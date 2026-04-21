@@ -1,0 +1,5 @@
+organization_id    = "SEU_ORGANIZATION_ID"
+billing_account_id = "SEU_BILLING_ACCOUNT_ID"
+terraform_sa_email = "terraform@SEU_PROJECT.iam.gserviceaccount.com"
+region             = "southamerica-east1"
+# api_db_password é passado via -var na linha de comando, não aqui
