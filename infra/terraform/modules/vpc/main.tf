@@ -21,16 +21,14 @@ resource "google_vpc_access_connector" "connector" {
   project = var.project_id
   region  = var.region
 
-  subnet {
-    name       = google_compute_subnetwork.subnet.name
-    project_id = var.project_id
-  }
+  ip_cidr_range = "10.8.0.0/28"
+  network       = google_compute_network.vpc.name
 
   machine_type  = var.connector_machine_type
   min_instances = 2
   max_instances = 3
 
-  depends_on = [google_compute_subnetwork.subnet]
+  depends_on = [google_compute_network.vpc]
 }
 
 resource "google_compute_global_address" "private_ip_range" {

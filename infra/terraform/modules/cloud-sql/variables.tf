@@ -57,6 +57,11 @@ variable "deletion_protection" {
   default = true
 }
 
+variable "ipv4_enabled" {
+  type    = bool
+  default = false
+}
+
 variable "api_db_password" {
   type      = string
   sensitive = true

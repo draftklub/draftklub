@@ -1,3 +1,11 @@
+locals {
+  node_env = {
+    "dev"     = "development"
+    "staging" = "staging"
+    "prod"    = "production"
+  }
+}
+
 resource "google_cloud_run_v2_service" "api" {
   name     = "draftklub-api"
   project  = var.project_id
@@ -29,9 +37,13 @@ resource "google_cloud_run_v2_service" "api" {
         startup_cpu_boost = true
       }
 
+      ports {
+        container_port = 3000
+      }
+
       env {
         name  = "NODE_ENV"
-        value = var.environment
+        value = lookup(local.node_env, var.environment, var.environment)
       }
 
       liveness_probe {
@@ -96,7 +108,7 @@ resource "google_cloud_run_v2_service" "worker" {
 
       env {
         name  = "NODE_ENV"
-        value = var.environment
+        value = lookup(local.node_env, var.environment, var.environment)
       }
     }
   }

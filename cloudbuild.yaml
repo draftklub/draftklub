@@ -1,0 +1,21 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build-api
+    args:
+      - build
+      - '-f'
+      - 'apps/api/Dockerfile'
+      - '-t'
+      - '$_API_IMAGE'
+      - '--cache-from'
+      - '$_API_IMAGE'
+      - '.'
+
+images:
+  - '$_API_IMAGE'
+
+substitutions:
+  _API_IMAGE: 'southamerica-east1-docker.pkg.dev/draftklub-dev/draftklub/api:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

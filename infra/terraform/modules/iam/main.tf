@@ -1,3 +1,42 @@
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+locals {
+  cloudbuild_sa = "serviceAccount:${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
+  compute_sa    = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "cloudbuild_storage_admin" {
+  project = var.project_id
+  role    = "roles/storage.admin"
+  member  = local.cloudbuild_sa
+}
+
+resource "google_project_iam_member" "cloudbuild_artifact_writer" {
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = local.cloudbuild_sa
+}
+
+resource "google_project_iam_member" "compute_sa_artifact_writer" {
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = local.compute_sa
+}
+
+resource "google_project_iam_member" "compute_sa_storage_viewer" {
+  project = var.project_id
+  role    = "roles/storage.objectViewer"
+  member  = local.compute_sa
+}
+
+resource "google_project_iam_member" "compute_sa_logging" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = local.compute_sa
+}
+
 resource "google_service_account" "api" {
   account_id   = "draftklub-api"
   display_name = "DraftKlub API"

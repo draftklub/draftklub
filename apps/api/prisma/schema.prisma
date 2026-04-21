@@ -1,0 +1,86 @@
+generator client {
+  provider        = "prisma-client-js"
+previewFeatures = []
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["identity", "audit"]
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUDIT — schema compartilhado, usado por todos os módulos
+// ═══════════════════════════════════════════════════════════════
+
+model OutboxEvent {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventType     String    @map("event_type")
+  eventVersion  Int       @default(1) @map("event_version")
+  payload       Json
+  occurredAt    DateTime  @default(now()) @map("occurred_at") @db.Timestamptz
+  status        String    @default("pending")
+  attempts      Int       @default(0)
+  lastError     String?   @map("last_error")
+  sentAt        DateTime? @map("sent_at") @db.Timestamptz
+  correlationId String?   @map("correlation_id")
+
+  @@index([occurredAt], map: "idx_outbox_pending")
+  @@map("outbox_events")
+  @@schema("audit")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// IDENTITY — usuários, memberships, papéis escopados
+// ═══════════════════════════════════════════════════════════════
+
+model User {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  firebaseUid    String    @unique @map("firebase_uid")
+  email          String    @unique
+  phone          String?
+  fullName       String    @map("full_name")
+  birthDate      DateTime? @map("birth_date") @db.Date
+  avatarUrl      String?   @map("avatar_url")
+  consentGivenAt DateTime? @map("consent_given_at") @db.Timestamptz
+  consentVersion String?   @map("consent_version")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+
+  memberships     Membership[]
+  roleAssignments RoleAssignment[]
+
+  @@map("users")
+  @@schema("identity")
+}
+
+model Membership {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  klubId    String    @map("klub_id") @db.Uuid
+  status    String    @default("active")
+  type      String    @default("member")
+  joinedAt  DateTime  @default(now()) @map("joined_at") @db.Timestamptz
+  expiresAt DateTime? @map("expires_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, klubId])
+  @@map("memberships")
+  @@schema("identity")
+}
+
+model RoleAssignment {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  role         String
+  scopeKlubId  String?   @map("scope_klub_id") @db.Uuid
+  scopeSportId String?   @map("scope_sport_id") @db.Uuid
+  grantedAt    DateTime  @default(now()) @map("granted_at") @db.Timestamptz
+  grantedBy    String?   @map("granted_by") @db.Uuid
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("role_assignments")
+  @@schema("identity")
+}

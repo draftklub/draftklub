@@ -1,0 +1,38 @@
+{
+  "name": "@draftklub/worker",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "start": "node dist/worker",
+    "lint": "eslint \"{src,test}/**/*.ts\"",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/schedule": "^5.0.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.56.0",
+    "@opentelemetry/sdk-node": "^0.57.0",
+    "@prisma/client": "^7.6.0",
+    "nestjs-pino": "^4.3.0",
+    "pino-http": "^10.4.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@draftklub/tsconfig": "workspace:*",
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@types/node": "^24.0.0",
+    "pino-pretty": "^13.0.0",
+    "prisma": "^7.6.0",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.0"
+  }
+}
