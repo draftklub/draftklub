@@ -1,0 +1,13 @@
+{
+  "name": "@draftklub/tsconfig",
+  "version": "0.0.1",
+  "private": true,
+  "license": "UNLICENSED",
+  "files": [
+    "base.json",
+    "nestjs.json",
+    "nextjs.json",
+    "react-native.json",
+    "library.json"
+  ]
+}
