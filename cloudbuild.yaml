@@ -85,16 +85,18 @@ steps:
   # ─────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
     id: migrate
-    entrypoint: gcloud
+    entrypoint: sh
     args:
-      - run
-      - jobs
-      - execute
-      - draftklub-migrate
-      - '--project=$_PROJECT_ID'
-      - '--region=$_REGION'
-      - '--image=$_API_IMAGE:$COMMIT_SHA'
-      - '--wait'
+      - '-c'
+      - |
+        gcloud run jobs update draftklub-migrate \
+          --project=$_PROJECT_ID \
+          --region=$_REGION \
+          --image=$_API_IMAGE:$COMMIT_SHA
+        gcloud run jobs execute draftklub-migrate \
+          --project=$_PROJECT_ID \
+          --region=$_REGION \
+          --wait
     waitFor: ['push-api']
 
   # ─────────────────────────────────────────
