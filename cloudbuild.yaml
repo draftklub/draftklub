@@ -4,82 +4,21 @@
 
 steps:
   # ─────────────────────────────────────────
-  # STEP 1: Instalar dependências
+  # STEP 1: CI — install, typecheck, lint, test
   # ─────────────────────────────────────────
   - name: 'node:24-alpine'
-    id: install
+    id: ci
     entrypoint: sh
-    volumes:
-      - name: node_modules
-        path: /workspace/node_modules
-      - name: pnpm_store
-        path: /root/.local/share/pnpm/store
     args:
       - '-c'
       - |
         corepack enable
         corepack prepare pnpm@10.6.5 --activate
         pnpm install --frozen-lockfile
+        pnpm turbo run typecheck lint test
 
   # ─────────────────────────────────────────
-  # STEP 2: Typecheck
-  # ─────────────────────────────────────────
-  - name: 'node:24-alpine'
-    id: typecheck
-    entrypoint: sh
-    volumes:
-      - name: node_modules
-        path: /workspace/node_modules
-      - name: pnpm_store
-        path: /root/.local/share/pnpm/store
-    args:
-      - '-c'
-      - |
-        corepack enable
-        corepack prepare pnpm@10.6.5 --activate
-        pnpm turbo run typecheck
-    waitFor: ['install']
-
-  # ─────────────────────────────────────────
-  # STEP 3: Lint
-  # ─────────────────────────────────────────
-  - name: 'node:24-alpine'
-    id: lint
-    entrypoint: sh
-    volumes:
-      - name: node_modules
-        path: /workspace/node_modules
-      - name: pnpm_store
-        path: /root/.local/share/pnpm/store
-    args:
-      - '-c'
-      - |
-        corepack enable
-        corepack prepare pnpm@10.6.5 --activate
-        pnpm turbo run lint
-    waitFor: ['install']
-
-  # ─────────────────────────────────────────
-  # STEP 4: Testes unitários
-  # ─────────────────────────────────────────
-  - name: 'node:24-alpine'
-    id: test
-    entrypoint: sh
-    volumes:
-      - name: node_modules
-        path: /workspace/node_modules
-      - name: pnpm_store
-        path: /root/.local/share/pnpm/store
-    args:
-      - '-c'
-      - |
-        corepack enable
-        corepack prepare pnpm@10.6.5 --activate
-        pnpm turbo run test
-    waitFor: ['install']
-
-  # ─────────────────────────────────────────
-  # STEP 5: Build imagem API
+  # STEP 2: Build imagem API
   # ─────────────────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
     id: build-api
@@ -96,10 +35,10 @@ steps:
       - '--build-arg'
       - 'BUILDKIT_INLINE_CACHE=1'
       - '.'
-    waitFor: ['typecheck', 'lint', 'test']
+    waitFor: ['ci']
 
   # ─────────────────────────────────────────
-  # STEP 6: Build imagem Worker
+  # STEP 3: Build imagem Worker
   # ─────────────────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
     id: build-worker
@@ -116,10 +55,10 @@ steps:
       - '--build-arg'
       - 'BUILDKIT_INLINE_CACHE=1'
       - '.'
-    waitFor: ['typecheck', 'lint', 'test']
+    waitFor: ['ci']
 
   # ─────────────────────────────────────────
-  # STEP 7: Push imagem API
+  # STEP 4: Push imagem API
   # ─────────────────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
     id: push-api
@@ -130,7 +69,7 @@ steps:
     waitFor: ['build-api']
 
   # ─────────────────────────────────────────
-  # STEP 8: Push imagem Worker
+  # STEP 5: Push imagem Worker
   # ─────────────────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
     id: push-worker
@@ -141,7 +80,7 @@ steps:
     waitFor: ['build-worker']
 
   # ─────────────────────────────────────────
-  # STEP 9: Rodar migrations (Cloud Run Job)
+  # STEP 6: Rodar migrations (Cloud Run Job)
   # ─────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
     id: migrate
@@ -158,7 +97,7 @@ steps:
     waitFor: ['push-api']
 
   # ─────────────────────────────────────────
-  # STEP 10: Deploy API
+  # STEP 7: Deploy API
   # ─────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
     id: deploy-api
@@ -174,7 +113,7 @@ steps:
     waitFor: ['migrate']
 
   # ─────────────────────────────────────────
-  # STEP 11: Deploy Worker
+  # STEP 8: Deploy Worker
   # ─────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
     id: deploy-worker
@@ -190,7 +129,7 @@ steps:
     waitFor: ['push-worker', 'migrate']
 
   # ─────────────────────────────────────────
-  # STEP 12: Health check pós-deploy
+  # STEP 9: Health check pós-deploy
   # ─────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
     id: health-check
