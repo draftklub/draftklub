@@ -139,3 +139,39 @@ resource "google_cloud_run_v2_service" "worker" {
   }
 }
 
+
+resource "google_cloud_run_v2_job" "migrate" {
+  name     = "draftklub-migrate"
+  project  = var.project_id
+  location = var.region
+
+  template {
+    template {
+      service_account = var.api_sa_email
+
+      volumes {
+        name = "cloudsql"
+        cloud_sql_instance {
+          instances = [var.cloud_sql_instance]
+        }
+      }
+
+      containers {
+        image   = "us-docker.pkg.dev/cloudrun/container/hello"
+        command = ["sh"]
+        args    = ["-c", "cd /app/apps/api && node_modules/.bin/prisma migrate deploy"]
+
+        volume_mounts {
+          name       = "cloudsql"
+          mount_path = "/cloudsql"
+        }
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template[0].template[0].containers[0].image,
+    ]
+  }
+}
