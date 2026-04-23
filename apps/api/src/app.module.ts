@@ -2,8 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { validateConfig } from './bootstrap/config/app.config';
+import { FirebaseModule } from './bootstrap/firebase/firebase.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { HealthModule } from './shared/health/health.module';
+import { AuthModule } from './shared/auth/auth.module';
+import { IdentityModule } from './modules/identity/identity.module';
 
 @Module({
   imports: [
@@ -27,8 +30,11 @@ import { HealthModule } from './shared/health/health.module';
         },
       },
     }),
+    FirebaseModule,
+    AuthModule,
     PrismaModule,
     HealthModule,
+    IdentityModule,
   ],
 })
 export class AppModule {}
