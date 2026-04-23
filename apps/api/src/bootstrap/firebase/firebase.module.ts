@@ -8,7 +8,9 @@ export class FirebaseModule implements OnApplicationBootstrap {
 
   onApplicationBootstrap(): void {
     if (admin.apps.length > 0) return;
-    admin.initializeApp();
+    admin.initializeApp({
+      projectId: 'draftklub-dev',
+    });
     this.logger.log('Firebase Admin SDK initialized via ADC');
   }
 }
