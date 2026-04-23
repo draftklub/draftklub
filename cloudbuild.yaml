@@ -184,13 +184,13 @@ steps:
           --project=$_PROJECT_ID \
           --region=$_REGION \
           --format="value(status.url)")
-        echo "URL: $URL"
+        echo "URL: $$URL"
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
           -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
-          "$URL/health")
-        echo "Health check status: $STATUS"
-        if [ "$STATUS" != "200" ]; then
-          echo "Health check falhou com status $STATUS"
+          "$$URL/health")
+        echo "Health check status: $$STATUS"
+        if [ "$$STATUS" != "200" ]; then
+          echo "Health check falhou com status $$STATUS"
           exit 1
         fi
         echo "Health check OK"
