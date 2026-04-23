@@ -15,6 +15,7 @@ steps:
         corepack enable
         corepack prepare pnpm@10.6.5 --activate
         pnpm install --frozen-lockfile
+        pnpm --filter @draftklub/api exec prisma generate
         pnpm turbo run typecheck lint test
 
   # ─────────────────────────────────────────
