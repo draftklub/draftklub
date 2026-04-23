@@ -92,7 +92,9 @@ steps:
         gcloud run jobs update draftklub-migrate \
           --project=$_PROJECT_ID \
           --region=$_REGION \
-          --image=$_API_IMAGE:$COMMIT_SHA
+          --image=$_API_IMAGE:$COMMIT_SHA \
+          --command="sh" \
+          --args="-c,cd /app/apps/api && node_modules/.bin/prisma migrate deploy"
         gcloud run jobs execute draftklub-migrate \
           --project=$_PROJECT_ID \
           --region=$_REGION \
