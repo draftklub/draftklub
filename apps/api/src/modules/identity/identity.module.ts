@@ -4,6 +4,7 @@ import { SyncUserHandler } from './application/commands/sync-user.handler';
 import { GetUserByFirebaseUidHandler } from './application/queries/get-user-by-firebase-uid.handler';
 import { IdentityFacade } from './public/identity.facade';
 import { IdentityController } from './api/identity.controller';
+import { FirebaseAuthGuard } from '../../shared/auth/firebase-auth.guard';
 
 @Module({
   controllers: [IdentityController],
@@ -12,7 +13,8 @@ import { IdentityController } from './api/identity.controller';
     SyncUserHandler,
     GetUserByFirebaseUidHandler,
     IdentityFacade,
+    FirebaseAuthGuard,
   ],
-  exports: [IdentityFacade],
+  exports: [IdentityFacade, FirebaseAuthGuard],
 })
 export class IdentityModule {}
