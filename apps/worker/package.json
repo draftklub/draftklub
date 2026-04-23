@@ -7,7 +7,7 @@
     "dev": "nest start --watch",
     "start": "node dist/worker",
     "lint": "eslint \"{src,test}/**/*.ts\"",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
