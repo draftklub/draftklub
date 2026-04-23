@@ -26,10 +26,12 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@draftklub/eslint-config": "workspace:*",
     "@draftklub/tsconfig": "workspace:*",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@types/node": "^24.0.0",
+    "eslint": "^9.25.0",
     "pino-pretty": "^13.0.0",
     "prisma": "^7.6.0",
     "typescript": "^5.9.2",
