@@ -9,6 +9,11 @@ steps:
   - name: 'node:24-alpine'
     id: install
     entrypoint: sh
+    volumes:
+      - name: node_modules
+        path: /workspace/node_modules
+      - name: pnpm_store
+        path: /root/.local/share/pnpm/store
     args:
       - '-c'
       - |
@@ -22,6 +27,11 @@ steps:
   - name: 'node:24-alpine'
     id: typecheck
     entrypoint: sh
+    volumes:
+      - name: node_modules
+        path: /workspace/node_modules
+      - name: pnpm_store
+        path: /root/.local/share/pnpm/store
     args:
       - '-c'
       - |
@@ -36,6 +46,11 @@ steps:
   - name: 'node:24-alpine'
     id: lint
     entrypoint: sh
+    volumes:
+      - name: node_modules
+        path: /workspace/node_modules
+      - name: pnpm_store
+        path: /root/.local/share/pnpm/store
     args:
       - '-c'
       - |
@@ -50,6 +65,11 @@ steps:
   - name: 'node:24-alpine'
     id: test
     entrypoint: sh
+    volumes:
+      - name: node_modules
+        path: /workspace/node_modules
+      - name: pnpm_store
+        path: /root/.local/share/pnpm/store
     args:
       - '-c'
       - |
