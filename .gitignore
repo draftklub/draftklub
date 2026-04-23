@@ -55,3 +55,4 @@ gcloud-key*.json
 .sentryclirc
 .turbo
 .claude/
+BRIEFING_*.md
