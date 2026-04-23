@@ -4,8 +4,9 @@ function runMigrations(): void {
   console.log('[migrate] Starting database migrations...');
 
   try {
-    execSync('npx prisma migrate deploy', {
+    execSync('node node_modules/.bin/prisma migrate deploy', {
       stdio: 'inherit',
+      cwd: '/app/apps/api',
       env: { ...process.env },
     });
 
