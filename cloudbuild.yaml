@@ -116,23 +116,7 @@ steps:
     waitFor: ['migrate']
 
   # ─────────────────────────────────────────
-  # STEP 8: Deploy Worker
-  # ─────────────────────────────────────────
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
-    id: deploy-worker
-    entrypoint: gcloud
-    args:
-      - run
-      - services
-      - update
-      - draftklub-worker
-      - '--project=$_PROJECT_ID'
-      - '--region=$_REGION'
-      - '--image=$_WORKER_IMAGE:$COMMIT_SHA'
-    waitFor: ['push-worker', 'migrate']
-
-  # ─────────────────────────────────────────
-  # STEP 9: Health check pós-deploy
+  # STEP 8: Health check pós-deploy
   # ─────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
     id: health-check
