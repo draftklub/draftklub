@@ -114,6 +114,7 @@ steps:
       - '--region=$_REGION'
       - '--image=$_API_IMAGE:$COMMIT_SHA'
       - '--set-secrets=DATABASE_URL=database-url:latest'
+      - '--set-env-vars=NODE_ENV=production,LOG_LEVEL=debug,OTEL_ENABLED=false,OTEL_SERVICE_NAME=draftklub-api'
     waitFor: ['migrate']
 
 
