@@ -1,3 +1,3 @@
-import config from '@draftklub/eslint-config/nestjs.js';
+import config from '@draftklub/eslint-config/nestjs';
 
 export default config;

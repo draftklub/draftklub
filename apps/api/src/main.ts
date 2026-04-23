@@ -1,20 +1,20 @@
 import { NestFactory } from '@nestjs/core';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { type NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
 import { Logger } from 'nestjs-pino';
 import { execSync } from 'node:child_process';
 import { AppModule } from './app.module';
 import { initTelemetry, shutdownTelemetry } from './bootstrap/telemetry/otel';
 
-async function runMigrations(): Promise<void> {
+function runMigrations(): void {
   execSync('./node_modules/.bin/prisma migrate deploy', { stdio: 'inherit' });
 }
 
 async function bootstrap(): Promise<void> {
-  const serviceName = process.env['OTEL_SERVICE_NAME'] ?? 'draftklub-api';
-  const otlpEndpoint = process.env['OTEL_EXPORTER_OTLP_ENDPOINT'];
+  const serviceName = process.env.OTEL_SERVICE_NAME ?? 'draftklub-api';
+  const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
   initTelemetry(serviceName, otlpEndpoint);
 
-  await runMigrations();
+  runMigrations();
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -28,7 +28,7 @@ async function bootstrap(): Promise<void> {
   app.useLogger(app.get(Logger));
   app.enableShutdownHooks();
 
-  const port = parseInt(process.env['PORT'] ?? '3000', 10);
+  const port = parseInt(process.env.PORT ?? '3000', 10);
   await app.listen(port, '0.0.0.0');
 }
 
@@ -37,6 +37,8 @@ bootstrap().catch((err: unknown) => {
   process.exitCode = 1;
 });
 
-process.on('SIGTERM', async () => {
-  await shutdownTelemetry();
+process.on('SIGTERM', () => {
+  shutdownTelemetry().catch((err: unknown) => {
+    console.error('Error during telemetry shutdown:', err);
+  });
 });
