@@ -51,7 +51,7 @@ export class FirebaseAuthGuard implements CanActivate {
       (request as FastifyRequest & { user: AuthenticatedUser }).user = authenticatedUser;
       return true;
     } catch (error) {
-      this.logger.warn(`Auth failed: ${String(error)}`);
+      this.logger.error(`Auth failed: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
