@@ -1,3 +1,4 @@
+import * as http from 'http';
 import { NestFactory } from '@nestjs/core';
 import { Logger } from 'nestjs-pino';
 import { WorkerModule } from './worker.module';
@@ -12,6 +13,10 @@ async function bootstrap(): Promise<void> {
 
   const logger = app.get(Logger);
   logger.log('Worker started', 'Worker');
+
+  const port = parseInt(process.env.PORT ?? '8080', 10);
+  http.createServer((_, res) => { res.writeHead(200); res.end('ok'); }).listen(port);
+  logger.log(`Worker HTTP health server listening on port ${port}`, 'Worker');
 }
 
 bootstrap().catch((err: unknown) => {
