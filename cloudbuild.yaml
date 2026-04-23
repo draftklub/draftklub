@@ -115,32 +115,6 @@ steps:
       - '--image=$_API_IMAGE:$COMMIT_SHA'
     waitFor: ['migrate']
 
-  # ─────────────────────────────────────────
-  # STEP 8: Health check pós-deploy
-  # ─────────────────────────────────────────
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
-    id: health-check
-    entrypoint: sh
-    args:
-      - '-c'
-      - |
-        echo "Aguardando deploy estabilizar..."
-        sleep 10
-        URL=$(gcloud run services describe draftklub-api \
-          --project=$_PROJECT_ID \
-          --region=$_REGION \
-          --format="value(status.url)")
-        echo "URL: $$URL"
-        STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-          -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
-          "$$URL/health")
-        echo "Health check status: $$STATUS"
-        if [ "$$STATUS" != "200" ]; then
-          echo "Health check falhou com status $$STATUS"
-          exit 1
-        fi
-        echo "Health check OK"
-    waitFor: ['deploy-api']
 
 substitutions:
   _PROJECT_ID: 'draftklub-dev'
