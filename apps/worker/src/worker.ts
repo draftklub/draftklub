@@ -4,6 +4,13 @@ import { Logger } from 'nestjs-pino';
 import { WorkerModule } from './worker.module';
 
 async function bootstrap(): Promise<void> {
+  // HTTP server sobe PRIMEIRO — Cloud Run exige resposta rápida na porta
+  const port = parseInt(process.env.PORT ?? '8080', 10);
+  const server = http.createServer((_, res) => { res.writeHead(200); res.end('ok'); });
+  await new Promise<void>((resolve) => server.listen(port, resolve));
+  console.log(`Worker HTTP health server listening on port ${port}`);
+
+  // Depois inicializa o contexto Nest
   const app = await NestFactory.createApplicationContext(WorkerModule, {
     bufferLogs: true,
   });
@@ -13,10 +20,6 @@ async function bootstrap(): Promise<void> {
 
   const logger = app.get(Logger);
   logger.log('Worker started', 'Worker');
-
-  const port = parseInt(process.env.PORT ?? '8080', 10);
-  http.createServer((_, res) => { res.writeHead(200); res.end('ok'); }).listen(port);
-  logger.log(`Worker HTTP health server listening on port ${port}`, 'Worker');
 }
 
 bootstrap().catch((err: unknown) => {
