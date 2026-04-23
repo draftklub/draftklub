@@ -1,4 +1,66 @@
+# DraftKlub — Cloud Build Pipeline
+# Trigger: push na branch main
+# Fluxo: lint/typecheck/test → build imagens → push → migrate → deploy
+
 steps:
+  # ─────────────────────────────────────────
+  # STEP 1: Instalar dependências
+  # ─────────────────────────────────────────
+  - name: 'node:24-alpine'
+    id: install
+    entrypoint: sh
+    args:
+      - '-c'
+      - |
+        corepack enable
+        corepack prepare pnpm@10.6.5 --activate
+        pnpm install --frozen-lockfile
+
+  # ─────────────────────────────────────────
+  # STEP 2: Typecheck
+  # ─────────────────────────────────────────
+  - name: 'node:24-alpine'
+    id: typecheck
+    entrypoint: sh
+    args:
+      - '-c'
+      - |
+        corepack enable
+        corepack prepare pnpm@10.6.5 --activate
+        pnpm turbo run typecheck
+    waitFor: ['install']
+
+  # ─────────────────────────────────────────
+  # STEP 3: Lint
+  # ─────────────────────────────────────────
+  - name: 'node:24-alpine'
+    id: lint
+    entrypoint: sh
+    args:
+      - '-c'
+      - |
+        corepack enable
+        corepack prepare pnpm@10.6.5 --activate
+        pnpm turbo run lint
+    waitFor: ['install']
+
+  # ─────────────────────────────────────────
+  # STEP 4: Testes unitários
+  # ─────────────────────────────────────────
+  - name: 'node:24-alpine'
+    id: test
+    entrypoint: sh
+    args:
+      - '-c'
+      - |
+        corepack enable
+        corepack prepare pnpm@10.6.5 --activate
+        pnpm turbo run test
+    waitFor: ['install']
+
+  # ─────────────────────────────────────────
+  # STEP 5: Build imagem API
+  # ─────────────────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
     id: build-api
     args:
@@ -6,16 +68,142 @@ steps:
       - '-f'
       - 'apps/api/Dockerfile'
       - '-t'
-      - '$_API_IMAGE'
+      - '$_API_IMAGE:$COMMIT_SHA'
+      - '-t'
+      - '$_API_IMAGE:latest'
       - '--cache-from'
-      - '$_API_IMAGE'
+      - '$_API_IMAGE:latest'
+      - '--build-arg'
+      - 'BUILDKIT_INLINE_CACHE=1'
       - '.'
+    waitFor: ['typecheck', 'lint', 'test']
 
-images:
-  - '$_API_IMAGE'
+  # ─────────────────────────────────────────
+  # STEP 6: Build imagem Worker
+  # ─────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build-worker
+    args:
+      - build
+      - '-f'
+      - 'apps/worker/Dockerfile'
+      - '-t'
+      - '$_WORKER_IMAGE:$COMMIT_SHA'
+      - '-t'
+      - '$_WORKER_IMAGE:latest'
+      - '--cache-from'
+      - '$_WORKER_IMAGE:latest'
+      - '--build-arg'
+      - 'BUILDKIT_INLINE_CACHE=1'
+      - '.'
+    waitFor: ['typecheck', 'lint', 'test']
+
+  # ─────────────────────────────────────────
+  # STEP 7: Push imagem API
+  # ─────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push-api
+    args:
+      - push
+      - '--all-tags'
+      - '$_API_IMAGE'
+    waitFor: ['build-api']
+
+  # ─────────────────────────────────────────
+  # STEP 8: Push imagem Worker
+  # ─────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push-worker
+    args:
+      - push
+      - '--all-tags'
+      - '$_WORKER_IMAGE'
+    waitFor: ['build-worker']
+
+  # ─────────────────────────────────────────
+  # STEP 9: Rodar migrations (Cloud Run Job)
+  # ─────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+    id: migrate
+    entrypoint: gcloud
+    args:
+      - run
+      - jobs
+      - execute
+      - draftklub-migrate
+      - '--project=$_PROJECT_ID'
+      - '--region=$_REGION'
+      - '--image=$_API_IMAGE:$COMMIT_SHA'
+      - '--wait'
+    waitFor: ['push-api']
+
+  # ─────────────────────────────────────────
+  # STEP 10: Deploy API
+  # ─────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+    id: deploy-api
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - draftklub-api
+      - '--project=$_PROJECT_ID'
+      - '--region=$_REGION'
+      - '--image=$_API_IMAGE:$COMMIT_SHA'
+    waitFor: ['migrate']
+
+  # ─────────────────────────────────────────
+  # STEP 11: Deploy Worker
+  # ─────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+    id: deploy-worker
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - draftklub-worker
+      - '--project=$_PROJECT_ID'
+      - '--region=$_REGION'
+      - '--image=$_WORKER_IMAGE:$COMMIT_SHA'
+    waitFor: ['push-worker', 'migrate']
+
+  # ─────────────────────────────────────────
+  # STEP 12: Health check pós-deploy
+  # ─────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+    id: health-check
+    entrypoint: sh
+    args:
+      - '-c'
+      - |
+        echo "Aguardando deploy estabilizar..."
+        sleep 10
+        URL=$(gcloud run services describe draftklub-api \
+          --project=$_PROJECT_ID \
+          --region=$_REGION \
+          --format="value(status.url)")
+        echo "URL: $URL"
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+          "$URL/health")
+        echo "Health check status: $STATUS"
+        if [ "$STATUS" != "200" ]; then
+          echo "Health check falhou com status $STATUS"
+          exit 1
+        fi
+        echo "Health check OK"
+    waitFor: ['deploy-api']
 
 substitutions:
-  _API_IMAGE: 'southamerica-east1-docker.pkg.dev/draftklub-dev/draftklub/api:latest'
+  _PROJECT_ID: 'draftklub-dev'
+  _REGION: 'southamerica-east1'
+  _API_IMAGE: 'southamerica-east1-docker.pkg.dev/draftklub-dev/draftklub/api'
+  _WORKER_IMAGE: 'southamerica-east1-docker.pkg.dev/draftklub-dev/draftklub/worker'
 
 options:
   logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+timeout: '1800s'

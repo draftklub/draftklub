@@ -1,3 +1,10 @@
+resource "google_project_iam_member" "admin_owner" {
+  count   = var.admin_user_email != "" ? 1 : 0
+  project = var.project_id
+  role    = "roles/owner"
+  member  = "user:${var.admin_user_email}"
+}
+
 data "google_project" "project" {
   project_id = var.project_id
 }

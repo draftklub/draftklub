@@ -56,9 +56,10 @@ module "vpc" {
 }
 
 module "iam" {
-  source     = "../../modules/iam"
-  project_id = local.project_id
-  depends_on = [module.project]
+  source           = "../../modules/iam"
+  project_id       = local.project_id
+  admin_user_email = "admin@draftklub.com"
+  depends_on       = [module.project]
 }
 
 module "cloud_sql" {
@@ -130,6 +131,7 @@ module "cloud_run" {
   worker_max_instances = 2
   worker_cpu           = "1"
   worker_memory        = "512Mi"
+  cloud_sql_instance   = "draftklub-dev:southamerica-east1:draftklub-postgres"
 
   depends_on = [module.vpc, module.iam]
 }

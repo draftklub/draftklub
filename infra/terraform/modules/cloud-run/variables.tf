@@ -38,3 +38,9 @@ variable "worker_memory" {
   type    = string
   default = "512Mi"
 }
+
+variable "cloud_sql_instance" {
+  type        = string
+  default     = ""
+  description = "Cloud SQL instance connection name (e.g. project:region:instance)"
+}

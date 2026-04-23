@@ -56,9 +56,10 @@ module "vpc" {
 }
 
 module "iam" {
-  source     = "../../modules/iam"
-  project_id = local.project_id
-  depends_on = [module.project]
+  source           = "../../modules/iam"
+  project_id       = local.project_id
+  admin_user_email = "admin@draftklub.com"
+  depends_on       = [module.project]
 }
 
 module "cloud_sql" {

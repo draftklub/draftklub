@@ -22,13 +22,10 @@ resource "google_project_service" "apis" {
   depends_on = [google_project.this]
 }
 
-resource "google_project_iam_binding" "terraform_admin" {
+resource "google_project_iam_member" "terraform_admin" {
   project = google_project.this.project_id
   role    = "roles/owner"
-
-  members = [
-    "serviceAccount:${var.terraform_sa_email}",
-  ]
+  member  = "serviceAccount:${var.terraform_sa_email}"
 
   depends_on = [google_project_service.apis]
 }
