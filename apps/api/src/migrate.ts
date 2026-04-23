@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 
-async function runMigrations(): Promise<void> {
+function runMigrations(): void {
   console.log('[migrate] Starting database migrations...');
 
   try {
@@ -16,7 +16,4 @@ async function runMigrations(): Promise<void> {
   }
 }
 
-runMigrations().catch((err: unknown) => {
-  console.error('[migrate] Fatal error:', err);
-  process.exit(1);
-});
+runMigrations();
