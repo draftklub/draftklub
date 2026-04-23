@@ -3,7 +3,9 @@ import { PrismaClient } from '@prisma/client';
 async function runMigrations(): Promise<void> {
   console.log('[migrate] Starting database migrations...');
 
-  const prisma = new PrismaClient();
+  const prisma = new PrismaClient({
+    datasourceUrl: process.env.DATABASE_URL,
+  });
 
   try {
     await prisma.$connect();
