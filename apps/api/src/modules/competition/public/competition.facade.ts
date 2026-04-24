@@ -24,10 +24,39 @@ import {
   MoveEntryCategoryHandler,
   type MoveEntryCategoryCommand,
 } from '../application/commands/move-entry-category.handler';
+import {
+  DrawTournamentHandler,
+  type DrawTournamentCommand,
+} from '../application/commands/draw-tournament.handler';
+import {
+  ReportTournamentMatchHandler,
+  type ReportTournamentMatchCommand,
+} from '../application/commands/report-tournament-match.handler';
+import {
+  ConfirmTournamentMatchHandler,
+  type ConfirmTournamentMatchCommand,
+} from '../application/commands/confirm-tournament-match.handler';
+import {
+  EditTournamentMatchResultHandler,
+  type EditTournamentMatchResultCommand,
+} from '../application/commands/edit-tournament-match-result.handler';
+import {
+  ApplyWalkoverHandler,
+  type ApplyWalkoverCommand,
+} from '../application/commands/apply-walkover.handler';
+import {
+  ApplyDoubleWalkoverHandler,
+  type ApplyDoubleWalkoverCommand,
+} from '../application/commands/apply-double-walkover.handler';
+import {
+  UpdateReportingModeHandler,
+  type UpdateReportingModeCommand,
+} from '../application/commands/update-reporting-mode.handler';
 import { ListPointsSchemasHandler } from '../application/queries/list-points-schemas.handler';
 import { ListTournamentsHandler } from '../application/queries/list-tournaments.handler';
 import { GetTournamentHandler } from '../application/queries/get-tournament.handler';
 import { ListEntriesHandler } from '../application/queries/list-entries.handler';
+import { GetBracketHandler } from '../application/queries/get-bracket.handler';
 
 export interface CreatePointsSchemaInput extends Omit<CreatePointsSchemaCommand, 'klubSportId'> {
   klubId: string;
@@ -53,7 +82,65 @@ export class CompetitionFacade {
     private readonly listTournamentsHandler: ListTournamentsHandler,
     private readonly getTournamentHandler: GetTournamentHandler,
     private readonly listEntriesHandler: ListEntriesHandler,
+    private readonly drawHandler: DrawTournamentHandler,
+    private readonly reportMatchHandler: ReportTournamentMatchHandler,
+    private readonly confirmMatchHandler: ConfirmTournamentMatchHandler,
+    private readonly editMatchHandler: EditTournamentMatchResultHandler,
+    private readonly walkoverHandler: ApplyWalkoverHandler,
+    private readonly doubleWalkoverHandler: ApplyDoubleWalkoverHandler,
+    private readonly updateReportingModeHandler: UpdateReportingModeHandler,
+    private readonly getBracketHandler: GetBracketHandler,
   ) {}
+
+  async drawTournament(tournamentId: string) {
+    return this.drawHandler.execute({ tournamentId } satisfies DrawTournamentCommand);
+  }
+
+  async getBracket(tournamentId: string) {
+    return this.getBracketHandler.execute(tournamentId);
+  }
+
+  async reportTournamentMatch(cmd: ReportTournamentMatchCommand) {
+    return this.reportMatchHandler.execute(cmd);
+  }
+
+  async confirmTournamentMatch(cmd: ConfirmTournamentMatchCommand) {
+    return this.confirmMatchHandler.execute(cmd);
+  }
+
+  async editTournamentMatchResult(cmd: EditTournamentMatchResultCommand) {
+    return this.editMatchHandler.execute(cmd);
+  }
+
+  async applyWalkover(cmd: ApplyWalkoverCommand) {
+    return this.walkoverHandler.execute(cmd);
+  }
+
+  async applyDoubleWalkover(cmd: ApplyDoubleWalkoverCommand) {
+    return this.doubleWalkoverHandler.execute(cmd);
+  }
+
+  async updateReportingMode(cmd: UpdateReportingModeCommand) {
+    return this.updateReportingModeHandler.execute(cmd);
+  }
+
+  async userIsCommitteeForTournament(userId: string, tournamentId: string): Promise<boolean> {
+    const tournament = await this.prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      include: { klubSport: true },
+    });
+    if (!tournament) return false;
+
+    const roles = await this.prisma.roleAssignment.findMany({
+      where: {
+        userId,
+        scopeKlubId: tournament.klubSport.klubId,
+        role: { in: ['KLUB_ADMIN', 'SPORTS_COMMITTEE', 'SUPER_ADMIN'] },
+      },
+    });
+
+    return roles.length > 0;
+  }
 
   private async resolveKlubSport(klubId: string, sportCode: string) {
     const profile = await this.prisma.klubSportProfile.findUnique({

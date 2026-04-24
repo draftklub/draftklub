@@ -38,6 +38,9 @@ export const CreateTournamentSchema = z.object({
     .optional()
     .transform((v) => (v ? new Date(v) : undefined)),
   scheduleConfig: z.record(z.unknown()).optional(),
+  resultReportingMode: z
+    .enum(['committee_only', 'player_with_confirm'])
+    .default('committee_only'),
   categories: z.array(CreateCategorySchema).min(1),
 });
 

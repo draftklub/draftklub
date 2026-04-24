@@ -24,6 +24,6 @@ import { IdentityModule } from '../identity/identity.module';
     RatingCalculatorService,
     RankingFacade,
   ],
-  exports: [RankingFacade],
+  exports: [RankingFacade, RatingCalculatorService],
 })
 export class RankingModule {}

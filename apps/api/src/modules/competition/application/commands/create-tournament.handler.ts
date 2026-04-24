@@ -30,6 +30,7 @@ export interface CreateTournamentCommand {
   mainStartDate: Date;
   mainEndDate?: Date;
   scheduleConfig?: Record<string, unknown>;
+  resultReportingMode?: 'committee_only' | 'player_with_confirm';
   categories: CreateTournamentCategoryInput[];
   createdById?: string;
 }
@@ -122,6 +123,7 @@ export class CreateTournamentHandler {
         mainStartDate: cmd.mainStartDate,
         mainEndDate: cmd.mainEndDate,
         scheduleConfig: (cmd.scheduleConfig ?? {}) as Prisma.InputJsonValue,
+        resultReportingMode: cmd.resultReportingMode ?? 'committee_only',
         status: 'draft',
         createdById: cmd.createdById,
         categories: {

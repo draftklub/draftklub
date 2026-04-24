@@ -329,9 +329,20 @@ model MatchResult {
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
 
+  source              String    @default("casual")
+  tournamentId        String?   @map("tournament_id") @db.Uuid
+  tournamentMatchId   String?   @map("tournament_match_id") @db.Uuid
+  phase               String?
+  bracketPosition     String?   @map("bracket_position")
+  isWalkover          Boolean   @default(false) @map("is_walkover")
+
   ranking         KlubSportRanking @relation(fields: [rankingId], references: [id])
   submittedBy     User             @relation("MatchesSubmitted", fields: [submittedById], references: [id])
+  tournament      Tournament?      @relation("TournamentMatchResults", fields: [tournamentId], references: [id])
+  tournamentMatch TournamentMatch? @relation("TournamentMatchResult")
 
+  @@index([tournamentId])
+  @@index([source])
   @@map("match_results")
   @@schema("klub")
 }
@@ -402,6 +413,8 @@ model Tournament {
   status                  String    @default("draft")
   currentPhase            String?   @map("current_phase")
 
+  resultReportingMode     String    @default("committee_only") @map("result_reporting_mode")
+
   createdById             String?   @map("created_by_id") @db.Uuid
   createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt               DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
@@ -410,6 +423,8 @@ model Tournament {
   ranking                 KlubSportRanking @relation("TournamentRankings", fields: [rankingId], references: [id])
   categories              TournamentCategory[]
   entries                 TournamentEntry[]
+  matches                 TournamentMatch[]
+  matchResults            MatchResult[] @relation("TournamentMatchResults")
 
   @@map("tournaments")
   @@schema("klub")
@@ -434,10 +449,52 @@ model TournamentCategory {
   tournament        Tournament          @relation(fields: [tournamentId], references: [id])
   pointsSchema      RankingPointsSchema @relation(fields: [pointsSchemaId], references: [id])
   entries           TournamentEntry[]
+  matches           TournamentMatch[]
 
   @@unique([tournamentId, name])
   @@unique([tournamentId, order])
   @@map("tournament_categories")
+  @@schema("klub")
+}
+
+model TournamentMatch {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tournamentId        String    @map("tournament_id") @db.Uuid
+  categoryId          String    @map("category_id") @db.Uuid
+
+  phase               String
+  round               Int
+  bracketPosition     String    @map("bracket_position")
+  slotTop             Int       @map("slot_top")
+  slotBottom          Int       @map("slot_bottom")
+
+  player1Id           String?   @map("player1_id") @db.Uuid
+  player2Id           String?   @map("player2_id") @db.Uuid
+
+  seed1               Int?
+  seed2               Int?
+  isBye               Boolean   @default(false) @map("is_bye")
+
+  nextMatchId         String?   @map("next_match_id") @db.Uuid
+  nextMatchSlot       String?   @map("next_match_slot")
+
+  status              String    @default("pending")
+  winnerId            String?   @map("winner_id") @db.Uuid
+  matchResultId       String?   @map("match_result_id") @db.Uuid @unique
+
+  scheduledFor        DateTime? @map("scheduled_for") @db.Timestamptz
+  completedAt         DateTime? @map("completed_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+
+  tournament          Tournament          @relation(fields: [tournamentId], references: [id])
+  category            TournamentCategory  @relation(fields: [categoryId], references: [id])
+  nextMatch           TournamentMatch?    @relation("BracketProgression", fields: [nextMatchId], references: [id])
+  previousMatches     TournamentMatch[]   @relation("BracketProgression")
+  matchResult         MatchResult?        @relation("TournamentMatchResult", fields: [matchResultId], references: [id])
+
+  @@unique([tournamentId, bracketPosition])
+  @@map("tournament_matches")
   @@schema("klub")
 }
 
