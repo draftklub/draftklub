@@ -51,6 +51,7 @@ model User {
   roleAssignments RoleAssignment[]
   rankingEntries    PlayerRankingEntry[] @relation("PlayerEntries")
   matchesSubmitted  MatchResult[]        @relation("MatchesSubmitted")
+  tournamentEntries TournamentEntry[]    @relation("TournamentEntries")
 
   @@map("users")
   @@schema("identity")
@@ -223,6 +224,8 @@ model KlubSportProfile {
   klub   Klub         @relation("KlubSportProfiles", fields: [klubId], references: [id])
   sport  SportCatalog @relation(fields: [sportCode], references: [code])
   rankings KlubSportRanking[] @relation("RankingProfiles")
+  pointsSchemas  RankingPointsSchema[] @relation("PointsSchemas")
+  tournaments    Tournament[]          @relation("Tournaments")
 
   @@unique([klubId, sportCode])
   @@map("klub_sport_profiles")
@@ -256,6 +259,7 @@ model KlubSportRanking {
   klubSport       KlubSportProfile @relation("RankingProfiles", fields: [klubSportId], references: [id])
   entries         PlayerRankingEntry[]
   matches         MatchResult[]
+  tournaments     Tournament[] @relation("TournamentRankings")
 
   @@map("klub_sport_rankings")
   @@schema("klub")
@@ -341,6 +345,129 @@ model KlubSportInterest {
   klub  Klub  @relation("KlubSportInterests", fields: [klubId], references: [id])
 
   @@map("klub_sport_interests")
+  @@schema("klub")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPETITION — pontuação reutilizável e torneios
+// ═══════════════════════════════════════════════════════════════
+
+model RankingPointsSchema {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubSportId     String   @map("klub_sport_id") @db.Uuid
+
+  name            String
+  description     String?
+
+  points          Json     @default("{}")
+
+  active          Boolean  @default(true)
+  createdById     String?  @map("created_by_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt      @map("updated_at") @db.Timestamptz
+
+  klubSport       KlubSportProfile     @relation("PointsSchemas", fields: [klubSportId], references: [id])
+  categories      TournamentCategory[]
+
+  @@map("ranking_points_schemas")
+  @@schema("klub")
+}
+
+model Tournament {
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubSportId             String    @map("klub_sport_id") @db.Uuid
+  rankingId               String    @map("ranking_id") @db.Uuid
+
+  name                    String
+  description             String?
+  coverUrl                String?   @map("cover_url")
+
+  format                  String    @default("knockout")
+  hasPrequalifiers        Boolean   @default(false) @map("has_prequalifiers")
+  prequalifierBordersPerFrontier Int? @map("prequalifier_borders_per_frontier")
+
+  registrationApproval    String    @default("auto") @map("registration_approval")
+  registrationFee         Decimal?  @map("registration_fee") @db.Decimal(10, 2)
+
+  registrationOpensAt     DateTime  @map("registration_opens_at") @db.Timestamptz
+  registrationClosesAt    DateTime  @map("registration_closes_at") @db.Timestamptz
+  drawDate                DateTime  @map("draw_date") @db.Timestamptz
+  prequalifierStartDate   DateTime? @map("prequalifier_start_date") @db.Timestamptz
+  prequalifierEndDate     DateTime? @map("prequalifier_end_date") @db.Timestamptz
+  mainStartDate           DateTime  @map("main_start_date") @db.Timestamptz
+  mainEndDate             DateTime? @map("main_end_date") @db.Timestamptz
+
+  scheduleConfig          Json      @default("{}") @map("schedule_config")
+
+  status                  String    @default("draft")
+  currentPhase            String?   @map("current_phase")
+
+  createdById             String?   @map("created_by_id") @db.Uuid
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+
+  klubSport               KlubSportProfile @relation("Tournaments", fields: [klubSportId], references: [id])
+  ranking                 KlubSportRanking @relation("TournamentRankings", fields: [rankingId], references: [id])
+  categories              TournamentCategory[]
+  entries                 TournamentEntry[]
+
+  @@map("tournaments")
+  @@schema("klub")
+}
+
+model TournamentCategory {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tournamentId      String  @map("tournament_id") @db.Uuid
+
+  name              String
+  order             Int     @default(0)
+
+  maxPlayers        Int?    @map("max_players")
+  minRatingExpected Int?    @map("min_rating_expected")
+  maxRatingExpected Int?    @map("max_rating_expected")
+
+  pointsSchemaId    String  @map("points_schema_id") @db.Uuid
+
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt      @map("updated_at") @db.Timestamptz
+
+  tournament        Tournament          @relation(fields: [tournamentId], references: [id])
+  pointsSchema      RankingPointsSchema @relation(fields: [pointsSchemaId], references: [id])
+  entries           TournamentEntry[]
+
+  @@unique([tournamentId, name])
+  @@unique([tournamentId, order])
+  @@map("tournament_categories")
+  @@schema("klub")
+}
+
+model TournamentEntry {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tournamentId      String    @map("tournament_id") @db.Uuid
+  userId            String    @map("user_id") @db.Uuid
+  categoryId        String?   @map("category_id") @db.Uuid
+
+  status            String    @default("pending_seeding")
+  finalPosition     String?   @map("final_position")
+
+  ratingAtEntry     Int?      @map("rating_at_entry")
+
+  categorySource    String    @default("auto") @map("category_source")
+  isWildCard        Boolean   @default(false) @map("is_wild_card")
+
+  registeredAt      DateTime  @default(now()) @map("registered_at") @db.Timestamptz
+  approvedAt        DateTime? @map("approved_at") @db.Timestamptz
+  approvedById      String?   @map("approved_by_id") @db.Uuid
+  seededAt          DateTime? @map("seeded_at") @db.Timestamptz
+  movedById         String?   @map("moved_by_id") @db.Uuid
+  withdrawnAt       DateTime? @map("withdrawn_at") @db.Timestamptz
+
+  tournament        Tournament         @relation(fields: [tournamentId], references: [id])
+  user              User               @relation("TournamentEntries", fields: [userId], references: [id])
+  category          TournamentCategory? @relation(fields: [categoryId], references: [id])
+
+  @@unique([tournamentId, userId])
+  @@map("tournament_entries")
   @@schema("klub")
 }
 

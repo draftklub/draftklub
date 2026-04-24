@@ -256,6 +256,84 @@ async function main(): Promise<void> {
     }
 
     console.log('Players enrolled in rankings');
+
+    console.log('Creating points schema + tournament...');
+    const POINTS_SCHEMA_ID = '00000000-0000-0000-0003-000000000001';
+    const pointsSchema = await prisma.rankingPointsSchema.upsert({
+      where: { id: POINTS_SCHEMA_ID },
+      create: {
+        id: POINTS_SCHEMA_ID,
+        klubSportId: tennisProfile.id,
+        name: 'Pontuação Padrão',
+        description: 'Pontuação padrão para torneios regulares',
+        points: {
+          champion: 100,
+          runner_up: 70,
+          semi_final: 40,
+          quarter_final: 20,
+          round_of_16: 10,
+          first_round: 3,
+          participation: 1,
+        },
+      },
+      update: {},
+    });
+    console.log('Points schema created');
+
+    const TOURNAMENT_ID = '00000000-0000-0000-0004-000000000001';
+    const now = new Date();
+    const regOpen = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000);
+    const regClose = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const drawDate = new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000);
+    const mainStart = new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000);
+    const mainEnd = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
+
+    await prisma.tournament.upsert({
+      where: { id: TOURNAMENT_ID },
+      create: {
+        id: TOURNAMENT_ID,
+        klubSportId: tennisProfile.id,
+        rankingId: rankingOpen.id,
+        name: 'Torneio Piloto Tennis Club Carioca',
+        description: 'Primeiro torneio do Tennis Club Carioca',
+        format: 'knockout',
+        hasPrequalifiers: false,
+        registrationApproval: 'auto',
+        registrationOpensAt: regOpen,
+        registrationClosesAt: regClose,
+        drawDate: drawDate,
+        mainStartDate: mainStart,
+        mainEndDate: mainEnd,
+        status: 'draft',
+        categories: {
+          create: [
+            {
+              name: 'A',
+              order: 0,
+              minRatingExpected: 1200,
+              maxRatingExpected: 9999,
+              pointsSchemaId: pointsSchema.id,
+            },
+            {
+              name: 'B',
+              order: 1,
+              minRatingExpected: 900,
+              maxRatingExpected: 1199,
+              pointsSchemaId: pointsSchema.id,
+            },
+            {
+              name: 'C',
+              order: 2,
+              minRatingExpected: 0,
+              maxRatingExpected: 899,
+              pointsSchemaId: pointsSchema.id,
+            },
+          ],
+        },
+      },
+      update: {},
+    });
+    console.log('Tournament created');
   }
 
   console.log('Seed completed!');
