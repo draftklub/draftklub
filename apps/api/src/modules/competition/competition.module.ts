@@ -4,6 +4,7 @@ import { RankingModule } from '../ranking/ranking.module';
 import { CategoryAllocatorService } from './domain/services/category-allocator.service';
 import { TournamentValidatorService } from './domain/services/tournament-validator.service';
 import { BracketGeneratorService } from './domain/services/bracket-generator.service';
+import { PrequalifierGeneratorService } from './domain/services/prequalifier-generator.service';
 import { TournamentProgressionService } from './domain/services/tournament-progression.service';
 import { CreatePointsSchemaHandler } from './application/commands/create-points-schema.handler';
 import { CreateTournamentHandler } from './application/commands/create-tournament.handler';
@@ -43,6 +44,7 @@ import { TournamentMatchesController } from './api/tournament-matches.controller
     CategoryAllocatorService,
     TournamentValidatorService,
     BracketGeneratorService,
+    PrequalifierGeneratorService,
     TournamentProgressionService,
     CreatePointsSchemaHandler,
     CreateTournamentHandler,

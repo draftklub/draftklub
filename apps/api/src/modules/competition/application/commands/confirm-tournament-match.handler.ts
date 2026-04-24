@@ -49,6 +49,8 @@ export class ConfirmTournamentMatchHandler {
       throw new ForbiddenException('Only a player in the match can confirm');
     }
 
+    const isPrequalifier = match.matchKind === 'prequalifier';
+
     const player1Won = mr.winnerId === match.player1Id;
     const engine = match.tournament.ranking.ratingEngine;
     const config = match.tournament.ranking.ratingConfig as Record<string, unknown>;
@@ -63,7 +65,7 @@ export class ConfirmTournamentMatchHandler {
       player2NewRating: p2RatingBefore,
     };
 
-    if (engine === 'elo' || engine === 'win_loss') {
+    if (!isPrequalifier && (engine === 'elo' || engine === 'win_loss')) {
       ratingResult = this.calculator.compute(engine, config, p1RatingBefore, p2RatingBefore, player1Won);
     }
 
@@ -98,7 +100,7 @@ export class ConfirmTournamentMatchHandler {
         },
       });
 
-      if (engine === 'elo' || engine === 'win_loss') {
+      if (!isPrequalifier && (engine === 'elo' || engine === 'win_loss')) {
         await upsertEntry(
           tx,
           match.tournament.rankingId,

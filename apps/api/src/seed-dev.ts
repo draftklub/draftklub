@@ -334,6 +334,51 @@ async function main(): Promise<void> {
       update: {},
     });
     console.log('Tournament created');
+
+    const PREQUALIFIER_TOURNAMENT_ID = '00000000-0000-0000-0004-000000000002';
+    await prisma.tournament.upsert({
+      where: { id: PREQUALIFIER_TOURNAMENT_ID },
+      create: {
+        id: PREQUALIFIER_TOURNAMENT_ID,
+        klubSportId: tennisProfile.id,
+        rankingId: rankingOpen.id,
+        name: 'Torneio com Pré-Classificatórios',
+        description: 'Torneio piloto com pré-classificatórios entre categorias',
+        format: 'knockout',
+        hasPrequalifiers: true,
+        prequalifierBordersPerFrontier: 1,
+        registrationApproval: 'auto',
+        resultReportingMode: 'committee_only',
+        registrationOpensAt: now,
+        registrationClosesAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+        drawDate: new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000),
+        prequalifierStartDate: new Date(now.getTime() + 9 * 24 * 60 * 60 * 1000),
+        prequalifierEndDate: new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000),
+        mainStartDate: new Date(now.getTime() + 11 * 24 * 60 * 60 * 1000),
+        mainEndDate: new Date(now.getTime() + 16 * 24 * 60 * 60 * 1000),
+        status: 'draft',
+        categories: {
+          create: [
+            {
+              name: 'A',
+              order: 0,
+              minRatingExpected: 1000,
+              maxRatingExpected: 9999,
+              pointsSchemaId: pointsSchema.id,
+            },
+            {
+              name: 'B',
+              order: 1,
+              minRatingExpected: 0,
+              maxRatingExpected: 999,
+              pointsSchemaId: pointsSchema.id,
+            },
+          ],
+        },
+      },
+      update: {},
+    });
+    console.log('Prequalifier tournament created');
   }
 
   console.log('Seed completed!');

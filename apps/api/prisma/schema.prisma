@@ -482,6 +482,19 @@ model TournamentMatch {
   winnerId            String?   @map("winner_id") @db.Uuid
   matchResultId       String?   @map("match_result_id") @db.Uuid @unique
 
+  matchKind                     String    @default("main") @map("match_kind")
+  prequalifierFrontierUpper     String?   @map("prequalifier_frontier_upper")
+  prequalifierFrontierLower     String?   @map("prequalifier_frontier_lower")
+  prequalifierPairIndex         Int?      @map("prequalifier_pair_index")
+
+  tbdPlayer1Source              String?   @map("tbd_player1_source")
+  tbdPlayer1PrequalifierMatchRef String?  @map("tbd_player1_prequalifier_ref") @db.Uuid
+  tbdPlayer1Label               String?   @map("tbd_player1_label")
+
+  tbdPlayer2Source              String?   @map("tbd_player2_source")
+  tbdPlayer2PrequalifierMatchRef String?  @map("tbd_player2_prequalifier_ref") @db.Uuid
+  tbdPlayer2Label               String?   @map("tbd_player2_label")
+
   scheduledFor        DateTime? @map("scheduled_for") @db.Timestamptz
   completedAt         DateTime? @map("completed_at") @db.Timestamptz
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -492,8 +505,13 @@ model TournamentMatch {
   nextMatch           TournamentMatch?    @relation("BracketProgression", fields: [nextMatchId], references: [id])
   previousMatches     TournamentMatch[]   @relation("BracketProgression")
   matchResult         MatchResult?        @relation("TournamentMatchResult", fields: [matchResultId], references: [id])
+  tbdPlayer1Prequalifier TournamentMatch? @relation("TbdPlayer1Ref", fields: [tbdPlayer1PrequalifierMatchRef], references: [id])
+  tbdPlayer1DependentMatches TournamentMatch[] @relation("TbdPlayer1Ref")
+  tbdPlayer2Prequalifier TournamentMatch? @relation("TbdPlayer2Ref", fields: [tbdPlayer2PrequalifierMatchRef], references: [id])
+  tbdPlayer2DependentMatches TournamentMatch[] @relation("TbdPlayer2Ref")
 
   @@unique([tournamentId, bracketPosition])
+  @@index([matchKind])
   @@map("tournament_matches")
   @@schema("klub")
 }

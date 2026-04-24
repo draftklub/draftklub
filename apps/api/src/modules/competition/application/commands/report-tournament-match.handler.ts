@@ -62,6 +62,8 @@ export class ReportTournamentMatchHandler {
       }
     }
 
+    const isPrequalifier = match.matchKind === 'prequalifier';
+
     const player1Won = cmd.winnerId === match.player1Id;
     const player1Id = match.player1Id;
     const player2Id = match.player2Id;
@@ -90,7 +92,7 @@ export class ReportTournamentMatchHandler {
     const engine = match.tournament.ranking.ratingEngine;
     const config = match.tournament.ranking.ratingConfig as Record<string, unknown>;
 
-    if (isDirectConfirm && (engine === 'elo' || engine === 'win_loss')) {
+    if (!isPrequalifier && isDirectConfirm && (engine === 'elo' || engine === 'win_loss')) {
       ratingResult = this.calculator.compute(engine, config, p1RatingBefore, p2RatingBefore, player1Won);
     }
 
@@ -114,7 +116,7 @@ export class ReportTournamentMatchHandler {
           player2RatingAfter: isDirectConfirm ? ratingResult.player2NewRating : null,
           ratingDelta1: isDirectConfirm ? ratingResult.player1Delta : null,
           ratingDelta2: isDirectConfirm ? ratingResult.player2Delta : null,
-          source: 'tournament',
+          source: isPrequalifier ? 'tournament_prequalifier' : 'tournament',
           tournamentId: cmd.tournamentId,
           tournamentMatchId: cmd.matchId,
           phase: match.phase,
@@ -133,7 +135,7 @@ export class ReportTournamentMatchHandler {
       });
 
       if (isDirectConfirm) {
-        if (engine === 'elo' || engine === 'win_loss') {
+        if (!isPrequalifier && (engine === 'elo' || engine === 'win_loss')) {
           await upsertEntry(
             tx,
             match.tournament.rankingId,
