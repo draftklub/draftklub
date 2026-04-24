@@ -48,3 +48,48 @@ export function computeEloDelta(
   const k = ratingA >= config.kThreshold ? config.kFactorHigh : config.kFactor;
   return Math.round(k * (scoreA - expected));
 }
+
+// ─── Points engine ──────────────────────────────────────────────
+
+export interface TournamentFinish {
+  position: 'champion' | 'runner_up' | 'semi' | 'quarter' | 'round_of_16' | 'participant';
+}
+
+export function computePointsDelta(
+  finish: TournamentFinish,
+  config: PointsConfig,
+): number {
+  switch (finish.position) {
+    case 'champion':
+      return config.champion;
+    case 'runner_up':
+      return config.runnerUp;
+    case 'semi':
+      return config.semi;
+    case 'quarter':
+      return config.quarter;
+    case 'round_of_16':
+      return config.roundOf16;
+    default:
+      return 0;
+  }
+}
+
+// ─── Win/Loss engine ────────────────────────────────────────────
+
+export function computeWinLossDelta(
+  won: boolean,
+  config: WinLossConfig,
+): number {
+  return won ? config.win : config.loss;
+}
+
+export function computeWinLossDecay(
+  weeksInactive: number,
+  config: WinLossConfig,
+): number {
+  return Math.max(
+    config.minRating,
+    weeksInactive * config.decayPerWeek,
+  );
+}

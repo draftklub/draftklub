@@ -19,6 +19,7 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@draftklub/sport-strategies": "workspace:^",
     "@nestjs/common": "^11.1.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.1.0",

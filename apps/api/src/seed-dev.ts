@@ -170,6 +170,94 @@ async function main(): Promise<void> {
     console.log(`${userData.email} (${userData.role})`);
   }
 
+  console.log('Creating rankings...');
+  const tennisProfile = await prisma.klubSportProfile.findUnique({
+    where: { klubId_sportCode: { klubId: KLUB_ID, sportCode: 'tennis' } },
+  });
+
+  if (tennisProfile) {
+    const RANKING_OPEN_ID = '00000000-0000-0000-0002-000000000001';
+    const RANKING_MASC_ID = '00000000-0000-0000-0002-000000000002';
+
+    const rankingOpen = await prisma.klubSportRanking.upsert({
+      where: { id: RANKING_OPEN_ID },
+      create: {
+        id: RANKING_OPEN_ID,
+        klubSportId: tennisProfile.id,
+        name: 'Ranking Open',
+        type: 'singles',
+        gender: null,
+        ratingEngine: 'elo',
+        ratingConfig: { kFactor: 32, kFactorHigh: 16, kThreshold: 1400, initialRating: 1000 },
+        initialRating: 1000,
+      },
+      update: {},
+    });
+
+    const rankingMasc = await prisma.klubSportRanking.upsert({
+      where: { id: RANKING_MASC_ID },
+      create: {
+        id: RANKING_MASC_ID,
+        klubSportId: tennisProfile.id,
+        name: 'Ranking Masculino Simples',
+        type: 'singles',
+        gender: 'M',
+        ratingEngine: 'elo',
+        ratingConfig: { kFactor: 32, kFactorHigh: 16, kThreshold: 1400, initialRating: 1000 },
+        initialRating: 1000,
+      },
+      update: {},
+    });
+
+    console.log('Tennis rankings created');
+
+    const malePlayerEmails = ['joao@player.com', 'pedro@player.com', 'lucas@player.com'];
+    for (const email of malePlayerEmails) {
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) continue;
+
+      await prisma.playerRankingEntry.upsert({
+        where: { rankingId_userId: { rankingId: rankingOpen.id, userId: user.id } },
+        create: {
+          rankingId: rankingOpen.id,
+          userId: user.id,
+          rating: 1000,
+          ratingSource: 'initial',
+        },
+        update: {},
+      });
+
+      await prisma.playerRankingEntry.upsert({
+        where: { rankingId_userId: { rankingId: rankingMasc.id, userId: user.id } },
+        create: {
+          rankingId: rankingMasc.id,
+          userId: user.id,
+          rating: 1000,
+          ratingSource: 'initial',
+        },
+        update: {},
+      });
+    }
+
+    const femalePlayerEmails = ['maria@player.com', 'ana@player.com'];
+    for (const email of femalePlayerEmails) {
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) continue;
+      await prisma.playerRankingEntry.upsert({
+        where: { rankingId_userId: { rankingId: rankingOpen.id, userId: user.id } },
+        create: {
+          rankingId: rankingOpen.id,
+          userId: user.id,
+          rating: 1000,
+          ratingSource: 'initial',
+        },
+        update: {},
+      });
+    }
+
+    console.log('Players enrolled in rankings');
+  }
+
   console.log('Seed completed!');
   console.log('');
   console.log('Credentials (password: DraftKlub@Seed2026!):');

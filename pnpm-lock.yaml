@@ -23,6 +23,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@draftklub/sport-strategies':
+        specifier: workspace:^
+        version: link:../../packages/sport-strategies
       '@nestjs/common':
         specifier: ^11.1.0
         version: 11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)

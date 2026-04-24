@@ -49,6 +49,8 @@ model User {
 
   memberships     Membership[]
   roleAssignments RoleAssignment[]
+  rankingEntries    PlayerRankingEntry[] @relation("PlayerEntries")
+  matchesSubmitted  MatchResult[]        @relation("MatchesSubmitted")
 
   @@map("users")
   @@schema("identity")
@@ -220,9 +222,113 @@ model KlubSportProfile {
 
   klub   Klub         @relation("KlubSportProfiles", fields: [klubId], references: [id])
   sport  SportCatalog @relation(fields: [sportCode], references: [code])
+  rankings KlubSportRanking[] @relation("RankingProfiles")
 
   @@unique([klubId, sportCode])
   @@map("klub_sport_profiles")
+  @@schema("klub")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RANKING
+// ═══════════════════════════════════════════════════════════════
+
+model KlubSportRanking {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubSportId     String    @map("klub_sport_id") @db.Uuid
+
+  name            String
+  type            String    @default("singles")
+  gender          String?
+  ageMin          Int?      @map("age_min")
+  ageMax          Int?      @map("age_max")
+
+  ratingEngine    String    @default("elo") @map("rating_engine")
+  ratingConfig    Json      @default("{}") @map("rating_config")
+  initialRating   Int       @default(1000) @map("initial_rating")
+
+  active          Boolean   @default(true)
+  seasonId        String?   @map("season_id")
+
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+
+  klubSport       KlubSportProfile @relation("RankingProfiles", fields: [klubSportId], references: [id])
+  entries         PlayerRankingEntry[]
+  matches         MatchResult[]
+
+  @@map("klub_sport_rankings")
+  @@schema("klub")
+}
+
+model PlayerRankingEntry {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rankingId       String    @map("ranking_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+
+  rating          Int       @default(1000)
+  ratingSource    String    @default("initial") @map("rating_source")
+
+  wins            Int       @default(0)
+  losses          Int       @default(0)
+  draws           Int       @default(0)
+  gamesPlayed     Int       @default(0) @map("games_played")
+
+  lastPlayedAt    DateTime? @map("last_played_at") @db.Timestamptz
+  lastRatingChange Int      @default(0) @map("last_rating_change")
+
+  position        Int?
+
+  active          Boolean   @default(true)
+  joinedAt        DateTime  @default(now()) @map("joined_at") @db.Timestamptz
+
+  ranking         KlubSportRanking @relation(fields: [rankingId], references: [id])
+  user            User             @relation("PlayerEntries", fields: [userId], references: [id])
+
+  @@unique([rankingId, userId])
+  @@map("player_ranking_entries")
+  @@schema("klub")
+}
+
+model MatchResult {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rankingId       String    @map("ranking_id") @db.Uuid
+
+  player1Id       String    @map("player1_id") @db.Uuid
+  player2Id       String    @map("player2_id") @db.Uuid
+
+  winnerId        String?   @map("winner_id") @db.Uuid
+  score           String?
+
+  status          String    @default("pending_confirmation")
+
+  submittedById   String    @map("submitted_by_id") @db.Uuid
+  confirmedById   String?   @map("confirmed_by_id") @db.Uuid
+  confirmedAt     DateTime? @map("confirmed_at") @db.Timestamptz
+
+  validatedById   String?   @map("validated_by_id") @db.Uuid
+  validatedAt     DateTime? @map("validated_at") @db.Timestamptz
+
+  disputeReason   String?   @map("dispute_reason")
+
+  player1RatingBefore Int?  @map("player1_rating_before")
+  player2RatingBefore Int?  @map("player2_rating_before")
+  player1RatingAfter  Int?  @map("player1_rating_after")
+  player2RatingAfter  Int?  @map("player2_rating_after")
+  ratingDelta1        Int?  @map("rating_delta1")
+  ratingDelta2        Int?  @map("rating_delta2")
+
+  playedAt        DateTime  @default(now()) @map("played_at") @db.Timestamptz
+  spaceId         String?   @map("space_id") @db.Uuid
+
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+
+  ranking         KlubSportRanking @relation(fields: [rankingId], references: [id])
+  submittedBy     User             @relation("MatchesSubmitted", fields: [submittedById], references: [id])
+
+  @@map("match_results")
   @@schema("klub")
 }
 

@@ -58,8 +58,9 @@ export class PolicyEngine {
 
       case 'PLAYER':
         if (operation === 'read') return true;
+        if (domain === 'match' && ['create', 'confirm'].includes(operation)) return true;
         if (resource.ownerId != null && resource.ownerId === user.userId) return true;
-        return ['reservation', 'match'].includes(domain) && operation === 'create';
+        return domain === 'reservation' && operation === 'create';
 
       default:
         return false;

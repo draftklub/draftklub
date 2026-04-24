@@ -10,6 +10,7 @@ import { EncryptionModule } from './shared/encryption/encryption.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { KlubModule } from './modules/klub/klub.module';
 import { SportsModule } from './modules/sports/sports.module';
+import { RankingModule } from './modules/ranking/ranking.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { SportsModule } from './modules/sports/sports.module';
     IdentityModule,
     KlubModule,
     SportsModule,
+    RankingModule,
   ],
 })
 export class AppModule {}
