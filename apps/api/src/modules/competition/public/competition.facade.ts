@@ -134,8 +134,13 @@ export class CompetitionFacade {
     const roles = await this.prisma.roleAssignment.findMany({
       where: {
         userId,
-        scopeKlubId: tournament.klubSport.klubId,
-        role: { in: ['KLUB_ADMIN', 'SPORTS_COMMITTEE', 'SUPER_ADMIN'] },
+        OR: [
+          { role: 'SUPER_ADMIN' },
+          {
+            scopeKlubId: tournament.klubSport.klubId,
+            role: { in: ['KLUB_ADMIN', 'SPORTS_COMMITTEE'] },
+          },
+        ],
       },
     });
 
