@@ -14,12 +14,15 @@ interface TxLike {
   tournamentMatch: {
     update: (args: unknown) => Promise<unknown>;
     findUnique: (args: unknown) => Promise<unknown>;
+    findFirst: (args: unknown) => Promise<unknown>;
     findMany: (args: unknown) => Promise<unknown>;
+    count: (args: unknown) => Promise<number>;
   };
   tournamentEntry: {
     updateMany: (args: unknown) => Promise<unknown>;
   };
   tournament: {
+    findUnique: (args: unknown) => Promise<unknown>;
     update: (args: unknown) => Promise<unknown>;
   };
 }
@@ -202,5 +205,40 @@ export class TournamentProgressionService {
         });
       }
     }
+
+    await this.maybeTransitionToMain(tx, prequalifierMatch.tournamentId);
+  }
+
+  private async maybeTransitionToMain(tx: TxLike, tournamentId: string): Promise<void> {
+    const pendingPrequalifiers = await tx.tournamentMatch.count({
+      where: {
+        tournamentId,
+        matchKind: 'prequalifier',
+        status: { notIn: ['completed', 'walkover', 'double_walkover'] },
+      },
+    });
+
+    if (pendingPrequalifiers > 0) return;
+
+    const tournament = (await tx.tournament.findUnique({
+      where: { id: tournamentId },
+      select: { status: true },
+    })) as { status: string } | null;
+
+    if (tournament?.status !== 'prequalifying') return;
+
+    const firstMainMatch = (await tx.tournamentMatch.findFirst({
+      where: { tournamentId, matchKind: 'main' },
+      orderBy: { round: 'asc' },
+      select: { phase: true },
+    })) as { phase: string } | null;
+
+    await tx.tournament.update({
+      where: { id: tournamentId },
+      data: {
+        status: 'in_progress',
+        currentPhase: firstMainMatch?.phase ?? 'final',
+      },
+    });
   }
 }
