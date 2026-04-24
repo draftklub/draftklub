@@ -92,6 +92,7 @@ export class KlubPrismaRepository {
   async findBySlug(slug: string) {
     return this.prisma.klub.findUnique({
       where: { slug, deletedAt: null },
+      include: { config: true, sports: true },
     });
   }
 
