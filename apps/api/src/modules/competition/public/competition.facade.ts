@@ -125,6 +125,11 @@ export class CompetitionFacade {
   }
 
   async userIsCommitteeForTournament(userId: string, tournamentId: string): Promise<boolean> {
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!tournamentId || !UUID_REGEX.test(tournamentId)) {
+      return false;
+    }
+
     const tournament = await this.prisma.tournament.findUnique({
       where: { id: tournamentId },
       include: { klubSport: true },

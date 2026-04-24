@@ -41,7 +41,7 @@ export class TournamentEntriesController {
   }
 
   @Post(':entryId/approve')
-  @RequirePolicy('tournament.manage')
+  @RequirePolicy('tournament.manage', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async approve(
     @Param('tournamentId') tournamentId: string,
     @Param('entryId') entryId: string,
@@ -55,7 +55,7 @@ export class TournamentEntriesController {
   }
 
   @Patch(':entryId/category')
-  @RequirePolicy('tournament.manage')
+  @RequirePolicy('tournament.manage', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async moveCategory(
     @Param('tournamentId') tournamentId: string,
     @Param('entryId') entryId: string,

@@ -17,7 +17,7 @@ export class TournamentDrawController {
   constructor(private readonly facade: CompetitionFacade) {}
 
   @Post('draw')
-  @RequirePolicy('tournament.manage')
+  @RequirePolicy('tournament.manage', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async draw(@Param('tournamentId') tournamentId: string) {
     return this.facade.drawTournament(tournamentId);
   }
@@ -28,7 +28,7 @@ export class TournamentDrawController {
   }
 
   @Patch('reporting-mode')
-  @RequirePolicy('tournament.manage')
+  @RequirePolicy('tournament.manage', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async updateReportingMode(
     @Param('tournamentId') tournamentId: string,
     @Body() body: unknown,

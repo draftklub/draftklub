@@ -3,12 +3,26 @@ import type { ResourceContext } from './resource-context.interface';
 
 export const POLICY_KEY = 'policy';
 
+export type KlubIdResolver = 'tournament:tournamentId';
+
 export interface PolicyMetadata {
   action: string;
   extractContext?: (request: unknown) => ResourceContext;
+  resolveKlubIdFrom?: KlubIdResolver;
 }
 
-export const RequirePolicy = (
+export interface PolicyOptions {
+  extractContext?: (request: unknown) => ResourceContext;
+  resolveKlubIdFrom?: KlubIdResolver;
+}
+
+export function RequirePolicy(
   action: string,
-  extractContext?: (request: unknown) => ResourceContext,
-) => SetMetadata<string, PolicyMetadata>(POLICY_KEY, { action, extractContext });
+  optionsOrExtract?: ((request: unknown) => ResourceContext) | PolicyOptions,
+) {
+  const metadata: PolicyMetadata =
+    typeof optionsOrExtract === 'function'
+      ? { action, extractContext: optionsOrExtract }
+      : { action, ...(optionsOrExtract ?? {}) };
+  return SetMetadata<string, PolicyMetadata>(POLICY_KEY, metadata);
+}

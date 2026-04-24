@@ -50,7 +50,7 @@ export class TournamentMatchesController {
   }
 
   @Patch('result')
-  @RequirePolicy('tournament.manage')
+  @RequirePolicy('tournament.manage', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async edit(
     @Param('tournamentId') tournamentId: string,
     @Param('matchId') matchId: string,
@@ -68,7 +68,7 @@ export class TournamentMatchesController {
   }
 
   @Post('walkover')
-  @RequirePolicy('tournament.manage')
+  @RequirePolicy('tournament.manage', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async walkover(
     @Param('tournamentId') tournamentId: string,
     @Param('matchId') matchId: string,
@@ -86,7 +86,7 @@ export class TournamentMatchesController {
   }
 
   @Post('double-walkover')
-  @RequirePolicy('tournament.manage')
+  @RequirePolicy('tournament.manage', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async doubleWalkover(
     @Param('tournamentId') tournamentId: string,
     @Param('matchId') matchId: string,
