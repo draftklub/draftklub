@@ -6,7 +6,9 @@ import { FirebaseModule } from './bootstrap/firebase/firebase.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { HealthModule } from './shared/health/health.module';
 import { AuthModule } from './shared/auth/auth.module';
+import { EncryptionModule } from './shared/encryption/encryption.module';
 import { IdentityModule } from './modules/identity/identity.module';
+import { KlubModule } from './modules/klub/klub.module';
 
 @Module({
   imports: [
@@ -32,9 +34,11 @@ import { IdentityModule } from './modules/identity/identity.module';
     }),
     FirebaseModule,
     AuthModule,
+    EncryptionModule,
     PrismaModule,
     HealthModule,
     IdentityModule,
+    KlubModule,
   ],
 })
 export class AppModule {}

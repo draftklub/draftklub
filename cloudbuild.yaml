@@ -113,7 +113,7 @@ steps:
       - '--project=$_PROJECT_ID'
       - '--region=$_REGION'
       - '--image=$_API_IMAGE:$COMMIT_SHA'
-      - '--set-secrets=DATABASE_URL=database-url:latest'
+      - '--set-secrets=DATABASE_URL=database-url:latest,ENCRYPTION_KEY=encryption-key:latest'
       - '--set-env-vars=NODE_ENV=production,LOG_LEVEL=info,OTEL_ENABLED=false,OTEL_SERVICE_NAME=draftklub-api'
     waitFor: ['migrate']
 

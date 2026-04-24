@@ -8,6 +8,7 @@ export const appConfigSchema = z.object({
   OTEL_ENABLED: z.coerce.boolean().default(false),
   OTEL_SERVICE_NAME: z.string().default('draftklub-api'),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
+  ENCRYPTION_KEY: z.string().min(64).optional(),
 });
 
 export type AppConfig = z.infer<typeof appConfigSchema>;

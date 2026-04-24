@@ -5,7 +5,7 @@ previewFeatures = []
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["identity", "audit"]
+  schemas  = ["identity", "audit", "klub", "space"]
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -64,6 +64,7 @@ model Membership {
   expiresAt DateTime? @map("expires_at") @db.Timestamptz
 
   user User @relation(fields: [userId], references: [id])
+  klub Klub @relation("KlubMemberships", fields: [klubId], references: [id], map: "memberships_klub_id_fkey")
 
   @@unique([userId, klubId])
   @@map("memberships")
@@ -83,4 +84,215 @@ model RoleAssignment {
 
   @@map("role_assignments")
   @@schema("identity")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KLUB
+// ═══════════════════════════════════════════════════════════════
+
+model Klub {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // ─── Identidade ───────────────────────────────────────────
+  name        String
+  slug        String    @unique
+  description String?
+  avatarUrl   String?   @map("avatar_url")
+  coverUrl    String?   @map("cover_url")
+
+  // ─── Tipo ─────────────────────────────────────────────────
+  type        String    @default("sports_club")
+  // sports_club | condo | school | public_space | academy | individual
+
+  // ─── Dados legais ─────────────────────────────────────────
+  entityType          String?   @map("entity_type")   // pj | pf
+  documentEncrypted   String?   @map("document_encrypted")
+  documentHint        String?   @map("document_hint") // últimos 4 dígitos
+  documentIv          String?   @map("document_iv")   // IV do AES-GCM
+  legalName           String?   @map("legal_name")
+  kycStatus           String    @default("pending") @map("kyc_status")
+  // pending | approved | rejected
+
+  // ─── Localização ──────────────────────────────────────────
+  country     String    @default("BR")
+  state       String?
+  city        String?
+  address     String?
+  zipCode     String?   @map("zip_code")
+  timezone    String    @default("America/Sao_Paulo")
+  latitude    Decimal?  @db.Decimal(10, 8)
+  longitude   Decimal?  @db.Decimal(11, 8)
+
+  // ─── Contato ──────────────────────────────────────────────
+  email       String?
+  phone       String?
+  website     String?
+
+  // ─── Comodidades (JSONB flexível) ─────────────────────────
+  amenities   Json      @default("{}")
+  // {"parking": true, "locker": false, "wifi": true, ...}
+
+  // ─── Plano e billing ──────────────────────────────────────
+  plan        String    @default("trial")
+  // trial | starter | pro | elite | enterprise
+  status      String    @default("trial")
+  // trial | active | suspended | churned | pending_payment
+  trialEndsAt DateTime? @map("trial_ends_at") @db.Timestamptz
+
+  // ─── Limites operacionais ─────────────────────────────────
+  maxMembers  Int       @default(50)    @map("max_members")
+  maxSports   Int       @default(2)     @map("max_sports")
+  maxCourts   Int       @default(3)     @map("max_courts")
+  txFeeRate   Decimal   @default(0.025) @map("tx_fee_rate") @db.Decimal(5, 4)
+
+  // ─── Filiais ──────────────────────────────────────────────
+  parentKlubId  String?  @map("parent_klub_id") @db.Uuid
+  isGroup       Boolean  @default(false) @map("is_group")
+  billingKlubId String?  @map("billing_klub_id") @db.Uuid
+  // null = o próprio Klub é responsável pelo billing
+
+  // ─── Onboarding ───────────────────────────────────────────
+  onboardingSource String @default("self_service") @map("onboarding_source")
+  // self_service | sales_led
+  createdById String?   @map("created_by_id") @db.Uuid
+
+  // ─── Auditoria ────────────────────────────────────────────
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  config         KlubConfig?
+  sports         KlubSport[]
+  sportInterests KlubSportInterest[]
+  media          KlubMedia[]
+  memberships    Membership[] @relation("KlubMemberships")
+
+  @@map("klubs")
+  @@schema("klub")
+}
+
+model KlubConfig {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId  String  @unique @map("klub_id") @db.Uuid
+
+  // ─── Política de reserva ──────────────────────────────────
+  bookingPolicy           String  @default("members_only") @map("booking_policy")
+  // members_only | members_and_guests | public
+
+  // ─── Política de cancelamento ─────────────────────────────
+  cancellationWindowHours Int     @default(24)  @map("cancellation_window_hours")
+  cancellationFeePercent  Decimal @default(0)   @map("cancellation_fee_percent") @db.Decimal(5, 2)
+
+  // ─── Política de no-show ──────────────────────────────────
+  noShowFeeEnabled  Boolean @default(false) @map("no_show_fee_enabled")
+  noShowFeeAmount   Decimal @default(0)     @map("no_show_fee_amount") @db.Decimal(10, 2)
+
+  // ─── Pagamento ────────────────────────────────────────────
+  gatewayAccountId String? @map("gateway_account_id")
+
+  // ─── Horários de funcionamento ────────────────────────────
+  openingHour Int     @default(6)             @map("opening_hour")
+  closingHour Int     @default(23)            @map("closing_hour")
+  openDays    String  @default("1,2,3,4,5,6,7") @map("open_days")
+
+  klub  Klub  @relation(fields: [klubId], references: [id])
+
+  @@map("klub_configs")
+  @@schema("klub")
+}
+
+model KlubSport {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId    String   @map("klub_id") @db.Uuid
+  sportCode String   @map("sport_code")
+  // tennis | padel | squash | beach_tennis
+  status    String   @default("active")
+  addedAt   DateTime @default(now()) @map("added_at") @db.Timestamptz
+
+  klub  Klub  @relation(fields: [klubId], references: [id])
+
+  @@unique([klubId, sportCode])
+  @@map("klub_sports")
+  @@schema("klub")
+}
+
+model KlubSportInterest {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId    String   @map("klub_id") @db.Uuid
+  sportName String   @map("sport_name")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  klub  Klub  @relation(fields: [klubId], references: [id])
+
+  @@map("klub_sport_interests")
+  @@schema("klub")
+}
+
+model KlubRequest {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  type             String    @default("sports_club")
+  city             String
+  state            String
+  contactName      String    @map("contact_name")
+  contactEmail     String    @map("contact_email")
+  contactPhone     String?   @map("contact_phone")
+  sportCodes       String[]  @map("sport_codes")
+  estimatedMembers Int?      @map("estimated_members")
+  message          String?
+  status           String    @default("pending")
+  // pending | approved | rejected | converted
+  convertedKlubId  String?   @map("converted_klub_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  reviewedAt       DateTime? @map("reviewed_at") @db.Timestamptz
+  reviewedById     String?   @map("reviewed_by_id") @db.Uuid
+
+  @@map("klub_requests")
+  @@schema("klub")
+}
+
+model KlubMedia {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId    String   @map("klub_id") @db.Uuid
+  type      String
+  // photo | video | cover | logo
+  url       String
+  order     Int      @default(0)
+  caption   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  klub  Klub  @relation(fields: [klubId], references: [id])
+
+  @@map("klub_media")
+  @@schema("klub")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SPACE
+// ═══════════════════════════════════════════════════════════════
+
+model Space {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId      String    @map("klub_id") @db.Uuid
+  name        String
+  // ex: "Quadra 1", "Quadra Central", "Sala A"
+  type        String    @default("court")
+  // court | room | pool | field | other
+  sportCode   String?   @map("sport_code")
+  // tennis | padel | squash | beach_tennis | null (pra spaces não-esportivos)
+  surface     String?
+  // clay | hard | grass | synthetic | carpet | null
+  indoor      Boolean   @default(false)
+  hasLighting Boolean   @default(false) @map("has_lighting")
+  maxPlayers  Int       @default(4)     @map("max_players")
+  description String?
+  amenities   Json      @default("{}")
+  status      String    @default("active")
+  // active | maintenance | inactive
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  @@map("spaces")
+  @@schema("space")
 }
