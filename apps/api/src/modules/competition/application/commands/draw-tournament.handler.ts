@@ -1,15 +1,17 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import {
-  BracketGeneratorService,
-  type PlayerSeed,
-  type GeneratedMatch,
-} from '../../domain/services/bracket-generator.service';
-import {
   PrequalifierGeneratorService,
-  type CategoryWithPlayers,
   type PrequalifierPairing,
 } from '../../domain/services/prequalifier-generator.service';
+import type {
+  CategoryWithPlayers,
+  DrawContext,
+  PlayerSeed,
+  TournamentFormatStrategy,
+} from '../../domain/services/strategies/tournament-format.strategy';
+import { KnockoutStrategy } from '../../domain/services/strategies/knockout.strategy';
+import { RoundRobinStrategy } from '../../domain/services/strategies/round-robin.strategy';
 
 export interface DrawTournamentCommand {
   tournamentId: string;
@@ -21,29 +23,7 @@ interface TbdSlotInfo {
   label: string;
 }
 
-interface MainMatchRecord {
-  categoryId: string;
-  phase: string;
-  round: number;
-  bracketPosition: string;
-  slotTop: number;
-  slotBottom: number;
-  player1Id: string | null;
-  player2Id: string | null;
-  seed1: number | null;
-  seed2: number | null;
-  isBye: boolean;
-  nextBracketPosition: string | null;
-  nextMatchSlot: 'top' | 'bottom' | null;
-  tbdPlayer1Source: string | null;
-  tbdPlayer1PrequalifierTempId: string | null;
-  tbdPlayer1Label: string | null;
-  tbdPlayer2Source: string | null;
-  tbdPlayer2PrequalifierTempId: string | null;
-  tbdPlayer2Label: string | null;
-}
-
-interface PrequalifierMatchRecord {
+interface PrequalifierRecord {
   tempId: string;
   categoryId: string;
   bracketPosition: string;
@@ -56,13 +36,23 @@ interface PrequalifierMatchRecord {
   prequalifierPairIndex: number;
 }
 
+function isTbdUserId(userId: string | null, prefix: string): boolean {
+  return userId?.startsWith(prefix) ?? false;
+}
+
 @Injectable()
 export class DrawTournamentHandler {
+  private readonly strategies = new Map<string, TournamentFormatStrategy>();
+
   constructor(
     private readonly prisma: PrismaService,
-    private readonly bracketGenerator: BracketGeneratorService,
     private readonly prequalifierGenerator: PrequalifierGeneratorService,
-  ) {}
+    knockoutStrategy: KnockoutStrategy,
+    roundRobinStrategy: RoundRobinStrategy,
+  ) {
+    this.strategies.set(knockoutStrategy.format, knockoutStrategy);
+    this.strategies.set(roundRobinStrategy.format, roundRobinStrategy);
+  }
 
   async execute(cmd: DrawTournamentCommand) {
     const tournament = await this.prisma.tournament.findUnique({
@@ -82,11 +72,13 @@ export class DrawTournamentHandler {
     if (tournament.status === 'in_progress' || tournament.status === 'prequalifying') {
       throw new BadRequestException('Tournament already drawn');
     }
-    if (tournament.format !== 'knockout') {
-      throw new BadRequestException(`Only 'knockout' supported. Other formats in day 9D`);
-    }
     if (tournament.entries.length < 2) {
       throw new BadRequestException('Need at least 2 entries to draw');
+    }
+
+    const strategy = this.strategies.get(tournament.format);
+    if (!strategy) {
+      throw new BadRequestException(`Unsupported tournament format: ${tournament.format}`);
     }
 
     const existingMatches = await this.prisma.tournamentMatch.count({
@@ -104,7 +96,7 @@ export class DrawTournamentHandler {
     });
     const ratingByUser = new Map(rankingEntries.map((r) => [r.userId, r.rating]));
 
-    const categoriesWithPlayers: CategoryWithPlayers[] = tournament.categories.map((cat) => {
+    const categoriesWithRealPlayers: CategoryWithPlayers[] = tournament.categories.map((cat) => {
       const catEntries = tournament.entries.filter((e) => e.categoryId === cat.id);
       const sortedByRating = [...catEntries].sort((a, b) => {
         const ra = ratingByUser.get(a.userId) ?? a.ratingAtEntry ?? 1000;
@@ -124,7 +116,6 @@ export class DrawTournamentHandler {
     });
 
     const prequalifierPairings: (PrequalifierPairing & { tempId: string })[] = [];
-
     if (tournament.hasPrequalifiers) {
       if (!tournament.prequalifierBordersPerFrontier) {
         throw new BadRequestException(
@@ -132,7 +123,7 @@ export class DrawTournamentHandler {
         );
       }
       const pairings = this.prequalifierGenerator.generate(
-        categoriesWithPlayers,
+        categoriesWithRealPlayers,
         tournament.prequalifierBordersPerFrontier,
       );
       pairings.forEach((p, idx) => {
@@ -140,23 +131,20 @@ export class DrawTournamentHandler {
       });
     }
 
-    const mainMatchRecords: MainMatchRecord[] = [];
+    const categoriesForStrategy: CategoryWithPlayers[] = [];
+    const tbdSlotsByCategory = new Map<string, TbdSlotInfo[]>();
+    const tbdPrefix = 'TBD-';
 
-    for (const category of categoriesWithPlayers) {
+    for (const category of categoriesWithRealPlayers) {
       const directPlayers: PlayerSeed[] = [];
       const tbdSlots: TbdSlotInfo[] = [];
 
       if (tournament.hasPrequalifiers) {
-        const pairingsThisIsLower = prequalifierPairings.filter(
-          (p) => p.lowerCategoryId === category.id,
-        );
-        const pairingsThisIsUpper = prequalifierPairings.filter(
-          (p) => p.upperCategoryId === category.id,
-        );
-
+        const pairingsLower = prequalifierPairings.filter((p) => p.lowerCategoryId === category.id);
+        const pairingsUpper = prequalifierPairings.filter((p) => p.upperCategoryId === category.id);
         const excludeIds = new Set<string>([
-          ...pairingsThisIsLower.map((p) => p.lowerPlayerId),
-          ...pairingsThisIsUpper.map((p) => p.upperPlayerId),
+          ...pairingsLower.map((p) => p.lowerPlayerId),
+          ...pairingsUpper.map((p) => p.upperPlayerId),
         ]);
 
         category.players.forEach((p) => {
@@ -166,14 +154,14 @@ export class DrawTournamentHandler {
           p.seed = idx + 1;
         });
 
-        pairingsThisIsUpper.forEach((p) => {
+        pairingsUpper.forEach((p) => {
           tbdSlots.push({
             source: 'prequalifier_winner',
             prequalifierTempId: p.tempId,
             label: `Vencedor Pré ${p.frontierUpper}/${p.frontierLower} #${p.pairIndex}`,
           });
         });
-        pairingsThisIsLower.forEach((p) => {
+        pairingsLower.forEach((p) => {
           tbdSlots.push({
             source: 'prequalifier_loser',
             prequalifierTempId: p.tempId,
@@ -184,69 +172,44 @@ export class DrawTournamentHandler {
         directPlayers.push(...category.players);
       }
 
-      const totalInBracket = directPlayers.length + tbdSlots.length;
-      if (totalInBracket < 2) continue;
-
-      const tbdPrefix = `TBD-${category.id}-`;
-      const pseudoPlayers: PlayerSeed[] = directPlayers.map((p) => ({ ...p }));
+      const players: PlayerSeed[] = directPlayers.map((p) => ({ ...p }));
       tbdSlots.forEach((_slot, idx) => {
-        pseudoPlayers.push({
-          userId: `${tbdPrefix}${idx}`,
+        players.push({
+          userId: `${tbdPrefix}${category.id}-${idx}`,
           rating: 0,
-          seed: pseudoPlayers.length + 1,
+          seed: players.length + 1,
         });
       });
 
-      const generatedMatches: GeneratedMatch[] = this.bracketGenerator.generate(pseudoPlayers);
-
-      generatedMatches.forEach((m) => {
-        let p1Id: string | null = m.player1Id;
-        let p2Id: string | null = m.player2Id;
-        let tbd1: TbdSlotInfo | null = null;
-        let tbd2: TbdSlotInfo | null = null;
-
-        if (m.player1Id?.startsWith(tbdPrefix)) {
-          const idxStr = m.player1Id.slice(tbdPrefix.length);
-          const idx = parseInt(idxStr, 10);
-          tbd1 = tbdSlots[idx] ?? null;
-          p1Id = null;
-        }
-        if (m.player2Id?.startsWith(tbdPrefix)) {
-          const idxStr = m.player2Id.slice(tbdPrefix.length);
-          const idx = parseInt(idxStr, 10);
-          tbd2 = tbdSlots[idx] ?? null;
-          p2Id = null;
-        }
-
-        mainMatchRecords.push({
-          categoryId: category.id,
-          phase: m.phase,
-          round: m.round,
-          bracketPosition: m.bracketPosition,
-          slotTop: m.slotTop,
-          slotBottom: m.slotBottom,
-          player1Id: p1Id,
-          player2Id: p2Id,
-          seed1: p1Id ? m.seed1 : null,
-          seed2: p2Id ? m.seed2 : null,
-          isBye: m.isBye,
-          nextBracketPosition: m.nextBracketPosition,
-          nextMatchSlot: m.nextMatchSlot,
-          tbdPlayer1Source: tbd1?.source ?? null,
-          tbdPlayer1PrequalifierTempId: tbd1?.prequalifierTempId ?? null,
-          tbdPlayer1Label: tbd1?.label ?? null,
-          tbdPlayer2Source: tbd2?.source ?? null,
-          tbdPlayer2PrequalifierTempId: tbd2?.prequalifierTempId ?? null,
-          tbdPlayer2Label: tbd2?.label ?? null,
-        });
+      tbdSlotsByCategory.set(category.id, tbdSlots);
+      categoriesForStrategy.push({
+        id: category.id,
+        name: category.name,
+        order: category.order,
+        players,
       });
     }
 
-    if (mainMatchRecords.length === 0 && prequalifierPairings.length === 0) {
+    const drawContext: DrawContext = {
+      tournamentId: cmd.tournamentId,
+      format: tournament.format,
+      hasPrequalifiers: tournament.hasPrequalifiers,
+      groupsConfig: tournament.groupsConfig as DrawContext['groupsConfig'],
+      categories: categoriesForStrategy,
+    };
+
+    const validation = strategy.validate(drawContext);
+    if (!validation.ok) {
+      throw new BadRequestException(validation.errors?.join('; ') ?? 'Invalid draw context');
+    }
+
+    const strategyMatches = strategy.generateMatches(drawContext);
+
+    if (strategyMatches.length === 0 && prequalifierPairings.length === 0) {
       throw new BadRequestException('No category has enough entries to draw');
     }
 
-    const prequalifierRecords: PrequalifierMatchRecord[] = prequalifierPairings.map((p) => ({
+    const prequalifierRecords: PrequalifierRecord[] = prequalifierPairings.map((p) => ({
       tempId: p.tempId,
       categoryId: p.upperCategoryId,
       bracketPosition: `PRE-${p.frontierUpper}-${p.frontierLower}-${p.pairIndex}`,
@@ -289,61 +252,81 @@ export class DrawTournamentHandler {
 
       const mainCreatedByKey = new Map<string, string>();
 
-      for (const rec of mainMatchRecords) {
-        const hasBothPlayers = rec.player1Id != null && rec.player2Id != null;
-        const initialStatus = rec.isBye
+      for (const m of strategyMatches) {
+        const tbdSlots = tbdSlotsByCategory.get(m.categoryId) ?? [];
+
+        let p1: string | null = m.player1Id;
+        let p2: string | null = m.player2Id;
+        let tbd1: TbdSlotInfo | null = null;
+        let tbd2: TbdSlotInfo | null = null;
+
+        if (m.player1Id && isTbdUserId(m.player1Id, tbdPrefix)) {
+          const idxStr = m.player1Id.slice(tbdPrefix.length).split('-').pop() ?? '0';
+          tbd1 = tbdSlots[parseInt(idxStr, 10)] ?? null;
+          p1 = null;
+        }
+        if (m.player2Id && isTbdUserId(m.player2Id, tbdPrefix)) {
+          const idxStr = m.player2Id.slice(tbdPrefix.length).split('-').pop() ?? '0';
+          tbd2 = tbdSlots[parseInt(idxStr, 10)] ?? null;
+          p2 = null;
+        }
+
+        const hasBothPlayers = p1 != null && p2 != null;
+        const initialStatus = m.isBye
           ? 'bye'
-          : hasBothPlayers && rec.round === 1
+          : hasBothPlayers && m.round === 1
             ? 'scheduled'
             : 'pending';
 
         const created = await tx.tournamentMatch.create({
           data: {
             tournamentId: cmd.tournamentId,
-            categoryId: rec.categoryId,
-            matchKind: 'main',
-            phase: rec.phase,
-            round: rec.round,
-            bracketPosition: rec.bracketPosition,
-            slotTop: rec.slotTop,
-            slotBottom: rec.slotBottom,
-            player1Id: rec.player1Id,
-            player2Id: rec.player2Id,
-            seed1: rec.seed1,
-            seed2: rec.seed2,
-            isBye: rec.isBye,
+            categoryId: m.categoryId,
+            matchKind: m.matchKind,
+            phase: m.phase,
+            round: m.round,
+            bracketPosition: m.bracketPosition,
+            slotTop: m.slotTop,
+            slotBottom: m.slotBottom,
+            player1Id: p1,
+            player2Id: p2,
+            seed1: p1 != null ? m.seed1 : null,
+            seed2: p2 != null ? m.seed2 : null,
+            isBye: m.isBye,
             status: initialStatus,
-            winnerId: rec.isBye ? (rec.player1Id ?? rec.player2Id) : null,
-            completedAt: rec.isBye ? new Date() : null,
-            tbdPlayer1Source: rec.tbdPlayer1Source,
-            tbdPlayer1PrequalifierMatchRef: rec.tbdPlayer1PrequalifierTempId
-              ? (tempIdToRealId.get(rec.tbdPlayer1PrequalifierTempId) ?? null)
+            winnerId: m.isBye ? (p1 ?? p2) : null,
+            completedAt: m.isBye ? new Date() : null,
+            tbdPlayer1Source: tbd1?.source ?? null,
+            tbdPlayer1PrequalifierMatchRef: tbd1?.prequalifierTempId
+              ? (tempIdToRealId.get(tbd1.prequalifierTempId) ?? null)
               : null,
-            tbdPlayer1Label: rec.tbdPlayer1Label,
-            tbdPlayer2Source: rec.tbdPlayer2Source,
-            tbdPlayer2PrequalifierMatchRef: rec.tbdPlayer2PrequalifierTempId
-              ? (tempIdToRealId.get(rec.tbdPlayer2PrequalifierTempId) ?? null)
+            tbdPlayer1Label: tbd1?.label ?? null,
+            tbdPlayer2Source: tbd2?.source ?? null,
+            tbdPlayer2PrequalifierMatchRef: tbd2?.prequalifierTempId
+              ? (tempIdToRealId.get(tbd2.prequalifierTempId) ?? null)
               : null,
-            tbdPlayer2Label: rec.tbdPlayer2Label,
+            tbdPlayer2Label: tbd2?.label ?? null,
           },
         });
-        mainCreatedByKey.set(`${rec.categoryId}::${rec.bracketPosition}`, created.id);
+        mainCreatedByKey.set(`${m.categoryId}::${m.bracketPosition}`, created.id);
       }
 
-      for (const rec of mainMatchRecords) {
-        if (!rec.nextBracketPosition) continue;
-        const currId = mainCreatedByKey.get(`${rec.categoryId}::${rec.bracketPosition}`);
-        const nextId = mainCreatedByKey.get(`${rec.categoryId}::${rec.nextBracketPosition}`);
+      for (const m of strategyMatches) {
+        if (!m.nextBracketPosition) continue;
+        const currId = mainCreatedByKey.get(`${m.categoryId}::${m.bracketPosition}`);
+        const nextId = mainCreatedByKey.get(`${m.categoryId}::${m.nextBracketPosition}`);
         if (!currId || !nextId) continue;
         await tx.tournamentMatch.update({
           where: { id: currId },
-          data: { nextMatchId: nextId, nextMatchSlot: rec.nextMatchSlot },
+          data: { nextMatchId: nextId, nextMatchSlot: m.nextMatchSlot },
         });
 
-        if (rec.isBye) {
-          const winnerId = rec.player1Id ?? rec.player2Id;
+        if (m.isBye) {
+          const winnerId = m.player1Id && !isTbdUserId(m.player1Id, tbdPrefix)
+            ? m.player1Id
+            : (m.player2Id && !isTbdUserId(m.player2Id, tbdPrefix) ? m.player2Id : null);
           if (winnerId) {
-            const slotField = rec.nextMatchSlot === 'top' ? 'player1Id' : 'player2Id';
+            const slotField = m.nextMatchSlot === 'top' ? 'player1Id' : 'player2Id';
             await tx.tournamentMatch.update({
               where: { id: nextId },
               data: { [slotField]: winnerId },
@@ -360,14 +343,12 @@ export class DrawTournamentHandler {
         data: { status: 'playing', seededAt: new Date() },
       });
 
-      const newStatus = tournament.hasPrequalifiers ? 'prequalifying' : 'in_progress';
-      const firstPhase = tournament.hasPrequalifiers
-        ? 'prequalifier'
-        : (mainMatchRecords.find((r) => r.round === 1)?.phase ?? null);
+      const newStatus = strategy.getInitialStatus(tournament.hasPrequalifiers);
+      const newPhase = strategy.getInitialPhase(strategyMatches, tournament.hasPrequalifiers);
 
       await tx.tournament.update({
         where: { id: cmd.tournamentId },
-        data: { status: newStatus, currentPhase: firstPhase },
+        data: { status: newStatus, currentPhase: newPhase },
       });
 
       return tx.tournamentMatch.findMany({

@@ -250,6 +250,17 @@ model KlubSportRanking {
   ratingConfig    Json      @default("{}") @map("rating_config")
   initialRating   Int       @default(1000) @map("initial_rating")
 
+  includesCasualMatches     Boolean   @default(true) @map("includes_casual_matches")
+  includesTournamentMatches Boolean   @default(true) @map("includes_tournament_matches")
+  includesTournamentPoints  Boolean   @default(false) @map("includes_tournament_points")
+
+  orderBy                   String    @default("rating") @map("order_by")
+  combinedWeight            Json?     @map("combined_weight")
+
+  windowType                String    @default("all_time") @map("window_type")
+  windowSize                Int?      @map("window_size")
+  windowStartDate           DateTime? @map("window_start_date") @db.Timestamptz
+
   active          Boolean   @default(true)
   seasonId        String?   @map("season_id")
 
@@ -282,6 +293,9 @@ model PlayerRankingEntry {
   lastRatingChange Int      @default(0) @map("last_rating_change")
 
   position        Int?
+
+  tournamentPoints        Int       @default(0) @map("tournament_points")
+  lastTournamentAppliedAt DateTime? @map("last_tournament_applied_at") @db.Timestamptz
 
   active          Boolean   @default(true)
   joinedAt        DateTime  @default(now()) @map("joined_at") @db.Timestamptz
@@ -410,10 +424,16 @@ model Tournament {
 
   scheduleConfig          Json      @default("{}") @map("schedule_config")
 
+  tieBreakRule            Json?     @default("[\"wins\",\"head_to_head\",\"set_diff\",\"game_diff\"]") @map("tie_break_rule")
+  groupsConfig            Json?     @map("groups_config")
+
   status                  String    @default("draft")
   currentPhase            String?   @map("current_phase")
 
   resultReportingMode     String    @default("committee_only") @map("result_reporting_mode")
+
+  pointsApplied           Boolean   @default(false) @map("points_applied")
+  pointsAppliedAt         DateTime? @map("points_applied_at") @db.Timestamptz
 
   createdById             String?   @map("created_by_id") @db.Uuid
   createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -495,6 +515,9 @@ model TournamentMatch {
   tbdPlayer2PrequalifierMatchRef String?  @map("tbd_player2_prequalifier_ref") @db.Uuid
   tbdPlayer2Label               String?   @map("tbd_player2_label")
 
+  spaceId             String?   @map("space_id") @db.Uuid
+  scheduleWarning     String?   @map("schedule_warning")
+
   scheduledFor        DateTime? @map("scheduled_for") @db.Timestamptz
   completedAt         DateTime? @map("completed_at") @db.Timestamptz
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -502,6 +525,7 @@ model TournamentMatch {
 
   tournament          Tournament          @relation(fields: [tournamentId], references: [id])
   category            TournamentCategory  @relation(fields: [categoryId], references: [id])
+  space               Space?              @relation(fields: [spaceId], references: [id])
   nextMatch           TournamentMatch?    @relation("BracketProgression", fields: [nextMatchId], references: [id])
   previousMatches     TournamentMatch[]   @relation("BracketProgression")
   matchResult         MatchResult?        @relation("TournamentMatchResult", fields: [matchResultId], references: [id])
@@ -645,6 +669,8 @@ model Space {
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  tournamentMatches TournamentMatch[]
 
   @@map("spaces")
   @@schema("space")
