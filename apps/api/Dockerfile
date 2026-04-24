@@ -8,6 +8,7 @@ RUN corepack enable && corepack prepare pnpm@10.6.5 --activate
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/tsconfig/package.json ./packages/tsconfig/
+COPY packages/sport-strategies/package.json ./packages/sport-strategies/
 COPY apps/api/package.json ./apps/api/
 
 RUN pnpm install --frozen-lockfile --filter @draftklub/api...
@@ -24,6 +25,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY . .
 
+RUN pnpm --filter @draftklub/sport-strategies build
 RUN cd apps/api && pnpm prisma generate
 RUN cd apps/api && pnpm build
 
@@ -45,6 +47,8 @@ COPY --from=builder --chown=nestjs:nodejs /app/apps/api/node_modules ./apps/api/
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/prisma ./apps/api/prisma
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/prisma.config.ts ./apps/api/prisma.config.ts
+COPY --from=builder --chown=nestjs:nodejs /app/packages/sport-strategies/package.json ./packages/sport-strategies/package.json
+COPY --from=builder --chown=nestjs:nodejs /app/packages/sport-strategies/dist ./packages/sport-strategies/dist
 
 WORKDIR /app/apps/api
 
