@@ -124,6 +124,7 @@ export class TournamentProgressionService {
       where: { id: match.nextMatchId },
       data: { [slotField]: winnerId },
     });
+    await this.markScheduledIfReady(tx, match.nextMatchId);
 
     await tx.tournament.update({
       where: { id: match.tournamentId },
@@ -142,6 +143,7 @@ export class TournamentProgressionService {
       where: { id: match.nextMatchId },
       data: { [slotField]: winnerId },
     });
+    await this.markScheduledIfReady(tx, match.nextMatchId);
   }
 
   async resolvePrequalifierSlots(
@@ -195,18 +197,26 @@ export class TournamentProgressionService {
         where: { id: dep.id },
         data: updates,
       });
-
-      const newP1 = 'player1Id' in updates ? (updates.player1Id as string | null) : dep.player1Id;
-      const newP2 = 'player2Id' in updates ? (updates.player2Id as string | null) : dep.player2Id;
-      if (newP1 && newP2 && dep.status === 'pending') {
-        await tx.tournamentMatch.update({
-          where: { id: dep.id },
-          data: { status: 'scheduled' },
-        });
-      }
+      await this.markScheduledIfReady(tx, dep.id);
     }
 
     await this.maybeTransitionToMain(tx, prequalifierMatch.tournamentId);
+  }
+
+  private async markScheduledIfReady(tx: TxLike, matchId: string): Promise<void> {
+    const m = (await tx.tournamentMatch.findUnique({
+      where: { id: matchId },
+      select: { status: true, player1Id: true, player2Id: true },
+    })) as { status: string; player1Id: string | null; player2Id: string | null } | null;
+
+    if (!m) return;
+    if (m.status !== 'pending') return;
+    if (!m.player1Id || !m.player2Id) return;
+
+    await tx.tournamentMatch.update({
+      where: { id: matchId },
+      data: { status: 'scheduled' },
+    });
   }
 
   private async maybeTransitionToMain(tx: TxLike, tournamentId: string): Promise<void> {

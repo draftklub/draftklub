@@ -95,3 +95,69 @@ describe('TournamentProgressionService.resolvePrequalifierSlots', () => {
     });
   });
 });
+
+describe('TournamentProgressionService.advance — pending→scheduled transition', () => {
+  let service: TournamentProgressionService;
+
+  const advanceCtx = {
+    id: 'sf-1',
+    tournamentId: 'tour-1',
+    phase: 'semifinals',
+    player1Id: 'p1',
+    player2Id: 'p2',
+    nextMatchId: 'final-match',
+    nextMatchSlot: 'top',
+  };
+
+  beforeEach(() => {
+    service = new TournamentProgressionService();
+  });
+
+  it('vira scheduled quando nextMatch ja tinha o outro player definido', async () => {
+    const tx = makeTx();
+    tx.tournamentMatch.findUnique.mockResolvedValueOnce({
+      status: 'pending',
+      player1Id: 'winner-prev',
+      player2Id: 'p1',
+    });
+
+    await service.advance(tx, advanceCtx, 'p1');
+
+    expect(tx.tournamentMatch.update).toHaveBeenCalledWith({
+      where: { id: 'final-match' },
+      data: { status: 'scheduled' },
+    });
+  });
+
+  it('continua pending se nextMatch so tem um player definido', async () => {
+    const tx = makeTx();
+    tx.tournamentMatch.findUnique.mockResolvedValueOnce({
+      status: 'pending',
+      player1Id: 'p1',
+      player2Id: null,
+    });
+
+    await service.advance(tx, advanceCtx, 'p1');
+
+    const scheduledCalls = tx.tournamentMatch.update.mock.calls.filter(
+      ([args]) => (args as { data: { status?: string } }).data.status === 'scheduled',
+    );
+    expect(scheduledCalls).toHaveLength(0);
+  });
+
+  it('nao vira scheduled se status ja eh bye (ou diferente de pending)', async () => {
+    const tx = makeTx();
+    tx.tournamentMatch.findUnique.mockResolvedValueOnce({
+      status: 'bye',
+      player1Id: 'p1',
+      player2Id: 'p2',
+    });
+
+    await service.advance(tx, advanceCtx, 'p1');
+
+    const scheduledCalls = tx.tournamentMatch.update.mock.calls.filter(
+      ([args]) => (args as { data: { status?: string } }).data.status === 'scheduled',
+    );
+    expect(scheduledCalls).toHaveLength(0);
+  });
+});
