@@ -151,17 +151,20 @@ async function main(): Promise<void> {
     });
 
     if (userData.role !== 'PLAYER') {
-      await prisma.roleAssignment.upsert({
-        where: { id: `seed-role-${user.id}` },
-        create: {
-          id: `seed-role-${user.id}`,
-          userId: user.id,
-          role: userData.role,
-          scopeKlubId: KLUB_ID,
-          scopeSportId: null,
-        },
-        update: {},
+      const existingRole = await prisma.roleAssignment.findFirst({
+        where: { userId: user.id, scopeKlubId: KLUB_ID, role: userData.role },
       });
+
+      if (!existingRole) {
+        await prisma.roleAssignment.create({
+          data: {
+            userId: user.id,
+            role: userData.role,
+            scopeKlubId: KLUB_ID,
+            scopeSportId: null,
+          },
+        });
+      }
     }
 
     console.log(`${userData.email} (${userData.role})`);
