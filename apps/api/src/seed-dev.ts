@@ -1,9 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import * as admin from 'firebase-admin';
 
 admin.initializeApp({ projectId: 'draftklub-dev' });
 
-const prisma = new PrismaClient();
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 const KLUB_ID = '00000000-0000-0000-0000-000000000001';
 const SEED_PASSWORD = 'DraftKlub@Seed2026!';
