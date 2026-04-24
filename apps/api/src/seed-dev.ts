@@ -71,11 +71,11 @@ async function main(): Promise<void> {
           openDays: '1,2,3,4,5,6,7',
         },
       },
-      sports: {
+      sportProfiles: {
         createMany: {
           data: [
-            { sportCode: 'tennis', status: 'active' },
-            { sportCode: 'squash', status: 'active' },
+            { sportCode: 'tennis', status: 'active', defaultRatingEngine: 'elo' },
+            { sportCode: 'squash', status: 'active', defaultRatingEngine: 'win_loss' },
           ],
           skipDuplicates: true,
         },

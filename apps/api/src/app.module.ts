@@ -9,6 +9,7 @@ import { AuthModule } from './shared/auth/auth.module';
 import { EncryptionModule } from './shared/encryption/encryption.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { KlubModule } from './modules/klub/klub.module';
+import { SportsModule } from './modules/sports/sports.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { KlubModule } from './modules/klub/klub.module';
     HealthModule,
     IdentityModule,
     KlubModule,
+    SportsModule,
   ],
 })
 export class AppModule {}

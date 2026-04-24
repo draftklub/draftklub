@@ -51,7 +51,7 @@ export class PolicyEngine {
         return true;
 
       case 'SPORTS_COMMITTEE':
-        return ['tournament', 'match', 'ranking', 'rating', 'klub'].includes(domain);
+        return ['tournament', 'match', 'ranking', 'rating', 'klub', 'sport'].includes(domain);
 
       case 'TEACHER':
         return domain === 'academy' || domain === 'class';

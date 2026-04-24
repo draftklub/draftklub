@@ -5,7 +5,7 @@ previewFeatures = []
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["identity", "audit", "klub", "space"]
+  schemas  = ["identity", "audit", "klub", "space", "sports"]
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -162,8 +162,8 @@ model Klub {
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
 
   config         KlubConfig?
-  sports         KlubSport[]
-  sportInterests KlubSportInterest[]
+  sportProfiles  KlubSportProfile[]  @relation("KlubSportProfiles")
+  sportInterests KlubSportInterest[] @relation("KlubSportInterests")
   media          KlubMedia[]
   memberships    Membership[] @relation("KlubMemberships")
 
@@ -201,18 +201,28 @@ model KlubConfig {
   @@schema("klub")
 }
 
-model KlubSport {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  klubId    String   @map("klub_id") @db.Uuid
-  sportCode String   @map("sport_code")
-  // tennis | padel | squash | beach_tennis
-  status    String   @default("active")
-  addedAt   DateTime @default(now()) @map("added_at") @db.Timestamptz
+model KlubSportProfile {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId        String    @map("klub_id") @db.Uuid
+  sportCode     String    @map("sport_code")
 
-  klub  Klub  @relation(fields: [klubId], references: [id])
+  name          String?
+  description   String?
+  coverUrl      String?   @map("cover_url")
+
+  defaultRatingEngine   String  @default("elo") @map("default_rating_engine")
+  defaultRatingConfig   Json    @default("{}") @map("default_rating_config")
+  defaultInitialRating  Int     @default(1000) @map("default_initial_rating")
+
+  status        String    @default("active")
+  addedAt       DateTime  @default(now()) @map("added_at") @db.Timestamptz
+  addedById     String?   @map("added_by_id") @db.Uuid
+
+  klub   Klub         @relation("KlubSportProfiles", fields: [klubId], references: [id])
+  sport  SportCatalog @relation(fields: [sportCode], references: [code])
 
   @@unique([klubId, sportCode])
-  @@map("klub_sports")
+  @@map("klub_sport_profiles")
   @@schema("klub")
 }
 
@@ -222,10 +232,45 @@ model KlubSportInterest {
   sportName String   @map("sport_name")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  klub  Klub  @relation(fields: [klubId], references: [id])
+  klub  Klub  @relation("KlubSportInterests", fields: [klubId], references: [id])
 
   @@map("klub_sport_interests")
   @@schema("klub")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SPORTS — catálogo global da plataforma
+// ═══════════════════════════════════════════════════════════════
+
+model SportCatalog {
+  code          String    @id
+  name          String
+  description   String?
+  playType      String    @default("both") @map("play_type")
+  minPlayers    Int       @default(2) @map("min_players")
+  maxPlayers    Int       @default(4) @map("max_players")
+  active        Boolean   @default(true)
+  sortOrder     Int       @default(0) @map("sort_order")
+  iconUrl       String?   @map("icon_url")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+
+  klubProfiles  KlubSportProfile[]
+
+  @@map("catalog")
+  @@schema("sports")
+}
+
+model RatingEngine {
+  code          String    @id
+  name          String
+  description   String?
+  configSchema  Json      @map("config_schema")
+  defaultConfig Json      @map("default_config")
+  active        Boolean   @default(true)
+
+  @@map("rating_engines")
+  @@schema("sports")
 }
 
 model KlubRequest {

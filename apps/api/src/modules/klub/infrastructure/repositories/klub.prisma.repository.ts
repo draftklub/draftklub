@@ -56,7 +56,7 @@ export class KlubPrismaRepository {
           config: {
             create: {},
           },
-          sports: {
+          sportProfiles: {
             createMany: {
               data: data.sportCodes.map((code) => ({ sportCode: code })),
               skipDuplicates: true,
@@ -65,7 +65,7 @@ export class KlubPrismaRepository {
         },
         include: {
           config: true,
-          sports: true,
+          sportProfiles: true,
         },
       });
 
@@ -85,14 +85,14 @@ export class KlubPrismaRepository {
   async findById(id: string) {
     return this.prisma.klub.findUnique({
       where: { id, deletedAt: null },
-      include: { config: true, sports: true, media: true },
+      include: { config: true, sportProfiles: true, media: true },
     });
   }
 
   async findBySlug(slug: string) {
     return this.prisma.klub.findUnique({
       where: { slug, deletedAt: null },
-      include: { config: true, sports: true },
+      include: { config: true, sportProfiles: true },
     });
   }
 
@@ -103,7 +103,7 @@ export class KlubPrismaRepository {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.type ? { type: filters.type } : {}),
       },
-      include: { config: true, sports: true },
+      include: { config: true, sportProfiles: true },
       orderBy: { createdAt: 'desc' },
     });
   }

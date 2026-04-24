@@ -25,7 +25,7 @@ export class GetKlubBySlugHandler {
       legalName: klub.legalName,
       isGroup: klub.isGroup,
       parentKlubId: klub.parentKlubId,
-      sports: klub.sports.map((s) => s.sportCode),
+      sports: klub.sportProfiles.map((s) => s.sportCode),
       config: klub.config
         ? {
             bookingPolicy: klub.config.bookingPolicy,
