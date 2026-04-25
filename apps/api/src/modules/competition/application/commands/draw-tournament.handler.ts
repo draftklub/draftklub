@@ -12,6 +12,8 @@ import type {
 } from '../../domain/services/strategies/tournament-format.strategy';
 import { KnockoutStrategy } from '../../domain/services/strategies/knockout.strategy';
 import { RoundRobinStrategy } from '../../domain/services/strategies/round-robin.strategy';
+import { GroupsKnockoutStrategy } from '../../domain/services/strategies/groups-knockout.strategy';
+import { DoubleEliminationStrategy } from '../../domain/services/strategies/double-elimination.strategy';
 
 export interface DrawTournamentCommand {
   tournamentId: string;
@@ -49,9 +51,13 @@ export class DrawTournamentHandler {
     private readonly prequalifierGenerator: PrequalifierGeneratorService,
     knockoutStrategy: KnockoutStrategy,
     roundRobinStrategy: RoundRobinStrategy,
+    groupsKnockoutStrategy: GroupsKnockoutStrategy,
+    doubleEliminationStrategy: DoubleEliminationStrategy,
   ) {
     this.strategies.set(knockoutStrategy.format, knockoutStrategy);
     this.strategies.set(roundRobinStrategy.format, roundRobinStrategy);
+    this.strategies.set(groupsKnockoutStrategy.format, groupsKnockoutStrategy);
+    this.strategies.set(doubleEliminationStrategy.format, doubleEliminationStrategy);
   }
 
   async execute(cmd: DrawTournamentCommand) {
@@ -257,18 +263,39 @@ export class DrawTournamentHandler {
 
         let p1: string | null = m.player1Id;
         let p2: string | null = m.player2Id;
-        let tbd1: TbdSlotInfo | null = null;
-        let tbd2: TbdSlotInfo | null = null;
+        let tbd1Source: string | null = null;
+        let tbd1Label: string | null = null;
+        let tbd1Ref: string | null = null;
+        let tbd2Source: string | null = null;
+        let tbd2Label: string | null = null;
+        let tbd2Ref: string | null = null;
 
         if (m.player1Id && isTbdUserId(m.player1Id, tbdPrefix)) {
           const idxStr = m.player1Id.slice(tbdPrefix.length).split('-').pop() ?? '0';
-          tbd1 = tbdSlots[parseInt(idxStr, 10)] ?? null;
+          const tbd = tbdSlots[parseInt(idxStr, 10)] ?? null;
+          if (tbd) {
+            tbd1Source = tbd.source;
+            tbd1Label = tbd.label;
+            tbd1Ref = tempIdToRealId.get(tbd.prequalifierTempId) ?? null;
+          }
           p1 = null;
+        } else if (p1 == null && m.tbdPlayer1) {
+          tbd1Source = m.tbdPlayer1.source;
+          tbd1Label = m.tbdPlayer1.label;
         }
+
         if (m.player2Id && isTbdUserId(m.player2Id, tbdPrefix)) {
           const idxStr = m.player2Id.slice(tbdPrefix.length).split('-').pop() ?? '0';
-          tbd2 = tbdSlots[parseInt(idxStr, 10)] ?? null;
+          const tbd = tbdSlots[parseInt(idxStr, 10)] ?? null;
+          if (tbd) {
+            tbd2Source = tbd.source;
+            tbd2Label = tbd.label;
+            tbd2Ref = tempIdToRealId.get(tbd.prequalifierTempId) ?? null;
+          }
           p2 = null;
+        } else if (p2 == null && m.tbdPlayer2) {
+          tbd2Source = m.tbdPlayer2.source;
+          tbd2Label = m.tbdPlayer2.label;
         }
 
         const hasBothPlayers = p1 != null && p2 != null;
@@ -296,16 +323,12 @@ export class DrawTournamentHandler {
             status: initialStatus,
             winnerId: m.isBye ? (p1 ?? p2) : null,
             completedAt: m.isBye ? new Date() : null,
-            tbdPlayer1Source: tbd1?.source ?? null,
-            tbdPlayer1PrequalifierMatchRef: tbd1?.prequalifierTempId
-              ? (tempIdToRealId.get(tbd1.prequalifierTempId) ?? null)
-              : null,
-            tbdPlayer1Label: tbd1?.label ?? null,
-            tbdPlayer2Source: tbd2?.source ?? null,
-            tbdPlayer2PrequalifierMatchRef: tbd2?.prequalifierTempId
-              ? (tempIdToRealId.get(tbd2.prequalifierTempId) ?? null)
-              : null,
-            tbdPlayer2Label: tbd2?.label ?? null,
+            tbdPlayer1Source: tbd1Source,
+            tbdPlayer1PrequalifierMatchRef: tbd1Ref,
+            tbdPlayer1Label: tbd1Label,
+            tbdPlayer2Source: tbd2Source,
+            tbdPlayer2PrequalifierMatchRef: tbd2Ref,
+            tbdPlayer2Label: tbd2Label,
           },
         });
         mainCreatedByKey.set(`${m.categoryId}::${m.bracketPosition}`, created.id);

@@ -129,6 +129,9 @@ export class ConfirmTournamentMatchHandler {
           player2Id,
           nextMatchId: match.nextMatchId,
           nextMatchSlot: match.nextMatchSlot,
+          matchKind: match.matchKind,
+          categoryId: match.categoryId,
+          bracketPosition: match.bracketPosition,
         },
         winnerId,
       );

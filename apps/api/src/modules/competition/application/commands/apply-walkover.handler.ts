@@ -95,6 +95,9 @@ export class ApplyWalkoverHandler {
           player2Id,
           nextMatchId: match.nextMatchId,
           nextMatchSlot: match.nextMatchSlot,
+          matchKind: match.matchKind,
+          categoryId: match.categoryId,
+          bracketPosition: match.bracketPosition,
         },
         cmd.winnerId,
       );

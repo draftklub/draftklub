@@ -19,6 +19,20 @@ export interface DrawContext {
   categories: CategoryWithPlayers[];
 }
 
+export type TbdSource =
+  | 'group_standing'
+  | 'winners_bracket_loser'
+  | 'losers_bracket_winner'
+  | 'winners_bracket_winner';
+
+export interface TbdSlotMetadata {
+  source: TbdSource;
+  label: string;
+  groupId?: string;
+  groupPosition?: number;
+  referenceMatchBracketPosition?: string;
+}
+
 export interface StrategyGeneratedMatch {
   categoryId: string;
   matchKind: 'main' | 'group' | 'losers' | 'grand_final';
@@ -35,6 +49,8 @@ export interface StrategyGeneratedMatch {
   nextBracketPosition: string | null;
   nextMatchSlot: 'top' | 'bottom' | null;
   groupId?: string | null;
+  tbdPlayer1?: TbdSlotMetadata;
+  tbdPlayer2?: TbdSlotMetadata;
 }
 
 export interface ValidationResult {

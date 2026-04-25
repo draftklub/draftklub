@@ -4,6 +4,7 @@ import { TournamentProgressionService } from './tournament-progression.service';
 interface TxMock {
   tournamentMatch: {
     update: ReturnType<typeof vi.fn>;
+    updateMany: ReturnType<typeof vi.fn>;
     findUnique: ReturnType<typeof vi.fn>;
     findFirst: ReturnType<typeof vi.fn>;
     findMany: ReturnType<typeof vi.fn>;
@@ -20,6 +21,7 @@ function makeTx(): TxMock {
   return {
     tournamentMatch: {
       update: vi.fn().mockResolvedValue({}),
+      updateMany: vi.fn().mockResolvedValue({}),
       findUnique: vi.fn().mockResolvedValue(null),
       findFirst: vi.fn().mockResolvedValue(null),
       findMany: vi.fn().mockResolvedValue([]),
@@ -93,6 +95,57 @@ describe('TournamentProgressionService.resolvePrequalifierSlots', () => {
       where: { id: 'tour-1' },
       data: { status: 'in_progress', currentPhase: 'final' },
     });
+  });
+});
+
+describe('TournamentProgressionService.maybeResolveGroupStandings', () => {
+  let service: TournamentProgressionService;
+
+  beforeEach(() => {
+    service = new TournamentProgressionService();
+  });
+
+  it('nao resolve se algum match do grupo ainda nao terminou', async () => {
+    const tx = makeTx();
+    tx.tournamentMatch.findMany.mockResolvedValueOnce([
+      { id: 'm1', status: 'completed', winnerId: 'p1', player1Id: 'p1', player2Id: 'p2', seed1: 1, seed2: 2 },
+      { id: 'm2', status: 'scheduled', winnerId: null, player1Id: 'p3', player2Id: 'p4', seed1: 3, seed2: 4 },
+    ]);
+
+    await service.maybeResolveGroupStandings(tx, 'tour-1', 'cat-a', 'A');
+
+    expect(tx.tournamentMatch.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('resolve standings ordenando por wins e tiebreak por seed quando todos completos', async () => {
+    const tx = makeTx();
+    tx.tournamentMatch.findMany.mockResolvedValueOnce([
+      { id: 'm1', status: 'completed', winnerId: 'p1', player1Id: 'p1', player2Id: 'p2', seed1: 1, seed2: 2 },
+      { id: 'm2', status: 'completed', winnerId: 'p3', player1Id: 'p3', player2Id: 'p4', seed1: 3, seed2: 4 },
+      { id: 'm3', status: 'completed', winnerId: 'p1', player1Id: 'p1', player2Id: 'p3', seed1: 1, seed2: 3 },
+      { id: 'm4', status: 'completed', winnerId: 'p2', player1Id: 'p2', player2Id: 'p4', seed1: 2, seed2: 4 },
+      { id: 'm5', status: 'completed', winnerId: 'p1', player1Id: 'p1', player2Id: 'p4', seed1: 1, seed2: 4 },
+      { id: 'm6', status: 'completed', winnerId: 'p3', player1Id: 'p2', player2Id: 'p3', seed1: 2, seed2: 3 },
+    ]);
+    // Pre-resolve filling: empty list of pending main matches
+    tx.tournamentMatch.findMany.mockResolvedValueOnce([]);
+
+    await service.maybeResolveGroupStandings(tx, 'tour-1', 'cat-a', 'A');
+
+    // p1 has 3 wins, p3 has 2, p2 has 1, p4 has 0
+    // Expect updateMany called for each position
+    const updateManyCalls = tx.tournamentMatch.updateMany.mock.calls;
+    const labelCalls = updateManyCalls
+      .map(([args]) => (args as { where?: { tbdPlayer1Label?: string; tbdPlayer2Label?: string } }).where ?? {})
+      .filter((w) => w.tbdPlayer1Label != null || w.tbdPlayer2Label != null);
+
+    expect(labelCalls.length).toBeGreaterThanOrEqual(4);
+    // Has updates for "1º Grupo A", "2º Grupo A", etc.
+    const labels = labelCalls.map((w) => w.tbdPlayer1Label ?? w.tbdPlayer2Label);
+    expect(labels).toContain('1º Grupo A');
+    expect(labels).toContain('2º Grupo A');
+    expect(labels).toContain('3º Grupo A');
+    expect(labels).toContain('4º Grupo A');
   });
 });
 

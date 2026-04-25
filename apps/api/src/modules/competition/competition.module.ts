@@ -8,6 +8,8 @@ import { PrequalifierGeneratorService } from './domain/services/prequalifier-gen
 import { TournamentProgressionService } from './domain/services/tournament-progression.service';
 import { KnockoutStrategy } from './domain/services/strategies/knockout.strategy';
 import { RoundRobinStrategy } from './domain/services/strategies/round-robin.strategy';
+import { GroupsKnockoutStrategy } from './domain/services/strategies/groups-knockout.strategy';
+import { DoubleEliminationStrategy } from './domain/services/strategies/double-elimination.strategy';
 import { CreatePointsSchemaHandler } from './application/commands/create-points-schema.handler';
 import { CreateTournamentHandler } from './application/commands/create-tournament.handler';
 import { RegisterEntryHandler } from './application/commands/register-entry.handler';
@@ -50,6 +52,8 @@ import { TournamentMatchesController } from './api/tournament-matches.controller
     TournamentProgressionService,
     KnockoutStrategy,
     RoundRobinStrategy,
+    GroupsKnockoutStrategy,
+    DoubleEliminationStrategy,
     CreatePointsSchemaHandler,
     CreateTournamentHandler,
     RegisterEntryHandler,
