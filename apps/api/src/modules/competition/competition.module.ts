@@ -10,6 +10,9 @@ import { KnockoutStrategy } from './domain/services/strategies/knockout.strategy
 import { RoundRobinStrategy } from './domain/services/strategies/round-robin.strategy';
 import { GroupsKnockoutStrategy } from './domain/services/strategies/groups-knockout.strategy';
 import { DoubleEliminationStrategy } from './domain/services/strategies/double-elimination.strategy';
+import { ScheduleDistributorService } from './domain/services/schedule-distributor.service';
+import { ScheduleTournamentHandler } from './application/commands/schedule-tournament.handler';
+import { TournamentScheduleController } from './api/tournament-schedule.controller';
 import { CreatePointsSchemaHandler } from './application/commands/create-points-schema.handler';
 import { CreateTournamentHandler } from './application/commands/create-tournament.handler';
 import { RegisterEntryHandler } from './application/commands/register-entry.handler';
@@ -43,6 +46,7 @@ import { TournamentMatchesController } from './api/tournament-matches.controller
     TournamentEntriesController,
     TournamentDrawController,
     TournamentMatchesController,
+    TournamentScheduleController,
   ],
   providers: [
     CategoryAllocatorService,
@@ -54,6 +58,7 @@ import { TournamentMatchesController } from './api/tournament-matches.controller
     RoundRobinStrategy,
     GroupsKnockoutStrategy,
     DoubleEliminationStrategy,
+    ScheduleDistributorService,
     CreatePointsSchemaHandler,
     CreateTournamentHandler,
     RegisterEntryHandler,
@@ -67,6 +72,7 @@ import { TournamentMatchesController } from './api/tournament-matches.controller
     ApplyWalkoverHandler,
     ApplyDoubleWalkoverHandler,
     UpdateReportingModeHandler,
+    ScheduleTournamentHandler,
     ListPointsSchemasHandler,
     ListTournamentsHandler,
     GetTournamentHandler,

@@ -52,6 +52,10 @@ import {
   UpdateReportingModeHandler,
   type UpdateReportingModeCommand,
 } from '../application/commands/update-reporting-mode.handler';
+import {
+  ScheduleTournamentHandler,
+  type ScheduleTournamentCommand,
+} from '../application/commands/schedule-tournament.handler';
 import { ListPointsSchemasHandler } from '../application/queries/list-points-schemas.handler';
 import { ListTournamentsHandler } from '../application/queries/list-tournaments.handler';
 import { GetTournamentHandler } from '../application/queries/get-tournament.handler';
@@ -89,6 +93,7 @@ export class CompetitionFacade {
     private readonly walkoverHandler: ApplyWalkoverHandler,
     private readonly doubleWalkoverHandler: ApplyDoubleWalkoverHandler,
     private readonly updateReportingModeHandler: UpdateReportingModeHandler,
+    private readonly scheduleTournamentHandler: ScheduleTournamentHandler,
     private readonly getBracketHandler: GetBracketHandler,
   ) {}
 
@@ -122,6 +127,10 @@ export class CompetitionFacade {
 
   async updateReportingMode(cmd: UpdateReportingModeCommand) {
     return this.updateReportingModeHandler.execute(cmd);
+  }
+
+  async scheduleTournament(cmd: ScheduleTournamentCommand) {
+    return this.scheduleTournamentHandler.execute(cmd);
   }
 
   async userIsCommitteeForTournament(userId: string, tournamentId: string): Promise<boolean> {
