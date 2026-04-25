@@ -4,10 +4,12 @@ import { PrismaService } from '../../../../shared/prisma/prisma.service';
 export interface SpaceAvailabilitySlot {
   startTime: string;
   endTime: string;
-  status: 'available' | 'booked' | 'past' | 'closed';
+  status: 'available' | 'booked' | 'blocked' | 'past' | 'closed';
   bookingId?: string;
   bookingType?: string;
 }
+
+const BLOCK_TYPES = new Set(['maintenance', 'weather_closed', 'staff_blocked']);
 
 export interface SpaceAvailabilityResult {
   spaceId: string;
@@ -59,7 +61,7 @@ export class GetSpaceAvailabilityHandler {
         spaceId,
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: dayEnd },
-        endsAt: { gt: dayStart },
+        OR: [{ endsAt: null }, { endsAt: { gt: dayStart } }],
       },
       orderBy: { startsAt: 'asc' },
       select: {
@@ -87,13 +89,13 @@ export class GetSpaceAvailabilityHandler {
       if (cursor < now) {
         status = 'past';
       } else {
-        const overlapping = bookings.find(
-          (b) =>
-            b.startsAt.getTime() < slotEnd.getTime() &&
-            b.endsAt.getTime() > slotStart.getTime(),
-        );
+        const overlapping = bookings.find((b) => {
+          if (b.startsAt.getTime() >= slotEnd.getTime()) return false;
+          const bookingEndMs = b.endsAt?.getTime() ?? Number.POSITIVE_INFINITY;
+          return bookingEndMs > slotStart.getTime();
+        });
         if (overlapping) {
-          status = 'booked';
+          status = BLOCK_TYPES.has(overlapping.bookingType) ? 'blocked' : 'booked';
           bookingId = overlapping.id;
           bookingType = overlapping.bookingType;
         }

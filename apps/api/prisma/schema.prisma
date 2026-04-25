@@ -210,6 +210,8 @@ model KlubConfig {
   closingHour Int     @default(23)            @map("closing_hour")
   openDays    String  @default("1,2,3,4,5,6,7") @map("open_days")
 
+  maxRecurrenceMonths Int @default(3) @map("max_recurrence_months")
+
   klub  Klub  @relation(fields: [klubId], references: [id])
 
   @@map("klub_configs")
@@ -690,6 +692,7 @@ model Space {
 
   tournamentMatches TournamentMatch[]
   bookings          Booking[]
+  bookingSeries     BookingSeries[]
 
   @@map("spaces")
   @@schema("space")
@@ -705,7 +708,7 @@ model Booking {
   spaceId         String    @map("space_id") @db.Uuid
 
   startsAt        DateTime  @map("starts_at") @db.Timestamptz
-  endsAt          DateTime  @map("ends_at") @db.Timestamptz
+  endsAt          DateTime? @map("ends_at") @db.Timestamptz
 
   bookingType     String    @default("player_match") @map("booking_type")
   // 'player_match' | 'player_free_play' | 'maintenance' | 'weather_closed' | 'staff_blocked'
@@ -720,6 +723,9 @@ model Booking {
   otherPlayers    Json      @default("[]") @map("other_players")
 
   tournamentMatchId String?  @unique @map("tournament_match_id") @db.Uuid
+
+  bookingSeriesId String?   @map("booking_series_id") @db.Uuid
+  autoCancelledByBookingId String? @map("auto_cancelled_by_booking_id") @db.Uuid
 
   createdById     String?   @map("created_by_id") @db.Uuid
   approvedById    String?   @map("approved_by_id") @db.Uuid
@@ -740,11 +746,57 @@ model Booking {
 
   space           Space     @relation(fields: [spaceId], references: [id])
   tournamentMatch TournamentMatch? @relation(fields: [tournamentMatchId], references: [id])
+  bookingSeries   BookingSeries? @relation(fields: [bookingSeriesId], references: [id])
+  autoCancelledBy Booking?  @relation("AutoCancellation", fields: [autoCancelledByBookingId], references: [id])
+  cancelledBookings Booking[] @relation("AutoCancellation")
 
   @@index([klubId, startsAt])
   @@index([spaceId, startsAt])
   @@index([primaryPlayerId, startsAt])
   @@index([status])
   @@map("bookings")
+  @@schema("booking")
+}
+
+model BookingSeries {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId          String    @map("klub_id") @db.Uuid
+  spaceId         String    @map("space_id") @db.Uuid
+
+  frequency       String
+  interval        Int       @default(1)
+  daysOfWeek      Json      @default("[]") @map("days_of_week")
+
+  startsOn        DateTime  @map("starts_on") @db.Timestamptz
+  endsOn          DateTime  @map("ends_on") @db.Timestamptz
+
+  durationMinutes Int       @map("duration_minutes")
+  startHour       Int       @map("start_hour")
+  startMinute     Int       @default(0) @map("start_minute")
+
+  bookingType     String    @default("player_match") @map("booking_type")
+
+  primaryPlayerId String?   @map("primary_player_id") @db.Uuid
+  otherPlayers    Json      @default("[]") @map("other_players")
+
+  status          String    @default("active")
+
+  createdById     String    @map("created_by_id") @db.Uuid
+  cancelledById   String?   @map("cancelled_by_id") @db.Uuid
+  cancelledAt     DateTime? @map("cancelled_at") @db.Timestamptz
+  cancellationReason String? @map("cancellation_reason")
+  notes           String?
+
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  space           Space     @relation(fields: [spaceId], references: [id])
+  bookings        Booking[]
+
+  @@index([klubId, startsOn])
+  @@index([spaceId, startsOn])
+  @@index([primaryPlayerId])
+  @@map("booking_series")
   @@schema("booking")
 }

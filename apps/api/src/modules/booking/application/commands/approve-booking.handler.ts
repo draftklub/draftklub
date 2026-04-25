@@ -23,13 +23,17 @@ export class ApproveBookingHandler {
       throw new BadRequestException(`Booking is in status '${booking.status}', cannot approve`);
     }
 
+    if (!booking.endsAt) {
+      throw new BadRequestException('Cannot approve booking with null endsAt');
+    }
+
     const conflict = await this.prisma.booking.findFirst({
       where: {
         spaceId: booking.spaceId,
         id: { not: booking.id },
         status: 'confirmed',
         startsAt: { lt: booking.endsAt },
-        endsAt: { gt: booking.startsAt },
+        OR: [{ endsAt: null }, { endsAt: { gt: booking.startsAt } }],
       },
       select: { id: true },
     });

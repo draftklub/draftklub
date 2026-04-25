@@ -23,6 +23,23 @@ import {
   type ListBookingsFilters,
 } from '../application/queries/list-bookings.handler';
 import { GetBookingHandler } from '../application/queries/get-booking.handler';
+import {
+  CreateBookingSeriesHandler,
+  type CreateBookingSeriesCommand,
+} from '../application/commands/create-booking-series.handler';
+import {
+  CancelBookingSeriesHandler,
+  type CancelBookingSeriesCommand,
+} from '../application/commands/cancel-booking-series.handler';
+import {
+  CreateOperationalBlockHandler,
+  type CreateOperationalBlockCommand,
+} from '../application/commands/create-operational-block.handler';
+import {
+  CloseOperationalBlockHandler,
+  type CloseOperationalBlockCommand,
+} from '../application/commands/close-operational-block.handler';
+import { NotFoundException } from '@nestjs/common';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -38,6 +55,10 @@ export class BookingFacade {
     private readonly calendarHandler: GetKlubCalendarHandler,
     private readonly listHandler: ListBookingsHandler,
     private readonly getHandler: GetBookingHandler,
+    private readonly createSeriesHandler: CreateBookingSeriesHandler,
+    private readonly cancelSeriesHandler: CancelBookingSeriesHandler,
+    private readonly createBlockHandler: CreateOperationalBlockHandler,
+    private readonly closeBlockHandler: CloseOperationalBlockHandler,
   ) {}
 
   async createBooking(cmd: CreateBookingCommand) {
@@ -70,6 +91,30 @@ export class BookingFacade {
 
   async getBooking(bookingId: string) {
     return this.getHandler.execute(bookingId);
+  }
+
+  async createBookingSeries(cmd: CreateBookingSeriesCommand) {
+    return this.createSeriesHandler.execute(cmd);
+  }
+
+  async cancelBookingSeries(cmd: CancelBookingSeriesCommand) {
+    return this.cancelSeriesHandler.execute(cmd);
+  }
+
+  async getBookingSeries(seriesId: string) {
+    const series = await this.prisma.bookingSeries.findUnique({
+      where: { id: seriesId },
+    });
+    if (!series) throw new NotFoundException('Series not found');
+    return series;
+  }
+
+  async createOperationalBlock(cmd: CreateOperationalBlockCommand) {
+    return this.createBlockHandler.execute(cmd);
+  }
+
+  async closeOperationalBlock(cmd: CloseOperationalBlockCommand) {
+    return this.closeBlockHandler.execute(cmd);
   }
 
   async userIsStaffOfKlub(userId: string, klubId: string): Promise<boolean> {

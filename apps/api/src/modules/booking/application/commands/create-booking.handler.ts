@@ -28,11 +28,12 @@ export interface CreateBookingCommand {
 
 function ranges_overlap(
   aStart: Date,
-  aEnd: Date,
+  aEnd: Date | null,
   bStart: Date,
   bEnd: Date,
 ): boolean {
-  return aStart < bEnd && aEnd > bStart;
+  const aEndMs = aEnd?.getTime() ?? Number.POSITIVE_INFINITY;
+  return aStart.getTime() < bEnd.getTime() && aEndMs > bStart.getTime();
 }
 
 @Injectable()
@@ -125,7 +126,7 @@ export class CreateBookingHandler {
         spaceId: cmd.spaceId,
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: cmd.endsAt },
-        endsAt: { gt: cmd.startsAt },
+        OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }],
       },
     });
 
@@ -133,7 +134,7 @@ export class CreateBookingHandler {
       throw new ConflictException({
         type: 'space_conflict',
         conflictingBookingId: spaceConflict.id,
-        message: `Space already has a booking from ${spaceConflict.startsAt.toISOString()} to ${spaceConflict.endsAt.toISOString()}`,
+        message: `Space already has a booking from ${spaceConflict.startsAt.toISOString()} to ${spaceConflict.endsAt?.toISOString() ?? 'open-ended'}`,
       });
     }
 
@@ -143,11 +144,12 @@ export class CreateBookingHandler {
       where: {
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: cmd.endsAt },
-        endsAt: { gt: cmd.startsAt },
-        OR: [
-          { primaryPlayerId: { in: allPlayerIds } },
-          // otherPlayers JSONB: filtra in-memory depois
+        AND: [
+          {
+            OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }],
+          },
         ],
+        primaryPlayerId: { in: allPlayerIds },
       },
       select: {
         id: true,
@@ -183,7 +185,7 @@ export class CreateBookingHandler {
       where: {
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: cmd.endsAt },
-        endsAt: { gt: cmd.startsAt },
+        OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }],
       },
       select: { id: true, otherPlayers: true },
     });

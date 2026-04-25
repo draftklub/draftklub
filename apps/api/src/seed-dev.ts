@@ -418,6 +418,67 @@ async function main(): Promise<void> {
       update: {},
     });
     console.log('Sample bookings created');
+
+    const SERIES_ID = '00000000-0000-0000-0006-000000000001';
+    const seriesStart = new Date(Date.now() + 48 * 3_600_000);
+    seriesStart.setUTCHours(0, 0, 0, 0);
+    const seriesEnd = new Date(seriesStart.getTime() + 28 * 24 * 3_600_000);
+    await prisma.bookingSeries.upsert({
+      where: { id: SERIES_ID },
+      create: {
+        id: SERIES_ID,
+        klubId: KLUB_ID,
+        spaceId: court1.id,
+        frequency: 'weekly',
+        interval: 1,
+        daysOfWeek: [2, 4],
+        startsOn: seriesStart,
+        endsOn: seriesEnd,
+        durationMinutes: 60,
+        startHour: 19,
+        startMinute: 0,
+        bookingType: 'player_match',
+        primaryPlayerId: joao.id,
+        otherPlayers: [{ userId: pedro.id, name: 'Pedro Costa' }],
+        createdById: joao.id,
+      },
+      update: {},
+    });
+    console.log('Sample booking series created');
+  }
+
+  const court2 = await prisma.space.findFirst({
+    where: { klubId: KLUB_ID, sportCode: 'tennis', name: { contains: '2' } },
+  });
+  const adminUser = await prisma.user.findUnique({
+    where: { email: 'admin@tennis-carioca.com' },
+  });
+  if (court2 && adminUser) {
+    const BLOCK_ID = '00000000-0000-0000-0005-000000000002';
+    const blockStart = new Date(Date.now() + 48 * 3_600_000);
+    blockStart.setUTCHours(14, 0, 0, 0);
+    const blockEnd = new Date(blockStart.getTime() + 4 * 3_600_000);
+    await prisma.booking.upsert({
+      where: { id: BLOCK_ID },
+      create: {
+        id: BLOCK_ID,
+        klubId: KLUB_ID,
+        spaceId: court2.id,
+        startsAt: blockStart,
+        endsAt: blockEnd,
+        bookingType: 'maintenance',
+        creationMode: 'staff_assisted',
+        status: 'confirmed',
+        primaryPlayerId: null,
+        otherPlayers: [],
+        notes: 'Troca de piso (seed)',
+        createdById: adminUser.id,
+        approvedById: adminUser.id,
+        approvedAt: new Date(),
+      },
+      update: {},
+    });
+    console.log('Sample maintenance block created');
   }
 
   console.log('Seed completed!');
