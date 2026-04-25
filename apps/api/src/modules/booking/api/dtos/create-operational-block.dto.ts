@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { uuidString } from '../../../../shared/validation/uuid-string';
 
 export const CreateOperationalBlockSchema = z
   .object({
-    spaceId: z.string().uuid(),
+    spaceId: uuidString(),
     blockType: z.enum(['maintenance', 'weather_closed', 'staff_blocked']),
     startsAt: z.string().datetime(),
     endsAt: z.string().datetime().optional(),

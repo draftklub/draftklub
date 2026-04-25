@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { uuidString } from '../../../../shared/validation/uuid-string';
 
 export const CreateKlubSchema = z.object({
   name: z.string().min(2).max(100),
@@ -15,7 +16,7 @@ export const CreateKlubSchema = z.object({
   sportCodes: z.array(
     z.enum(['tennis', 'padel', 'squash', 'beach_tennis'])
   ).default([]),
-  parentKlubId: z.string().uuid().optional(),
+  parentKlubId: uuidString().optional(),
   isGroup: z.boolean().default(false),
   plan: z.enum(['trial', 'starter', 'pro', 'elite', 'enterprise']).default('trial'),
 });

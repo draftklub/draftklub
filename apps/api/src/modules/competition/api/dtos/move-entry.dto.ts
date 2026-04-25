@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { uuidString } from '../../../../shared/validation/uuid-string';
 
 export const MoveEntrySchema = z.object({
-  targetCategoryId: z.string().uuid(),
+  targetCategoryId: uuidString(),
   asWildCard: z.boolean().default(false),
 });
 

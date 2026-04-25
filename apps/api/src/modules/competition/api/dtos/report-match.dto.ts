@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { uuidString } from '../../../../shared/validation/uuid-string';
 
 export const ReportMatchSchema = z.object({
-  winnerId: z.string().uuid(),
+  winnerId: uuidString(),
   score: z.string().max(50).optional(),
   notes: z.string().max(500).optional(),
 });

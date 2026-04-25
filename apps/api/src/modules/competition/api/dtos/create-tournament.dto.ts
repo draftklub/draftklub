@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { uuidString } from '../../../../shared/validation/uuid-string';
 
 export const CreateCategorySchema = z.object({
   name: z.string().min(1).max(20),
@@ -6,11 +7,11 @@ export const CreateCategorySchema = z.object({
   maxPlayers: z.number().int().positive().optional(),
   minRatingExpected: z.number().int().optional(),
   maxRatingExpected: z.number().int().optional(),
-  pointsSchemaId: z.string().uuid(),
+  pointsSchemaId: uuidString(),
 });
 
 export const CreateTournamentSchema = z.object({
-  rankingId: z.string().uuid(),
+  rankingId: uuidString(),
   name: z.string().min(2).max(100),
   description: z.string().max(1000).optional(),
   format: z.enum(['knockout', 'round_robin', 'double_elimination', 'groups_knockout']).default('knockout'),

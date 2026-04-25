@@ -1,16 +1,17 @@
 import { z } from 'zod';
+import { uuidString } from '../../../../shared/validation/uuid-string';
 
 export const CreateBookingSchema = z
   .object({
-    spaceId: z.string().uuid(),
+    spaceId: uuidString(),
     startsAt: z.string().datetime(),
     endsAt: z.string().datetime(),
     bookingType: z.enum(['player_match', 'player_free_play']).default('player_match'),
-    primaryPlayerId: z.string().uuid().optional(),
+    primaryPlayerId: uuidString().optional(),
     otherPlayers: z
       .array(
         z.object({
-          userId: z.string().uuid(),
+          userId: uuidString(),
           name: z.string().min(1).max(120),
         }),
       )

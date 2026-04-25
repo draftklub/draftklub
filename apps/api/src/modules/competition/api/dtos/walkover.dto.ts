@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { uuidString } from '../../../../shared/validation/uuid-string';
 
 export const WalkoverSchema = z.object({
-  winnerId: z.string().uuid(),
+  winnerId: uuidString(),
   notes: z.string().max(500).optional(),
 });
 
