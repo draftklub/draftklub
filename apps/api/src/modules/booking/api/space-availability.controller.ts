@@ -20,10 +20,14 @@ export class SpaceAvailabilityController {
   async getAvailability(
     @Param('spaceId') spaceId: string,
     @Query('date') date: string,
+    @Query('matchType') matchType?: string,
   ) {
     if (!date || !DATE_REGEX.test(date)) {
       throw new BadRequestException('Invalid date format. Use YYYY-MM-DD');
     }
-    return this.facade.getSpaceAvailability(spaceId, date);
+    if (matchType && matchType !== 'singles' && matchType !== 'doubles') {
+      throw new BadRequestException('matchType must be singles or doubles');
+    }
+    return this.facade.getSpaceAvailability(spaceId, date, matchType as 'singles' | 'doubles' | undefined);
   }
 }

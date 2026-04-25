@@ -11,7 +11,7 @@ export const CreateBookingSeriesSchema = z
     endsOn: z.string().datetime(),
     startHour: z.number().int().min(0).max(23),
     startMinute: z.number().int().min(0).max(59).default(0),
-    durationMinutes: z.number().int().min(15).max(360),
+    matchType: z.enum(['singles', 'doubles']),
     bookingType: z.enum(['player_match', 'player_free_play']).default('player_match'),
     primaryPlayerId: uuidString().optional(),
     otherPlayers: z

@@ -41,7 +41,7 @@ export class BookingSeriesController {
       endsOn: new Date(dto.endsOn),
       startHour: dto.startHour,
       startMinute: dto.startMinute,
-      durationMinutes: dto.durationMinutes,
+      matchType: dto.matchType,
       bookingType: dto.bookingType,
       primaryPlayerId: dto.primaryPlayerId ?? user.userId,
       otherPlayers: dto.otherPlayers,

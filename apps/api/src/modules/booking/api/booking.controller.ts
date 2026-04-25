@@ -35,7 +35,7 @@ export class BookingController {
       klubId,
       spaceId: dto.spaceId,
       startsAt: new Date(dto.startsAt),
-      endsAt: new Date(dto.endsAt),
+      matchType: dto.matchType,
       bookingType: dto.bookingType,
       primaryPlayerId: dto.primaryPlayerId ?? user.userId,
       otherPlayers: dto.otherPlayers,

@@ -73,6 +73,7 @@ async function main(): Promise<void> {
           openingHour: 7,
           closingHour: 22,
           openDays: '1,2,3,4,5,6,7',
+          extensionMode: 'player',
         },
       },
       sportProfiles: {
@@ -101,9 +102,35 @@ async function main(): Promise<void> {
     { name: 'Quadra 3', sportCode: 'squash', surface: 'synthetic', indoor: true, hasLighting: true },
   ];
 
+  const HOUR_BANDS_TENNIS = [
+    {
+      type: 'off_peak',
+      startHour: 6,
+      endHour: 12,
+      daysOfWeek: [1, 2, 3, 4, 5],
+      durationByMatchType: { singles: 60, doubles: 90 },
+    },
+    {
+      type: 'regular',
+      startHour: 12,
+      endHour: 17,
+      daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+      durationByMatchType: { singles: 60, doubles: 90 },
+    },
+    {
+      type: 'prime',
+      startHour: 17,
+      endHour: 22,
+      daysOfWeek: [1, 2, 3, 4, 5, 6, 7],
+      durationByMatchType: { singles: 60 },
+    },
+  ];
+
   for (let i = 0; i < spaces.length; i++) {
     const space = spaces[i];
     if (!space) continue;
+    const hourBands = space.sportCode === 'tennis' ? HOUR_BANDS_TENNIS : [];
+    const allowedMatchTypes = space.sportCode === 'squash' ? ['singles'] : ['singles', 'doubles'];
     await prisma.space.upsert({
       where: { id: `00000000-0000-0000-0001-${i.toString().padStart(12, '0')}` },
       create: {
@@ -117,8 +144,11 @@ async function main(): Promise<void> {
         hasLighting: space.hasLighting,
         maxPlayers: space.sportCode === 'squash' ? 2 : 4,
         status: 'active',
+        slotGranularityMinutes: 30,
+        hourBands,
+        allowedMatchTypes,
       },
-      update: { name: space.name },
+      update: { name: space.name, hourBands, allowedMatchTypes },
     });
   }
   console.log('Spaces created');
@@ -404,6 +434,7 @@ async function main(): Promise<void> {
         spaceId: court1.id,
         startsAt: tomorrow,
         endsAt: new Date(tomorrow.getTime() + 60 * 60_000),
+        matchType: 'singles',
         bookingType: 'player_match',
         creationMode: 'direct',
         status: 'confirmed',

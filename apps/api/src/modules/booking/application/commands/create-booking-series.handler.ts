@@ -8,6 +8,11 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { SeriesGeneratorService } from '../../domain/services/series-generator.service';
+import {
+  HourBandResolverService,
+  type HourBand,
+  type MatchType,
+} from '../../domain/services/hour-band-resolver.service';
 
 const MAX_OCCURRENCES = 100;
 
@@ -26,7 +31,7 @@ export interface CreateBookingSeriesCommand {
   endsOn: Date;
   startHour: number;
   startMinute: number;
-  durationMinutes: number;
+  matchType: MatchType;
   bookingType: 'player_match' | 'player_free_play';
   primaryPlayerId: string;
   otherPlayers: OtherPlayerInput[];
@@ -48,6 +53,7 @@ export class CreateBookingSeriesHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly generator: SeriesGeneratorService,
+    private readonly hourBandResolver: HourBandResolverService,
   ) {}
 
   async execute(cmd: CreateBookingSeriesCommand) {
@@ -60,6 +66,13 @@ export class CreateBookingSeriesHandler {
       throw new BadRequestException('Space is not available for booking');
     }
 
+    const allowedTypes = (space.allowedMatchTypes as string[]) ?? [];
+    if (!allowedTypes.includes(cmd.matchType)) {
+      throw new BadRequestException(
+        `Space does not allow ${cmd.matchType}. Allowed: ${allowedTypes.join(', ') || '(none)'}`,
+      );
+    }
+
     const klub = await this.prisma.klub.findUnique({
       where: { id: cmd.klubId },
       include: { config: true },
@@ -67,7 +80,6 @@ export class CreateBookingSeriesHandler {
     const config = klub?.config;
     if (!config) throw new BadRequestException('Klub config missing');
 
-    // Validate max recurrence window
     const rangeMs = cmd.endsOn.getTime() - cmd.startsOn.getTime();
     const maxMs = config.maxRecurrenceMonths * 31 * 24 * 60 * 60_000;
     if (rangeMs > maxMs) {
@@ -76,7 +88,6 @@ export class CreateBookingSeriesHandler {
       );
     }
 
-    // Determine booking mode / initial status
     const allowedModes = config.bookingModes as string[];
     let creationMode: 'direct' | 'staff_approval' | 'staff_assisted';
     let initialStatus: 'pending' | 'confirmed';
@@ -105,7 +116,19 @@ export class CreateBookingSeriesHandler {
       }
     }
 
-    // Generate occurrences
+    const hourBands = (space.hourBands as unknown as HourBand[]) ?? [];
+
+    const probeStart = new Date(cmd.startsOn);
+    probeStart.setUTCHours(cmd.startHour, cmd.startMinute, 0, 0);
+    const probe = this.hourBandResolver.resolve(
+      probeStart,
+      cmd.matchType,
+      hourBands,
+      space.slotDefaultDurationMinutes,
+    );
+    const baseDurationMinutes =
+      Math.round((probe.endsAt.getTime() - probeStart.getTime()) / 60_000);
+
     const occurrences = this.generator.generate({
       startsOn: cmd.startsOn,
       endsOn: cmd.endsOn,
@@ -114,7 +137,7 @@ export class CreateBookingSeriesHandler {
       daysOfWeek: cmd.daysOfWeek,
       startHour: cmd.startHour,
       startMinute: cmd.startMinute,
-      durationMinutes: cmd.durationMinutes,
+      durationMinutes: baseDurationMinutes,
     });
 
     if (occurrences.length === 0) {
@@ -126,12 +149,26 @@ export class CreateBookingSeriesHandler {
       );
     }
 
-    // ATOMIC: validate ALL conflicts before creating ANYTHING
+    const resolvedOccurrences = occurrences.map((occ) => {
+      const r = this.hourBandResolver.resolve(
+        occ.startsAt,
+        cmd.matchType,
+        hourBands,
+        space.slotDefaultDurationMinutes,
+      );
+      if (cmd.otherPlayers.length > 0 && !this.hourBandResolver.bandAllowsGuests(r.band)) {
+        throw new BadRequestException(
+          `Occurrence at ${occ.startsAt.toISOString()} falls in '${r.band.type}' band which does not allow guests`,
+        );
+      }
+      return { startsAt: occ.startsAt, endsAt: r.endsAt };
+    });
+
     const allPlayerIds = [cmd.primaryPlayerId, ...cmd.otherPlayers.map((p) => p.userId)];
     const conflicts: ConflictDetail[] = [];
 
-    const firstOcc = occurrences[0];
-    const lastOcc = occurrences[occurrences.length - 1];
+    const firstOcc = resolvedOccurrences[0];
+    const lastOcc = resolvedOccurrences[resolvedOccurrences.length - 1];
     if (!firstOcc || !lastOcc) {
       throw new BadRequestException('No occurrences generated');
     }
@@ -185,7 +222,7 @@ export class CreateBookingSeriesHandler {
 
     const playerIdSet = new Set(allPlayerIds);
 
-    for (const occ of occurrences) {
+    for (const occ of resolvedOccurrences) {
       for (const existing of combined.values()) {
         const existingEndMs = existing.endsAt?.getTime() ?? Number.POSITIVE_INFINITY;
         const overlaps =
@@ -247,7 +284,7 @@ export class CreateBookingSeriesHandler {
           daysOfWeek: cmd.daysOfWeek,
           startsOn: cmd.startsOn,
           endsOn: cmd.endsOn,
-          durationMinutes: cmd.durationMinutes,
+          durationMinutes: baseDurationMinutes,
           startHour: cmd.startHour,
           startMinute: cmd.startMinute,
           bookingType: cmd.bookingType,
@@ -259,18 +296,20 @@ export class CreateBookingSeriesHandler {
       });
 
       const created = [];
-      for (const occ of occurrences) {
+      for (const occ of resolvedOccurrences) {
         const booking = await tx.booking.create({
           data: {
             klubId: cmd.klubId,
             spaceId: cmd.spaceId,
             startsAt: occ.startsAt,
             endsAt: occ.endsAt,
+            matchType: cmd.matchType,
             bookingType: cmd.bookingType,
             creationMode,
             status: initialStatus,
             primaryPlayerId: cmd.primaryPlayerId,
             otherPlayers: cmd.otherPlayers as unknown as Prisma.InputJsonValue,
+            extensions: [],
             notes: cmd.notes,
             createdById: cmd.createdById,
             approvedById: initialStatus === 'confirmed' ? cmd.createdById : null,

@@ -212,6 +212,10 @@ model KlubConfig {
 
   maxRecurrenceMonths Int @default(3) @map("max_recurrence_months")
 
+  // ─── Extensão de booking ──────────────────────────────────
+  extensionMode       String   @default("disabled") @map("extension_mode")
+  // 'disabled' | 'player' | 'staff_approval' | 'staff_only'
+
   klub  Klub  @relation(fields: [klubId], references: [id])
 
   @@map("klub_configs")
@@ -683,8 +687,15 @@ model Space {
   // active | maintenance | inactive
 
   slotGranularityMinutes     Int      @default(30) @map("slot_granularity_minutes")
+  // 15-180, múltiplo de 15 (validação Zod + check constraint)
   slotDefaultDurationMinutes Int      @default(60) @map("slot_default_duration_minutes")
   bookingActive              Boolean  @default(true) @map("booking_active")
+
+  hourBands                  Json     @default("[]") @map("hour_bands")
+  // [{ type: 'off_peak'|'regular'|'prime', startHour, endHour, daysOfWeek,
+  //    durationByMatchType: { singles?, doubles? } }]
+  allowedMatchTypes          Json     @default("[\"singles\",\"doubles\"]") @map("allowed_match_types")
+  // ['singles', 'doubles'] | ['singles'] | ['doubles']
 
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
@@ -722,6 +733,12 @@ model Booking {
   primaryPlayerId String?   @map("primary_player_id") @db.Uuid
   otherPlayers    Json      @default("[]") @map("other_players")
 
+  matchType       String?   @map("match_type")
+  // 'singles' | 'doubles' | null (null pra blocos operacionais e bookings 10A/10B legados)
+
+  extensions      Json      @default("[]") @map("extensions")
+  // [{ id, extendedFrom, extendedTo, mode, status, requestedById, requestedAt, decidedById?, decidedAt?, decisionReason? }]
+
   tournamentMatchId String?  @unique @map("tournament_match_id") @db.Uuid
 
   bookingSeriesId String?   @map("booking_series_id") @db.Uuid
@@ -754,6 +771,7 @@ model Booking {
   @@index([spaceId, startsAt])
   @@index([primaryPlayerId, startsAt])
   @@index([status])
+  @@index([matchType])
   @@map("bookings")
   @@schema("booking")
 }

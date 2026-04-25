@@ -39,7 +39,20 @@ import {
   CloseOperationalBlockHandler,
   type CloseOperationalBlockCommand,
 } from '../application/commands/close-operational-block.handler';
+import {
+  ExtendBookingHandler,
+  type ExtendBookingCommand,
+} from '../application/commands/extend-booking.handler';
+import {
+  ApproveExtensionHandler,
+  type ApproveExtensionCommand,
+} from '../application/commands/approve-extension.handler';
+import {
+  RejectExtensionHandler,
+  type RejectExtensionCommand,
+} from '../application/commands/reject-extension.handler';
 import { NotFoundException } from '@nestjs/common';
+import type { MatchType } from '../domain/services/hour-band-resolver.service';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -59,6 +72,9 @@ export class BookingFacade {
     private readonly cancelSeriesHandler: CancelBookingSeriesHandler,
     private readonly createBlockHandler: CreateOperationalBlockHandler,
     private readonly closeBlockHandler: CloseOperationalBlockHandler,
+    private readonly extendHandler: ExtendBookingHandler,
+    private readonly approveExtensionHandler: ApproveExtensionHandler,
+    private readonly rejectExtensionHandler: RejectExtensionHandler,
   ) {}
 
   async createBooking(cmd: CreateBookingCommand) {
@@ -77,8 +93,8 @@ export class BookingFacade {
     return this.cancelHandler.execute(cmd);
   }
 
-  async getSpaceAvailability(spaceId: string, date: string) {
-    return this.availabilityHandler.execute(spaceId, date);
+  async getSpaceAvailability(spaceId: string, date: string, matchType?: MatchType) {
+    return this.availabilityHandler.execute(spaceId, date, matchType);
   }
 
   async getKlubCalendar(klubId: string, date: string) {
@@ -115,6 +131,18 @@ export class BookingFacade {
 
   async closeOperationalBlock(cmd: CloseOperationalBlockCommand) {
     return this.closeBlockHandler.execute(cmd);
+  }
+
+  async extendBooking(cmd: ExtendBookingCommand) {
+    return this.extendHandler.execute(cmd);
+  }
+
+  async approveExtension(cmd: ApproveExtensionCommand) {
+    return this.approveExtensionHandler.execute(cmd);
+  }
+
+  async rejectExtension(cmd: RejectExtensionCommand) {
+    return this.rejectExtensionHandler.execute(cmd);
   }
 
   async userIsStaffOfKlub(userId: string, klubId: string): Promise<boolean> {

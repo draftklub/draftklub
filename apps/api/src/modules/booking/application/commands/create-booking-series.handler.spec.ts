@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CreateBookingSeriesHandler } from './create-booking-series.handler';
 import { SeriesGeneratorService } from '../../domain/services/series-generator.service';
+import { HourBandResolverService } from '../../domain/services/hour-band-resolver.service';
 
 const KLUB_ID = '00000000-0000-0000-0000-000000000001';
 const SPACE_ID = '00000000-0000-0000-0001-000000000001';
@@ -40,6 +41,10 @@ function makePrisma(overrides: {
           klubId: KLUB_ID,
           bookingActive: true,
           status: 'active',
+          slotGranularityMinutes: 30,
+          slotDefaultDurationMinutes: 60,
+          hourBands: [],
+          allowedMatchTypes: ['singles', 'doubles'],
         }),
       },
       klub: {
@@ -71,7 +76,11 @@ describe('CreateBookingSeriesHandler (atomic)', () => {
   let handler: CreateBookingSeriesHandler;
 
   beforeEach(() => {
-    handler = new CreateBookingSeriesHandler({} as never, new SeriesGeneratorService());
+    handler = new CreateBookingSeriesHandler(
+      {} as never,
+      new SeriesGeneratorService(),
+      new HourBandResolverService(),
+    );
   });
 
   const baseCmd = () => {
@@ -89,7 +98,7 @@ describe('CreateBookingSeriesHandler (atomic)', () => {
       endsOn: end,
       startHour: 19,
       startMinute: 0,
-      durationMinutes: 60,
+      matchType: 'singles' as const,
       bookingType: 'player_match' as const,
       primaryPlayerId: USER_ID,
       otherPlayers: [],

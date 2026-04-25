@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GetSpaceAvailabilityHandler } from './get-space-availability.handler';
+import { HourBandResolverService } from '../../domain/services/hour-band-resolver.service';
 
 describe('GetSpaceAvailabilityHandler', () => {
   let handler: GetSpaceAvailabilityHandler;
@@ -10,6 +11,8 @@ describe('GetSpaceAvailabilityHandler', () => {
     klubId: 'klub-1',
     slotGranularityMinutes: overrides.granularity ?? 60,
     slotDefaultDurationMinutes: overrides.duration ?? 60,
+    hourBands: [],
+    allowedMatchTypes: ['singles', 'doubles'],
   });
 
   const makeKlub = (openDays = '1,2,3,4,5,6,7') => ({
@@ -17,7 +20,7 @@ describe('GetSpaceAvailabilityHandler', () => {
   });
 
   beforeEach(() => {
-    handler = new GetSpaceAvailabilityHandler({} as never);
+    handler = new GetSpaceAvailabilityHandler({} as never, new HourBandResolverService());
   });
 
   it('gera 4 slots de 1h num dia 8-12h', async () => {

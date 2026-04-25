@@ -1,5 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import {
+  HourBandResolverService,
+  type HourBand,
+  type MatchType,
+} from '../../domain/services/hour-band-resolver.service';
 
 export interface SpaceAvailabilitySlot {
   startTime: string;
@@ -7,6 +12,7 @@ export interface SpaceAvailabilitySlot {
   status: 'available' | 'booked' | 'blocked' | 'past' | 'closed';
   bookingId?: string;
   bookingType?: string;
+  bandType?: string;
 }
 
 const BLOCK_TYPES = new Set(['maintenance', 'weather_closed', 'staff_blocked']);
@@ -15,6 +21,7 @@ export interface SpaceAvailabilityResult {
   spaceId: string;
   spaceName: string;
   date: string;
+  matchType: MatchType;
   granularityMinutes: number;
   defaultDurationMinutes: number;
   slots: SpaceAvailabilitySlot[];
@@ -22,13 +29,28 @@ export interface SpaceAvailabilityResult {
 
 @Injectable()
 export class GetSpaceAvailabilityHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly hourBandResolver: HourBandResolverService,
+  ) {}
 
-  async execute(spaceId: string, date: string): Promise<SpaceAvailabilityResult> {
+  async execute(
+    spaceId: string,
+    date: string,
+    matchType?: MatchType,
+  ): Promise<SpaceAvailabilityResult> {
     const space = await this.prisma.space.findUnique({
       where: { id: spaceId },
     });
     if (!space) throw new NotFoundException('Space not found');
+
+    const allowedTypes = (space.allowedMatchTypes as string[]) ?? [];
+    const effectiveMatchType: MatchType = (matchType ?? (allowedTypes[0] as MatchType)) || 'singles';
+    if (!allowedTypes.includes(effectiveMatchType)) {
+      throw new BadRequestException(
+        `Space does not allow ${effectiveMatchType}. Allowed: ${allowedTypes.join(', ') || '(none)'}`,
+      );
+    }
 
     const klub = await this.prisma.klub.findUnique({
       where: { id: space.klubId },
@@ -50,6 +72,7 @@ export class GetSpaceAvailabilityHandler {
         spaceId,
         spaceName: space.name,
         date,
+        matchType: effectiveMatchType,
         granularityMinutes: space.slotGranularityMinutes,
         defaultDurationMinutes: space.slotDefaultDurationMinutes,
         slots: [],
@@ -73,31 +96,50 @@ export class GetSpaceAvailabilityHandler {
     });
 
     const stepMs = space.slotGranularityMinutes * 60_000;
-    const durationMs = space.slotDefaultDurationMinutes * 60_000;
+    const fallbackDurationMs = space.slotDefaultDurationMinutes * 60_000;
+    const hourBands = (space.hourBands as unknown as HourBand[]) ?? [];
     const now = Date.now();
 
     const slots: SpaceAvailabilitySlot[] = [];
     let cursor = dayStart.getTime();
-    while (cursor + durationMs <= dayEnd.getTime()) {
+    while (cursor + stepMs <= dayEnd.getTime()) {
       const slotStart = new Date(cursor);
-      const slotEnd = new Date(cursor + durationMs);
 
+      let durationMs = fallbackDurationMs;
+      let bandType: string | undefined;
       let status: SpaceAvailabilitySlot['status'] = 'available';
+
+      try {
+        const r = this.hourBandResolver.resolve(
+          slotStart,
+          effectiveMatchType,
+          hourBands,
+          space.slotDefaultDurationMinutes,
+        );
+        durationMs = r.endsAt.getTime() - slotStart.getTime();
+        bandType = r.band.type;
+      } catch {
+        status = 'closed';
+      }
+
+      const slotEnd = new Date(cursor + durationMs);
       let bookingId: string | undefined;
       let bookingType: string | undefined;
 
-      if (cursor < now) {
-        status = 'past';
-      } else {
-        const overlapping = bookings.find((b) => {
-          if (b.startsAt.getTime() >= slotEnd.getTime()) return false;
-          const bookingEndMs = b.endsAt?.getTime() ?? Number.POSITIVE_INFINITY;
-          return bookingEndMs > slotStart.getTime();
-        });
-        if (overlapping) {
-          status = BLOCK_TYPES.has(overlapping.bookingType) ? 'blocked' : 'booked';
-          bookingId = overlapping.id;
-          bookingType = overlapping.bookingType;
+      if (status !== 'closed') {
+        if (cursor < now) {
+          status = 'past';
+        } else {
+          const overlapping = bookings.find((b) => {
+            if (b.startsAt.getTime() >= slotEnd.getTime()) return false;
+            const bookingEndMs = b.endsAt?.getTime() ?? Number.POSITIVE_INFINITY;
+            return bookingEndMs > slotStart.getTime();
+          });
+          if (overlapping) {
+            status = BLOCK_TYPES.has(overlapping.bookingType) ? 'blocked' : 'booked';
+            bookingId = overlapping.id;
+            bookingType = overlapping.bookingType;
+          }
         }
       }
 
@@ -107,6 +149,7 @@ export class GetSpaceAvailabilityHandler {
         status,
         bookingId,
         bookingType,
+        bandType,
       });
 
       cursor += stepMs;
@@ -116,6 +159,7 @@ export class GetSpaceAvailabilityHandler {
       spaceId,
       spaceName: space.name,
       date,
+      matchType: effectiveMatchType,
       granularityMinutes: space.slotGranularityMinutes,
       defaultDurationMinutes: space.slotDefaultDurationMinutes,
       slots,

@@ -7,6 +7,11 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import {
+  HourBandResolverService,
+  type HourBand,
+  type MatchType,
+} from '../../domain/services/hour-band-resolver.service';
 
 export interface OtherPlayerInput {
   userId: string;
@@ -17,7 +22,7 @@ export interface CreateBookingCommand {
   klubId: string;
   spaceId: string;
   startsAt: Date;
-  endsAt: Date;
+  matchType: MatchType;
   bookingType: 'player_match' | 'player_free_play';
   primaryPlayerId: string;
   otherPlayers: OtherPlayerInput[];
@@ -26,7 +31,7 @@ export interface CreateBookingCommand {
   createdByIsStaff: boolean;
 }
 
-function ranges_overlap(
+function rangesOverlap(
   aStart: Date,
   aEnd: Date | null,
   bStart: Date,
@@ -38,7 +43,10 @@ function ranges_overlap(
 
 @Injectable()
 export class CreateBookingHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly hourBandResolver: HourBandResolverService,
+  ) {}
 
   async execute(cmd: CreateBookingCommand) {
     const space = await this.prisma.space.findUnique({
@@ -52,12 +60,43 @@ export class CreateBookingHandler {
       throw new BadRequestException('Space is not available for booking');
     }
 
+    const allowedTypes = (space.allowedMatchTypes as string[]) ?? [];
+    if (!allowedTypes.includes(cmd.matchType)) {
+      throw new BadRequestException(
+        `Space does not allow ${cmd.matchType}. Allowed: ${allowedTypes.join(', ') || '(none configured)'}`,
+      );
+    }
+
     const klub = await this.prisma.klub.findUnique({
       where: { id: cmd.klubId },
       include: { config: true },
     });
     const config = klub?.config;
     if (!config) throw new BadRequestException('Klub config missing');
+
+    const startMinutes =
+      cmd.startsAt.getUTCHours() * 60 + cmd.startsAt.getUTCMinutes();
+    if (startMinutes % space.slotGranularityMinutes !== 0) {
+      throw new BadRequestException(
+        `Start time must be aligned to ${space.slotGranularityMinutes}-minute boundaries`,
+      );
+    }
+
+    const { band, endsAt } = this.hourBandResolver.resolve(
+      cmd.startsAt,
+      cmd.matchType,
+      (space.hourBands as unknown as HourBand[]) ?? [],
+      space.slotDefaultDurationMinutes,
+    );
+
+    if (
+      cmd.otherPlayers.length > 0 &&
+      !this.hourBandResolver.bandAllowsGuests(band)
+    ) {
+      throw new BadRequestException(
+        `Band '${band.type}' does not allow guests/other players`,
+      );
+    }
 
     const allowedModes = config.bookingModes as string[];
     let creationMode: 'direct' | 'staff_approval' | 'staff_assisted';
@@ -78,27 +117,13 @@ export class CreateBookingHandler {
       throw new BadRequestException('Klub has no valid booking modes configured');
     }
 
-    if (cmd.endsAt <= cmd.startsAt) {
-      throw new BadRequestException('endsAt must be after startsAt');
-    }
-    const durationMinutes = (cmd.endsAt.getTime() - cmd.startsAt.getTime()) / 60000;
-    if (durationMinutes < 15) {
-      throw new BadRequestException('Booking duration must be at least 15 minutes');
-    }
     if (cmd.startsAt < new Date()) {
       throw new BadRequestException('Cannot create booking in the past');
     }
 
-    const startMinutes = cmd.startsAt.getUTCHours() * 60 + cmd.startsAt.getUTCMinutes();
-    if (startMinutes % space.slotGranularityMinutes !== 0) {
-      throw new BadRequestException(
-        `Start time must be aligned to ${space.slotGranularityMinutes}-minute boundaries`,
-      );
-    }
-
     const startHour = cmd.startsAt.getUTCHours();
-    const endHour = cmd.endsAt.getUTCHours();
-    const endMinutes = cmd.endsAt.getUTCMinutes();
+    const endHour = endsAt.getUTCHours();
+    const endMinutes = endsAt.getUTCMinutes();
     const effectiveEndHour = endMinutes === 0 ? endHour : endHour + 1;
     if (startHour < config.openingHour || effectiveEndHour > config.closingHour) {
       throw new BadRequestException(
@@ -125,7 +150,7 @@ export class CreateBookingHandler {
       where: {
         spaceId: cmd.spaceId,
         status: { in: ['pending', 'confirmed'] },
-        startsAt: { lt: cmd.endsAt },
+        startsAt: { lt: endsAt },
         OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }],
       },
     });
@@ -138,12 +163,15 @@ export class CreateBookingHandler {
       });
     }
 
-    const allPlayerIds = [cmd.primaryPlayerId, ...cmd.otherPlayers.map((p) => p.userId)];
+    const allPlayerIds = [
+      cmd.primaryPlayerId,
+      ...cmd.otherPlayers.map((p) => p.userId),
+    ];
 
     const overlappingBookings = await this.prisma.booking.findMany({
       where: {
         status: { in: ['pending', 'confirmed'] },
-        startsAt: { lt: cmd.endsAt },
+        startsAt: { lt: endsAt },
         AND: [
           {
             OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }],
@@ -163,7 +191,7 @@ export class CreateBookingHandler {
     const playerIdSet = new Set(allPlayerIds);
     for (const pid of allPlayerIds) {
       const conflict = overlappingBookings.find((b) => {
-        if (!ranges_overlap(b.startsAt, b.endsAt, cmd.startsAt, cmd.endsAt)) return false;
+        if (!rangesOverlap(b.startsAt, b.endsAt, cmd.startsAt, endsAt)) return false;
         if (b.primaryPlayerId && playerIdSet.has(b.primaryPlayerId)) return true;
         const others = (b.otherPlayers as { userId?: string }[] | null) ?? [];
         return others.some((o) => o.userId === pid);
@@ -178,13 +206,10 @@ export class CreateBookingHandler {
       }
     }
 
-    // Fetch remaining bookings not captured by primaryPlayerId IN filter but
-    // containing any of the player IDs in otherPlayers — handled via a broader
-    // time-window query:
     const otherOverlaps = await this.prisma.booking.findMany({
       where: {
         status: { in: ['pending', 'confirmed'] },
-        startsAt: { lt: cmd.endsAt },
+        startsAt: { lt: endsAt },
         OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }],
       },
       select: { id: true, otherPlayers: true },
@@ -210,12 +235,14 @@ export class CreateBookingHandler {
         klubId: cmd.klubId,
         spaceId: cmd.spaceId,
         startsAt: cmd.startsAt,
-        endsAt: cmd.endsAt,
+        endsAt,
+        matchType: cmd.matchType,
         bookingType: cmd.bookingType,
         creationMode,
         status: initialStatus,
         primaryPlayerId: cmd.primaryPlayerId,
         otherPlayers: cmd.otherPlayers as unknown as Prisma.InputJsonValue,
+        extensions: [],
         notes: cmd.notes,
         createdById: cmd.createdById,
         approvedById: initialStatus === 'confirmed' ? cmd.createdById : null,
