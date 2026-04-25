@@ -51,7 +51,7 @@ export class PolicyEngine {
         return true;
 
       case 'SPORTS_COMMITTEE':
-        return ['tournament', 'match', 'ranking', 'rating', 'klub', 'sport'].includes(domain);
+        return ['tournament', 'match', 'ranking', 'rating', 'klub', 'sport', 'booking'].includes(domain);
 
       case 'TEACHER':
         return domain === 'academy' || domain === 'class';
@@ -62,6 +62,7 @@ export class PolicyEngine {
       case 'PLAYER':
         if (operation === 'read') return true;
         if (domain === 'match' && ['create', 'confirm'].includes(operation)) return true;
+        if (domain === 'booking' && operation === 'create') return true;
         if (resource.ownerId != null && resource.ownerId === user.userId) return true;
         return domain === 'reservation' && operation === 'create';
 

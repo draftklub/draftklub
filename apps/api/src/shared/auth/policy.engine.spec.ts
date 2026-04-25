@@ -119,4 +119,36 @@ describe('PolicyEngine', () => {
     };
     expect(engine.can(user, 'booking.create', { klubId: 'klub-B' })).toBe(false);
   });
+
+  it('PLAYER passa em booking.create (membership validado no handler)', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'player@test.com',
+      roleAssignments: [{ role: 'PLAYER', scopeKlubId: klubId }],
+    };
+    expect(engine.can(user, 'booking.create', { klubId })).toBe(true);
+  });
+
+  it('SPORTS_COMMITTEE passa em booking.approve quando scope só klub (booking não tem sportId)', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'committee@test.com',
+      roleAssignments: [{ role: 'SPORTS_COMMITTEE', scopeKlubId: klubId }],
+    };
+    expect(engine.can(user, 'booking.create', { klubId })).toBe(true);
+    expect(engine.can(user, 'booking.approve', { klubId })).toBe(true);
+  });
+
+  it('PLAYER NÃO passa em booking.approve (operação de staff)', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'player@test.com',
+      roleAssignments: [{ role: 'PLAYER', scopeKlubId: klubId }],
+    };
+    expect(engine.can(user, 'booking.approve', { klubId })).toBe(false);
+    expect(engine.can(user, 'booking.cancel_others', { klubId })).toBe(false);
+  });
 });
