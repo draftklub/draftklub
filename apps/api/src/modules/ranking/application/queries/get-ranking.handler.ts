@@ -1,6 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
+interface RankingEntryRow {
+  userId: string;
+  rating: number;
+  tournamentPoints: number;
+  ratingSource: string;
+  wins: number;
+  losses: number;
+  gamesPlayed: number;
+  lastRatingChange: number;
+  lastPlayedAt: Date | null;
+  user: { id: string; fullName: string; avatarUrl: string | null };
+}
+
 @Injectable()
 export class GetRankingHandler {
   constructor(private readonly prisma: PrismaService) {}
@@ -11,7 +24,6 @@ export class GetRankingHandler {
       include: {
         entries: {
           where: { active: true },
-          orderBy: [{ position: 'asc' }, { rating: 'desc' }],
           include: {
             user: {
               select: {
@@ -27,6 +39,12 @@ export class GetRankingHandler {
 
     if (!ranking) throw new NotFoundException(`Ranking ${rankingId} not found`);
 
+    const sorted = sortEntries(
+      ranking.entries,
+      ranking.orderBy,
+      ranking.combinedWeight as { ratingWeight: number; pointsWeight: number } | null,
+    );
+
     return {
       id: ranking.id,
       name: ranking.name,
@@ -37,12 +55,19 @@ export class GetRankingHandler {
       ratingEngine: ranking.ratingEngine,
       initialRating: ranking.initialRating,
       active: ranking.active,
-      players: ranking.entries.map((e) => ({
-        position: e.position,
+      orderBy: ranking.orderBy,
+      windowType: ranking.windowType,
+      windowSize: ranking.windowSize,
+      includesCasualMatches: ranking.includesCasualMatches,
+      includesTournamentMatches: ranking.includesTournamentMatches,
+      includesTournamentPoints: ranking.includesTournamentPoints,
+      players: sorted.map((e, idx) => ({
+        position: idx + 1,
         userId: e.userId,
         fullName: e.user.fullName,
         avatarUrl: e.user.avatarUrl,
         rating: e.rating,
+        tournamentPoints: e.tournamentPoints,
         ratingSource: e.ratingSource,
         wins: e.wins,
         losses: e.losses,
@@ -52,4 +77,34 @@ export class GetRankingHandler {
       })),
     };
   }
+}
+
+export function sortEntries(
+  entries: RankingEntryRow[],
+  orderBy: string,
+  combinedWeight: { ratingWeight: number; pointsWeight: number } | null,
+): RankingEntryRow[] {
+  const arr = [...entries];
+
+  if (orderBy === 'tournament_points') {
+    arr.sort((a, b) => {
+      if (b.tournamentPoints !== a.tournamentPoints) return b.tournamentPoints - a.tournamentPoints;
+      return b.rating - a.rating;
+    });
+    return arr;
+  }
+
+  if (orderBy === 'combined') {
+    const w = combinedWeight ?? { ratingWeight: 0.5, pointsWeight: 0.5 };
+    arr.sort((a, b) => {
+      const scoreA = a.rating * w.ratingWeight + a.tournamentPoints * w.pointsWeight;
+      const scoreB = b.rating * w.ratingWeight + b.tournamentPoints * w.pointsWeight;
+      return scoreB - scoreA;
+    });
+    return arr;
+  }
+
+  // Default: rating
+  arr.sort((a, b) => b.rating - a.rating);
+  return arr;
 }

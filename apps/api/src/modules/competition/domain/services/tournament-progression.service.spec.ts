@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TournamentProgressionService } from './tournament-progression.service';
+import { ApplyTournamentPointsService } from './apply-tournament-points.service';
 
 interface TxMock {
   tournamentMatch: {
@@ -15,6 +16,7 @@ interface TxMock {
     findUnique: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
+  playerRankingEntry: { upsert: ReturnType<typeof vi.fn> };
 }
 
 function makeTx(): TxMock {
@@ -32,14 +34,19 @@ function makeTx(): TxMock {
       findUnique: vi.fn().mockResolvedValue(null),
       update: vi.fn().mockResolvedValue({}),
     },
+    playerRankingEntry: { upsert: vi.fn().mockResolvedValue({}) },
   };
+}
+
+function makeProgressionService(): TournamentProgressionService {
+  return new TournamentProgressionService(new ApplyTournamentPointsService());
 }
 
 describe('TournamentProgressionService.resolvePrequalifierSlots', () => {
   let service: TournamentProgressionService;
 
   beforeEach(() => {
-    service = new TournamentProgressionService();
+    service = makeProgressionService();
   });
 
   const prequalifierMatch = {
@@ -102,7 +109,7 @@ describe('TournamentProgressionService.maybeResolveGroupStandings', () => {
   let service: TournamentProgressionService;
 
   beforeEach(() => {
-    service = new TournamentProgressionService();
+    service = makeProgressionService();
   });
 
   it('nao resolve se algum match do grupo ainda nao terminou', async () => {
@@ -163,7 +170,7 @@ describe('TournamentProgressionService.advance — pending→scheduled transitio
   };
 
   beforeEach(() => {
-    service = new TournamentProgressionService();
+    service = makeProgressionService();
   });
 
   it('vira scheduled quando nextMatch ja tinha o outro player definido', async () => {

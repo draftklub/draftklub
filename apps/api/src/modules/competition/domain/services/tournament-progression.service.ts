@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ApplyTournamentPointsService } from './apply-tournament-points.service';
 
 export interface ProgressionContext {
   id: string;
@@ -28,6 +29,9 @@ interface TxLike {
   tournament: {
     findUnique: (args: unknown) => Promise<unknown>;
     update: (args: unknown) => Promise<unknown>;
+  };
+  playerRankingEntry: {
+    upsert: (args: unknown) => Promise<unknown>;
   };
 }
 
@@ -88,6 +92,8 @@ function eliminationPosition(phase: string): string {
 
 @Injectable()
 export class TournamentProgressionService {
+  constructor(private readonly pointsService: ApplyTournamentPointsService) {}
+
   async advance(
     tx: TxLike,
     match: ProgressionContext,
@@ -139,6 +145,7 @@ export class TournamentProgressionService {
         where: { id: match.tournamentId },
         data: { status: 'finished', currentPhase: 'final' },
       });
+      await this.pointsService.apply(tx, match.tournamentId);
       return;
     }
 

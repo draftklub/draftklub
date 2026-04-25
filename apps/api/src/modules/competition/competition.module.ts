@@ -13,6 +13,7 @@ import { DoubleEliminationStrategy } from './domain/services/strategies/double-e
 import { ScheduleDistributorService } from './domain/services/schedule-distributor.service';
 import { ScheduleTournamentHandler } from './application/commands/schedule-tournament.handler';
 import { TournamentScheduleController } from './api/tournament-schedule.controller';
+import { ApplyTournamentPointsService } from './domain/services/apply-tournament-points.service';
 import { CreatePointsSchemaHandler } from './application/commands/create-points-schema.handler';
 import { CreateTournamentHandler } from './application/commands/create-tournament.handler';
 import { RegisterEntryHandler } from './application/commands/register-entry.handler';
@@ -59,6 +60,7 @@ import { TournamentMatchesController } from './api/tournament-matches.controller
     GroupsKnockoutStrategy,
     DoubleEliminationStrategy,
     ScheduleDistributorService,
+    ApplyTournamentPointsService,
     CreatePointsSchemaHandler,
     CreateTournamentHandler,
     RegisterEntryHandler,

@@ -15,8 +15,13 @@ import {
   ConfirmMatchHandler,
   type ConfirmMatchCommand,
 } from '../application/commands/confirm-match.handler';
+import {
+  UpdateRankingHandler,
+  type UpdateRankingCommand,
+} from '../application/commands/update-ranking.handler';
 import { ListRankingsHandler } from '../application/queries/list-rankings.handler';
 import { GetRankingHandler } from '../application/queries/get-ranking.handler';
+import { RankingRecomputeService } from '../domain/services/ranking-recompute.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 
 export interface CreateRankingWithKlubCommand extends Omit<CreateRankingCommand, 'klubSportId'> {
@@ -33,6 +38,8 @@ export class RankingFacade {
     private readonly confirmMatchHandler: ConfirmMatchHandler,
     private readonly listRankingsHandler: ListRankingsHandler,
     private readonly getRankingHandler: GetRankingHandler,
+    private readonly updateRankingHandler: UpdateRankingHandler,
+    private readonly recomputeService: RankingRecomputeService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -65,5 +72,22 @@ export class RankingFacade {
 
   async confirmMatch(cmd: ConfirmMatchCommand) {
     return this.confirmMatchHandler.execute(cmd);
+  }
+
+  async updateRanking(cmd: UpdateRankingCommand) {
+    return this.updateRankingHandler.execute(cmd);
+  }
+
+  async recomputeAllTemporalRankings(): Promise<{ recomputed: number }> {
+    const temporal = await this.prisma.klubSportRanking.findMany({
+      where: { windowType: { not: 'all_time' } },
+      select: { id: true },
+    });
+    let count = 0;
+    for (const r of temporal) {
+      await this.recomputeService.recompute(r.id);
+      count++;
+    }
+    return { recomputed: count };
   }
 }

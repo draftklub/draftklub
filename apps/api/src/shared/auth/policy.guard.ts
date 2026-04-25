@@ -44,6 +44,11 @@ export class PolicyGuard implements CanActivate {
       if (klubId) {
         resource = { ...resource, klubId };
       }
+    } else if (policy.resolveKlubIdFrom === 'ranking:id' && !resource.klubId) {
+      const klubId = await this.resolveKlubIdFromRankingParam(request);
+      if (klubId) {
+        resource = { ...resource, klubId };
+      }
     }
 
     if (!this.policyEngine.can(user, policy.action, resource)) {
@@ -71,5 +76,23 @@ export class PolicyGuard implements CanActivate {
     });
 
     return tournament?.klubSport.klubId ?? null;
+  }
+
+  private async resolveKlubIdFromRankingParam(
+    request: FastifyRequest,
+  ): Promise<string | null> {
+    const params = (request.params ?? {}) as Record<string, string | undefined>;
+    const rankingId = params.id ?? params.rankingId;
+
+    if (!rankingId || !UUID_REGEX.test(rankingId)) {
+      return null;
+    }
+
+    const ranking = await this.prisma.klubSportRanking.findUnique({
+      where: { id: rankingId },
+      select: { klubSport: { select: { klubId: true } } },
+    });
+
+    return ranking?.klubSport.klubId ?? null;
   }
 }
