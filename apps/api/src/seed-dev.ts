@@ -91,6 +91,21 @@ async function main(): Promise<void> {
     },
     update: {
       name: 'Tennis Club Carioca',
+      config: {
+        update: {
+          bookingPolicy: 'members_only',
+          accessMode: 'members_only',
+          bookingModes: ['direct', 'staff_approval'],
+          cancellationMode: 'with_deadline',
+          cancellationWindowHours: 24,
+          agendaVisibility: 'public',
+          openingHour: 7,
+          closingHour: 22,
+          openDays: '1,2,3,4,5,6,7',
+          maxRecurrenceMonths: 3,
+          extensionMode: 'player',
+        },
+      },
     },
   });
   console.log('Klub created');

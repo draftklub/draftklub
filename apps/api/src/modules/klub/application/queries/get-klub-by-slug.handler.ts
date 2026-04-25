@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { KlubPrismaRepository } from '../../infrastructure/repositories/klub.prisma.repository';
+import { mapKlubConfig } from '../mappers/klub-config.mapper';
 
 @Injectable()
 export class GetKlubBySlugHandler {
@@ -26,15 +27,7 @@ export class GetKlubBySlugHandler {
       isGroup: klub.isGroup,
       parentKlubId: klub.parentKlubId,
       sports: klub.sportProfiles.map((s) => s.sportCode),
-      config: klub.config
-        ? {
-            bookingPolicy: klub.config.bookingPolicy,
-            cancellationWindowHours: klub.config.cancellationWindowHours,
-            openingHour: klub.config.openingHour,
-            closingHour: klub.config.closingHour,
-            openDays: klub.config.openDays,
-          }
-        : null,
+      config: mapKlubConfig(klub.config),
       createdAt: klub.createdAt,
     };
   }
