@@ -154,21 +154,19 @@ async function main(): Promise<void> {
       update: {},
     });
 
-    if (userData.role !== 'PLAYER') {
-      const existingRole = await prisma.roleAssignment.findFirst({
-        where: { userId: user.id, scopeKlubId: KLUB_ID, role: userData.role },
-      });
+    const existingRole = await prisma.roleAssignment.findFirst({
+      where: { userId: user.id, scopeKlubId: KLUB_ID, role: userData.role },
+    });
 
-      if (!existingRole) {
-        await prisma.roleAssignment.create({
-          data: {
-            userId: user.id,
-            role: userData.role,
-            scopeKlubId: KLUB_ID,
-            scopeSportId: null,
-          },
-        });
-      }
+    if (!existingRole) {
+      await prisma.roleAssignment.create({
+        data: {
+          userId: user.id,
+          role: userData.role,
+          scopeKlubId: KLUB_ID,
+          scopeSportId: null,
+        },
+      });
     }
 
     console.log(`${userData.email} (${userData.role})`);

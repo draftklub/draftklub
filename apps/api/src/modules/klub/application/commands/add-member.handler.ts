@@ -5,6 +5,7 @@ export interface AddMemberCommand {
   klubId: string;
   userId: string;
   type: string;
+  role?: string;
 }
 
 @Injectable()
@@ -12,27 +13,45 @@ export class AddMemberHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: AddMemberCommand) {
-    const existing = await this.prisma.membership.findUnique({
-      where: { userId_klubId: { userId: cmd.userId, klubId: cmd.klubId } },
-    });
+    const role = cmd.role ?? 'PLAYER';
 
-    if (existing) {
-      if (existing.status !== 'active') {
-        return this.prisma.membership.update({
-          where: { id: existing.id },
-          data: { status: 'active', type: cmd.type },
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.membership.findUnique({
+        where: { userId_klubId: { userId: cmd.userId, klubId: cmd.klubId } },
+      });
+
+      const membership = existing
+        ? existing.status !== 'active'
+          ? await tx.membership.update({
+              where: { id: existing.id },
+              data: { status: 'active', type: cmd.type },
+            })
+          : existing
+        : await tx.membership.create({
+            data: {
+              userId: cmd.userId,
+              klubId: cmd.klubId,
+              type: cmd.type,
+              status: 'active',
+            },
+          });
+
+      const existingRole = await tx.roleAssignment.findFirst({
+        where: { userId: cmd.userId, scopeKlubId: cmd.klubId, role },
+      });
+
+      if (!existingRole) {
+        await tx.roleAssignment.create({
+          data: {
+            userId: cmd.userId,
+            role,
+            scopeKlubId: cmd.klubId,
+            scopeSportId: null,
+          },
         });
       }
-      return existing;
-    }
 
-    return this.prisma.membership.create({
-      data: {
-        userId: cmd.userId,
-        klubId: cmd.klubId,
-        type: cmd.type,
-        status: 'active',
-      },
+      return membership;
     });
   }
 }
