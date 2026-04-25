@@ -56,6 +56,9 @@ export class PolicyEngine {
       case 'TEACHER':
         return domain === 'academy' || domain === 'class';
 
+      case 'STAFF':
+        return domain === 'booking' && ['create', 'approve', 'cancel_others'].includes(operation);
+
       case 'PLAYER':
         if (operation === 'read') return true;
         if (domain === 'match' && ['create', 'confirm'].includes(operation)) return true;

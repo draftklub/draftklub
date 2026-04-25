@@ -5,7 +5,7 @@ previewFeatures = []
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["identity", "audit", "klub", "space", "sports"]
+  schemas  = ["identity", "audit", "klub", "space", "sports", "booking"]
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -178,9 +178,21 @@ model KlubConfig {
   id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   klubId  String  @unique @map("klub_id") @db.Uuid
 
-  // ─── Política de reserva ──────────────────────────────────
-  bookingPolicy           String  @default("members_only") @map("booking_policy")
-  // members_only | members_and_guests | public
+  // ─── Política de reserva (granular) ───────────────────────
+  accessMode              String   @default("members_only") @map("access_mode")
+  // 'public' | 'members_only'
+
+  bookingModes            Json     @default("[\"direct\"]") @map("booking_modes")
+  // ['direct', 'staff_approval', 'staff_only'] — modos podem combinar
+
+  cancellationMode        String   @default("with_deadline") @map("cancellation_mode")
+  // 'free' | 'with_deadline' | 'staff_only'
+
+  agendaVisibility        String   @default("public") @map("agenda_visibility")
+  // 'public' | 'private'
+
+  // DEPRECATED: mantido por compat (backfill em init_booking popula accessMode)
+  bookingPolicy           String   @default("members_only") @map("booking_policy")
 
   // ─── Política de cancelamento ─────────────────────────────
   cancellationWindowHours Int     @default(24)  @map("cancellation_window_hours")
@@ -533,6 +545,7 @@ model TournamentMatch {
   tbdPlayer1DependentMatches TournamentMatch[] @relation("TbdPlayer1Ref")
   tbdPlayer2Prequalifier TournamentMatch? @relation("TbdPlayer2Ref", fields: [tbdPlayer2PrequalifierMatchRef], references: [id])
   tbdPlayer2DependentMatches TournamentMatch[] @relation("TbdPlayer2Ref")
+  booking             Booking?
 
   @@unique([tournamentId, bracketPosition])
   @@index([matchKind])
@@ -666,12 +679,72 @@ model Space {
   amenities   Json      @default("{}")
   status      String    @default("active")
   // active | maintenance | inactive
+
+  slotGranularityMinutes     Int      @default(30) @map("slot_granularity_minutes")
+  slotDefaultDurationMinutes Int      @default(60) @map("slot_default_duration_minutes")
+  bookingActive              Boolean  @default(true) @map("booking_active")
+
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
 
   tournamentMatches TournamentMatch[]
+  bookings          Booking[]
 
   @@map("spaces")
   @@schema("space")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BOOKING
+// ═══════════════════════════════════════════════════════════════
+
+model Booking {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId          String    @map("klub_id") @db.Uuid
+  spaceId         String    @map("space_id") @db.Uuid
+
+  startsAt        DateTime  @map("starts_at") @db.Timestamptz
+  endsAt          DateTime  @map("ends_at") @db.Timestamptz
+
+  bookingType     String    @default("player_match") @map("booking_type")
+  // 'player_match' | 'player_free_play' | 'maintenance' | 'weather_closed' | 'staff_blocked'
+
+  creationMode    String    @map("creation_mode")
+  // 'direct' | 'staff_approval' | 'staff_assisted'
+
+  status          String    @default("pending") @map("status")
+  // 'pending' | 'confirmed' | 'cancelled' | 'no_show' | 'completed'
+
+  primaryPlayerId String?   @map("primary_player_id") @db.Uuid
+  otherPlayers    Json      @default("[]") @map("other_players")
+
+  tournamentMatchId String?  @unique @map("tournament_match_id") @db.Uuid
+
+  createdById     String?   @map("created_by_id") @db.Uuid
+  approvedById    String?   @map("approved_by_id") @db.Uuid
+  approvedAt      DateTime? @map("approved_at") @db.Timestamptz
+  rejectedById    String?   @map("rejected_by_id") @db.Uuid
+  rejectedAt      DateTime? @map("rejected_at") @db.Timestamptz
+  rejectionReason String?   @map("rejection_reason")
+
+  cancelledById   String?   @map("cancelled_by_id") @db.Uuid
+  cancelledAt     DateTime? @map("cancelled_at") @db.Timestamptz
+  cancellationReason String? @map("cancellation_reason")
+
+  notes           String?
+
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  space           Space     @relation(fields: [spaceId], references: [id])
+  tournamentMatch TournamentMatch? @relation(fields: [tournamentMatchId], references: [id])
+
+  @@index([klubId, startsAt])
+  @@index([spaceId, startsAt])
+  @@index([primaryPlayerId, startsAt])
+  @@index([status])
+  @@map("bookings")
+  @@schema("booking")
 }

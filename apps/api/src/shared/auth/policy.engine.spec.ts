@@ -86,4 +86,37 @@ describe('PolicyEngine', () => {
     };
     expect(engine.can(user, 'tournament.delete', { klubId, ownerId: 'outro-user' })).toBe(false);
   });
+
+  it('STAFF passa em booking.create quando scopeKlubId bate', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'staff@test.com',
+      roleAssignments: [{ role: 'STAFF', scopeKlubId: klubId }],
+    };
+    expect(engine.can(user, 'booking.create', { klubId })).toBe(true);
+    expect(engine.can(user, 'booking.approve', { klubId })).toBe(true);
+    expect(engine.can(user, 'booking.cancel_others', { klubId })).toBe(true);
+  });
+
+  it('STAFF NÃO passa em klub.members.add (sem essa permissão)', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'staff@test.com',
+      roleAssignments: [{ role: 'STAFF', scopeKlubId: klubId }],
+    };
+    expect(engine.can(user, 'klub.members.add', { klubId })).toBe(false);
+    expect(engine.can(user, 'tournament.manage', { klubId })).toBe(false);
+  });
+
+  it('STAFF de Klub A NÃO passa em booking.create com klubId Klub B', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'staff@test.com',
+      roleAssignments: [{ role: 'STAFF', scopeKlubId: 'klub-A' }],
+    };
+    expect(engine.can(user, 'booking.create', { klubId: 'klub-B' })).toBe(false);
+  });
 });

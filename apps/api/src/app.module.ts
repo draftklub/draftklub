@@ -12,6 +12,7 @@ import { KlubModule } from './modules/klub/klub.module';
 import { SportsModule } from './modules/sports/sports.module';
 import { RankingModule } from './modules/ranking/ranking.module';
 import { CompetitionModule } from './modules/competition/competition.module';
+import { BookingModule } from './modules/booking/booking.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { CompetitionModule } from './modules/competition/competition.module';
     SportsModule,
     RankingModule,
     CompetitionModule,
+    BookingModule,
   ],
 })
 export class AppModule {}

@@ -3,6 +3,7 @@ export type Role =
   | 'KLUB_ADMIN'
   | 'SPORTS_COMMITTEE'
   | 'TEACHER'
+  | 'STAFF'
   | 'PLAYER';
 
 export interface RoleAssignmentProps {

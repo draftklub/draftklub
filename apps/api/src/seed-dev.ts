@@ -65,7 +65,11 @@ async function main(): Promise<void> {
       config: {
         create: {
           bookingPolicy: 'members_only',
+          accessMode: 'members_only',
+          bookingModes: ['direct', 'staff_approval'],
+          cancellationMode: 'with_deadline',
           cancellationWindowHours: 24,
+          agendaVisibility: 'public',
           openingHour: 7,
           closingHour: 22,
           openDays: '1,2,3,4,5,6,7',
@@ -379,6 +383,41 @@ async function main(): Promise<void> {
       update: {},
     });
     console.log('Prequalifier tournament created');
+  }
+
+  console.log('Creating sample bookings...');
+  const court1 = await prisma.space.findFirst({
+    where: { klubId: KLUB_ID, sportCode: 'tennis' },
+    orderBy: { name: 'asc' },
+  });
+  const joao = await prisma.user.findUnique({ where: { email: 'joao@player.com' } });
+  const pedro = await prisma.user.findUnique({ where: { email: 'pedro@player.com' } });
+
+  if (court1 && joao && pedro) {
+    const tomorrow = new Date(Date.now() + 24 * 3_600_000);
+    tomorrow.setUTCHours(10, 0, 0, 0);
+
+    const BOOKING_ID_1 = '00000000-0000-0000-0005-000000000001';
+    await prisma.booking.upsert({
+      where: { id: BOOKING_ID_1 },
+      create: {
+        id: BOOKING_ID_1,
+        klubId: KLUB_ID,
+        spaceId: court1.id,
+        startsAt: tomorrow,
+        endsAt: new Date(tomorrow.getTime() + 60 * 60_000),
+        bookingType: 'player_match',
+        creationMode: 'direct',
+        status: 'confirmed',
+        primaryPlayerId: joao.id,
+        otherPlayers: [{ userId: pedro.id, name: 'Pedro Costa' }],
+        createdById: joao.id,
+        approvedById: joao.id,
+        approvedAt: new Date(),
+      },
+      update: {},
+    });
+    console.log('Sample bookings created');
   }
 
   console.log('Seed completed!');

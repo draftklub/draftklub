@@ -49,6 +49,11 @@ export class PolicyGuard implements CanActivate {
       if (klubId) {
         resource = { ...resource, klubId };
       }
+    } else if (policy.resolveKlubIdFrom === 'booking:bookingId' && !resource.klubId) {
+      const klubId = await this.resolveKlubIdFromBookingParam(request);
+      if (klubId) {
+        resource = { ...resource, klubId };
+      }
     }
 
     if (!this.policyEngine.can(user, policy.action, resource)) {
@@ -94,5 +99,23 @@ export class PolicyGuard implements CanActivate {
     });
 
     return ranking?.klubSport.klubId ?? null;
+  }
+
+  private async resolveKlubIdFromBookingParam(
+    request: FastifyRequest,
+  ): Promise<string | null> {
+    const params = (request.params ?? {}) as Record<string, string | undefined>;
+    const bookingId = params.bookingId;
+
+    if (!bookingId || !UUID_REGEX.test(bookingId)) {
+      return null;
+    }
+
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { klubId: true },
+    });
+
+    return booking?.klubId ?? null;
   }
 }
