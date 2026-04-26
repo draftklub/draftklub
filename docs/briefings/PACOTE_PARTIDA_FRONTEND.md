@@ -945,10 +945,10 @@ GET  /klub-sports/:id/ranking            # rankings
 ### 5.3 Variáveis de ambiente
 
 ```
-NEXT_PUBLIC_API_URL=https://draftklub-api-uwlikcs6ka-rj.a.run.app
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyD0zTZCWWJjgCg3FLexNOgnI0TDgy8dEX0
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=draftklub-dev.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=draftklub-dev
+NEXT_PUBLIC_API_URL=<api-cloud-run-url>
+NEXT_PUBLIC_FIREBASE_API_KEY=<get-from-firebase-console>
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<your-project>.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=<your-project>
 ```
 
 ## D11.6 Critério de "D11 mínimo pronto"
