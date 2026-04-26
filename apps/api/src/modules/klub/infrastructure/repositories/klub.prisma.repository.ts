@@ -69,6 +69,50 @@ export class KlubPrismaRepository {
         },
       });
 
+      // Self-service: o criador vira KLUB_ADMIN automaticamente.
+      // Sem isso, ele cria o Klub e fica sem acesso (PolicyEngine bloqueia).
+      // Sales-led (sem createdById) não cria membership/role aqui — esses
+      // fluxos populam os dois manualmente via /klubs/:id/members + role
+      // em onboarding posterior.
+      if (data.createdById) {
+        await tx.membership.upsert({
+          where: {
+            userId_klubId: {
+              userId: data.createdById,
+              klubId: klub.id,
+            },
+          },
+          create: {
+            userId: data.createdById,
+            klubId: klub.id,
+            type: 'member',
+            status: 'active',
+          },
+          update: {
+            status: 'active',
+            type: 'member',
+          },
+        });
+
+        const existingRole = await tx.roleAssignment.findFirst({
+          where: {
+            userId: data.createdById,
+            scopeKlubId: klub.id,
+            role: 'KLUB_ADMIN',
+          },
+        });
+        if (!existingRole) {
+          await tx.roleAssignment.create({
+            data: {
+              userId: data.createdById,
+              role: 'KLUB_ADMIN',
+              scopeKlubId: klub.id,
+              scopeSportId: null,
+            },
+          });
+        }
+      }
+
       return {
         id: klub.id,
         name: klub.name,

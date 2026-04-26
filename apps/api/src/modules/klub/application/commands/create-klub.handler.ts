@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { KlubPrismaRepository } from '../../infrastructure/repositories/klub.prisma.repository';
 import { EncryptionService } from '../../../../shared/encryption/encryption.service';
 import { DocumentVO } from '../../domain/value-objects/document.vo';
@@ -6,6 +6,8 @@ import type { DocumentType } from '../../domain/value-objects/document.vo';
 
 export interface CreateKlubCommand {
   name: string;
+  /** Slug opcional (kebab-case). Se omitido, gerado do nome (+ cidade). */
+  slug?: string;
   type?: string;
   city?: string;
   state?: string;
@@ -42,7 +44,9 @@ export class CreateKlubHandler {
   ) {}
 
   async execute(cmd: CreateKlubCommand): Promise<CreateKlubResult> {
-    const slug = await this.generateSlug(cmd.name, cmd.city);
+    const slug = cmd.slug
+      ? await this.assertSlugAvailable(cmd.slug)
+      : await this.generateSlug(cmd.name, cmd.city);
 
     let documentEncrypted: string | undefined;
     let documentIv: string | undefined;
@@ -80,6 +84,22 @@ export class CreateKlubHandler {
       createdById: cmd.createdById,
       plan: cmd.plan ?? 'trial',
     });
+  }
+
+  /**
+   * Valida slug fornecido pelo cliente. Se já em uso, lança 409 com
+   * payload tipado pra UI mostrar erro contextual no campo.
+   */
+  private async assertSlugAvailable(slug: string): Promise<string> {
+    const exists = await this.klubRepo.findBySlug(slug);
+    if (exists) {
+      throw new ConflictException({
+        type: 'slug_unavailable',
+        slug,
+        message: `Slug "${slug}" já está em uso. Escolha outro.`,
+      });
+    }
+    return slug;
   }
 
   private async generateSlug(name: string, city?: string): Promise<string> {

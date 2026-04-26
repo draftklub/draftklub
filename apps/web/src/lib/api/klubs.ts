@@ -3,6 +3,8 @@ import { apiFetch } from './client';
 
 export interface CreateKlubInput {
   name: string;
+  /** Opcional. Se omitido, backend gera. Conflito → 409 com type='slug_unavailable'. */
+  slug?: string;
   type?: KlubType;
   city?: string;
   state?: string;
@@ -31,7 +33,11 @@ export function getKlubBySlug(slug: string): Promise<Klub> {
   return apiFetch<Klub>(`/klubs/slug/${slug}`);
 }
 
-/** POST /klubs — cria um Klub novo. Auto-membership do criador é PR3. */
+/**
+ * POST /klubs — cria um Klub novo. O criador vira KLUB_ADMIN
+ * automaticamente (Membership + RoleAssignment criados na mesma
+ * transação no backend).
+ */
 export function createKlub(input: CreateKlubInput): Promise<Klub> {
   return apiFetch<Klub>('/klubs', { method: 'POST', json: input });
 }

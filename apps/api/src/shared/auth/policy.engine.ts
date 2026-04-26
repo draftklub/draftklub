@@ -2,6 +2,16 @@ import { Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from './authenticated-user.interface';
 import type { ResourceContext } from './resource-context.interface';
 
+/**
+ * Ações liberadas pra qualquer user autenticado (sem roleAssignments).
+ * Use com parcimônia — cada entrada aqui amplia o ataque surface.
+ *
+ * `klub.create`: self-service de Klub novo (Onda 1, fluxo /criar-klub).
+ * Logo após criar, o user vira KLUB_ADMIN automaticamente — daí em
+ * diante respeita o scope normal.
+ */
+const PUBLIC_AUTHENTICATED_ACTIONS: ReadonlySet<string> = new Set(['klub.create']);
+
 @Injectable()
 export class PolicyEngine {
   can(
@@ -10,6 +20,10 @@ export class PolicyEngine {
     resource: ResourceContext = {},
   ): boolean {
     if (user.roleAssignments.some((r) => r.role === 'SUPER_ADMIN')) {
+      return true;
+    }
+
+    if (PUBLIC_AUTHENTICATED_ACTIONS.has(action)) {
       return true;
     }
 
