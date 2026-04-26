@@ -1,6 +1,6 @@
 export interface UserProps {
   id: string;
-  firebaseUid: string;
+  firebaseUid: string | null;
   email: string;
   fullName: string;
   phone?: string | null;
@@ -15,7 +15,7 @@ export class UserEntity {
   constructor(private readonly props: UserProps) {}
 
   get id(): string { return this.props.id; }
-  get firebaseUid(): string { return this.props.firebaseUid; }
+  get firebaseUid(): string | null { return this.props.firebaseUid; }
   get email(): string { return this.props.email; }
   get fullName(): string { return this.props.fullName; }
   get phone(): string | null { return this.props.phone ?? null; }

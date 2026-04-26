@@ -35,12 +35,21 @@ model OutboxEvent {
 
 model User {
   id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  firebaseUid    String    @unique @map("firebase_uid")
+  firebaseUid    String?   @unique @map("firebase_uid")
+  // nullable: guests nao tem Firebase
   email          String    @unique
   phone          String?
   fullName       String    @map("full_name")
   birthDate      DateTime? @map("birth_date") @db.Date
   avatarUrl      String?   @map("avatar_url")
+
+  kind            String    @default("regular")
+  // 'regular' | 'guest'
+  documentNumber  String?   @map("document_number")
+  // CPF/RG/passport (sem encryption no MVP)
+  documentType    String?   @map("document_type")
+  // 'cpf' | 'rg' | 'passport' | 'other'
+
   consentGivenAt DateTime? @map("consent_given_at") @db.Timestamptz
   consentVersion String?   @map("consent_version")
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -52,6 +61,7 @@ model User {
   rankingEntries    PlayerRankingEntry[] @relation("PlayerEntries")
   matchesSubmitted  MatchResult[]        @relation("MatchesSubmitted")
   tournamentEntries TournamentEntry[]    @relation("TournamentEntries")
+  responsibleForBookings Booking[]       @relation("ResponsibleMember")
 
   @@map("users")
   @@schema("identity")
@@ -215,6 +225,13 @@ model KlubConfig {
   // ─── Extensão de booking ──────────────────────────────────
   extensionMode       String   @default("disabled") @map("extension_mode")
   // 'disabled' | 'player' | 'staff_approval' | 'staff_only'
+
+  // ─── Convidados + integracao com torneio ──────────────────
+  guestsAddedBy                 String   @default("both") @map("guests_added_by")
+  // 'player' | 'staff' | 'both'
+
+  tournamentBookingConflictMode String   @default("staff_decides") @map("tournament_booking_conflict_mode")
+  // 'block_avulso' | 'auto_cancel_avulso' | 'staff_decides'
 
   klub  Klub  @relation(fields: [klubId], references: [id])
 
@@ -735,6 +752,11 @@ model Booking {
 
   matchType       String?   @map("match_type")
   // 'singles' | 'doubles' | null (null pra blocos operacionais e bookings 10A/10B legados)
+
+  responsibleMemberId String?  @map("responsible_member_id") @db.Uuid
+  // FK pra User. Nullable. Default = primaryPlayerId quando primary eh member.
+  // Em members_only sem primary member, este campo eh obrigatorio.
+  responsibleMember   User?    @relation("ResponsibleMember", fields: [responsibleMemberId], references: [id])
 
   extensions      Json      @default("[]") @map("extensions")
   // [{ id, extendedFrom, extendedTo, mode, status, requestedById, requestedAt, decidedById?, decidedAt?, decisionReason? }]

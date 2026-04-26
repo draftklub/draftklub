@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { IdentityModule } from '../identity/identity.module';
 import { SeriesGeneratorService } from './domain/services/series-generator.service';
 import { HourBandResolverService } from './domain/services/hour-band-resolver.service';
+import { BookingVisibilityService } from './domain/services/booking-visibility.service';
+import { GuestUserService } from './domain/services/guest-user.service';
 import { CreateBookingHandler } from './application/commands/create-booking.handler';
 import { ApproveBookingHandler } from './application/commands/approve-booking.handler';
 import { RejectBookingHandler } from './application/commands/reject-booking.handler';
@@ -34,6 +36,7 @@ import {
   BookingExtensionController,
   BookingExtensionActionsController,
 } from './api/booking-extension.controller';
+import { UsersSearchController } from './api/users-search.controller';
 
 @Module({
   imports: [IdentityModule],
@@ -48,10 +51,13 @@ import {
     OperationalBlockActionsController,
     BookingExtensionController,
     BookingExtensionActionsController,
+    UsersSearchController,
   ],
   providers: [
     SeriesGeneratorService,
     HourBandResolverService,
+    BookingVisibilityService,
+    GuestUserService,
     CreateBookingHandler,
     ApproveBookingHandler,
     RejectBookingHandler,

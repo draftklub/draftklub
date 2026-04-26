@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ScheduleDistributorService, type MatchToSchedule } from './schedule-distributor.service';
 import type { ScheduleConfig } from '../../api/dtos/schedule-config.dto';
 
@@ -153,5 +153,184 @@ describe('ScheduleDistributorService.assignMatchesToSlots', () => {
     expect(result.scheduled[0]?.matchId).toBe('r1a');
     expect(result.scheduled[1]?.matchId).toBe('r1b');
     expect(result.scheduled[2]?.matchId).toBe('r2');
+  });
+});
+
+// ─── Side effect: distribute() cria/atualiza Bookings ──────────────
+// Estes testes cobrem o efeito colateral introduzido no 10D.
+
+interface MockTournament {
+  klubSport: { klubId: string; klub: { config: { tournamentBookingConflictMode: string } | null } };
+  matches: {
+    id: string;
+    player1Id: string | null;
+    player2Id: string | null;
+    round: number;
+    bracketPosition: string;
+    isBye: boolean;
+    scheduledFor: Date | null;
+  }[];
+  scheduleConfig: ScheduleConfig;
+  createdById: string | null;
+}
+
+interface FakeTx {
+  tournamentMatch: {
+    update: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+  };
+  booking: {
+    findUnique: ReturnType<typeof vi.fn>;
+    findFirst: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+  };
+}
+
+function buildPrismaForDistribute(opts: {
+  tournament: MockTournament;
+  existingAvulso?: { id: string };
+  existingBookingForMatch?: { id: string };
+}) {
+  const txTournamentMatchUpdate = vi.fn().mockResolvedValue({});
+  const txMatchFindUnique = vi.fn();
+  for (const m of opts.tournament.matches) {
+    txMatchFindUnique.mockResolvedValueOnce({ ...m });
+  }
+  const txBookingFindUnique = vi.fn().mockResolvedValue(opts.existingBookingForMatch ?? null);
+  const txBookingFindFirst = vi.fn().mockResolvedValue(opts.existingAvulso ?? null);
+  const txBookingUpdate = vi.fn().mockImplementation(({ where, data }: { where: { id: string }; data: unknown }) =>
+    Promise.resolve({ id: where.id, ...(data as object) }),
+  );
+  const txBookingCreate = vi.fn().mockImplementation(({ data }: { data: unknown }) =>
+    Promise.resolve({ id: 'new-booking-' + Math.random(), ...(data as object) }),
+  );
+
+  const tx: FakeTx = {
+    tournamentMatch: { update: txTournamentMatchUpdate, findUnique: txMatchFindUnique },
+    booking: {
+      findUnique: txBookingFindUnique,
+      findFirst: txBookingFindFirst,
+      update: txBookingUpdate,
+      create: txBookingCreate,
+    },
+  };
+
+  return {
+    prisma: {
+      tournament: { findUnique: vi.fn().mockResolvedValue(opts.tournament) },
+      $transaction: vi.fn(async (fn: (tx: FakeTx) => Promise<unknown>) => fn(tx)),
+    },
+    tx,
+    spies: { txBookingCreate, txBookingUpdate, txBookingFindFirst },
+  };
+}
+
+const SAMPLE_TOURNAMENT: MockTournament = {
+  klubSport: {
+    klubId: 'klub-1',
+    klub: { config: { tournamentBookingConflictMode: 'auto_cancel_avulso' } },
+  },
+  matches: [
+    {
+      id: 'm1',
+      player1Id: 'pA',
+      player2Id: 'pB',
+      round: 1,
+      bracketPosition: 'QF-1',
+      isBye: false,
+      scheduledFor: null,
+    },
+  ],
+  scheduleConfig: {
+    availableDates: ['2026-05-10'],
+    startHour: 8,
+    endHour: 12,
+    matchDurationMinutes: 60,
+    breakBetweenMatchesMinutes: 0,
+    spaceIds: [SPACE_A],
+    restRuleMinutes: 0,
+  },
+  createdById: 'user-creator',
+};
+
+describe('ScheduleDistributorService.distribute (10D side effects)', () => {
+  let service: ScheduleDistributorService;
+
+  it('cria bookings tournament_match ao agendar (sem conflito)', async () => {
+    const mock = buildPrismaForDistribute({ tournament: SAMPLE_TOURNAMENT });
+    service = new ScheduleDistributorService(mock.prisma as never);
+
+    const result = await service.distribute('t-1');
+
+    expect(mock.spies.txBookingCreate).toHaveBeenCalledOnce();
+    const createCall = mock.spies.txBookingCreate.mock.calls[0]?.[0] as { data: Record<string, unknown> };
+    expect(createCall.data.bookingType).toBe('tournament_match');
+    expect(createCall.data.creationMode).toBe('staff_assisted');
+    expect(createCall.data.status).toBe('confirmed');
+    expect(createCall.data.tournamentMatchId).toBe('m1');
+    expect(result.bookingsCreated).toHaveLength(1);
+    expect(result.bookingsAutoCancelled).toEqual([]);
+    expect(result.conflictsToResolve).toEqual([]);
+  });
+
+  it('conflito + block_avulso => lanca 409', async () => {
+    const tournament: MockTournament = {
+      ...SAMPLE_TOURNAMENT,
+      klubSport: {
+        ...SAMPLE_TOURNAMENT.klubSport,
+        klub: { config: { tournamentBookingConflictMode: 'block_avulso' } },
+      },
+    };
+    const mock = buildPrismaForDistribute({
+      tournament,
+      existingAvulso: { id: 'avulso-1' },
+    });
+    service = new ScheduleDistributorService(mock.prisma as never);
+
+    await expect(service.distribute('t-1')).rejects.toMatchObject({
+      response: expect.objectContaining({ type: 'tournament_vs_avulso' }) as object,
+    });
+    expect(mock.spies.txBookingCreate).not.toHaveBeenCalled();
+  });
+
+  it('conflito + auto_cancel_avulso => cancela avulso e cria booking de torneio', async () => {
+    const mock = buildPrismaForDistribute({
+      tournament: SAMPLE_TOURNAMENT,
+      existingAvulso: { id: 'avulso-1' },
+    });
+    service = new ScheduleDistributorService(mock.prisma as never);
+
+    const result = await service.distribute('t-1');
+
+    expect(result.bookingsAutoCancelled).toContain('avulso-1');
+    expect(result.bookingsCreated).toHaveLength(1);
+    const cancelCall = mock.spies.txBookingUpdate.mock.calls[0]?.[0] as { data: { status: string; cancellationReason: string } };
+    expect(cancelCall.data.status).toBe('cancelled');
+    expect(cancelCall.data.cancellationReason).toMatch(/auto_cancelled:tournament/);
+  });
+
+  it('conflito + staff_decides => marca pendencia e nao cria/cancela', async () => {
+    const tournament: MockTournament = {
+      ...SAMPLE_TOURNAMENT,
+      klubSport: {
+        ...SAMPLE_TOURNAMENT.klubSport,
+        klub: { config: { tournamentBookingConflictMode: 'staff_decides' } },
+      },
+    };
+    const mock = buildPrismaForDistribute({
+      tournament,
+      existingAvulso: { id: 'avulso-1' },
+    });
+    service = new ScheduleDistributorService(mock.prisma as never);
+
+    const result = await service.distribute('t-1');
+
+    expect(result.conflictsToResolve).toHaveLength(1);
+    expect(result.conflictsToResolve?.[0]?.avulsoBookingId).toBe('avulso-1');
+    expect(result.bookingsCreated).toEqual([]);
+    expect(result.bookingsAutoCancelled).toEqual([]);
+    expect(mock.spies.txBookingCreate).not.toHaveBeenCalled();
+    expect(mock.spies.txBookingUpdate).not.toHaveBeenCalled();
   });
 });

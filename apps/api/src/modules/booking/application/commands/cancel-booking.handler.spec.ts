@@ -10,6 +10,7 @@ function makeBooking(overrides: {
   primaryPlayerId: string | null;
   otherPlayers: unknown;
   status?: string;
+  bookingType?: string;
 }) {
   return {
     id: BOOKING_ID,
@@ -18,6 +19,7 @@ function makeBooking(overrides: {
     primaryPlayerId: overrides.primaryPlayerId,
     otherPlayers: overrides.otherPlayers,
     status: overrides.status ?? 'confirmed',
+    bookingType: overrides.bookingType ?? 'player_match',
   };
 }
 
@@ -99,6 +101,43 @@ describe('CancelBookingHandler', () => {
     const result = await handler.execute({
       bookingId: BOOKING_ID,
       cancelledById: USER_ID,
+      isStaff: true,
+    });
+    expect(result.status).toBe('cancelled');
+  });
+
+  it('player NAO pode cancelar tournament_match (10D)', async () => {
+    const booking = makeBooking({
+      startsAt: new Date(Date.now() + 48 * 3_600_000),
+      primaryPlayerId: USER_ID,
+      otherPlayers: [],
+      bookingType: 'tournament_match',
+    });
+    const prisma = buildPrisma(booking, makeKlub('free'));
+    (handler as unknown as { prisma: unknown }).prisma = prisma;
+
+    await expect(
+      handler.execute({
+        bookingId: BOOKING_ID,
+        cancelledById: USER_ID,
+        isStaff: false,
+      }),
+    ).rejects.toThrow(/Tournament match bookings cannot be cancelled directly/);
+  });
+
+  it('staff PODE cancelar tournament_match (10D)', async () => {
+    const booking = makeBooking({
+      startsAt: new Date(Date.now() + 48 * 3_600_000),
+      primaryPlayerId: USER_ID,
+      otherPlayers: [],
+      bookingType: 'tournament_match',
+    });
+    const prisma = buildPrisma(booking, makeKlub('free'));
+    (handler as unknown as { prisma: unknown }).prisma = prisma;
+
+    const result = await handler.execute({
+      bookingId: BOOKING_ID,
+      cancelledById: OTHER_USER_ID,
       isStaff: true,
     });
     expect(result.status).toBe('cancelled');

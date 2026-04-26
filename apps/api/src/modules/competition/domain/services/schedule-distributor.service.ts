@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import {
   ScheduleConfigSchema,
@@ -33,9 +38,19 @@ export interface UnscheduledMatch {
   reason: string;
 }
 
+export interface ConflictPending {
+  tournamentMatchId: string;
+  avulsoBookingId: string;
+  proposedSlot: Slot;
+}
+
 export interface DistributionResult {
   scheduled: ScheduledMatch[];
   unscheduled: UnscheduledMatch[];
+  bookingsCreated?: string[];
+  bookingsUpdated?: string[];
+  bookingsAutoCancelled?: string[];
+  conflictsToResolve?: ConflictPending[];
 }
 
 export interface KlubHours {
@@ -200,7 +215,18 @@ export class ScheduleDistributorService {
       klubHours,
     );
 
-    await this.prisma.$transaction(async (tx) => {
+    const conflictMode =
+      tournament.klubSport.klub.config?.tournamentBookingConflictMode ??
+      'staff_decides';
+    const klubId = tournament.klubSport.klubId;
+    const tournamentCreatedById = tournament.createdById;
+
+    const sideEffects = await this.prisma.$transaction(async (tx) => {
+      const bookingsCreated: string[] = [];
+      const bookingsUpdated: string[] = [];
+      const bookingsAutoCancelled: string[] = [];
+      const conflictsToResolve: ConflictPending[] = [];
+
       for (const sched of scheduled) {
         await tx.tournamentMatch.update({
           where: { id: sched.matchId },
@@ -210,12 +236,111 @@ export class ScheduleDistributorService {
             scheduleWarning: sched.warning ?? null,
           },
         });
+
+        const match = await tx.tournamentMatch.findUnique({
+          where: { id: sched.matchId },
+        });
+        if (!match) continue;
+
+        const existingBooking = await tx.booking.findUnique({
+          where: { tournamentMatchId: match.id },
+        });
+
+        const avulsoConflict = await tx.booking.findFirst({
+          where: {
+            spaceId: sched.spaceId,
+            ...(existingBooking ? { id: { not: existingBooking.id } } : {}),
+            status: { in: ['pending', 'confirmed'] },
+            bookingType: { in: ['player_match', 'player_free_play'] },
+            tournamentMatchId: null,
+            startsAt: { lt: sched.endTime },
+            OR: [{ endsAt: null }, { endsAt: { gt: sched.startTime } }],
+          },
+          select: { id: true },
+        });
+
+        if (avulsoConflict) {
+          if (conflictMode === 'block_avulso') {
+            throw new ConflictException({
+              type: 'tournament_vs_avulso',
+              message:
+                'Tournament scheduling blocked by existing booking. Cancel avulso first.',
+              avulsoBookingId: avulsoConflict.id,
+              tournamentMatchId: match.id,
+            });
+          } else if (conflictMode === 'auto_cancel_avulso') {
+            await tx.booking.update({
+              where: { id: avulsoConflict.id },
+              data: {
+                status: 'cancelled',
+                cancelledAt: new Date(),
+                cancellationReason: `auto_cancelled:tournament:${tournamentId}`,
+              },
+            });
+            bookingsAutoCancelled.push(avulsoConflict.id);
+          } else {
+            conflictsToResolve.push({
+              tournamentMatchId: match.id,
+              avulsoBookingId: avulsoConflict.id,
+              proposedSlot: {
+                date: sched.startTime.toISOString().slice(0, 10),
+                startTime: sched.startTime,
+                endTime: sched.endTime,
+                spaceId: sched.spaceId,
+              },
+            });
+            continue;
+          }
+        }
+
+        const otherPlayers = match.player2Id
+          ? [{ userId: match.player2Id, name: 'Player 2' }]
+          : [];
+
+        if (existingBooking) {
+          await tx.booking.update({
+            where: { id: existingBooking.id },
+            data: {
+              startsAt: sched.startTime,
+              endsAt: sched.endTime,
+              spaceId: sched.spaceId,
+            },
+          });
+          bookingsUpdated.push(existingBooking.id);
+        } else {
+          const created = await tx.booking.create({
+            data: {
+              klubId,
+              spaceId: sched.spaceId,
+              startsAt: sched.startTime,
+              endsAt: sched.endTime,
+              bookingType: 'tournament_match',
+              creationMode: 'staff_assisted',
+              status: 'confirmed',
+              tournamentMatchId: match.id,
+              primaryPlayerId: match.player1Id,
+              otherPlayers,
+              matchType: 'singles',
+              extensions: [],
+              createdById: tournamentCreatedById,
+              approvedById: tournamentCreatedById,
+              approvedAt: new Date(),
+            },
+          });
+          bookingsCreated.push(created.id);
+        }
       }
+
+      return { bookingsCreated, bookingsUpdated, bookingsAutoCancelled, conflictsToResolve };
     });
 
     return {
       scheduled,
       unscheduled: [...skipped, ...unscheduled],
+      bookingsCreated: sideEffects.bookingsCreated,
+      bookingsUpdated: sideEffects.bookingsUpdated,
+      bookingsAutoCancelled: sideEffects.bookingsAutoCancelled,
+      conflictsToResolve: sideEffects.conflictsToResolve,
     };
   }
 

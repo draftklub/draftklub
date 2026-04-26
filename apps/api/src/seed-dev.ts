@@ -74,6 +74,8 @@ async function main(): Promise<void> {
           closingHour: 22,
           openDays: '1,2,3,4,5,6,7',
           extensionMode: 'player',
+          guestsAddedBy: 'both',
+          tournamentBookingConflictMode: 'staff_decides',
         },
       },
       sportProfiles: {
@@ -104,6 +106,8 @@ async function main(): Promise<void> {
           openDays: '1,2,3,4,5,6,7',
           maxRecurrenceMonths: 3,
           extensionMode: 'player',
+          guestsAddedBy: 'both',
+          tournamentBookingConflictMode: 'staff_decides',
         },
       },
     },
@@ -489,6 +493,49 @@ async function main(): Promise<void> {
       update: {},
     });
     console.log('Sample booking series created');
+
+    // ─── Guest user de exemplo + booking com guest ───────────
+    const GUEST_ID = '00000000-0000-0001-0001-000000000099';
+    const guest = await prisma.user.upsert({
+      where: { id: GUEST_ID },
+      create: {
+        id: GUEST_ID,
+        email: 'guest.example@external.com',
+        fullName: 'Carlos Silva (guest)',
+        kind: 'guest',
+        documentNumber: '12345678900',
+        documentType: 'cpf',
+        firebaseUid: null,
+      },
+      update: {},
+    });
+
+    const GUEST_BOOKING_ID = '00000000-0000-0000-0005-000000000003';
+    const guestBookingDate = new Date(Date.now() + 3 * 24 * 3_600_000);
+    guestBookingDate.setUTCHours(13, 0, 0, 0);
+    await prisma.booking.upsert({
+      where: { id: GUEST_BOOKING_ID },
+      create: {
+        id: GUEST_BOOKING_ID,
+        klubId: KLUB_ID,
+        spaceId: court1.id,
+        startsAt: guestBookingDate,
+        endsAt: new Date(guestBookingDate.getTime() + 60 * 60_000),
+        matchType: 'singles',
+        bookingType: 'player_match',
+        creationMode: 'direct',
+        status: 'confirmed',
+        primaryPlayerId: joao.id,
+        otherPlayers: [{ userId: guest.id, name: guest.fullName }],
+        responsibleMemberId: joao.id,
+        notes: 'Singles com convidado externo',
+        createdById: joao.id,
+        approvedById: joao.id,
+        approvedAt: new Date(),
+      },
+      update: {},
+    });
+    console.log('Guest user + booking with guest created');
   }
 
   const court2 = await prisma.space.findFirst({

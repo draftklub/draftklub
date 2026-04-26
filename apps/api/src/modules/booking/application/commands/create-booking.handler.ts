@@ -12,11 +12,15 @@ import {
   type HourBand,
   type MatchType,
 } from '../../domain/services/hour-band-resolver.service';
+import { GuestUserService, type GuestInput } from '../../domain/services/guest-user.service';
 
-export interface OtherPlayerInput {
+export interface ExistingPlayerInput {
   userId: string;
-  name: string;
 }
+export interface GuestPlayerInput {
+  guest: GuestInput;
+}
+export type PlayerInput = ExistingPlayerInput | GuestPlayerInput;
 
 export interface CreateBookingCommand {
   klubId: string;
@@ -25,10 +29,16 @@ export interface CreateBookingCommand {
   matchType: MatchType;
   bookingType: 'player_match' | 'player_free_play';
   primaryPlayerId: string;
-  otherPlayers: OtherPlayerInput[];
+  otherPlayers: PlayerInput[];
+  responsibleMemberId?: string;
   notes?: string;
   createdById: string;
   createdByIsStaff: boolean;
+}
+
+interface ResolvedPlayer {
+  userId: string;
+  name: string;
 }
 
 function rangesOverlap(
@@ -46,6 +56,7 @@ export class CreateBookingHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly hourBandResolver: HourBandResolverService,
+    private readonly guestUserService: GuestUserService,
   ) {}
 
   async execute(cmd: CreateBookingCommand) {
@@ -63,7 +74,7 @@ export class CreateBookingHandler {
     const allowedTypes = (space.allowedMatchTypes as string[]) ?? [];
     if (!allowedTypes.includes(cmd.matchType)) {
       throw new BadRequestException(
-        `Space does not allow ${cmd.matchType}. Allowed: ${allowedTypes.join(', ') || '(none configured)'}`,
+        `Space does not allow ${cmd.matchType}. Allowed: ${allowedTypes.join(', ') || '(none)'}`,
       );
     }
 
@@ -89,8 +100,26 @@ export class CreateBookingHandler {
       space.slotDefaultDurationMinutes,
     );
 
+    const allowGuestAdd = this.canAddGuests(config.guestsAddedBy, cmd.createdByIsStaff);
+    const resolvedOtherPlayers: ResolvedPlayer[] = [];
+    for (const player of cmd.otherPlayers) {
+      if ('userId' in player) {
+        const user = await this.prisma.user.findUnique({ where: { id: player.userId } });
+        if (!user) throw new BadRequestException(`User ${player.userId} not found`);
+        resolvedOtherPlayers.push({ userId: user.id, name: user.fullName });
+      } else {
+        if (!allowGuestAdd) {
+          throw new ForbiddenException(
+            `This Klub does not allow ${cmd.createdByIsStaff ? 'staff' : 'players'} to add guests`,
+          );
+        }
+        const guest = await this.guestUserService.createOrGet(player.guest);
+        resolvedOtherPlayers.push({ userId: guest.id, name: guest.fullName });
+      }
+    }
+
     if (
-      cmd.otherPlayers.length > 0 &&
+      resolvedOtherPlayers.length > 0 &&
       !this.hourBandResolver.bandAllowsGuests(band)
     ) {
       throw new BadRequestException(
@@ -137,12 +166,64 @@ export class CreateBookingHandler {
       throw new BadRequestException('Klub is closed on this day');
     }
 
+    const allUserIds = [cmd.primaryPlayerId, ...resolvedOtherPlayers.map((p) => p.userId)];
+
     if (config.accessMode === 'members_only' && !cmd.createdByIsStaff) {
-      const isMember = await this.prisma.membership.findFirst({
-        where: { userId: cmd.primaryPlayerId, klubId: cmd.klubId },
+      const memberships = await this.prisma.membership.findMany({
+        where: {
+          userId: { in: allUserIds },
+          klubId: cmd.klubId,
+          status: 'active',
+        },
+        select: { userId: true },
       });
-      if (!isMember) {
-        throw new ForbiddenException('This Klub requires membership to book');
+      if (memberships.length === 0) {
+        throw new BadRequestException(
+          'In members_only Klub, at least one member must be in the booking',
+        );
+      }
+    }
+
+    let responsibleMemberId = cmd.responsibleMemberId;
+
+    if (config.accessMode === 'members_only') {
+      if (!responsibleMemberId) {
+        const primaryIsMember = await this.prisma.membership.findFirst({
+          where: {
+            userId: cmd.primaryPlayerId,
+            klubId: cmd.klubId,
+            status: 'active',
+          },
+          select: { userId: true },
+        });
+        if (primaryIsMember) {
+          responsibleMemberId = cmd.primaryPlayerId;
+        } else {
+          const memberOther = await this.findFirstMember(
+            resolvedOtherPlayers.map((p) => p.userId),
+            cmd.klubId,
+          );
+          if (!memberOther) {
+            throw new BadRequestException(
+              'In members_only Klub with non-member primary, must specify responsibleMemberId',
+            );
+          }
+          responsibleMemberId = memberOther;
+        }
+      } else {
+        const isMember = await this.prisma.membership.findFirst({
+          where: {
+            userId: responsibleMemberId,
+            klubId: cmd.klubId,
+            status: 'active',
+          },
+          select: { id: true },
+        });
+        if (!isMember) {
+          throw new BadRequestException(
+            'responsibleMemberId must be an active member of this Klub',
+          );
+        }
       }
     }
 
@@ -154,7 +235,6 @@ export class CreateBookingHandler {
         OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }],
       },
     });
-
     if (spaceConflict) {
       throw new ConflictException({
         type: 'space_conflict',
@@ -163,21 +243,12 @@ export class CreateBookingHandler {
       });
     }
 
-    const allPlayerIds = [
-      cmd.primaryPlayerId,
-      ...cmd.otherPlayers.map((p) => p.userId),
-    ];
-
     const overlappingBookings = await this.prisma.booking.findMany({
       where: {
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: endsAt },
-        AND: [
-          {
-            OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }],
-          },
-        ],
-        primaryPlayerId: { in: allPlayerIds },
+        AND: [{ OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }] }],
+        primaryPlayerId: { in: allUserIds },
       },
       select: {
         id: true,
@@ -188,8 +259,8 @@ export class CreateBookingHandler {
       },
     });
 
-    const playerIdSet = new Set(allPlayerIds);
-    for (const pid of allPlayerIds) {
+    const playerIdSet = new Set(allUserIds);
+    for (const pid of allUserIds) {
       const conflict = overlappingBookings.find((b) => {
         if (!rangesOverlap(b.startsAt, b.endsAt, cmd.startsAt, endsAt)) return false;
         if (b.primaryPlayerId && playerIdSet.has(b.primaryPlayerId)) return true;
@@ -214,8 +285,7 @@ export class CreateBookingHandler {
       },
       select: { id: true, otherPlayers: true },
     });
-
-    for (const pid of allPlayerIds) {
+    for (const pid of allUserIds) {
       const conflict = otherOverlaps.find((b) => {
         const others = (b.otherPlayers as { userId?: string }[] | null) ?? [];
         return others.some((o) => o.userId === pid);
@@ -241,7 +311,8 @@ export class CreateBookingHandler {
         creationMode,
         status: initialStatus,
         primaryPlayerId: cmd.primaryPlayerId,
-        otherPlayers: cmd.otherPlayers as unknown as Prisma.InputJsonValue,
+        otherPlayers: resolvedOtherPlayers as unknown as Prisma.InputJsonValue,
+        responsibleMemberId: responsibleMemberId ?? null,
         extensions: [],
         notes: cmd.notes,
         createdById: cmd.createdById,
@@ -249,5 +320,21 @@ export class CreateBookingHandler {
         approvedAt: initialStatus === 'confirmed' ? new Date() : null,
       },
     });
+  }
+
+  private canAddGuests(mode: string, isStaff: boolean): boolean {
+    if (mode === 'both') return true;
+    if (mode === 'player' && !isStaff) return true;
+    if (mode === 'staff' && isStaff) return true;
+    return false;
+  }
+
+  private async findFirstMember(userIds: string[], klubId: string): Promise<string | null> {
+    if (userIds.length === 0) return null;
+    const m = await this.prisma.membership.findFirst({
+      where: { userId: { in: userIds }, klubId, status: 'active' },
+      select: { userId: true },
+    });
+    return m?.userId ?? null;
   }
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CreateBookingHandler } from './create-booking.handler';
 import { HourBandResolverService } from '../../domain/services/hour-band-resolver.service';
+import { GuestUserService } from '../../domain/services/guest-user.service';
 
 const KLUB_ID = '00000000-0000-0000-0000-000000000001';
 const SPACE_ID = '00000000-0000-0000-0001-000000000001';
@@ -74,7 +75,7 @@ function makePrisma(overrides: {
     hourBands: overrides.space?.hourBands ?? [REGULAR_BAND, PRIME_BAND],
     allowedMatchTypes: overrides.space?.allowedMatchTypes ?? ['singles', 'doubles'],
   };
-  const config = overrides.klubConfig ?? {
+  const config = {
     bookingModes: ['direct'],
     accessMode: 'public',
     openingHour: 6,
@@ -82,6 +83,8 @@ function makePrisma(overrides: {
     openDays: '1,2,3,4,5,6,7',
     cancellationMode: 'with_deadline',
     cancellationWindowHours: 24,
+    guestsAddedBy: 'both',
+    ...(overrides.klubConfig ?? {}),
   };
 
   const bookingFindFirst = vi.fn().mockResolvedValueOnce(overrides.spaceConflict ?? null);
@@ -90,10 +93,20 @@ function makePrisma(overrides: {
     prisma: {
       space: { findUnique: vi.fn().mockResolvedValue(space) },
       klub: { findUnique: vi.fn().mockResolvedValue({ config }) },
+      user: {
+        findUnique: vi
+          .fn()
+          .mockImplementation(({ where }: { where: { id: string } }) =>
+            Promise.resolve({ id: where.id, fullName: `User ${where.id}` }),
+          ),
+      },
       membership: {
         findFirst: vi
           .fn()
           .mockResolvedValue(overrides.isMember === false ? null : { id: 'm1' }),
+        findMany: vi.fn().mockResolvedValue(
+          overrides.isMember === false ? [] : [{ userId: 'any' }],
+        ),
       },
       booking: {
         findFirst: bookingFindFirst,
@@ -127,7 +140,8 @@ describe('CreateBookingHandler', () => {
 
   beforeEach(() => {
     resolver = new HourBandResolverService();
-    handler = new CreateBookingHandler({} as never, resolver);
+    const guestSvc = new GuestUserService({} as never);
+    handler = new CreateBookingHandler({} as never, resolver, guestSvc);
   });
 
   function attach(prisma: unknown) {
@@ -205,7 +219,7 @@ describe('CreateBookingHandler', () => {
       handler.execute({
         ...baseCmd,
         startsAt: nextMonday(19),
-        otherPlayers: [{ userId: PLAYER2_ID, name: 'Player 2' }],
+        otherPlayers: [{ userId: PLAYER2_ID }],
       }),
     ).rejects.toThrow(/does not allow guests/);
   });
@@ -215,7 +229,7 @@ describe('CreateBookingHandler', () => {
     attach(mock.prisma);
     const result = await handler.execute({
       ...baseCmd,
-      otherPlayers: [{ userId: PLAYER2_ID, name: 'Player 2' }],
+      otherPlayers: [{ userId: PLAYER2_ID }],
     });
     expect(result).toMatchObject({ status: 'confirmed' });
   });
@@ -244,7 +258,7 @@ describe('CreateBookingHandler', () => {
       isMember: false,
     });
     attach(mock.prisma);
-    await expect(handler.execute({ ...baseCmd })).rejects.toThrow(/membership/i);
+    await expect(handler.execute({ ...baseCmd })).rejects.toThrow(/member/i);
   });
 
   it('rejeita se startsAt esta no passado', async () => {
@@ -255,5 +269,115 @@ describe('CreateBookingHandler', () => {
     await expect(
       handler.execute({ ...baseCmd, startsAt: past }),
     ).rejects.toThrow(/past/);
+  });
+
+  // ─── 10D: cenarios de guests + responsibleMember ────────────
+  it('10D: Cenario A - adiciona User existente como otherPlayer', async () => {
+    const mock = makePrisma();
+    attach(mock.prisma);
+    const result = await handler.execute({
+      ...baseCmd,
+      otherPlayers: [{ userId: PLAYER2_ID }],
+    });
+    const r = result as unknown as { otherPlayers: { userId: string; name: string }[] };
+    expect(r.otherPlayers[0]?.userId).toBe(PLAYER2_ID);
+    expect(r.otherPlayers[0]?.name).toMatch(/User/);
+  });
+
+  it('10D: Cenario B - cria guest e adiciona', async () => {
+    const mock = makePrisma();
+    // Mock GuestUserService via injecting through handler
+    const guestSvc = (handler as unknown as { guestUserService: { createOrGet: ReturnType<typeof vi.fn> } })
+      .guestUserService;
+    guestSvc.createOrGet = vi.fn().mockResolvedValue({
+      id: 'guest-new',
+      fullName: 'Carlos Silva',
+    });
+    attach(mock.prisma);
+    const result = await handler.execute({
+      ...baseCmd,
+      otherPlayers: [
+        { guest: { firstName: 'Carlos', lastName: 'Silva', email: 'c@x.com' } },
+      ],
+    });
+    const r = result as unknown as { otherPlayers: { userId: string; name: string }[] };
+    expect(r.otherPlayers[0]?.userId).toBe('guest-new');
+    expect(r.otherPlayers[0]?.name).toBe('Carlos Silva');
+  });
+
+  it('10D: guestsAddedBy=staff rejeita player adicionando guest', async () => {
+    const mock = makePrisma({
+      klubConfig: {
+        bookingModes: ['direct'],
+        accessMode: 'public',
+        openingHour: 6,
+        closingHour: 23,
+        openDays: '1,2,3,4,5,6,7',
+        cancellationMode: 'with_deadline',
+        cancellationWindowHours: 24,
+      },
+    });
+    // override config to set guestsAddedBy='staff'
+    mock.prisma.klub.findUnique = vi.fn().mockResolvedValue({
+      config: {
+        bookingModes: ['direct'],
+        accessMode: 'public',
+        openingHour: 6,
+        closingHour: 23,
+        openDays: '1,2,3,4,5,6,7',
+        guestsAddedBy: 'staff',
+      },
+    });
+    attach(mock.prisma);
+    await expect(
+      handler.execute({
+        ...baseCmd,
+        otherPlayers: [
+          { guest: { firstName: 'Carlos', lastName: 'Silva', email: 'c@x.com' } },
+        ],
+      }),
+    ).rejects.toThrow(/does not allow players to add guests/);
+  });
+
+  it('10D: responsibleMemberId explicito invalido (nao membro) -> 400', async () => {
+    const mock = makePrisma({
+      klubConfig: {
+        bookingModes: ['direct'],
+        accessMode: 'members_only',
+        openingHour: 6,
+        closingHour: 23,
+        openDays: '1,2,3,4,5,6,7',
+        cancellationMode: 'with_deadline',
+        cancellationWindowHours: 24,
+      },
+    });
+    // membership.findMany retorna [USER] (passa "at least 1 member"); findFirst retorna null (responsibleMember invalido)
+    mock.prisma.membership.findFirst = vi.fn().mockResolvedValue(null);
+    mock.prisma.membership.findMany = vi.fn().mockResolvedValue([{ userId: USER_ID }]);
+    attach(mock.prisma);
+    await expect(
+      handler.execute({ ...baseCmd, responsibleMemberId: PLAYER2_ID }),
+    ).rejects.toThrow(/responsibleMemberId must be an active member/);
+  });
+
+  it('10D: responsibleMemberId default = primary se primary eh member', async () => {
+    const mock = makePrisma({
+      klubConfig: {
+        bookingModes: ['direct'],
+        accessMode: 'members_only',
+        openingHour: 6,
+        closingHour: 23,
+        openDays: '1,2,3,4,5,6,7',
+        cancellationMode: 'with_deadline',
+        cancellationWindowHours: 24,
+      },
+    });
+    // membership.findFirst eh chamado: primary IS member
+    mock.prisma.membership.findFirst = vi.fn().mockResolvedValue({ userId: USER_ID });
+    mock.prisma.membership.findMany = vi.fn().mockResolvedValue([{ userId: USER_ID }]);
+    attach(mock.prisma);
+    const result = await handler.execute({ ...baseCmd });
+    const r = result as { responsibleMemberId: string | null };
+    expect(r.responsibleMemberId).toBe(USER_ID);
   });
 });

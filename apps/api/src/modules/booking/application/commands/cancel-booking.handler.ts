@@ -30,6 +30,12 @@ export class CancelBookingHandler {
       throw new BadRequestException(`Cannot cancel booking in status '${booking.status}'`);
     }
 
+    if (booking.bookingType === 'tournament_match' && !cmd.isStaff) {
+      throw new ForbiddenException(
+        'Tournament match bookings cannot be cancelled directly. Contact staff or cancel via tournament.',
+      );
+    }
+
     const klub = await this.prisma.klub.findUnique({
       where: { id: booking.klubId },
       include: { config: true },

@@ -39,6 +39,7 @@ export class BookingController {
       bookingType: dto.bookingType,
       primaryPlayerId: dto.primaryPlayerId ?? user.userId,
       otherPlayers: dto.otherPlayers,
+      responsibleMemberId: dto.responsibleMemberId,
       notes: dto.notes,
       createdById: user.userId,
       createdByIsStaff: isStaff,

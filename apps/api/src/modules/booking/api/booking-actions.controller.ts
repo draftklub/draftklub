@@ -25,8 +25,11 @@ export class BookingActionsController {
   constructor(private readonly facade: BookingFacade) {}
 
   @Get()
-  async get(@Param('bookingId') bookingId: string) {
-    return this.facade.getBooking(bookingId);
+  async get(
+    @Param('bookingId') bookingId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.facade.getBookingForViewer(bookingId, user.userId);
   }
 
   @Patch('approve')
