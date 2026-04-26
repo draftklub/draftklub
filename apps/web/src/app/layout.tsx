@@ -3,6 +3,7 @@ import { Inter, Geist, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { ThemeProvider, ThemeScript } from '@/components/theme-provider';
+import { AuthProvider } from '@/components/auth-provider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -58,7 +59,9 @@ export default function RootLayout({
           jetbrains.variable,
         )}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

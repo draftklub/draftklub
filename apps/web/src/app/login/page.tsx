@@ -1,6 +1,7 @@
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { CourtPattern } from '@/components/brand/court-pattern';
 import { LoginForm } from '@/components/login/login-form';
+import { RedirectIfAuthenticated } from '@/components/auth-guard';
 
 /**
  * DraftKlub Login — responsivo, 3 tratamentos.
@@ -18,6 +19,7 @@ import { LoginForm } from '@/components/login/login-form';
 export default function LoginPage() {
   return (
     <main className="min-h-screen lg:flex">
+      <RedirectIfAuthenticated to="/dashboard" />
       {/* ───── Hero (somente desktop) ───────────────────────────── */}
       <section
         className="relative hidden overflow-hidden text-white lg:flex lg:basis-[56%] lg:flex-col lg:justify-between"

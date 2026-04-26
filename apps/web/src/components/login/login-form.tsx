@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { loginWithEmail, loginWithGoogle } from '@/lib/auth-stub';
+import { loginWithEmail, loginWithGoogle } from '@/lib/auth';
 
 type Status = 'idle' | 'loading' | 'error' | 'success';
 

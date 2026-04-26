@@ -1,7 +1,9 @@
 'use client';
 
-import { Bell, Moon, Search, Sun } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Bell, LogOut, Moon, Search, Sun } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
+import { logout } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
 const SPORTS = ['Tennis', 'Padel', 'Squash', 'Beach'] as const;
@@ -15,6 +17,12 @@ interface TopbarProps {
 
 export function Topbar({ title, subtitle, activeSport = 'Tennis' }: TopbarProps) {
   const { resolvedTheme, setTheme } = useTheme();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await logout();
+    router.replace('/login');
+  }
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-6 border-b border-border bg-card px-8">
@@ -82,6 +90,15 @@ export function Topbar({ title, subtitle, activeSport = 'Tennis' }: TopbarProps)
             aria-hidden="true"
             className="absolute right-2.5 top-2.5 size-1.5 rounded-full bg-accent ring-2 ring-card"
           />
+        </button>
+
+        <button
+          type="button"
+          className="relative inline-flex size-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Sair"
+          onClick={() => void handleLogout()}
+        >
+          <LogOut className="size-4" />
         </button>
       </div>
     </header>

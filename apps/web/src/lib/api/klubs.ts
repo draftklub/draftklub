@@ -1,0 +1,37 @@
+import type { Klub, KlubType, KlubPlan } from '@draftklub/shared-types';
+import { apiFetch } from './client';
+
+export interface CreateKlubInput {
+  name: string;
+  type?: KlubType;
+  city?: string;
+  state?: string;
+  timezone?: string;
+  email?: string;
+  phone?: string;
+  entityType?: 'pj' | 'pf';
+  document?: string;
+  legalName?: string;
+  sportCodes?: string[];
+  plan?: KlubPlan;
+}
+
+/** GET /klubs — lista global (auth required, requer policy klub.list). */
+export function listKlubs(): Promise<Klub[]> {
+  return apiFetch<Klub[]>('/klubs');
+}
+
+/** GET /klubs/:id — detalhe completo com config + sports. */
+export function getKlubById(id: string): Promise<Klub> {
+  return apiFetch<Klub>(`/klubs/${id}`);
+}
+
+/** GET /klubs/slug/:slug — lookup por slug, usado pelo route guard. */
+export function getKlubBySlug(slug: string): Promise<Klub> {
+  return apiFetch<Klub>(`/klubs/slug/${slug}`);
+}
+
+/** POST /klubs — cria um Klub novo. Auto-membership do criador é PR3. */
+export function createKlub(input: CreateKlubInput): Promise<Klub> {
+  return apiFetch<Klub>('/klubs', { method: 'POST', json: input });
+}
