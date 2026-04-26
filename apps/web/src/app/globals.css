@@ -1,0 +1,227 @@
+@import "tailwindcss";
+
+/* Prevent layout shift when scrollbar appears/disappears (dialogs, selects, etc.) */
+html {
+  scrollbar-gutter: stable;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-display: var(--font-geist), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+
+  --container-2xl: 1400px;
+}
+
+/* ── Light mode — verde profundo brasileiro + stone neutrals ─────────────── */
+:root {
+  /* Brand palette — source of truth (canon: DraftKlub Design System) */
+  --brand-primary-50:  152 81% 96%;
+  --brand-primary-100: 153 81% 90%;
+  --brand-primary-200: 152 76% 80%;
+  --brand-primary-300: 156 72% 67%;
+  --brand-primary-400: 158 64% 52%;
+  --brand-primary-500: 168 80% 27%;   /* #0E7C66 ← cor principal da marca */
+  --brand-primary-600: 168 79% 22%;
+  --brand-primary-700: 170 82% 17%;
+  --brand-primary-800: 168 81% 12%;
+  --brand-primary-900: 169 81% 7%;
+
+  --brand-secondary-400: 12 75% 64%;
+  --brand-secondary-500: 12 73% 52%;  /* #DC4F2F terracota */
+  --brand-secondary-600: 12 69% 43%;
+
+  --brand-accent-400: 43 96% 56%;
+  --brand-accent-500: 38 92% 50%;     /* #F59E0B âmbar (hour bands prime time) */
+  --brand-accent-600: 32 95% 44%;
+
+  --brand-neutral-50:  60 9% 98%;
+  --brand-neutral-100: 60 5% 96%;
+  --brand-neutral-200: 20 6% 90%;
+  --brand-neutral-300: 24 6% 83%;
+  --brand-neutral-500: 25 5% 45%;
+  --brand-neutral-700: 30 7% 25%;
+  --brand-neutral-900: 20 14% 10%;
+
+  /* shadcn-compatible tokens */
+  --background:           60 9% 98%;
+  --foreground:           20 14% 10%;
+  --card:                 0 0% 100%;
+  --card-foreground:      20 14% 12%;
+  --popover:              0 0% 100%;
+  --popover-foreground:   20 14% 12%;
+
+  --primary:              168 80% 27%;
+  --primary-foreground:   0 0% 100%;
+
+  --secondary:            60 5% 96%;
+  --secondary-foreground: 30 7% 25%;
+  --muted:                60 5% 96%;
+  --muted-foreground:     25 5% 45%;
+
+  --accent:               12 73% 52%;          /* terracota */
+  --accent-foreground:    0 0% 100%;
+
+  --destructive:          0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border:               20 6% 90%;
+  --input:                20 6% 90%;
+  --ring:                 168 80% 27%;
+  --radius:               0.75rem;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow:    0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+
+  /* Court surface colors — usado em court cards e badges */
+  --surface-clay:      hsl(28 71% 36%);
+  --surface-hard:      hsl(202 78% 36%);
+  --surface-grass:     hsl(142 65% 30%);
+  --surface-synthetic: hsl(220 9% 38%);
+  --surface-carpet:    hsl(330 60% 35%);
+  --surface-other:     hsl(220 9% 50%);
+
+  /* Hour band colors — usado em calendar grids */
+  --band-offpeak: hsl(0 0% 100%);
+  --band-regular: hsl(60 5% 96%);
+  --band-prime:   hsl(43 96% 92%);
+}
+
+/* ── Dark mode — stone deep + verde-400 brighter ─────────────────────────── */
+.dark {
+  --background:           20 14% 8%;
+  --foreground:           60 9% 96%;
+  --card:                 20 12% 12%;
+  --card-foreground:      60 9% 96%;
+  --popover:              20 12% 12%;
+  --popover-foreground:   60 9% 96%;
+  --primary:              158 64% 52%;
+  --primary-foreground:   169 81% 7%;
+  --secondary:            24 6% 18%;
+  --secondary-foreground: 60 9% 88%;
+  --muted:                24 6% 16%;
+  --muted-foreground:     24 5% 65%;
+  --accent:               12 75% 58%;
+  --accent-foreground:    0 0% 100%;
+  --destructive:          0 62% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --border:               24 6% 22%;
+  --input:                24 6% 18%;
+  --ring:                 158 64% 52%;
+
+  --band-offpeak: hsl(20 12% 12%);
+  --band-regular: hsl(24 6% 16%);
+  --band-prime:   hsl(32 60% 16%);
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Accessibility — respeita prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Tagline lock-up */
+.tagline {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.tagline em {
+  font-style: normal;
+  color: hsl(var(--primary));
+}
+
+/* "Acontecendo" pulse — usado em badges live */
+@keyframes dk-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+.dk-pulse {
+  animation: dk-pulse 2s ease-in-out infinite;
+}
+
+/* dk-spin — usado em spinners de loading */
+@keyframes dk-spin {
+  to { transform: rotate(360deg); }
+}
+.dk-spin {
+  animation: dk-spin 0.7s linear infinite;
+}
+
+/* dk-fade-in — entrada suave de painéis */
+@keyframes dk-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+.dk-fade-in {
+  animation: dk-fade-in 220ms ease;
+}
+
+/* dk-pop-in — check de sucesso */
+@keyframes dk-pop-in {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.dk-pop-in {
+  animation: dk-pop-in 320ms cubic-bezier(.2,.9,.3,1.4);
+}
+
+/* dk-shake — feedback de erro inline (substitui toast) */
+@keyframes dk-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-3px); }
+  40%, 60% { transform: translateX(3px); }
+}
+.dk-shake {
+  animation: dk-shake 280ms cubic-bezier(.36,.07,.19,.97);
+}
