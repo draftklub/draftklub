@@ -39,6 +39,45 @@ steps:
     waitFor: ['ci']
 
   # ─────────────────────────────────────────
+  # STEP 2b: Build imagem Web (Next.js standalone)
+  # NEXT_PUBLIC_* sao baked-in no build do Next, então passados como
+  # --build-arg. Configure os valores reais via substituições do trigger
+  # (nao commitam aqui).
+  # ─────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build-web
+    args:
+      - build
+      - '-f'
+      - 'apps/web/Dockerfile'
+      - '-t'
+      - '$_WEB_IMAGE:$COMMIT_SHA'
+      - '-t'
+      - '$_WEB_IMAGE:latest'
+      - '--cache-from'
+      - '$_WEB_IMAGE:latest'
+      - '--build-arg'
+      - 'BUILDKIT_INLINE_CACHE=1'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=$_NEXT_PUBLIC_API_URL'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_WEB_URL=$_NEXT_PUBLIC_WEB_URL'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_API_KEY=$_NEXT_PUBLIC_FIREBASE_API_KEY'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_PROJECT_ID=$_NEXT_PUBLIC_FIREBASE_PROJECT_ID'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_APP_ID=$_NEXT_PUBLIC_FIREBASE_APP_ID'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'
+      - '.'
+    waitFor: ['ci']
+
+  # ─────────────────────────────────────────
   # STEP 3: Build imagem Worker
   # ─────────────────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
@@ -81,6 +120,17 @@ steps:
     waitFor: ['build-worker']
 
   # ─────────────────────────────────────────
+  # STEP 5b: Push imagem Web
+  # ─────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push-web
+    args:
+      - push
+      - '--all-tags'
+      - '$_WEB_IMAGE'
+    waitFor: ['build-web']
+
+  # ─────────────────────────────────────────
   # STEP 6: Rodar migrations (Cloud Run Job)
   # ─────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
@@ -114,8 +164,29 @@ steps:
       - '--region=$_REGION'
       - '--image=$_API_IMAGE:$COMMIT_SHA'
       - '--set-secrets=DATABASE_URL=database-url:latest,ENCRYPTION_KEY=encryption-key:latest'
-      - '--set-env-vars=NODE_ENV=production,LOG_LEVEL=info,OTEL_ENABLED=false,OTEL_SERVICE_NAME=draftklub-api'
+      - '--set-env-vars=NODE_ENV=production,LOG_LEVEL=info,OTEL_ENABLED=false,OTEL_SERVICE_NAME=draftklub-api,CORS_ORIGINS=$_WEB_CORS_ORIGINS'
     waitFor: ['migrate']
+
+  # ─────────────────────────────────────────
+  # STEP 8: Deploy Web (Next.js standalone)
+  # Cria o service na primeira execução; updates subsequentes só trocam
+  # imagem. Service publico (allow-unauthenticated) — login eh client-
+  # side via Firebase. Container escuta na porta 3001 (PORT env).
+  # ─────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+    id: deploy-web
+    entrypoint: sh
+    args:
+      - '-c'
+      - |
+        gcloud run deploy draftklub-web \
+          --project=$_PROJECT_ID \
+          --region=$_REGION \
+          --image=$_WEB_IMAGE:$COMMIT_SHA \
+          --port=3001 \
+          --allow-unauthenticated \
+          --set-env-vars=NODE_ENV=production
+    waitFor: ['push-web']
 
 
 substitutions:
@@ -123,6 +194,20 @@ substitutions:
   _REGION: 'southamerica-east1'
   _API_IMAGE: 'southamerica-east1-docker.pkg.dev/draftklub-dev/draftklub/api'
   _WORKER_IMAGE: 'southamerica-east1-docker.pkg.dev/draftklub-dev/draftklub/worker'
+  _WEB_IMAGE: 'southamerica-east1-docker.pkg.dev/draftklub-dev/draftklub/web'
+  # CORS — atualizar com a URL real do Cloud Run draftklub-web apos
+  # primeiro deploy (ou via trigger substitution).
+  _WEB_CORS_ORIGINS: 'http://localhost:3001'
+  # Firebase Web SDK config — defaults sao placeholders. Sobrescreva
+  # via trigger substitution pra build real.
+  _NEXT_PUBLIC_API_URL: 'https://draftklub-api-uwlikcs6ka-rj.a.run.app'
+  _NEXT_PUBLIC_WEB_URL: 'http://localhost:3001'
+  _NEXT_PUBLIC_FIREBASE_API_KEY: ''
+  _NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'draftklub-dev.firebaseapp.com'
+  _NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'draftklub-dev'
+  _NEXT_PUBLIC_FIREBASE_APP_ID: ''
+  _NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'draftklub-dev.firebasestorage.app'
+  _NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '598839404621'
 
 options:
   logging: CLOUD_LOGGING_ONLY
