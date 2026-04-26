@@ -12,7 +12,6 @@ import {
   X,
 } from 'lucide-react';
 import { Topbar } from '@/components/dashboard/topbar';
-import { useActiveKlub } from '@/components/active-klub-provider';
 import { cn } from '@/lib/utils';
 
 const HOURS: { h: string; pct: number; prime: boolean }[] = [
@@ -240,14 +239,9 @@ function todayHeader(): string {
 }
 
 export default function DashboardPage() {
-  const { klub } = useActiveKlub();
   return (
     <>
-      <Topbar
-        title={klub?.name ?? 'Klub'}
-        subtitle={todayHeader()}
-        activeSport="Tennis"
-      />
+      <Topbar subtitle={todayHeader()} activeSport="Tennis" />
       <main className="flex-1 overflow-y-auto px-8 py-6">
         {/* KPI row */}
         <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

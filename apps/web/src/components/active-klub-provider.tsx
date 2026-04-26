@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import type { Klub } from '@draftklub/shared-types';
 import { getKlubBySlug } from '@/lib/api/klubs';
 import { ApiError } from '@/lib/api/client';
+import { rememberLastKlubSlug } from '@/lib/last-klub-cookie';
 
 interface ActiveKlubContextValue {
   /** Slug lido do segmento `[klubSlug]` da URL. */
@@ -55,6 +56,7 @@ export function ActiveKlubProvider({ children }: { children: React.ReactNode }) 
         if (cancelled) return;
         setKlub(data);
         setIsLoading(false);
+        rememberLastKlubSlug(slug);
       })
       .catch((err: unknown) => {
         if (cancelled) return;

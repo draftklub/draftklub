@@ -2,8 +2,10 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import { AuthGuard } from '@/components/auth-guard';
 import { getMyKlubs } from '@/lib/api/me';
+import { readLastKlubSlug } from '@/lib/last-klub-cookie';
 
 export default function PostLoginPage() {
   return (
@@ -16,27 +18,39 @@ export default function PostLoginPage() {
 /**
  * Roteador pós-login: chama `GET /me/klubs` e redireciona conforme o
  * número de Klubs do user:
- * - 0 → `/criar-klub` (vazio: user ainda não tem Klub)
- * - 1 → `/k/:slug/dashboard` (caminho direto)
- * - N → `/escolher-klub` (mostra picker)
- *
- * Versão minimalista pra Onda 1 PR4. PR5 vai adicionar persistência
- * de "último Klub visitado" via cookie e UI de loading polida.
+ * - 0 → `/criar-klub`
+ * - 1 → `/k/:slug/dashboard` direto
+ * - N + cookie `dk_last_klub_slug` ainda válido → `/k/:slug/dashboard`
+ * - N sem cookie ou cookie stale → `/escolher-klub`
  */
 function PostLoginRouter() {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [reloadToken, setReloadToken] = React.useState(0);
 
   React.useEffect(() => {
     let cancelled = false;
+    setErrorMessage(null);
+
     getMyKlubs()
       .then((klubs) => {
         if (cancelled) return;
-        const only = klubs.length === 1 ? klubs[0] : null;
         if (klubs.length === 0) {
           router.replace('/criar-klub');
-        } else if (only) {
-          router.replace(`/k/${only.klubSlug}/dashboard`);
+          return;
+        }
+
+        if (klubs.length === 1) {
+          const only = klubs[0];
+          if (only) router.replace(`/k/${only.klubSlug}/dashboard`);
+          return;
+        }
+
+        const lastSlug = readLastKlubSlug();
+        const lastStillValid =
+          lastSlug && klubs.some((k) => k.klubSlug === lastSlug);
+        if (lastStillValid) {
+          router.replace(`/k/${lastSlug}/dashboard`);
         } else {
           router.replace('/escolher-klub');
         }
@@ -48,7 +62,7 @@ function PostLoginRouter() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, reloadToken]);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6">
@@ -56,9 +70,19 @@ function PostLoginRouter() {
         <div className="max-w-md text-center">
           <h1 className="font-display text-xl font-bold">Erro ao carregar Klubs</h1>
           <p className="mt-2 text-sm text-muted-foreground">{errorMessage}</p>
+          <button
+            type="button"
+            onClick={() => setReloadToken((n) => n + 1)}
+            className="mt-4 inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Tentar de novo
+          </button>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Resolvendo seu Klub…</p>
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Resolvendo seu Klub…</p>
+        </div>
       )}
     </main>
   );

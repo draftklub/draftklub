@@ -3,38 +3,41 @@
 import { useRouter } from 'next/navigation';
 import { Bell, LogOut, Moon, Search, Sun } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
+import { KlubSwitcher } from '@/components/dashboard/klub-switcher';
 import { logout } from '@/lib/auth';
+import { forgetLastKlubSlug } from '@/lib/last-klub-cookie';
 import { cn } from '@/lib/utils';
 
 const SPORTS = ['Tennis', 'Padel', 'Squash', 'Beach'] as const;
 type Sport = (typeof SPORTS)[number];
 
 interface TopbarProps {
-  title: string;
+  /**
+   * Subtítulo (geralmente data/hora do header). Sem `title`: agora vem
+   * do `KlubSwitcher` que lê o nome do Klub ativo via context.
+   */
   subtitle?: string;
   activeSport?: Sport;
 }
 
-export function Topbar({ title, subtitle, activeSport = 'Tennis' }: TopbarProps) {
+export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
 
   async function handleLogout() {
+    forgetLastKlubSlug();
     await logout();
     router.replace('/login');
   }
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-6 border-b border-border bg-card px-8">
-      <div className="min-w-0">
-        <h1
-          className="truncate font-display text-[20px] font-bold"
-          style={{ letterSpacing: '-0.02em' }}
-        >
-          {title}
-        </h1>
+      <div className="flex min-w-0 flex-col">
+        <KlubSwitcher />
         {subtitle ? (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p>
+          <p className="mt-0.5 truncate pl-2 text-xs text-muted-foreground">
+            {subtitle}
+          </p>
         ) : null}
       </div>
 
