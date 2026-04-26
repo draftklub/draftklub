@@ -54,6 +54,14 @@ export class PolicyGuard implements CanActivate {
       if (klubId) {
         resource = { ...resource, klubId };
       }
+    } else if (
+      policy.resolveKlubIdFrom === 'tournament-match:matchId' &&
+      !resource.klubId
+    ) {
+      const klubId = await this.resolveKlubIdFromTournamentMatchParam(request);
+      if (klubId) {
+        resource = { ...resource, klubId };
+      }
     }
 
     if (!this.policyEngine.can(user, policy.action, resource)) {
@@ -117,5 +125,23 @@ export class PolicyGuard implements CanActivate {
     });
 
     return booking?.klubId ?? null;
+  }
+
+  private async resolveKlubIdFromTournamentMatchParam(
+    request: FastifyRequest,
+  ): Promise<string | null> {
+    const params = (request.params ?? {}) as Record<string, string | undefined>;
+    const matchId = params.matchId;
+
+    if (!matchId || !UUID_REGEX.test(matchId)) {
+      return null;
+    }
+
+    const match = await this.prisma.tournamentMatch.findUnique({
+      where: { id: matchId },
+      select: { tournament: { select: { klubSport: { select: { klubId: true } } } } },
+    });
+
+    return match?.tournament.klubSport.klubId ?? null;
   }
 }

@@ -607,10 +607,37 @@ model TournamentMatch {
   tbdPlayer2Prequalifier TournamentMatch? @relation("TbdPlayer2Ref", fields: [tbdPlayer2PrequalifierMatchRef], references: [id])
   tbdPlayer2DependentMatches TournamentMatch[] @relation("TbdPlayer2Ref")
   booking             Booking?
+  reverts             TournamentMatchRevert[]
 
   @@unique([tournamentId, bracketPosition])
   @@index([matchKind])
   @@map("tournament_matches")
+  @@schema("klub")
+}
+
+model TournamentMatchRevert {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tournamentMatchId String    @map("tournament_match_id") @db.Uuid
+
+  revertedById      String    @map("reverted_by_id") @db.Uuid
+  revertedAt        DateTime  @default(now()) @map("reverted_at") @db.Timestamptz
+  reason            String?
+
+  previousState     Json      @map("previous_state")
+  // Snapshot completo:
+  // {
+  //   winnerId, matchResultId, status, completedAt,
+  //   ratingDeltas: [{ userId, ratingBefore, ratingAfter, delta, toRevert }],
+  //   nextMatchAffected?: { id, slot, hadCompleted }
+  // }
+
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  tournamentMatch   TournamentMatch @relation(fields: [tournamentMatchId], references: [id])
+
+  @@index([tournamentMatchId])
+  @@index([revertedAt])
+  @@map("tournament_match_reverts")
   @@schema("klub")
 }
 

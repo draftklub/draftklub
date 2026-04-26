@@ -3,7 +3,11 @@ import type { ResourceContext } from './resource-context.interface';
 
 export const POLICY_KEY = 'policy';
 
-export type KlubIdResolver = 'tournament:tournamentId' | 'ranking:id' | 'booking:bookingId';
+export type KlubIdResolver =
+  | 'tournament:tournamentId'
+  | 'ranking:id'
+  | 'booking:bookingId'
+  | 'tournament-match:matchId';
 
 export interface PolicyMetadata {
   action: string;
