@@ -5,6 +5,7 @@ import { execSync } from 'node:child_process';
 import { AppModule } from './app.module';
 import { initTelemetry, shutdownTelemetry } from './bootstrap/telemetry/otel';
 import { ZodExceptionFilter } from './shared/filters/zod-exception.filter';
+import { getCorsOrigins } from './bootstrap/config/app.config';
 
 function runMigrations(): void {
   execSync('./node_modules/.bin/prisma migrate deploy', { stdio: 'inherit' });
@@ -28,6 +29,15 @@ async function bootstrap(): Promise<void> {
 
   app.useLogger(app.get(Logger));
   app.useGlobalFilters(new ZodExceptionFilter());
+
+  app.enableCors({
+    origin: getCorsOrigins(),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Authorization', 'Content-Type', 'X-Requested-With'],
+    maxAge: 600,
+  });
+
   app.enableShutdownHooks();
 
   const port = parseInt(process.env.PORT ?? '3000', 10);

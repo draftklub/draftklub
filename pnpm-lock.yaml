@@ -23,6 +23,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@draftklub/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       '@draftklub/sport-strategies':
         specifier: workspace:^
         version: link:../../packages/sport-strategies
@@ -126,6 +129,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@draftklub/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       '@radix-ui/react-slot':
         specifier: ^1.1.0
         version: 1.2.3(@types/react@19.2.14)(react@19.0.0)
