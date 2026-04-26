@@ -1,3 +1,5 @@
+'use client';
+
 import {
   ArrowDown,
   ArrowUp,
@@ -10,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { Topbar } from '@/components/dashboard/topbar';
+import { useActiveKlub } from '@/components/active-klub-provider';
 import { cn } from '@/lib/utils';
 
 const HOURS: { h: string; pct: number; prime: boolean }[] = [
@@ -232,16 +235,16 @@ function todayHeader(): string {
     month: 'long',
   });
   const hora = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  // Capitalize day-of-week
   const cap = dia.charAt(0).toUpperCase() + dia.slice(1);
   return `${cap} · ${hora}`;
 }
 
 export default function DashboardPage() {
+  const { klub } = useActiveKlub();
   return (
     <>
       <Topbar
-        title="Klub Carioca de Tênis"
+        title={klub?.name ?? 'Klub'}
         subtitle={todayHeader()}
         activeSport="Tennis"
       />
@@ -539,7 +542,6 @@ function FeedIcon({ type }: { type: FeedItem['type'] }) {
       </span>
     );
   }
-  // tourney
   return (
     <span
       className={cls}

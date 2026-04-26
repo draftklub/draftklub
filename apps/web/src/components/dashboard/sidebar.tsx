@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import {
   Activity,
   BarChart3,
@@ -16,45 +16,67 @@ import {
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { cn } from '@/lib/utils';
 
-interface NavItem {
-  href: `/dashboard${string}` | '/dashboard';
+type IconType = typeof Home;
+
+interface NavSpec {
+  /** Slug do segmento dentro do Klub. `''` representa o root `/k/:slug/dashboard`. */
+  segment: '' | 'bookings' | 'courts' | 'tournaments' | 'players' | 'rankings' | 'finance' | 'reports' | 'settings';
   label: string;
-  icon: typeof Home;
+  icon: IconType;
   count?: number;
 }
 
-const PRIMARY_NAV: NavItem[] = [
-  { href: '/dashboard', label: 'Visão geral', icon: Home },
-  { href: '/dashboard/bookings', label: 'Reservas', icon: CalendarDays, count: 24 },
-  { href: '/dashboard/courts', label: 'Quadras', icon: Building2 },
-  { href: '/dashboard/tournaments', label: 'Torneios', icon: Trophy, count: 3 },
-  { href: '/dashboard/players', label: 'Sócios', icon: Users },
-  { href: '/dashboard/rankings', label: 'Ranking', icon: BarChart3 },
+const PRIMARY_NAV: NavSpec[] = [
+  { segment: '', label: 'Visão geral', icon: Home },
+  { segment: 'bookings', label: 'Reservas', icon: CalendarDays, count: 24 },
+  { segment: 'courts', label: 'Quadras', icon: Building2 },
+  { segment: 'tournaments', label: 'Torneios', icon: Trophy, count: 3 },
+  { segment: 'players', label: 'Sócios', icon: Users },
+  { segment: 'rankings', label: 'Ranking', icon: BarChart3 },
 ];
 
-const MANAGEMENT_NAV: NavItem[] = [
-  { href: '/dashboard/finance', label: 'Financeiro', icon: DollarSign },
-  { href: '/dashboard/reports', label: 'Relatórios', icon: Activity },
-  { href: '/dashboard/settings', label: 'Configurações', icon: Settings },
+const MANAGEMENT_NAV: NavSpec[] = [
+  { segment: 'finance', label: 'Financeiro', icon: DollarSign },
+  { segment: 'reports', label: 'Relatórios', icon: Activity },
+  { segment: 'settings', label: 'Configurações', icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const params = useParams<{ klubSlug?: string }>();
+  const slug = params.klubSlug;
+
+  const buildHref = (segment: NavSpec['segment']) => {
+    if (!slug) return '#';
+    return segment === ''
+      ? `/k/${slug}/dashboard`
+      : `/k/${slug}/dashboard/${segment}`;
+  };
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-card md:flex">
       {/* Brand row */}
       <div className="mx-3.5 mb-3 flex items-center gap-2.5 border-b border-border px-2 pb-4 pt-5">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
+        <Link href={buildHref('')} className="flex items-center gap-2.5">
           <BrandLockup size="sm" />
         </Link>
       </div>
 
       {/* Primary nav */}
       <nav className="flex flex-col gap-0.5 px-3.5 pb-2">
-        {PRIMARY_NAV.map((item) => (
-          <NavLink key={item.href} item={item} active={isActive(pathname, item.href)} />
-        ))}
+        {PRIMARY_NAV.map((item) => {
+          const href = buildHref(item.segment);
+          return (
+            <NavLink
+              key={item.segment || 'overview'}
+              href={href}
+              label={item.label}
+              icon={item.icon}
+              count={item.count}
+              active={isActive(pathname, href, item.segment === '')}
+            />
+          );
+        })}
       </nav>
 
       {/* Group: Gestão */}
@@ -62,9 +84,19 @@ export function Sidebar() {
         Gestão
       </p>
       <nav className="flex flex-col gap-0.5 px-3.5">
-        {MANAGEMENT_NAV.map((item) => (
-          <NavLink key={item.href} item={item} active={isActive(pathname, item.href)} />
-        ))}
+        {MANAGEMENT_NAV.map((item) => {
+          const href = buildHref(item.segment);
+          return (
+            <NavLink
+              key={item.segment}
+              href={href}
+              label={item.label}
+              icon={item.icon}
+              count={item.count}
+              active={isActive(pathname, href, false)}
+            />
+          );
+        })}
       </nav>
 
       {/* Footer card */}
@@ -83,16 +115,28 @@ export function Sidebar() {
   );
 }
 
-function isActive(pathname: string, href: string): boolean {
-  if (href === '/dashboard') return pathname === '/dashboard';
-  return pathname.startsWith(href);
+function isActive(pathname: string, href: string, isOverview: boolean): boolean {
+  if (href === '#') return false;
+  if (isOverview) return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLink({ item, active }: { item: NavItem; active: boolean }) {
-  const Icon = item.icon;
+function NavLink({
+  href,
+  label,
+  icon: Icon,
+  count,
+  active,
+}: {
+  href: string;
+  label: string;
+  icon: IconType;
+  count?: number;
+  active: boolean;
+}) {
   return (
     <Link
-      href={item.href}
+      href={href}
       className={cn(
         'flex items-center gap-[11px] rounded-lg px-2.5 py-2 text-[13.5px] transition-colors',
         active
@@ -107,10 +151,10 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         )}
         strokeWidth={1.8}
       />
-      <span className="flex-1">{item.label}</span>
-      {item.count !== undefined ? (
+      <span className="flex-1">{label}</span>
+      {count !== undefined ? (
         <span className="font-mono text-[11px] font-semibold text-muted-foreground">
-          {item.count}
+          {count}
         </span>
       ) : null}
     </Link>

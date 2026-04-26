@@ -48,7 +48,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
       await loginWithEmail(email, password);
       setStatus('success');
       // Pequena pausa pra usuário ver a confirmação antes do redirect.
-      setTimeout(() => router.push('/dashboard'), 700);
+      setTimeout(() => router.push('/post-login'), 700);
     } catch (err) {
       setStatus('error');
       setErrorMsg(
@@ -66,7 +66,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
     try {
       await loginWithGoogle();
       setStatus('success');
-      setTimeout(() => router.push('/dashboard'), 700);
+      setTimeout(() => router.push('/post-login'), 700);
     } catch (err) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Erro ao entrar com Google');
