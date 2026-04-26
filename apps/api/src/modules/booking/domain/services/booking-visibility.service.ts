@@ -59,16 +59,25 @@ export class BookingVisibilityService {
       if (isCommitteeOfSport) return 'full';
     }
 
-    // Membership do mesmo Klub: full (MVP - PlayerSportEnrollment ainda nao existe).
-    const membership = await this.prisma.membership.findFirst({
-      where: {
-        userId: ctx.viewerId,
-        klubId: ctx.bookingKlubId,
-        status: 'active',
-      },
-      select: { id: true },
-    });
-    if (membership) return 'full';
+    // PlayerSportEnrollment ativo na modalidade do booking -> full (W2.3).
+    if (ctx.spaceSportCode && ctx.viewerId) {
+      const profile = await this.prisma.klubSportProfile.findFirst({
+        where: { klubId: ctx.bookingKlubId, sportCode: ctx.spaceSportCode },
+        select: { id: true },
+      });
+      if (profile) {
+        const enrollment = await this.prisma.playerSportEnrollment.findUnique({
+          where: {
+            userId_klubSportProfileId: {
+              userId: ctx.viewerId,
+              klubSportProfileId: profile.id,
+            },
+          },
+          select: { status: true },
+        });
+        if (enrollment?.status === 'active') return 'full';
+      }
+    }
 
     return 'limited';
   }

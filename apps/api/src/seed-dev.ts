@@ -221,6 +221,55 @@ async function main(): Promise<void> {
     console.log(`${userData.email} (${userData.role})`);
   }
 
+  console.log('Creating tennis enrollments for players (W2.3)...');
+  const tennisProfileForEnrollment = await prisma.klubSportProfile.findUnique({
+    where: { klubId_sportCode: { klubId: KLUB_ID, sportCode: 'tennis' } },
+  });
+  const adminTennisCarioca = await prisma.user.findUnique({
+    where: { email: 'admin@tennis-carioca.com' },
+  });
+  if (tennisProfileForEnrollment) {
+    const playerEmails = [
+      'joao@player.com',
+      'pedro@player.com',
+      'lucas@player.com',
+      'maria@player.com',
+      'ana@player.com',
+    ];
+    const approvedById = adminTennisCarioca?.id ?? null;
+
+    for (const email of playerEmails) {
+      const player = await prisma.user.findUnique({ where: { email } });
+      if (!player) continue;
+      await prisma.playerSportEnrollment.upsert({
+        where: {
+          userId_klubSportProfileId: {
+            userId: player.id,
+            klubSportProfileId: tennisProfileForEnrollment.id,
+          },
+        },
+        create: {
+          userId: player.id,
+          klubSportProfileId: tennisProfileForEnrollment.id,
+          status: 'active',
+          approvedById,
+          approvedAt: new Date(),
+        },
+        update: {
+          status: 'active',
+          approvedById,
+          approvedAt: new Date(),
+          suspendedAt: null,
+          suspendedById: null,
+          suspensionReason: null,
+          cancelledAt: null,
+          cancelledById: null,
+        },
+      });
+    }
+    console.log(`  ${playerEmails.length} players enrolled (active) on tennis`);
+  }
+
   console.log('Creating rankings...');
   const tennisProfile = await prisma.klubSportProfile.findUnique({
     where: { klubId_sportCode: { klubId: KLUB_ID, sportCode: 'tennis' } },

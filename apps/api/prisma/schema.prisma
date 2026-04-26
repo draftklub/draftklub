@@ -62,6 +62,7 @@ model User {
   matchesSubmitted  MatchResult[]        @relation("MatchesSubmitted")
   tournamentEntries TournamentEntry[]    @relation("TournamentEntries")
   responsibleForBookings Booking[]       @relation("ResponsibleMember")
+  sportEnrollments       PlayerSportEnrollment[]
 
   @@map("users")
   @@schema("identity")
@@ -261,9 +262,42 @@ model KlubSportProfile {
   rankings KlubSportRanking[] @relation("RankingProfiles")
   pointsSchemas  RankingPointsSchema[] @relation("PointsSchemas")
   tournaments    Tournament[]          @relation("Tournaments")
+  playerSportEnrollments PlayerSportEnrollment[]
 
   @@unique([klubId, sportCode])
   @@map("klub_sport_profiles")
+  @@schema("klub")
+}
+
+model PlayerSportEnrollment {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  klubSportProfileId  String    @map("klub_sport_profile_id") @db.Uuid
+
+  status              String    @default("pending")
+  // 'pending' | 'active' | 'suspended' | 'cancelled'
+
+  enrolledAt          DateTime  @default(now()) @map("enrolled_at") @db.Timestamptz
+  approvedById        String?   @map("approved_by_id") @db.Uuid
+  approvedAt          DateTime? @map("approved_at") @db.Timestamptz
+
+  suspendedAt         DateTime? @map("suspended_at") @db.Timestamptz
+  suspendedById       String?   @map("suspended_by_id") @db.Uuid
+  suspensionReason    String?   @map("suspension_reason")
+
+  cancelledAt         DateTime? @map("cancelled_at") @db.Timestamptz
+  cancelledById       String?   @map("cancelled_by_id") @db.Uuid
+
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+
+  user                User              @relation(fields: [userId], references: [id])
+  klubSportProfile    KlubSportProfile  @relation(fields: [klubSportProfileId], references: [id])
+
+  @@unique([userId, klubSportProfileId])
+  @@index([userId, status])
+  @@index([klubSportProfileId, status])
+  @@map("player_sport_enrollments")
   @@schema("klub")
 }
 
