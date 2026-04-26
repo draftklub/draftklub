@@ -12,7 +12,9 @@ import { GroupsKnockoutStrategy } from './domain/services/strategies/groups-knoc
 import { DoubleEliminationStrategy } from './domain/services/strategies/double-elimination.strategy';
 import { ScheduleDistributorService } from './domain/services/schedule-distributor.service';
 import { ScheduleTournamentHandler } from './application/commands/schedule-tournament.handler';
+import { CancelTournamentHandler } from './application/commands/cancel-tournament.handler';
 import { TournamentScheduleController } from './api/tournament-schedule.controller';
+import { TournamentCancelController } from './api/tournament-cancel.controller';
 import { ApplyTournamentPointsService } from './domain/services/apply-tournament-points.service';
 import { CreatePointsSchemaHandler } from './application/commands/create-points-schema.handler';
 import { CreateTournamentHandler } from './application/commands/create-tournament.handler';
@@ -48,6 +50,7 @@ import { TournamentMatchesController } from './api/tournament-matches.controller
     TournamentDrawController,
     TournamentMatchesController,
     TournamentScheduleController,
+    TournamentCancelController,
   ],
   providers: [
     CategoryAllocatorService,
@@ -75,6 +78,7 @@ import { TournamentMatchesController } from './api/tournament-matches.controller
     ApplyDoubleWalkoverHandler,
     UpdateReportingModeHandler,
     ScheduleTournamentHandler,
+    CancelTournamentHandler,
     ListPointsSchemasHandler,
     ListTournamentsHandler,
     GetTournamentHandler,

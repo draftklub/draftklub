@@ -56,6 +56,10 @@ import {
   ScheduleTournamentHandler,
   type ScheduleTournamentCommand,
 } from '../application/commands/schedule-tournament.handler';
+import {
+  CancelTournamentHandler,
+  type CancelTournamentCommand,
+} from '../application/commands/cancel-tournament.handler';
 import { ListPointsSchemasHandler } from '../application/queries/list-points-schemas.handler';
 import { ListTournamentsHandler } from '../application/queries/list-tournaments.handler';
 import { GetTournamentHandler } from '../application/queries/get-tournament.handler';
@@ -95,6 +99,7 @@ export class CompetitionFacade {
     private readonly updateReportingModeHandler: UpdateReportingModeHandler,
     private readonly scheduleTournamentHandler: ScheduleTournamentHandler,
     private readonly getBracketHandler: GetBracketHandler,
+    private readonly cancelTournamentHandler: CancelTournamentHandler,
   ) {}
 
   async drawTournament(tournamentId: string) {
@@ -131,6 +136,10 @@ export class CompetitionFacade {
 
   async scheduleTournament(cmd: ScheduleTournamentCommand) {
     return this.scheduleTournamentHandler.execute(cmd);
+  }
+
+  async cancelTournament(cmd: CancelTournamentCommand) {
+    return this.cancelTournamentHandler.execute(cmd);
   }
 
   async userIsCommitteeForTournament(userId: string, tournamentId: string): Promise<boolean> {

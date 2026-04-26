@@ -474,6 +474,10 @@ model Tournament {
   createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt               DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
 
+  cancelledAt             DateTime? @map("cancelled_at") @db.Timestamptz
+  cancelledById           String?   @map("cancelled_by_id") @db.Uuid
+  cancellationReason      String?   @map("cancellation_reason")
+
   klubSport               KlubSportProfile @relation("Tournaments", fields: [klubSportId], references: [id])
   ranking                 KlubSportRanking @relation("TournamentRankings", fields: [rankingId], references: [id])
   categories              TournamentCategory[]
