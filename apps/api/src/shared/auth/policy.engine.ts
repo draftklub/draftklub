@@ -9,8 +9,18 @@ import type { ResourceContext } from './resource-context.interface';
  * `klub.create`: self-service de Klub novo (Onda 1, fluxo /criar-klub).
  * Logo após criar, o user vira KLUB_ADMIN automaticamente — daí em
  * diante respeita o scope normal.
+ *
+ * `klub.join_via_link`: aceitar convite por link compartilhado (Onda 1,
+ * fluxo /convite/:slug). Cria Membership + RoleAssignment PLAYER pra
+ * user atual no Klub identificado pelo slug. Idempotente — re-aceitar
+ * o mesmo link no-op. Trade-off: qualquer pessoa com o link pode
+ * entrar como PLAYER. Onda 2 vai trocar por sistema de Invitation
+ * tokens revogáveis.
  */
-const PUBLIC_AUTHENTICATED_ACTIONS: ReadonlySet<string> = new Set(['klub.create']);
+const PUBLIC_AUTHENTICATED_ACTIONS: ReadonlySet<string> = new Set([
+  'klub.create',
+  'klub.join_via_link',
+]);
 
 @Injectable()
 export class PolicyEngine {

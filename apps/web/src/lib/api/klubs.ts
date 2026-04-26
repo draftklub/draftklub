@@ -41,3 +41,12 @@ export function getKlubBySlug(slug: string): Promise<Klub> {
 export function createKlub(input: CreateKlubInput): Promise<Klub> {
   return apiFetch<Klub>('/klubs', { method: 'POST', json: input });
 }
+
+/**
+ * POST /klubs/slug/:slug/join — aceita convite por link. Adiciona o
+ * user logado ao Klub como PLAYER (membership + role atomicamente).
+ * Idempotente: re-aceitar o mesmo link no-op.
+ */
+export function joinKlubBySlug(slug: string): Promise<{ id: string; klubId: string; userId: string }> {
+  return apiFetch(`/klubs/slug/${slug}/join`, { method: 'POST' });
+}

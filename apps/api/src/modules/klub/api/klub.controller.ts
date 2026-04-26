@@ -36,6 +36,19 @@ export class KlubController {
     return this.klubFacade.getKlubBySlug(slug);
   }
 
+  /**
+   * Aceitar convite por link compartilhado. Liberado pra qualquer user
+   * autenticado via PUBLIC_AUTHENTICATED_ACTIONS no PolicyEngine.
+   */
+  @Post('slug/:slug/join')
+  @RequirePolicy('klub.join_via_link')
+  async joinKlubBySlug(
+    @Param('slug') slug: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.klubFacade.joinKlubBySlug(slug, user.userId);
+  }
+
   @Get(':id')
   async getKlub(@Param('id') id: string) {
     return this.klubFacade.getKlubById(id);

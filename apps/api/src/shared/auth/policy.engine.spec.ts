@@ -161,4 +161,24 @@ describe('PolicyEngine', () => {
     };
     expect(engine.can(user, 'reservation.create', { klubId })).toBe(false);
   });
+
+  it('klub.create eh liberado pra qualquer user autenticado (PR3 Onda 1)', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'newcomer@test.com',
+      roleAssignments: [], // user novo, sem nenhuma role ainda
+    };
+    expect(engine.can(user, 'klub.create')).toBe(true);
+  });
+
+  it('klub.join_via_link eh liberado pra qualquer user autenticado (PR9 Onda 1)', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'guest@test.com',
+      roleAssignments: [],
+    };
+    expect(engine.can(user, 'klub.join_via_link')).toBe(true);
+  });
 });

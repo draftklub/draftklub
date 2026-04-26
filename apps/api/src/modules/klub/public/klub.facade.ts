@@ -74,6 +74,20 @@ export class KlubFacade {
     return this.addMemberHandler.execute(cmd);
   }
 
+  /**
+   * Aceitar convite por link compartilhado: resolve slug → Klub e
+   * adiciona o user atual como PLAYER. Idempotente.
+   */
+  async joinKlubBySlug(slug: string, userId: string) {
+    const klub = await this.getKlubBySlugHandler.execute(slug);
+    return this.addMemberHandler.execute({
+      klubId: klub.id,
+      userId,
+      type: 'member',
+      role: 'PLAYER',
+    });
+  }
+
   async createKlubRequest(dto: CreateKlubRequestDto) {
     return this.createKlubRequestHandler.execute(dto);
   }
