@@ -64,7 +64,7 @@ export class PolicyEngine {
         if (domain === 'match' && ['create', 'confirm'].includes(operation)) return true;
         if (domain === 'booking' && operation === 'create') return true;
         if (resource.ownerId != null && resource.ownerId === user.userId) return true;
-        return domain === 'reservation' && operation === 'create';
+        return false;
 
       default:
         return false;

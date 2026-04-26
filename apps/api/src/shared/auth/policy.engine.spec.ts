@@ -151,4 +151,14 @@ describe('PolicyEngine', () => {
     expect(engine.can(user, 'booking.approve', { klubId })).toBe(false);
     expect(engine.can(user, 'booking.cancel_others', { klubId })).toBe(false);
   });
+
+  it('reservation.create eh legacy removido — sempre retorna false (W2.1)', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'player@test.com',
+      roleAssignments: [{ role: 'PLAYER', scopeKlubId: klubId }],
+    };
+    expect(engine.can(user, 'reservation.create', { klubId })).toBe(false);
+  });
 });
