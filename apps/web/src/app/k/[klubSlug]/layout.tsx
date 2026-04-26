@@ -2,6 +2,7 @@ import { AuthGuard } from '@/components/auth-guard';
 import { ActiveKlubProvider } from '@/components/active-klub-provider';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { ActiveKlubGate } from '@/components/active-klub-gate';
+import { PersonaSwitcher } from '@/components/dashboard/persona-switcher';
 
 export default function KlubScopedLayout({
   children,
@@ -16,6 +17,7 @@ export default function KlubScopedLayout({
           <div className="flex min-w-0 flex-1 flex-col">
             <ActiveKlubGate>{children}</ActiveKlubGate>
           </div>
+          <PersonaSwitcher />
         </div>
       </ActiveKlubProvider>
     </AuthGuard>
