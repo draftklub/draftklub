@@ -19,18 +19,29 @@ import { cn } from '@/lib/utils';
 type IconType = typeof Home;
 
 interface NavSpec {
-  /** Slug do segmento dentro do Klub. `''` representa o root `/k/:slug/dashboard`. */
-  segment: '' | 'bookings' | 'courts' | 'tournaments' | 'players' | 'rankings' | 'finance' | 'reports' | 'settings';
+  /** Segmento da URL relativo a `/k/:slug/`. `'dashboard'` é a visão geral. */
+  segment:
+    | 'dashboard'
+    | 'bookings'
+    | 'courts'
+    | 'tournaments'
+    | 'players'
+    | 'rankings'
+    | 'modalidades'
+    | 'finance'
+    | 'reports'
+    | 'settings';
   label: string;
   icon: IconType;
   count?: number;
 }
 
 const PRIMARY_NAV: NavSpec[] = [
-  { segment: '', label: 'Visão geral', icon: Home },
+  { segment: 'dashboard', label: 'Visão geral', icon: Home },
   { segment: 'bookings', label: 'Reservas', icon: CalendarDays, count: 24 },
   { segment: 'courts', label: 'Quadras', icon: Building2 },
   { segment: 'tournaments', label: 'Torneios', icon: Trophy, count: 3 },
+  { segment: 'modalidades', label: 'Modalidades', icon: BarChart3 },
   { segment: 'players', label: 'Sócios', icon: Users },
   { segment: 'rankings', label: 'Ranking', icon: BarChart3 },
 ];
@@ -48,16 +59,14 @@ export function Sidebar() {
 
   const buildHref = (segment: NavSpec['segment']) => {
     if (!slug) return '#';
-    return segment === ''
-      ? `/k/${slug}/dashboard`
-      : `/k/${slug}/dashboard/${segment}`;
+    return `/k/${slug}/${segment}`;
   };
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-card md:flex">
       {/* Brand row */}
       <div className="mx-3.5 mb-3 flex items-center gap-2.5 border-b border-border px-2 pb-4 pt-5">
-        <Link href={buildHref('')} className="flex items-center gap-2.5">
+        <Link href={buildHref('dashboard')} className="flex items-center gap-2.5">
           <BrandLockup size="sm" />
         </Link>
       </div>
@@ -68,12 +77,12 @@ export function Sidebar() {
           const href = buildHref(item.segment);
           return (
             <NavLink
-              key={item.segment || 'overview'}
+              key={item.segment}
               href={href}
               label={item.label}
               icon={item.icon}
               count={item.count}
-              active={isActive(pathname, href, item.segment === '')}
+              active={isActive(pathname, href, item.segment === 'dashboard')}
             />
           );
         })}
@@ -117,6 +126,7 @@ export function Sidebar() {
 
 function isActive(pathname: string, href: string, isOverview: boolean): boolean {
   if (href === '#') return false;
+  // Visão geral só ativa no path exato pra não capturar irmãos.
   if (isOverview) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
