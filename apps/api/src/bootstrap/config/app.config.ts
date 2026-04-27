@@ -11,6 +11,13 @@ export const appConfigSchema = z.object({
   ENCRYPTION_KEY: z.string().min(64).optional(),
   CORS_ORIGINS: z.string().optional(),
   // CSV de origens permitidas. Default desenvolvido em getCorsOrigins().
+
+  // Sprint D PR3 — email infra (Resend). Opcional: sem chave, EmailService
+  // cai em modo log-only (útil pra dev).
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().optional(),
+  // Base URL pra links nos emails (ex: https://draftklub.com).
+  APP_BASE_URL: z.string().url().optional(),
 });
 
 export type AppConfig = z.infer<typeof appConfigSchema>;

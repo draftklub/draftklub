@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from 'nestjs-pino';
 import { validateConfig } from './bootstrap/config/app.config';
 import { FirebaseModule } from './bootstrap/firebase/firebase.module';
@@ -9,6 +10,8 @@ import { AuthModule } from './shared/auth/auth.module';
 import { EncryptionModule } from './shared/encryption/encryption.module';
 import { GeocodingModule } from './shared/geocoding/geocoding.module';
 import { LookupModule } from './shared/lookup/lookup.module';
+import { EmailModule } from './shared/email/email.module';
+import { OutboxModule } from './shared/outbox/outbox.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { KlubModule } from './modules/klub/klub.module';
 import { SportsModule } from './modules/sports/sports.module';
@@ -38,13 +41,16 @@ import { BookingModule } from './modules/booking/booking.module';
         },
       },
     }),
+    ScheduleModule.forRoot(),
     FirebaseModule,
     AuthModule,
     EncryptionModule,
     GeocodingModule,
     LookupModule,
+    EmailModule,
     PrismaModule,
     HealthModule,
+    OutboxModule,
     IdentityModule,
     KlubModule,
     SportsModule,

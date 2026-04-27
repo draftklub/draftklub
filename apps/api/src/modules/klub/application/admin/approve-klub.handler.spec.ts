@@ -13,9 +13,8 @@ interface MockKlub {
 }
 
 function buildHandler(opts: { klub?: MockKlub | null; conflict?: { name: string } | null } = {}) {
-  const klubUpdate = vi.fn(
-    (args: { where: { id: string }; data: Record<string, unknown> }) =>
-      Promise.resolve({ id: args.where.id, slug: opts.klub?.slug ?? 'test' }),
+  const klubUpdate = vi.fn((args: { where: { id: string }; data: Record<string, unknown> }) =>
+    Promise.resolve({ id: args.where.id, slug: opts.klub?.slug ?? 'test' }),
   );
   const outboxCreate = vi.fn((_args: { data: { eventType: string; payload: unknown } }) =>
     Promise.resolve({}),
