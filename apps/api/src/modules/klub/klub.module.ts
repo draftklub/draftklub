@@ -6,6 +6,12 @@ import { GetKlubBySlugHandler } from './application/queries/get-klub-by-slug.han
 import { ListKlubsHandler } from './application/queries/list-klubs.handler';
 import { DiscoverKlubsHandler } from './application/queries/discover-klubs.handler';
 import { CheckSlugHandler } from './application/queries/check-slug.handler';
+import { ListPendingKlubsHandler } from './application/admin/list-pending-klubs.handler';
+import { GetPendingKlubHandler } from './application/admin/get-pending-klub.handler';
+import { UpdatePendingKlubHandler } from './application/admin/update-pending-klub.handler';
+import { ApproveKlubHandler } from './application/admin/approve-klub.handler';
+import { RejectKlubHandler } from './application/admin/reject-klub.handler';
+import { AdminKlubController } from './api/admin-klub.controller';
 import { AddMemberHandler } from './application/commands/add-member.handler';
 import { CreateKlubRequestHandler } from './application/commands/create-klub-request.handler';
 import { ListKlubRequestsHandler } from './application/queries/list-klub-requests.handler';
@@ -38,6 +44,7 @@ import { IdentityModule } from '../identity/identity.module';
   imports: [IdentityModule],
   controllers: [
     KlubController,
+    AdminKlubController,
     KlubRequestController,
     EnrollmentScopeController,
     EnrollmentActionsController,
@@ -51,6 +58,11 @@ import { IdentityModule } from '../identity/identity.module';
     ListKlubsHandler,
     DiscoverKlubsHandler,
     CheckSlugHandler,
+    ListPendingKlubsHandler,
+    GetPendingKlubHandler,
+    UpdatePendingKlubHandler,
+    ApproveKlubHandler,
+    RejectKlubHandler,
     AddMemberHandler,
     CreateKlubRequestHandler,
     ListKlubRequestsHandler,

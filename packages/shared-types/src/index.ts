@@ -127,6 +127,81 @@ export interface CheckSlugResponse {
   conflictKlubName: string | null;
 }
 
+/**
+ * Sprint D PR2 — payload da listagem admin de cadastros (`GET
+ * /admin/klubs/pending`). Subset enxuto pra grid; detalhe completo vem
+ * via `GET /admin/klubs/:id`.
+ */
+export interface AdminPendingKlubItem {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  entityType: 'pj' | 'pf' | null;
+  documentHint: string | null;
+  legalName: string | null;
+  city: string | null;
+  state: string | null;
+  cnpjStatus: CnpjSituacao | null;
+  reviewStatus: KlubReviewStatus;
+  createdAt: string;
+  createdBy: {
+    id: string;
+    fullName: string;
+    email: string;
+    documentNumber: string | null;
+  } | null;
+}
+
+export interface AdminPendingKlubsPage {
+  items: AdminPendingKlubItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * Detalhe completo do cadastro (`GET /admin/klubs/:id`). Inclui raw da
+ * Receita pra audit, endereço granular, e flag de conflito de slug
+ * pra UI bloquear "Aprovar" enquanto não resolve.
+ */
+export interface AdminPendingKlubDetail {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  entityType: 'pj' | 'pf' | null;
+  documentHint: string | null;
+  legalName: string | null;
+  cnpjStatus: CnpjSituacao | null;
+  cnpjStatusCheckedAt: string | null;
+  cnpjLookupData: Record<string, unknown> | null;
+  cep: string | null;
+  addressStreet: string | null;
+  addressNumber: string | null;
+  addressComplement: string | null;
+  addressNeighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  addressSource: KlubAddressSource | null;
+  discoverable: boolean;
+  accessMode: string;
+  sports: string[];
+  reviewStatus: KlubReviewStatus;
+  reviewRejectionReason: string | null;
+  reviewDecisionAt: string | null;
+  reviewDecidedById: string | null;
+  createdAt: string;
+  createdBy: {
+    id: string;
+    fullName: string;
+    email: string;
+    documentNumber: string | null;
+    phone: string | null;
+  } | null;
+  slugConflictKlubName: string | null;
+}
+
 export type AccessMode = 'public' | 'members_only';
 
 export type BookingMode = 'direct' | 'staff_approval' | 'staff_only';

@@ -3,12 +3,24 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Plus, Search, Mail, LogOut, Loader2, Moon, Sun, User, X } from 'lucide-react';
+import {
+  Home,
+  Plus,
+  Search,
+  Mail,
+  LogOut,
+  Loader2,
+  Moon,
+  Shield,
+  Sun,
+  User,
+  X,
+} from 'lucide-react';
 import type { UserKlubMembership, Role } from '@draftklub/shared-types';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { useAuth } from '@/components/auth-provider';
 import { useTheme } from '@/components/theme-provider';
-import { getMyKlubs } from '@/lib/api/me';
+import { getMe, getMyKlubs } from '@/lib/api/me';
 import { logout } from '@/lib/auth';
 import { forgetLastKlubSlug } from '@/lib/last-klub-cookie';
 import { cn } from '@/lib/utils';
@@ -39,6 +51,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
   const { user } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
   const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -49,6 +62,12 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
       .catch(() => {
         if (!cancelled) setKlubs([]);
       });
+    void getMe()
+      .then((me) => {
+        if (cancelled) return;
+        setIsSuperAdmin(me.roleAssignments.some((r) => r.role === 'SUPER_ADMIN'));
+      })
+      .catch(() => null);
     return () => {
       cancelled = true;
     };
@@ -154,6 +173,15 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
             onNavigate={onClose}
           />
           <NavLink href="#" label="Convites" icon={Mail} disabled badge="em breve" />
+          {isSuperAdmin ? (
+            <NavLink
+              href="/admin/cadastros"
+              label="Cadastros"
+              icon={Shield}
+              active={pathname.startsWith('/admin/cadastros')}
+              onNavigate={onClose}
+            />
+          ) : null}
         </nav>
 
         {/* Footer */}

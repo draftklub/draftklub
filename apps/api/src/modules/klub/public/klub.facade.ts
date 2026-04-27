@@ -9,6 +9,23 @@ import { ListKlubsHandler } from '../application/queries/list-klubs.handler';
 import { DiscoverKlubsHandler } from '../application/queries/discover-klubs.handler';
 import { CheckSlugHandler } from '../application/queries/check-slug.handler';
 import { CnpjLookupService } from '../../../shared/lookup/cnpj-lookup.service';
+import {
+  ListPendingKlubsHandler,
+  type ListPendingKlubsCommand,
+} from '../application/admin/list-pending-klubs.handler';
+import { GetPendingKlubHandler } from '../application/admin/get-pending-klub.handler';
+import {
+  UpdatePendingKlubHandler,
+  type UpdatePendingKlubCommand,
+} from '../application/admin/update-pending-klub.handler';
+import {
+  ApproveKlubHandler,
+  type ApproveKlubCommand,
+} from '../application/admin/approve-klub.handler';
+import {
+  RejectKlubHandler,
+  type RejectKlubCommand,
+} from '../application/admin/reject-klub.handler';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import type { DiscoverKlubsQueryDto } from '../api/dtos/discover-klubs.dto';
 import type { CheckSlugQueryDto } from '../api/dtos/check-slug.dto';
@@ -67,6 +84,11 @@ export class KlubFacade {
     private readonly discoverKlubsHandler: DiscoverKlubsHandler,
     private readonly checkSlugHandler: CheckSlugHandler,
     private readonly cnpjLookupService: CnpjLookupService,
+    private readonly listPendingKlubsHandler: ListPendingKlubsHandler,
+    private readonly getPendingKlubHandler: GetPendingKlubHandler,
+    private readonly updatePendingKlubHandler: UpdatePendingKlubHandler,
+    private readonly approveKlubHandler: ApproveKlubHandler,
+    private readonly rejectKlubHandler: RejectKlubHandler,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -114,6 +136,27 @@ export class KlubFacade {
 
   async lookupCnpj(cnpj: string) {
     return this.cnpjLookupService.lookup(cnpj);
+  }
+
+  // ─── Admin (Sprint D PR2) ──────────────────────────────────
+  async listPendingKlubs(cmd: ListPendingKlubsCommand) {
+    return this.listPendingKlubsHandler.execute(cmd);
+  }
+
+  async getPendingKlub(id: string) {
+    return this.getPendingKlubHandler.execute(id);
+  }
+
+  async updatePendingKlub(cmd: UpdatePendingKlubCommand) {
+    return this.updatePendingKlubHandler.execute(cmd);
+  }
+
+  async approveKlub(cmd: ApproveKlubCommand) {
+    return this.approveKlubHandler.execute(cmd);
+  }
+
+  async rejectKlub(cmd: RejectKlubCommand) {
+    return this.rejectKlubHandler.execute(cmd);
   }
 
   async addMember(cmd: AddMemberCommand) {
