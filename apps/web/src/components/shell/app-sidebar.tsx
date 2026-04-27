@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  CalendarCheck,
   CalendarDays,
   Home,
   Plus,
@@ -203,6 +204,13 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
                   label="Reservar quadra"
                   icon={CalendarDays}
                   active={pathname === `/k/${activeKlubSlug}/reservar`}
+                  onNavigate={onClose}
+                />
+                <NavLink
+                  href={`/k/${activeKlubSlug}/minhas-reservas`}
+                  label="Minhas reservas"
+                  icon={CalendarCheck}
+                  active={pathname === `/k/${activeKlubSlug}/minhas-reservas`}
                   onNavigate={onClose}
                 />
                 {isAdmin ? (
