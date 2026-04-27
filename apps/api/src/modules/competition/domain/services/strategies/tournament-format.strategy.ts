@@ -68,8 +68,5 @@ export interface TournamentFormatStrategy {
 
   getInitialStatus(hasPrequalifiers: boolean): string;
 
-  getInitialPhase(
-    matches: StrategyGeneratedMatch[],
-    hasPrequalifiers: boolean,
-  ): string | null;
+  getInitialPhase(matches: StrategyGeneratedMatch[], hasPrequalifiers: boolean): string | null;
 }

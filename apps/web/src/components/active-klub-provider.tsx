@@ -90,9 +90,7 @@ export function ActiveKlubProvider({ children }: { children: React.ReactNode }) 
     [slug, klub, isLoading, error, refetch],
   );
 
-  return (
-    <ActiveKlubContext.Provider value={value}>{children}</ActiveKlubContext.Provider>
-  );
+  return <ActiveKlubContext.Provider value={value}>{children}</ActiveKlubContext.Provider>;
 }
 
 /**

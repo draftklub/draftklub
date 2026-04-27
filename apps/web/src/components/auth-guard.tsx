@@ -30,9 +30,7 @@ export function AuthGuard({ children, fallbackUrl = '/login' }: AuthGuardProps) 
   }, [loading, user, router, fallbackUrl]);
 
   if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background" />
-    );
+    return <div className="flex min-h-screen items-center justify-center bg-background" />;
   }
 
   return <>{children}</>;
@@ -48,9 +46,7 @@ interface RedirectIfAuthenticatedProps {
  * user já está autenticado. Coloque dentro de páginas públicas (login,
  * signup) pra evitar mostrar o form pra quem já entrou.
  */
-export function RedirectIfAuthenticated({
-  to = '/post-login',
-}: RedirectIfAuthenticatedProps) {
+export function RedirectIfAuthenticated({ to = '/post-login' }: RedirectIfAuthenticatedProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
 

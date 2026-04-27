@@ -34,18 +34,12 @@ export class BookingVisibilityService {
     if (ctx.viewerRoles.some((r) => r.role === 'SUPER_ADMIN')) return 'full';
 
     if (
-      ctx.viewerRoles.some(
-        (r) => r.role === 'KLUB_ADMIN' && r.scopeKlubId === ctx.bookingKlubId,
-      )
+      ctx.viewerRoles.some((r) => r.role === 'KLUB_ADMIN' && r.scopeKlubId === ctx.bookingKlubId)
     ) {
       return 'full';
     }
 
-    if (
-      ctx.viewerRoles.some(
-        (r) => r.role === 'STAFF' && r.scopeKlubId === ctx.bookingKlubId,
-      )
-    ) {
+    if (ctx.viewerRoles.some((r) => r.role === 'STAFF' && r.scopeKlubId === ctx.bookingKlubId)) {
       return 'full';
     }
 

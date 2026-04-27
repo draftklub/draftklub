@@ -27,10 +27,12 @@ interface RoleRow {
   scopeKlubId: string | null;
 }
 
-function buildHandler(opts: {
-  memberships?: MembershipRow[];
-  roles?: RoleRow[];
-} = {}) {
+function buildHandler(
+  opts: {
+    memberships?: MembershipRow[];
+    roles?: RoleRow[];
+  } = {},
+) {
   const prisma = {
     membership: {
       findMany: vi.fn(() => Promise.resolve(opts.memberships ?? [])),
@@ -44,10 +46,7 @@ function buildHandler(opts: {
   return { handler, prisma };
 }
 
-function membership(
-  klubId: string,
-  overrides: Partial<MembershipRow> = {},
-): MembershipRow {
+function membership(klubId: string, overrides: Partial<MembershipRow> = {}): MembershipRow {
   return {
     klubId,
     type: 'member',
@@ -147,11 +146,7 @@ describe('GetMyKlubsHandler', () => {
 
   it('mapeia roles corretamente quando user tem múltiplos Klubs', async () => {
     const { handler } = buildHandler({
-      memberships: [
-        membership(KLUB_A),
-        membership(KLUB_B),
-        membership(KLUB_C),
-      ],
+      memberships: [membership(KLUB_A), membership(KLUB_B), membership(KLUB_C)],
       roles: [
         { role: 'KLUB_ADMIN', scopeKlubId: KLUB_A },
         { role: 'PLAYER', scopeKlubId: KLUB_B },

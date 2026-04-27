@@ -155,17 +155,12 @@ function NavLink({
       )}
     >
       <Icon
-        className={cn(
-          'size-[17px] shrink-0',
-          active ? 'text-primary' : 'text-muted-foreground',
-        )}
+        className={cn('size-[17px] shrink-0', active ? 'text-primary' : 'text-muted-foreground')}
         strokeWidth={1.8}
       />
       <span className="flex-1">{label}</span>
       {count !== undefined ? (
-        <span className="font-mono text-[11px] font-semibold text-muted-foreground">
-          {count}
-        </span>
+        <span className="font-mono text-[11px] font-semibold text-muted-foreground">{count}</span>
       ) : null}
     </Link>
   );

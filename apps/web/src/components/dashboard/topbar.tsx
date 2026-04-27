@@ -35,9 +35,7 @@ export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
       <div className="flex min-w-0 flex-col">
         <KlubSwitcher />
         {subtitle ? (
-          <p className="mt-0.5 truncate pl-2 text-xs text-muted-foreground">
-            {subtitle}
-          </p>
+          <p className="mt-0.5 truncate pl-2 text-xs text-muted-foreground">{subtitle}</p>
         ) : null}
       </div>
 

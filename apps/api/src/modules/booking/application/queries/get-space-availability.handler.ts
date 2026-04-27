@@ -45,7 +45,8 @@ export class GetSpaceAvailabilityHandler {
     if (!space) throw new NotFoundException('Space not found');
 
     const allowedTypes = (space.allowedMatchTypes as string[]) ?? [];
-    const effectiveMatchType: MatchType = (matchType ?? (allowedTypes[0] as MatchType)) || 'singles';
+    const effectiveMatchType: MatchType =
+      (matchType ?? (allowedTypes[0] as MatchType)) || 'singles';
     if (!allowedTypes.includes(effectiveMatchType)) {
       throw new BadRequestException(
         `Space does not allow ${effectiveMatchType}. Allowed: ${allowedTypes.join(', ') || '(none)'}`,

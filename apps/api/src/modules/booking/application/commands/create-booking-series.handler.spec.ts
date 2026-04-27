@@ -22,14 +22,18 @@ function makePrisma(overrides: {
 }) {
   const tx = {
     bookingSeries: {
-      create: vi.fn().mockImplementation((args: { data: unknown }) =>
-        Promise.resolve({ id: 'series-1', ...(args.data as Record<string, unknown>) }),
-      ),
+      create: vi
+        .fn()
+        .mockImplementation((args: { data: unknown }) =>
+          Promise.resolve({ id: 'series-1', ...(args.data as Record<string, unknown>) }),
+        ),
     },
     booking: {
-      create: vi.fn().mockImplementation((args: { data: unknown }) =>
-        Promise.resolve({ id: 'b-' + Math.random(), ...(args.data as Record<string, unknown>) }),
-      ),
+      create: vi
+        .fn()
+        .mockImplementation((args: { data: unknown }) =>
+          Promise.resolve({ id: 'b-' + Math.random(), ...(args.data as Record<string, unknown>) }),
+        ),
     },
   };
 
@@ -179,7 +183,9 @@ describe('CreateBookingSeriesHandler (atomic)', () => {
     (handler as unknown as { prisma: unknown }).prisma = prisma;
 
     await handler.execute(baseCmd());
-    const firstBookingCall = (tx.booking.create.mock.calls[0] as [{ data: { status?: string } }])[0];
+    const firstBookingCall = (
+      tx.booking.create.mock.calls[0] as [{ data: { status?: string } }]
+    )[0];
     expect(firstBookingCall.data.status).toBe('pending');
   });
 });

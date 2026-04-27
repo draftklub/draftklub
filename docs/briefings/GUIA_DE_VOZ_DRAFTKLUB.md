@@ -66,15 +66,15 @@ Use em headers, empty states, notificações, callouts.
 
 ### 2.2 Palavras nossas (preferidas)
 
-| Domínio | Use | Em vez de |
-|---------|-----|-----------|
-| Lugar | Klub, quadra | clube, instalações |
-| Ação | reservar, jogar, vencer | agendar, executar, finalizar |
-| Pessoas | sócio, jogador, comissão | usuário, membro, cliente |
-| Tempo | hoje, agora, próximo | atual, vigente, subsequente |
-| Estado | confirmado, livre, ocupado | aprovado, disponível, indisponível |
-| Coletivo | o Klub, a comunidade | os usuários, a base |
-| Produto | DraftKlub, o app, o Klub digital | a plataforma, o sistema, a aplicação |
+| Domínio  | Use                              | Em vez de                            |
+| -------- | -------------------------------- | ------------------------------------ |
+| Lugar    | Klub, quadra                     | clube, instalações                   |
+| Ação     | reservar, jogar, vencer          | agendar, executar, finalizar         |
+| Pessoas  | sócio, jogador, comissão         | usuário, membro, cliente             |
+| Tempo    | hoje, agora, próximo             | atual, vigente, subsequente          |
+| Estado   | confirmado, livre, ocupado       | aprovado, disponível, indisponível   |
+| Coletivo | o Klub, a comunidade             | os usuários, a base                  |
+| Produto  | DraftKlub, o app, o Klub digital | a plataforma, o sistema, a aplicação |
 
 ### 2.3 Palavras proibidas (corporativês)
 
@@ -284,7 +284,7 @@ Space            Quadra                 Tennis/Squash usam "quadra"
                                         Beach tênis pode usar "arena"
 Booking          Reserva                "Reservar" como verbo
 TournamentMatch  Partida                Em torneio: "Partida do torneio"
-Tournament       Torneio                
+Tournament       Torneio
 Ranking          Ranking                Anglicismo aceito
 PlayerSport
 Enrollment       Inscrição              "Inscrito em Tennis"

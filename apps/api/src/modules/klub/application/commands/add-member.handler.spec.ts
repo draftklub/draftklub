@@ -22,12 +22,19 @@ interface FakeRoleAssignment {
 
 interface FakeTx {
   membership: {
-    findUnique: (args: { where: { userId_klubId: { userId: string; klubId: string } } }) => Promise<FakeMembership | null>;
-    update: (args: { where: { id: string }; data: Partial<FakeMembership> }) => Promise<FakeMembership>;
+    findUnique: (args: {
+      where: { userId_klubId: { userId: string; klubId: string } };
+    }) => Promise<FakeMembership | null>;
+    update: (args: {
+      where: { id: string };
+      data: Partial<FakeMembership>;
+    }) => Promise<FakeMembership>;
     create: (args: { data: Omit<FakeMembership, 'id'> }) => Promise<FakeMembership>;
   };
   roleAssignment: {
-    findFirst: (args: { where: { userId: string; scopeKlubId: string; role: string } }) => Promise<FakeRoleAssignment | null>;
+    findFirst: (args: {
+      where: { userId: string; scopeKlubId: string; role: string };
+    }) => Promise<FakeRoleAssignment | null>;
     create: (args: { data: Omit<FakeRoleAssignment, 'id'> }) => Promise<FakeRoleAssignment>;
   };
 }
@@ -38,12 +45,14 @@ function buildPrisma() {
 
   const tx: FakeTx = {
     membership: {
-      findUnique: vi.fn(({ where }: { where: { userId_klubId: { userId: string; klubId: string } } }) =>
-        Promise.resolve(
-          memberships.find(
-            (m) => m.userId === where.userId_klubId.userId && m.klubId === where.userId_klubId.klubId,
-          ) ?? null,
-        ),
+      findUnique: vi.fn(
+        ({ where }: { where: { userId_klubId: { userId: string; klubId: string } } }) =>
+          Promise.resolve(
+            memberships.find(
+              (m) =>
+                m.userId === where.userId_klubId.userId && m.klubId === where.userId_klubId.klubId,
+            ) ?? null,
+          ),
       ),
       update: vi.fn(({ where, data }: { where: { id: string }; data: Partial<FakeMembership> }) => {
         const idx = memberships.findIndex((m) => m.id === where.id);
@@ -60,12 +69,16 @@ function buildPrisma() {
       }),
     },
     roleAssignment: {
-      findFirst: vi.fn(({ where }: { where: { userId: string; scopeKlubId: string; role: string } }) =>
-        Promise.resolve(
-          roleAssignments.find(
-            (r) => r.userId === where.userId && r.scopeKlubId === where.scopeKlubId && r.role === where.role,
-          ) ?? null,
-        ),
+      findFirst: vi.fn(
+        ({ where }: { where: { userId: string; scopeKlubId: string; role: string } }) =>
+          Promise.resolve(
+            roleAssignments.find(
+              (r) =>
+                r.userId === where.userId &&
+                r.scopeKlubId === where.scopeKlubId &&
+                r.role === where.role,
+            ) ?? null,
+          ),
       ),
       create: vi.fn(({ data }: { data: Omit<FakeRoleAssignment, 'id'> }) => {
         const created: FakeRoleAssignment = { id: `role-${roleAssignments.length + 1}`, ...data };
@@ -140,7 +153,15 @@ describe('AddMemberHandler', () => {
 
   it('reativa Membership inativo e garante RoleAssignment', async () => {
     fake.state.seed(
-      [{ id: 'mem-existing', userId: USER_ID, klubId: KLUB_ID, type: 'member', status: 'inactive' }],
+      [
+        {
+          id: 'mem-existing',
+          userId: USER_ID,
+          klubId: KLUB_ID,
+          type: 'member',
+          status: 'inactive',
+        },
+      ],
       [],
     );
 

@@ -7,9 +7,11 @@ import type { EncryptionService } from '../../../../shared/encryption/encryption
 const NEW_KLUB_ID = '00000000-0000-0000-0099-000000000001';
 const USER_ID = '00000000-0000-0000-0001-000000000aaa';
 
-function buildHandler(opts: {
-  existingSlugs?: string[];
-} = {}) {
+function buildHandler(
+  opts: {
+    existingSlugs?: string[];
+  } = {},
+) {
   const repo = {
     findBySlug: vi.fn((slug: string) => {
       if (opts.existingSlugs?.includes(slug)) {
@@ -17,17 +19,18 @@ function buildHandler(opts: {
       }
       return Promise.resolve(null);
     }),
-    create: vi.fn((data: { name: string; slug: string; type: string; plan: string; createdById?: string }) =>
-      Promise.resolve({
-        id: NEW_KLUB_ID,
-        name: data.name,
-        slug: data.slug,
-        type: data.type,
-        plan: data.plan,
-        status: data.plan === 'trial' ? 'trial' : 'active',
-        city: null,
-        state: null,
-      }),
+    create: vi.fn(
+      (data: { name: string; slug: string; type: string; plan: string; createdById?: string }) =>
+        Promise.resolve({
+          id: NEW_KLUB_ID,
+          name: data.name,
+          slug: data.slug,
+          type: data.type,
+          plan: data.plan,
+          status: data.plan === 'trial' ? 'trial' : 'active',
+          city: null,
+          state: null,
+        }),
     ),
   };
 

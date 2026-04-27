@@ -15,9 +15,7 @@ import { IdentityFacade } from '../../modules/identity/public/identity.facade';
 export class FirebaseAuthGuard implements CanActivate {
   private readonly logger = new Logger(FirebaseAuthGuard.name);
 
-  constructor(
-    private readonly identityFacade: IdentityFacade,
-  ) {}
+  constructor(private readonly identityFacade: IdentityFacade) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<FastifyRequest>();
@@ -51,7 +49,10 @@ export class FirebaseAuthGuard implements CanActivate {
       (request as FastifyRequest & { user: AuthenticatedUser }).user = authenticatedUser;
       return true;
     } catch (error) {
-      this.logger.error(`Auth failed: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `Auth failed: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new UnauthorizedException('Invalid or expired token');
     }
   }

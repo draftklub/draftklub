@@ -9,10 +9,9 @@ export function requestEnrollment(
   klubId: string,
   sportCode: string,
 ): Promise<PlayerSportEnrollment> {
-  return apiFetch<PlayerSportEnrollment>(
-    `/klubs/${klubId}/sports/${sportCode}/enrollments`,
-    { method: 'POST' },
-  );
+  return apiFetch<PlayerSportEnrollment>(`/klubs/${klubId}/sports/${sportCode}/enrollments`, {
+    method: 'POST',
+  });
 }
 
 /**
@@ -24,10 +23,10 @@ export function createEnrollmentDirect(
   sportCode: string,
   userId: string,
 ): Promise<PlayerSportEnrollment> {
-  return apiFetch<PlayerSportEnrollment>(
-    `/klubs/${klubId}/sports/${sportCode}/enrollments/admin`,
-    { method: 'POST', json: { userId } },
-  );
+  return apiFetch<PlayerSportEnrollment>(`/klubs/${klubId}/sports/${sportCode}/enrollments/admin`, {
+    method: 'POST',
+    json: { userId },
+  });
 }
 
 /** GET /klubs/:klubId/sports/:sportCode/enrollments — lista da modalidade. */
@@ -35,9 +34,7 @@ export function listEnrollmentsByProfile(
   klubId: string,
   sportCode: string,
 ): Promise<PlayerSportEnrollment[]> {
-  return apiFetch<PlayerSportEnrollment[]>(
-    `/klubs/${klubId}/sports/${sportCode}/enrollments`,
-  );
+  return apiFetch<PlayerSportEnrollment[]>(`/klubs/${klubId}/sports/${sportCode}/enrollments`);
 }
 
 /** GET /users/:userId/enrollments — lista por user. */

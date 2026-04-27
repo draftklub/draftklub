@@ -53,12 +53,7 @@ function ModalidadesScreen() {
     let cancelled = false;
     setError(null);
 
-    Promise.all([
-      getMe(),
-      getMyKlubs(),
-      listKlubSports(klub.id),
-      listSports(),
-    ])
+    Promise.all([getMe(), getMyKlubs(), listKlubSports(klub.id), listSports()])
       .then(async ([me, myKlubs, klubProfiles, sportCatalog]) => {
         if (cancelled) return;
         setUserId(me.id);
@@ -79,8 +74,7 @@ function ModalidadesScreen() {
     };
   }, [klub, reloadToken]);
 
-  const sportName = (code: string) =>
-    catalog.find((s) => s.code === code)?.name ?? code;
+  const sportName = (code: string) => catalog.find((s) => s.code === code)?.name ?? code;
 
   const enrollmentByProfile = React.useMemo(() => {
     const map = new Map<string, PlayerSportEnrollment>();
@@ -176,10 +170,7 @@ function ProfilesGrid({ profiles, enrollmentByProfile, onRequest, sportName }: P
     return (
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <li
-            key={i}
-            className="h-[140px] animate-pulse rounded-xl border border-border bg-card"
-          />
+          <li key={i} className="h-[140px] animate-pulse rounded-xl border border-border bg-card" />
         ))}
       </ul>
     );
@@ -245,9 +236,7 @@ function ProfileCard({
       >
         {displayName}
       </h3>
-      <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
-        {profile.sportCode}
-      </p>
+      <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{profile.sportCode}</p>
       {profile.description ? (
         <p className="mt-2 line-clamp-2 text-[12.5px] text-muted-foreground">
           {profile.description}
@@ -280,9 +269,7 @@ function ProfileCard({
 
 function EnrollmentBadge({ status }: { status: EnrollmentStatus | null }) {
   if (status === null) {
-    return (
-      <span className="text-[11px] text-muted-foreground">Não inscrito</span>
-    );
+    return <span className="text-[11px] text-muted-foreground">Não inscrito</span>;
   }
   const cfg: Record<EnrollmentStatus, { label: string; cls: string; icon: typeof Check }> = {
     pending: {
@@ -352,7 +339,9 @@ function PendingApprovalsTab({
     Promise.all(
       profiles.map((p) =>
         listEnrollmentsByProfile(klubId, p.sportCode)
-          .then((list) => list.filter((e) => e.status === 'pending').map((e) => ({ enrollment: e, profile: p })))
+          .then((list) =>
+            list.filter((e) => e.status === 'pending').map((e) => ({ enrollment: e, profile: p })),
+          )
           .catch((err: unknown) => {
             // 403 acontece quando user não é admin daquela modalidade especifica
             if (err instanceof ApiError && err.status === 403) return [];

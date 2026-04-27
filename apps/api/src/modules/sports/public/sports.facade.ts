@@ -3,7 +3,10 @@ import { ListSportsHandler } from '../application/queries/list-sports.handler';
 import { GetSportHandler } from '../application/queries/get-sport.handler';
 import { ListKlubSportsHandler } from '../application/queries/list-klub-sports.handler';
 import { GetKlubSportHandler } from '../application/queries/get-klub-sport.handler';
-import { ActivateSportHandler, type ActivateSportCommand } from '../application/commands/activate-sport.handler';
+import {
+  ActivateSportHandler,
+  type ActivateSportCommand,
+} from '../application/commands/activate-sport.handler';
 
 @Injectable()
 export class SportsFacade {

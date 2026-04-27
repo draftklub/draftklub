@@ -32,6 +32,7 @@ rankings quiser para cada esporte.
 ### Rating engine configurável por ranking
 
 Cada ranking define seu engine independentemente:
+
 - `elo`: ELO clássico com K-factor configurável
 - `points`: pontos por posição final em torneios
 - `win_loss`: W/L simples com decay por inatividade

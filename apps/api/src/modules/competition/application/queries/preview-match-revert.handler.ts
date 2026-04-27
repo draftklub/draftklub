@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 export interface RatingDeltaPreview {
@@ -90,10 +86,7 @@ export class PreviewMatchRevertHandler {
         where: { id: match.matchResultId },
       });
       if (result?.status === 'confirmed') {
-        if (
-          result.player1RatingBefore != null &&
-          result.player1RatingAfter != null
-        ) {
+        if (result.player1RatingBefore != null && result.player1RatingAfter != null) {
           const delta = result.player1RatingAfter - result.player1RatingBefore;
           ratingDeltas.push({
             userId: result.player1Id,
@@ -103,10 +96,7 @@ export class PreviewMatchRevertHandler {
             toRevert: -delta,
           });
         }
-        if (
-          result.player2RatingBefore != null &&
-          result.player2RatingAfter != null
-        ) {
+        if (result.player2RatingBefore != null && result.player2RatingAfter != null) {
           const delta = result.player2RatingAfter - result.player2RatingBefore;
           ratingDeltas.push({
             userId: result.player2Id,

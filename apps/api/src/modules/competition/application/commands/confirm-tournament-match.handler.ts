@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { RatingCalculatorService } from '../../../ranking/domain/rating-calculator.service';
@@ -66,7 +71,13 @@ export class ConfirmTournamentMatchHandler {
     };
 
     if (!isPrequalifier && (engine === 'elo' || engine === 'win_loss')) {
-      ratingResult = this.calculator.compute(engine, config, p1RatingBefore, p2RatingBefore, player1Won);
+      ratingResult = this.calculator.compute(
+        engine,
+        config,
+        p1RatingBefore,
+        p2RatingBefore,
+        player1Won,
+      );
     }
 
     const player1Id = match.player1Id;

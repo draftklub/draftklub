@@ -6,6 +6,7 @@
 ## Contexto
 
 Clubes brasileiros têm regras de horário diferenciadas:
+
 - Horário nobre (prime time, 17h-22h): só sócios, partidas mais curtas
 - Horário regular: convidados permitidos
 - Off-peak: descontos, mais flexível
@@ -21,6 +22,7 @@ não há outro jogador esperando. Cada Klub configura se permite e quem pode.
 
 Cada Space define até 3 bandas (`off_peak`, `regular`, `prime`). Granularidade
 configurável (`slotGranularityMinutes` 15-180 múltiplo de 15). Cada banda:
+
 - `type`, `startHour`, `endHour`, `daysOfWeek`
 - `durationByMatchType`: `{ singles, doubles }`
 
@@ -43,12 +45,14 @@ calcula duração. SEM `allowedBookingDurations` — duração vem 100% da banda
 ### Extensão
 
 4 modos no `KlubConfig.extensionMode`:
+
 - `disabled`: extensão indisponível, player cria nova reserva normal
 - `player`: player solicita E auto-aprova, mas só a partir de `endsAt`
 - `staff_approval`: player solicita, fica `pending`, staff decide
 - `staff_only`: player não solicita, só staff cria
 
 Modo `player`:
+
 - Player só pode solicitar a partir de `endsAt`
 - First come first served (sem prioridade pra player ativo)
 - Sistema verifica disponibilidade do próximo slot

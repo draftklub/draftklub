@@ -11,19 +11,13 @@ export class MatchesController {
   constructor(private readonly facade: RankingFacade) {}
 
   @Post()
-  async submitMatch(
-    @Body() body: unknown,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  async submitMatch(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = SubmitMatchSchema.parse(body);
     return this.facade.submitMatch({ ...dto, submittedById: user.userId });
   }
 
   @Post(':id/confirm')
-  async confirmMatch(
-    @Param('id') matchId: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  async confirmMatch(@Param('id') matchId: string, @CurrentUser() user: AuthenticatedUser) {
     return this.facade.confirmMatch({ matchId, confirmedById: user.userId });
   }
 }

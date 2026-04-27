@@ -9,10 +9,7 @@ export interface CategoryForAllocation {
 
 @Injectable()
 export class CategoryAllocatorService {
-  allocate(
-    rating: number | null,
-    categories: CategoryForAllocation[],
-  ): string {
+  allocate(rating: number | null, categories: CategoryForAllocation[]): string {
     const sorted = [...categories].sort((a, b) => a.order - b.order);
     const highest = sorted[0];
     const lowest = sorted[sorted.length - 1];

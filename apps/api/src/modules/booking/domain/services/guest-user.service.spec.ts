@@ -19,7 +19,13 @@ describe('GuestUserService', () => {
 
   it('search por email retorna match', async () => {
     userFindMany.mockResolvedValue([
-      { id: 'u1', fullName: 'Carlos Silva', email: 'carlos@x.com', kind: 'regular', documentNumber: null },
+      {
+        id: 'u1',
+        fullName: 'Carlos Silva',
+        email: 'carlos@x.com',
+        kind: 'regular',
+        documentNumber: null,
+      },
     ]);
     const r = await svc.search('carlos@x.com');
     expect(r).toHaveLength(1);
@@ -36,7 +42,13 @@ describe('GuestUserService', () => {
 
   it('search por nome retorna match', async () => {
     userFindMany.mockResolvedValue([
-      { id: 'u2', fullName: 'Carlos Lima', email: 'lima@x.com', kind: 'regular', documentNumber: null },
+      {
+        id: 'u2',
+        fullName: 'Carlos Lima',
+        email: 'lima@x.com',
+        kind: 'regular',
+        documentNumber: null,
+      },
     ]);
     const r = await svc.search('Carlos');
     expect(r).toHaveLength(1);

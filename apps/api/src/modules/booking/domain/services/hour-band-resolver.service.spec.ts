@@ -1,8 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  HourBandResolverService,
-  type HourBand,
-} from './hour-band-resolver.service';
+import { HourBandResolverService, type HourBand } from './hour-band-resolver.service';
 
 const BANDS: HourBand[] = [
   {

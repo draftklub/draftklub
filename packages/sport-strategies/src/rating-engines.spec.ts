@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  computePointsDelta,
-  computeWinLossDelta,
-  computeWinLossDecay,
-} from './index';
+import { computePointsDelta, computeWinLossDelta, computeWinLossDecay } from './index';
 
 const pointsConfig = {
   champion: 100,

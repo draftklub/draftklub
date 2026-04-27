@@ -185,7 +185,9 @@ function RealTournaments() {
         if (cancelled) return;
         const all = lists.flat();
         const upcoming = all
-          .filter((t) => ['in_progress', 'prequalifying', 'open_registrations', 'draft'].includes(t.status))
+          .filter((t) =>
+            ['in_progress', 'prequalifying', 'open_registrations', 'draft'].includes(t.status),
+          )
           .sort((a, b) => {
             const ta = a.mainStartDate ? Date.parse(a.mainStartDate) : Infinity;
             const tb = b.mainStartDate ? Date.parse(b.mainStartDate) : Infinity;
@@ -228,7 +230,10 @@ function RealTournaments() {
     <ul className="flex flex-col">
       {tournaments.map((t, i) => {
         const dateLabel = t.mainStartDate
-          ? new Date(t.mainStartDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+          ? new Date(t.mainStartDate).toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: 'short',
+            })
           : 'a definir';
         return (
           <li
@@ -240,9 +245,7 @@ function RealTournaments() {
             )}
           >
             <div className="min-w-0">
-              <p className="mb-0.5 truncate text-[13.5px] font-semibold leading-tight">
-                {t.name}
-              </p>
+              <p className="mb-0.5 truncate text-[13.5px] font-semibold leading-tight">{t.name}</p>
               <p className="font-mono text-[11px] text-muted-foreground">
                 Início {dateLabel} · {t.entryCount} inscritos
               </p>
@@ -329,10 +332,8 @@ function RealActivityFeed() {
                 <FeedIcon type={type} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate">
-                    <span className="font-semibold">
-                      {b.space?.name ?? 'Espaço'}
-                    </span>{' '}
-                    · {dateLabel} {time}
+                    <span className="font-semibold">{b.space?.name ?? 'Espaço'}</span> · {dateLabel}{' '}
+                    {time}
                     {b.status === 'cancelled' ? ' · cancelada' : ''}
                   </p>
                   <p className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
@@ -344,7 +345,8 @@ function RealActivityFeed() {
           })}
         </ul>
       ))}
-    </div>);
+    </div>
+  );
 }
 
 // ─── Pieces ──────────────────────────────────────────────────────────
@@ -385,9 +387,7 @@ function KpiCard({ kpi }: { kpi: KpiData }) {
           <ArrowDown className="size-3" strokeWidth={2} />
         )}
         {kpi.delta}
-        <span className="ml-0.5 font-medium text-muted-foreground">
-          {kpi.deltaContext}
-        </span>
+        <span className="ml-0.5 font-medium text-muted-foreground">{kpi.deltaContext}</span>
       </div>
       <svg
         className="absolute bottom-3.5 right-3.5 opacity-55"
@@ -432,9 +432,7 @@ function Panel({
           >
             {title}
           </h2>
-          {subtitle ? (
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
-          ) : null}
+          {subtitle ? <p className="text-xs text-muted-foreground">{subtitle}</p> : null}
         </div>
         {headerExtra}
       </div>
@@ -477,9 +475,7 @@ function HourRow({ row }: { row: { h: string; pct: number; prime: boolean } }) {
           className="absolute inset-y-0 left-0 rounded-md transition-[width] duration-300"
           style={{
             width: `${row.pct}%`,
-            background: row.prime
-              ? 'hsl(var(--brand-accent-500))'
-              : 'hsl(var(--primary))',
+            background: row.prime ? 'hsl(var(--brand-accent-500))' : 'hsl(var(--primary))',
           }}
         />
       </div>
@@ -500,7 +496,10 @@ function FeedIcon({ type }: { type: FeedItem['type'] }) {
   const inner = 'size-[15px]';
   if (type === 'book') {
     return (
-      <span className={cls} style={{ background: 'hsl(var(--primary) / 0.1)', color: 'hsl(var(--primary))' }}>
+      <span
+        className={cls}
+        style={{ background: 'hsl(var(--primary) / 0.1)', color: 'hsl(var(--primary))' }}
+      >
         <CalendarDays className={inner} strokeWidth={2} />
       </span>
     );
@@ -509,7 +508,10 @@ function FeedIcon({ type }: { type: FeedItem['type'] }) {
     return (
       <span
         className={cls}
-        style={{ background: 'hsl(var(--brand-secondary-500) / 0.1)', color: 'hsl(var(--brand-secondary-600))' }}
+        style={{
+          background: 'hsl(var(--brand-secondary-500) / 0.1)',
+          color: 'hsl(var(--brand-secondary-600))',
+        }}
       >
         <X className={inner} strokeWidth={2.2} />
       </span>
@@ -528,7 +530,10 @@ function FeedIcon({ type }: { type: FeedItem['type'] }) {
   return (
     <span
       className={cls}
-      style={{ background: 'hsl(var(--brand-primary-700) / 0.08)', color: 'hsl(var(--brand-primary-700))' }}
+      style={{
+        background: 'hsl(var(--brand-primary-700) / 0.08)',
+        color: 'hsl(var(--brand-primary-700))',
+      }}
     >
       <Trophy className={inner} strokeWidth={2} />
     </span>

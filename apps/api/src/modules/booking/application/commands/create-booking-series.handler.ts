@@ -126,8 +126,9 @@ export class CreateBookingSeriesHandler {
       hourBands,
       space.slotDefaultDurationMinutes,
     );
-    const baseDurationMinutes =
-      Math.round((probe.endsAt.getTime() - probeStart.getTime()) / 60_000);
+    const baseDurationMinutes = Math.round(
+      (probe.endsAt.getTime() - probeStart.getTime()) / 60_000,
+    );
 
     const occurrences = this.generator.generate({
       startsOn: cmd.startsOn,
@@ -182,10 +183,7 @@ export class CreateBookingSeriesHandler {
         AND: [
           { OR: [{ endsAt: null }, { endsAt: { gt: windowStart } }] },
           {
-            OR: [
-              { spaceId: cmd.spaceId },
-              { primaryPlayerId: { in: allPlayerIds } },
-            ],
+            OR: [{ spaceId: cmd.spaceId }, { primaryPlayerId: { in: allPlayerIds } }],
           },
         ],
       },

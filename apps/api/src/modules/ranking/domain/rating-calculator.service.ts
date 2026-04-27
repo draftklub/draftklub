@@ -24,9 +24,19 @@ export class RatingCalculatorService {
   ): RatingDeltaResult {
     switch (engine) {
       case 'elo':
-        return this.computeElo(config as unknown as EloConfig, player1Rating, player2Rating, player1Won);
+        return this.computeElo(
+          config as unknown as EloConfig,
+          player1Rating,
+          player2Rating,
+          player1Won,
+        );
       case 'win_loss':
-        return this.computeWinLoss(config as unknown as WinLossConfig, player1Rating, player2Rating, player1Won);
+        return this.computeWinLoss(
+          config as unknown as WinLossConfig,
+          player1Rating,
+          player2Rating,
+          player1Won,
+        );
       case 'points':
         return {
           player1Delta: 0,
@@ -39,12 +49,7 @@ export class RatingCalculatorService {
     }
   }
 
-  private computeElo(
-    config: EloConfig,
-    r1: number,
-    r2: number,
-    p1Won: boolean,
-  ): RatingDeltaResult {
+  private computeElo(config: EloConfig, r1: number, r2: number, p1Won: boolean): RatingDeltaResult {
     const delta1 = computeEloDelta(r1, r2, p1Won ? 1 : 0, config);
     const delta2 = computeEloDelta(r2, r1, p1Won ? 0 : 1, config);
     return {

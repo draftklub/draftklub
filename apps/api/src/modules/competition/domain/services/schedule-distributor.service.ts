@@ -5,10 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
-import {
-  ScheduleConfigSchema,
-  type ScheduleConfig,
-} from '../../api/dtos/schedule-config.dto';
+import { ScheduleConfigSchema, type ScheduleConfig } from '../../api/dtos/schedule-config.dto';
 
 export interface Slot {
   date: string;
@@ -187,8 +184,9 @@ export class ScheduleDistributorService {
       : undefined;
 
     const matchesToSchedule: MatchToSchedule[] = tournament.matches
-      .filter((m): m is typeof m & { player1Id: string; player2Id: string } =>
-        m.player1Id != null && m.player2Id != null,
+      .filter(
+        (m): m is typeof m & { player1Id: string; player2Id: string } =>
+          m.player1Id != null && m.player2Id != null,
       )
       .map((m) => ({
         id: m.id,
@@ -216,8 +214,7 @@ export class ScheduleDistributorService {
     );
 
     const conflictMode =
-      tournament.klubSport.klub.config?.tournamentBookingConflictMode ??
-      'staff_decides';
+      tournament.klubSport.klub.config?.tournamentBookingConflictMode ?? 'staff_decides';
     const klubId = tournament.klubSport.klubId;
     const tournamentCreatedById = tournament.createdById;
 
@@ -263,8 +260,7 @@ export class ScheduleDistributorService {
           if (conflictMode === 'block_avulso') {
             throw new ConflictException({
               type: 'tournament_vs_avulso',
-              message:
-                'Tournament scheduling blocked by existing booking. Cancel avulso first.',
+              message: 'Tournament scheduling blocked by existing booking. Cancel avulso first.',
               avulsoBookingId: avulsoConflict.id,
               tournamentMatchId: match.id,
             });
@@ -293,9 +289,7 @@ export class ScheduleDistributorService {
           }
         }
 
-        const otherPlayers = match.player2Id
-          ? [{ userId: match.player2Id, name: 'Player 2' }]
-          : [];
+        const otherPlayers = match.player2Id ? [{ userId: match.player2Id, name: 'Player 2' }] : [];
 
         if (existingBooking) {
           await tx.booking.update({

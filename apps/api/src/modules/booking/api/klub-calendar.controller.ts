@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  UseGuards,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { BookingFacade } from '../public/booking.facade';
 
@@ -17,10 +10,7 @@ export class KlubCalendarController {
   constructor(private readonly facade: BookingFacade) {}
 
   @Get()
-  async getCalendar(
-    @Param('klubId') klubId: string,
-    @Query('date') date: string,
-  ) {
+  async getCalendar(@Param('klubId') klubId: string, @Query('date') date: string) {
     if (!date || !DATE_REGEX.test(date)) {
       throw new BadRequestException('Invalid date format. Use YYYY-MM-DD');
     }

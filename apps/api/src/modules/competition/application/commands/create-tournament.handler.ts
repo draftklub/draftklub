@@ -55,7 +55,8 @@ export class CreateTournamentHandler {
     });
     if (activeSchemas === 0) {
       throw new BadRequestException({
-        message: 'No active RankingPointsSchema found for this sport profile. Create a points schema first.',
+        message:
+          'No active RankingPointsSchema found for this sport profile. Create a points schema first.',
         code: 'POINTS_SCHEMA_REQUIRED',
       });
     }
@@ -81,7 +82,9 @@ export class CreateTournamentHandler {
     }
     for (const schema of schemas) {
       if (schema.klubSportId !== cmd.klubSportId) {
-        throw new BadRequestException('All points schemas must belong to the same KlubSportProfile');
+        throw new BadRequestException(
+          'All points schemas must belong to the same KlubSportProfile',
+        );
       }
     }
 

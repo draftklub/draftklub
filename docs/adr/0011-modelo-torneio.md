@@ -69,7 +69,8 @@ disqualified         → desclassificado
 ### Wild card e movimentação
 
 Campo `categorySource` na TournamentEntry:
-- `auto`     → alocado pelo rating
+
+- `auto` → alocado pelo rating
 - `committee` → Comissão moveu manualmente
 - `wildcard` → Comissão promoveu acima do rating
 
@@ -78,8 +79,9 @@ Flag `isWildCard: Boolean`.
 ### Aprovação de inscrição
 
 Campo `registrationApproval` no Tournament:
-- `auto`       → inscrição direto pra pending_seeding
-- `committee`  → passa por pending_approval
+
+- `auto` → inscrição direto pra pending_seeding
+- `committee` → passa por pending_approval
 
 ### Fora do escopo do 9A
 

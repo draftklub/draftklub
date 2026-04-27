@@ -27,10 +27,7 @@ export class RankingsController {
   }
 
   @Get()
-  async listRankings(
-    @Param('klubId') klubId: string,
-    @Param('sportCode') sportCode: string,
-  ) {
+  async listRankings(@Param('klubId') klubId: string, @Param('sportCode') sportCode: string) {
     return this.facade.listRankings(klubId, sportCode);
   }
 

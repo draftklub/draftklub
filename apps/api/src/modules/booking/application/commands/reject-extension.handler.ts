@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import type { BookingExtension } from './extend-booking.handler';
@@ -28,9 +24,7 @@ export class RejectExtensionHandler {
     const extension = extensions.find((e) => e.id === cmd.extensionId);
     if (!extension) throw new NotFoundException('Extension not found');
     if (extension.status !== 'pending') {
-      throw new BadRequestException(
-        `Extension is in status '${extension.status}', cannot reject`,
-      );
+      throw new BadRequestException(`Extension is in status '${extension.status}', cannot reject`);
     }
 
     const now = new Date().toISOString();

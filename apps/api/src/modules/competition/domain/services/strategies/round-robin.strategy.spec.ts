@@ -15,9 +15,7 @@ function makeContext(playersPerCategory: number): DrawContext {
     tournamentId: 'tour-1',
     format: 'round_robin',
     hasPrequalifiers: false,
-    categories: [
-      { id: 'cat-a', name: 'A', order: 0, players: makePlayers(playersPerCategory) },
-    ],
+    categories: [{ id: 'cat-a', name: 'A', order: 0, players: makePlayers(playersPerCategory) }],
   };
 }
 
@@ -88,9 +86,7 @@ describe('RoundRobinStrategy', () => {
       tournamentId: 't',
       format: 'round_robin',
       hasPrequalifiers: false,
-      categories: [
-        { id: 'cat-x', name: 'X', order: 0, players: makePlayers(2) },
-      ],
+      categories: [{ id: 'cat-x', name: 'X', order: 0, players: makePlayers(2) }],
     };
     const result = strategy.validate(ctx);
     expect(result.ok).toBe(false);

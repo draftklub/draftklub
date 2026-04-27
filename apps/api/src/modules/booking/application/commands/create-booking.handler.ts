@@ -41,12 +41,7 @@ interface ResolvedPlayer {
   name: string;
 }
 
-function rangesOverlap(
-  aStart: Date,
-  aEnd: Date | null,
-  bStart: Date,
-  bEnd: Date,
-): boolean {
+function rangesOverlap(aStart: Date, aEnd: Date | null, bStart: Date, bEnd: Date): boolean {
   const aEndMs = aEnd?.getTime() ?? Number.POSITIVE_INFINITY;
   return aStart.getTime() < bEnd.getTime() && aEndMs > bStart.getTime();
 }
@@ -85,8 +80,7 @@ export class CreateBookingHandler {
     const config = klub?.config;
     if (!config) throw new BadRequestException('Klub config missing');
 
-    const startMinutes =
-      cmd.startsAt.getUTCHours() * 60 + cmd.startsAt.getUTCMinutes();
+    const startMinutes = cmd.startsAt.getUTCHours() * 60 + cmd.startsAt.getUTCMinutes();
     if (startMinutes % space.slotGranularityMinutes !== 0) {
       throw new BadRequestException(
         `Start time must be aligned to ${space.slotGranularityMinutes}-minute boundaries`,
@@ -118,13 +112,8 @@ export class CreateBookingHandler {
       }
     }
 
-    if (
-      resolvedOtherPlayers.length > 0 &&
-      !this.hourBandResolver.bandAllowsGuests(band)
-    ) {
-      throw new BadRequestException(
-        `Band '${band.type}' does not allow guests/other players`,
-      );
+    if (resolvedOtherPlayers.length > 0 && !this.hourBandResolver.bandAllowsGuests(band)) {
+      throw new BadRequestException(`Band '${band.type}' does not allow guests/other players`);
     }
 
     const allowedModes = config.bookingModes as string[];

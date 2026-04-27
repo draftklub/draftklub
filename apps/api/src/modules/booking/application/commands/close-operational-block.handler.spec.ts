@@ -21,9 +21,11 @@ describe('CloseOperationalBlockHandler', () => {
     const prisma = {
       booking: {
         findUnique: vi.fn().mockResolvedValue(block),
-        update: vi.fn().mockImplementation((args: { data: { endsAt: Date } }) =>
-          Promise.resolve({ ...block, endsAt: args.data.endsAt, status: 'completed' }),
-        ),
+        update: vi
+          .fn()
+          .mockImplementation((args: { data: { endsAt: Date } }) =>
+            Promise.resolve({ ...block, endsAt: args.data.endsAt, status: 'completed' }),
+          ),
       },
     };
     (handler as unknown as { prisma: unknown }).prisma = prisma;
@@ -46,9 +48,9 @@ describe('CloseOperationalBlockHandler', () => {
     };
     (handler as unknown as { prisma: unknown }).prisma = prisma;
 
-    await expect(
-      handler.execute({ bookingId: BLOCK_ID, closedById: STAFF_ID }),
-    ).rejects.toThrow(/weather_closed/);
+    await expect(handler.execute({ bookingId: BLOCK_ID, closedById: STAFF_ID })).rejects.toThrow(
+      /weather_closed/,
+    );
   });
 
   it('rejeita fechar block que ja tem endsAt', async () => {
@@ -64,8 +66,8 @@ describe('CloseOperationalBlockHandler', () => {
     };
     (handler as unknown as { prisma: unknown }).prisma = prisma;
 
-    await expect(
-      handler.execute({ bookingId: BLOCK_ID, closedById: STAFF_ID }),
-    ).rejects.toThrow(/already has endsAt/);
+    await expect(handler.execute({ bookingId: BLOCK_ID, closedById: STAFF_ID })).rejects.toThrow(
+      /already has endsAt/,
+    );
   });
 });

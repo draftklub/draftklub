@@ -17,7 +17,8 @@ export const CreateKlubSchema = z.object({
     .max(60)
     .regex(slugRegex, 'Slug deve ser kebab-case (lowercase + hífen)')
     .optional(),
-  type: z.enum(['sports_club', 'condo', 'school', 'public_space', 'academy', 'individual'])
+  type: z
+    .enum(['sports_club', 'condo', 'school', 'public_space', 'academy', 'individual'])
     .default('sports_club'),
   city: z.string().max(100).optional(),
   state: z.string().length(2).optional(),
@@ -27,9 +28,7 @@ export const CreateKlubSchema = z.object({
   entityType: z.enum(['pj', 'pf']).optional(),
   document: z.string().optional(),
   legalName: z.string().optional(),
-  sportCodes: z.array(
-    z.enum(['tennis', 'padel', 'squash', 'beach_tennis'])
-  ).default([]),
+  sportCodes: z.array(z.enum(['tennis', 'padel', 'squash', 'beach_tennis'])).default([]),
   parentKlubId: uuidString().optional(),
   isGroup: z.boolean().default(false),
   plan: z.enum(['trial', 'starter', 'pro', 'elite', 'enterprise']).default('trial'),

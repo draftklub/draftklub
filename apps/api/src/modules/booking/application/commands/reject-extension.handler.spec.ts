@@ -27,9 +27,11 @@ describe('RejectExtensionHandler', () => {
         },
       ],
     };
-    const update = vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) =>
-      Promise.resolve({ ...booking, ...data }),
-    );
+    const update = vi
+      .fn()
+      .mockImplementation(({ data }: { data: Record<string, unknown> }) =>
+        Promise.resolve({ ...booking, ...data }),
+      );
     (handler as unknown as { prisma: unknown }).prisma = {
       booking: {
         findUnique: vi.fn().mockResolvedValue(booking),

@@ -17,11 +17,11 @@ TODO porque o handler não existia.
 - Verifica que tournament está em status cancelável
   (`draft`, `prequalifying`, `in_progress`)
 - Atomic em transação:
-  * `tournament.status = 'cancelled'`
-  * `tournament.cancelledAt = now`
-  * `tournament.cancelledById = user`
-  * `tournament.cancellationReason = reason ?? 'Cancelled by committee'`
-  * Cancela bookings vinculados (`tournamentMatchId IN tournament.matches`)
+  - `tournament.status = 'cancelled'`
+  - `tournament.cancelledAt = now`
+  - `tournament.cancelledById = user`
+  - `tournament.cancellationReason = reason ?? 'Cancelled by committee'`
+  - Cancela bookings vinculados (`tournamentMatchId IN tournament.matches`)
     com status `pending`/`confirmed` → `status='cancelled'`,
     `cancellationReason='tournament_cancelled:<tournamentId>'`
 

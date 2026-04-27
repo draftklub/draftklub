@@ -57,11 +57,7 @@ export interface BookingResponseLimited {
   tournamentInfo?: TournamentInfo;
 }
 
-const OPERATIONAL_BLOCK_TYPES = new Set([
-  'maintenance',
-  'weather_closed',
-  'staff_blocked',
-]);
+const OPERATIONAL_BLOCK_TYPES = new Set(['maintenance', 'weather_closed', 'staff_blocked']);
 
 export function presentBooking(
   booking: BookingShape,

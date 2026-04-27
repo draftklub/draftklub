@@ -83,9 +83,11 @@ function buildPrisma(opts: BuildOpts) {
     txMatchFindUnique.mockResolvedValueOnce(opts.nextMatch);
   }
   const txMatchUpdate = vi.fn().mockResolvedValue({});
-  const txRevertCreate = vi.fn().mockImplementation(({ data }: { data: unknown }) =>
-    Promise.resolve({ id: 'rev-1', ...(data as object) }),
-  );
+  const txRevertCreate = vi
+    .fn()
+    .mockImplementation(({ data }: { data: unknown }) =>
+      Promise.resolve({ id: 'rev-1', ...(data as object) }),
+    );
   const txMatchResultUpdate = vi.fn().mockResolvedValue({});
   const txPlayerRankingUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
   const txTournamentFindUnique = vi.fn().mockResolvedValue({ rankingId: RANKING_ID });
@@ -262,7 +264,8 @@ describe('RevertMatchHandler', () => {
       matchResultId: RESULT_ID,
       status: 'completed',
     });
-    const ratingDeltas = (revertCreateCall.data.previousState as { ratingDeltas: unknown[] }).ratingDeltas;
+    const ratingDeltas = (revertCreateCall.data.previousState as { ratingDeltas: unknown[] })
+      .ratingDeltas;
     expect(ratingDeltas).toHaveLength(2);
   });
 
@@ -276,10 +279,13 @@ describe('RevertMatchHandler', () => {
 
     await handler.execute({ matchId: MATCH_ID, revertedById: STAFF_ID });
 
-    const calls = mock.spies.txPlayerRankingUpdateMany.mock.calls.map((c) => c[0] as {
-      where: { rankingId: string; userId: string };
-      data: { rating: { increment: number } };
-    });
+    const calls = mock.spies.txPlayerRankingUpdateMany.mock.calls.map(
+      (c) =>
+        c[0] as {
+          where: { rankingId: string; userId: string };
+          data: { rating: { increment: number } };
+        },
+    );
     expect(calls).toHaveLength(2);
     expect(calls[0]?.data.rating.increment).toBe(-20); // p1 ganhou 20, reverte -20
     expect(calls[1]?.data.rating.increment).toBe(20); // p2 perdeu 20, reverte +20
@@ -297,8 +303,8 @@ describe('RevertMatchHandler', () => {
       .mockResolvedValueOnce(makeMatch({ status: 'scheduled', winnerId: null }));
     attach(mock.prisma);
 
-    await expect(
-      handler.execute({ matchId: MATCH_ID, revertedById: STAFF_ID }),
-    ).rejects.toThrow(/state changed since preview/);
+    await expect(handler.execute({ matchId: MATCH_ID, revertedById: STAFF_ID })).rejects.toThrow(
+      /state changed since preview/,
+    );
   });
 });

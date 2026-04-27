@@ -41,19 +41,16 @@ describe('sortEntries', () => {
 
   it('orderBy=combined com pesos 50/50', () => {
     const entries = [
-      makeEntry('a', 1500, 0),    // score = 750
+      makeEntry('a', 1500, 0), // score = 750
       makeEntry('b', 1000, 1000), // score = 1000
-      makeEntry('c', 1200, 500),  // score = 850
+      makeEntry('c', 1200, 500), // score = 850
     ];
     const sorted = sortEntries(entries, 'combined', { ratingWeight: 0.5, pointsWeight: 0.5 });
     expect(sorted.map((e) => e.userId)).toEqual(['b', 'c', 'a']);
   });
 
   it('orderBy=combined sem combinedWeight usa default 50/50', () => {
-    const entries = [
-      makeEntry('a', 2000, 0),
-      makeEntry('b', 0, 2000),
-    ];
+    const entries = [makeEntry('a', 2000, 0), makeEntry('b', 0, 2000)];
     const sorted = sortEntries(entries, 'combined', null);
     // a: 1000, b: 1000 → tie, ordem original mantida
     expect(sorted.length).toBe(2);

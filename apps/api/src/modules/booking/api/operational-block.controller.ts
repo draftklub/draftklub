@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Post,
-  Patch,
-  Param,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { PolicyGuard } from '../../../shared/auth/policy.guard';
 import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';

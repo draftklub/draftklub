@@ -47,6 +47,8 @@ export function createKlub(input: CreateKlubInput): Promise<Klub> {
  * user logado ao Klub como PLAYER (membership + role atomicamente).
  * Idempotente: re-aceitar o mesmo link no-op.
  */
-export function joinKlubBySlug(slug: string): Promise<{ id: string; klubId: string; userId: string }> {
+export function joinKlubBySlug(
+  slug: string,
+): Promise<{ id: string; klubId: string; userId: string }> {
   return apiFetch(`/klubs/slug/${slug}/join`, { method: 'POST' });
 }

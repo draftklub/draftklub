@@ -20,24 +20,24 @@ interface FakeMatch {
   nextMatchSlot: string | null;
 }
 
-function buildPrisma(opts: {
-  match?: FakeMatch | null;
-  nextMatch?: FakeMatch | null;
-  nextNextMatch?: { status: string } | null;
-  matchResult?: {
-    id: string;
-    status: string;
-    player1Id: string;
-    player2Id: string;
-    player1RatingBefore: number | null;
-    player1RatingAfter: number | null;
-    player2RatingBefore: number | null;
-    player2RatingAfter: number | null;
-  } | null;
-} = {}) {
-  const tournamentMatchFindUnique = vi
-    .fn()
-    .mockResolvedValueOnce(opts.match ?? null);
+function buildPrisma(
+  opts: {
+    match?: FakeMatch | null;
+    nextMatch?: FakeMatch | null;
+    nextNextMatch?: { status: string } | null;
+    matchResult?: {
+      id: string;
+      status: string;
+      player1Id: string;
+      player2Id: string;
+      player1RatingBefore: number | null;
+      player1RatingAfter: number | null;
+      player2RatingBefore: number | null;
+      player2RatingAfter: number | null;
+    } | null;
+  } = {},
+) {
+  const tournamentMatchFindUnique = vi.fn().mockResolvedValueOnce(opts.match ?? null);
   if (opts.nextMatch !== undefined) {
     tournamentMatchFindUnique.mockResolvedValueOnce(opts.nextMatch);
   }

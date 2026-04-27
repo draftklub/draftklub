@@ -15,6 +15,7 @@ necessidades reais do operador de Klub que o modelo básico do 10A não cobre.
 
 `BookingSeries` é o **template** de recorrência. Ao criar, geramos **todos**
 os bookings individuais concretos (não virtual). Motivos:
+
 - Facilita queries de agenda (um booking é um booking, independente de origem)
 - Permite cancelamento granular por ocorrência
 - Permite alteração individual sem mexer na série
@@ -53,6 +54,7 @@ especial. Reusa todo o modelo de conflito, visibility e UI de agenda.
 ### Auto-cancelamento
 
 Ao criar um bloqueio, sistema auto-cancela bookings de player que conflitam:
+
 - `status='cancelled'`
 - `cancellationReason='auto_cancelled:<type>:<blockId>'`
 - `autoCancelledByBookingId=blockId` (FK self-ref para rastreabilidade)

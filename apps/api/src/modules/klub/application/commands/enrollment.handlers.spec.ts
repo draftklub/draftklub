@@ -13,32 +13,38 @@ const PROFILE_ID = '00000000-0000-0000-0010-000000000001';
 const STAFF_ID = '00000000-0000-0000-0001-000000000ccc';
 const ENROLLMENT_ID = '00000000-0000-0000-0030-000000000001';
 
-function buildPrisma(opts: {
-  profile?: { id: string; status: string } | null;
-  membership?: { id: string } | null;
-  existingEnrollment?: { id: string; status: string } | null;
-} = {}) {
+function buildPrisma(
+  opts: {
+    profile?: { id: string; status: string } | null;
+    membership?: { id: string } | null;
+    existingEnrollment?: { id: string; status: string } | null;
+  } = {},
+) {
   return {
     klubSportProfile: {
       findFirst: vi
         .fn()
         .mockResolvedValue(
-          opts.profile === null ? null : opts.profile ?? { id: PROFILE_ID, status: 'active' },
+          opts.profile === null ? null : (opts.profile ?? { id: PROFILE_ID, status: 'active' }),
         ),
     },
     membership: {
-      findFirst: vi.fn().mockResolvedValue(
-        opts.membership === null ? null : opts.membership ?? { id: 'm-1' },
-      ),
+      findFirst: vi
+        .fn()
+        .mockResolvedValue(opts.membership === null ? null : (opts.membership ?? { id: 'm-1' })),
     },
     playerSportEnrollment: {
       findUnique: vi.fn().mockResolvedValue(opts.existingEnrollment ?? null),
-      create: vi.fn().mockImplementation((args: { data: Record<string, unknown> }) =>
-        Promise.resolve({ id: 'enroll-new', ...args.data }),
-      ),
-      update: vi.fn().mockImplementation((args: { where: { id: string }; data: Record<string, unknown> }) =>
-        Promise.resolve({ id: args.where.id, ...args.data }),
-      ),
+      create: vi
+        .fn()
+        .mockImplementation((args: { data: Record<string, unknown> }) =>
+          Promise.resolve({ id: 'enroll-new', ...args.data }),
+        ),
+      update: vi
+        .fn()
+        .mockImplementation((args: { where: { id: string }; data: Record<string, unknown> }) =>
+          Promise.resolve({ id: args.where.id, ...args.data }),
+        ),
     },
   };
 }
@@ -159,7 +165,11 @@ describe('SuspendEnrollmentHandler', () => {
     });
     (handler as unknown as { prisma: unknown }).prisma = prisma;
 
-    await handler.execute({ enrollmentId: ENROLLMENT_ID, suspendedById: STAFF_ID, reason: 'no-show' });
+    await handler.execute({
+      enrollmentId: ENROLLMENT_ID,
+      suspendedById: STAFF_ID,
+      reason: 'no-show',
+    });
     const updateCall = prisma.playerSportEnrollment.update.mock.calls[0]?.[0] as {
       data: { status: string; suspensionReason: string };
     };

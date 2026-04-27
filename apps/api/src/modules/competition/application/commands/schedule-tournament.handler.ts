@@ -4,10 +4,7 @@ import {
   ScheduleDistributorService,
   type DistributionResult,
 } from '../../domain/services/schedule-distributor.service';
-import {
-  ScheduleConfigSchema,
-  type ScheduleConfig,
-} from '../../api/dtos/schedule-config.dto';
+import { ScheduleConfigSchema, type ScheduleConfig } from '../../api/dtos/schedule-config.dto';
 
 export interface ScheduleTournamentCommand {
   tournamentId: string;

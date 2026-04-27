@@ -14,16 +14,20 @@ function makePrisma(overrides: {
 }) {
   const tx = {
     booking: {
-      create: vi.fn().mockImplementation((args: { data: { id?: string } }) =>
-        Promise.resolve({ id: 'new-b', ...(args.data as Record<string, unknown>) }),
-      ),
+      create: vi
+        .fn()
+        .mockImplementation((args: { data: { id?: string } }) =>
+          Promise.resolve({ id: 'new-b', ...(args.data as Record<string, unknown>) }),
+        ),
       findMany: vi.fn().mockResolvedValue(overrides.conflicts ?? []),
       update: vi.fn().mockResolvedValue({}),
     },
     bookingSeries: {
-      create: vi.fn().mockImplementation((args: { data: unknown }) =>
-        Promise.resolve({ id: 'series-1', ...(args.data as Record<string, unknown>) }),
-      ),
+      create: vi
+        .fn()
+        .mockImplementation((args: { data: unknown }) =>
+          Promise.resolve({ id: 'series-1', ...(args.data as Record<string, unknown>) }),
+        ),
     },
   };
 

@@ -28,9 +28,7 @@ export class ApproveExtensionHandler {
     const extension = extensions.find((e) => e.id === cmd.extensionId);
     if (!extension) throw new NotFoundException('Extension not found');
     if (extension.status !== 'pending') {
-      throw new BadRequestException(
-        `Extension is in status '${extension.status}', cannot approve`,
-      );
+      throw new BadRequestException(`Extension is in status '${extension.status}', cannot approve`);
     }
     if (!booking.endsAt) {
       throw new BadRequestException('Cannot approve extension without booking endsAt');

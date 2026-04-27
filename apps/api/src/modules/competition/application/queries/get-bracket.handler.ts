@@ -13,11 +13,7 @@ export class GetBracketHandler {
           orderBy: { order: 'asc' },
           include: {
             matches: {
-              orderBy: [
-                { matchKind: 'desc' },
-                { round: 'asc' },
-                { bracketPosition: 'asc' },
-              ],
+              orderBy: [{ matchKind: 'desc' }, { round: 'asc' }, { bracketPosition: 'asc' }],
               include: {
                 matchResult: {
                   select: {

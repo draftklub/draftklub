@@ -199,12 +199,16 @@ function buildPrismaForDistribute(opts: {
   }
   const txBookingFindUnique = vi.fn().mockResolvedValue(opts.existingBookingForMatch ?? null);
   const txBookingFindFirst = vi.fn().mockResolvedValue(opts.existingAvulso ?? null);
-  const txBookingUpdate = vi.fn().mockImplementation(({ where, data }: { where: { id: string }; data: unknown }) =>
-    Promise.resolve({ id: where.id, ...(data as object) }),
-  );
-  const txBookingCreate = vi.fn().mockImplementation(({ data }: { data: unknown }) =>
-    Promise.resolve({ id: 'new-booking-' + Math.random(), ...(data as object) }),
-  );
+  const txBookingUpdate = vi
+    .fn()
+    .mockImplementation(({ where, data }: { where: { id: string }; data: unknown }) =>
+      Promise.resolve({ id: where.id, ...(data as object) }),
+    );
+  const txBookingCreate = vi
+    .fn()
+    .mockImplementation(({ data }: { data: unknown }) =>
+      Promise.resolve({ id: 'new-booking-' + Math.random(), ...(data as object) }),
+    );
 
   const tx: FakeTx = {
     tournamentMatch: { update: txTournamentMatchUpdate, findUnique: txMatchFindUnique },
@@ -264,7 +268,9 @@ describe('ScheduleDistributorService.distribute (10D side effects)', () => {
     const result = await service.distribute('t-1');
 
     expect(mock.spies.txBookingCreate).toHaveBeenCalledOnce();
-    const createCall = mock.spies.txBookingCreate.mock.calls[0]?.[0] as { data: Record<string, unknown> };
+    const createCall = mock.spies.txBookingCreate.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
     expect(createCall.data.bookingType).toBe('tournament_match');
     expect(createCall.data.creationMode).toBe('staff_assisted');
     expect(createCall.data.status).toBe('confirmed');
@@ -305,7 +311,9 @@ describe('ScheduleDistributorService.distribute (10D side effects)', () => {
 
     expect(result.bookingsAutoCancelled).toContain('avulso-1');
     expect(result.bookingsCreated).toHaveLength(1);
-    const cancelCall = mock.spies.txBookingUpdate.mock.calls[0]?.[0] as { data: { status: string; cancellationReason: string } };
+    const cancelCall = mock.spies.txBookingUpdate.mock.calls[0]?.[0] as {
+      data: { status: string; cancellationReason: string };
+    };
     expect(cancelCall.data.status).toBe('cancelled');
     expect(cancelCall.data.cancellationReason).toMatch(/auto_cancelled:tournament/);
   });

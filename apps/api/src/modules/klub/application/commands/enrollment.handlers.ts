@@ -46,11 +46,7 @@ export interface CancelEnrollmentCommand {
   cancelledById: string;
 }
 
-async function resolveSportProfile(
-  prisma: PrismaService,
-  klubId: string,
-  sportCode: string,
-) {
+async function resolveSportProfile(prisma: PrismaService, klubId: string, sportCode: string) {
   const profile = await prisma.klubSportProfile.findFirst({
     where: { klubId, sportCode },
     select: { id: true, status: true },
@@ -88,9 +84,7 @@ export class RequestEnrollmentHandler {
       },
     });
     if (existing && (existing.status === 'pending' || existing.status === 'active')) {
-      throw new BadRequestException(
-        `Enrollment already exists with status '${existing.status}'`,
-      );
+      throw new BadRequestException(`Enrollment already exists with status '${existing.status}'`);
     }
 
     if (existing) {
@@ -223,7 +217,9 @@ export class SuspendEnrollmentHandler {
     });
     if (!enrollment) throw new NotFoundException('Enrollment not found');
     if (enrollment.status !== 'active') {
-      throw new BadRequestException(`Only active enrollments can be suspended (status='${enrollment.status}')`);
+      throw new BadRequestException(
+        `Only active enrollments can be suspended (status='${enrollment.status}')`,
+      );
     }
     return this.prisma.playerSportEnrollment.update({
       where: { id: cmd.enrollmentId },
@@ -247,7 +243,9 @@ export class ReactivateEnrollmentHandler {
     });
     if (!enrollment) throw new NotFoundException('Enrollment not found');
     if (enrollment.status !== 'suspended') {
-      throw new BadRequestException(`Only suspended enrollments can be reactivated (status='${enrollment.status}')`);
+      throw new BadRequestException(
+        `Only suspended enrollments can be reactivated (status='${enrollment.status}')`,
+      );
     }
     return this.prisma.playerSportEnrollment.update({
       where: { id: cmd.enrollmentId },

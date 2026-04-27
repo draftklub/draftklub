@@ -18,10 +18,7 @@ export class KlubSportsController {
   }
 
   @Get(':code')
-  async getKlubSport(
-    @Param('klubId') klubId: string,
-    @Param('code') code: string,
-  ) {
+  async getKlubSport(@Param('klubId') klubId: string, @Param('code') code: string) {
     return this.facade.getKlubSport(klubId, code);
   }
 

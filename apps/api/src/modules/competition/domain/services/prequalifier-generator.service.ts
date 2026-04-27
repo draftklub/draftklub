@@ -25,10 +25,7 @@ export interface PrequalifierPairing {
 
 @Injectable()
 export class PrequalifierGeneratorService {
-  generate(
-    categories: CategoryWithPlayers[],
-    bordersPerFrontier: number,
-  ): PrequalifierPairing[] {
+  generate(categories: CategoryWithPlayers[], bordersPerFrontier: number): PrequalifierPairing[] {
     if (bordersPerFrontier < 1) {
       throw new BadRequestException('bordersPerFrontier must be >= 1');
     }

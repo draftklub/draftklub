@@ -345,9 +345,12 @@ export class DrawTournamentHandler {
         });
 
         if (m.isBye) {
-          const winnerId = m.player1Id && !isTbdUserId(m.player1Id, tbdPrefix)
-            ? m.player1Id
-            : (m.player2Id && !isTbdUserId(m.player2Id, tbdPrefix) ? m.player2Id : null);
+          const winnerId =
+            m.player1Id && !isTbdUserId(m.player1Id, tbdPrefix)
+              ? m.player1Id
+              : m.player2Id && !isTbdUserId(m.player2Id, tbdPrefix)
+                ? m.player2Id
+                : null;
           if (winnerId) {
             const slotField = m.nextMatchSlot === 'top' ? 'player1Id' : 'player2Id';
             await tx.tournamentMatch.update({

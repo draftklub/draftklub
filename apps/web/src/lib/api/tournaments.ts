@@ -26,7 +26,5 @@ export function listKlubTournaments(
   klubId: string,
   sportCode: string,
 ): Promise<TournamentListItem[]> {
-  return apiFetch<TournamentListItem[]>(
-    `/klubs/${klubId}/sports/${sportCode}/tournaments`,
-  );
+  return apiFetch<TournamentListItem[]>(`/klubs/${klubId}/sports/${sportCode}/tournaments`);
 }

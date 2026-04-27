@@ -14,15 +14,18 @@
 ## 1.1 Conceito de marca
 
 ### Tom de voz visual
+
 DraftKlub deve transmitir **profissionalismo esportivo brasileiro**. Não é Wimbledon (frio, britânico). Não é academia popular (descontraído demais). É o **clube de tênis carioca de classe média alta** — tradicional mas moderno, sério mas vibrante.
 
 Atributos:
+
 - **Confiável**: Klub Admin de 60 anos precisa ver e sentir "aqui é sério"
 - **Vibrante**: Player de 30 anos precisa achar bonito e querer abrir
 - **Direto**: Staff que opera no balcão precisa de UI sem fricção
 - **Brasileiro**: cor + tipografia com personalidade nossa, sem ser caricatural
 
 ### Inspirações de referência (pra mostrar ao Claude Design)
+
 - **Linear**: minimalismo + tokens de design rigorosos
 - **Notion**: legibilidade + hierarquia visual clara
 - **Strava**: vibração esportiva sem perder profissionalismo
@@ -31,6 +34,7 @@ Atributos:
 ## 1.2 Paleta de cores sugerida
 
 ### Tema claro (light)
+
 ```
 Primary       #0E7C66 (verde profundo, lembra grama de tênis + Brasil)
 Primary-soft  #14A085 (variante mais clara pra hover/active)
@@ -55,6 +59,7 @@ Info          #0EA5E9 (ciano informativo)
 ```
 
 ### Tema escuro (dark)
+
 ```
 Primary       #14B89A (mais saturado pra contraste em dark)
 Primary-soft  #1ED9B0
@@ -85,21 +90,28 @@ Border-strong #3F3F46
 ## 1.3 Tipografia
 
 ### Família principal
+
 **Inter** (Google Fonts)
+
 - Por que: legibilidade absoluta em todos os tamanhos, suporta português perfeitamente, está em quase todos os sistemas modernos
 - Pesos: 400 (regular), 500 (medium), 600 (semibold), 700 (bold)
 - Fallback: `system-ui, -apple-system, BlinkMacSystemFont, sans-serif`
 
 ### Família display (opcional, pra titulos grandes)
+
 **Geist** ou **General Sans**
+
 - Por que: personalidade mais distintiva pra hero/landing
 - Apenas pra títulos grandes (>32px)
 
 ### Família monospace (pra códigos/IDs)
+
 **JetBrains Mono** ou **IBM Plex Mono**
+
 - Pra exibir IDs de booking, ranking position, scores
 
 ### Escala tipográfica (mobile-first)
+
 ```
 2xs   10px / line 12   uppercase labels
 xs    12px / line 16   captions, metadata
@@ -115,6 +127,7 @@ xl    20px / line 28   títulos de card
 ## 1.4 Sistema de espaçamento
 
 **Grid 8pt** (clássico):
+
 - Tokens: 4, 8, 12, 16, 24, 32, 48, 64, 80, 96
 - Componentes pequenos (botão, badge): padding interno 8/12
 - Cards: padding 16/24
@@ -123,6 +136,7 @@ xl    20px / line 28   títulos de card
 ## 1.5 Iconografia
 
 **Lucide Icons** (compatível com shadcn/ui out-of-the-box).
+
 - Stroke-based, peso 1.5-2px
 - Tamanho default: 20px (inline), 24px (botões), 16px (badges)
 
@@ -189,24 +203,28 @@ experiência · jornada · engajamento · stakeholder · gestão
 ### Microcopy patterns
 
 **CTAs (botões):** verbo no infinitivo, direto.
+
 ```
 ✅ Reservar  ✅ Estender +30min  ✅ Ver detalhes
 ❌ Clique para reservar  ❌ Realizar agendamento
 ```
 
 **Erros:** diz o que aconteceu e o que fazer.
+
 ```
 ✅ "Quadra ocupada nesse horário. Escolha outro."
 ❌ "Erro ao processar requisição."
 ```
 
 **Sucesso:** curto, fato + opcional próxima ação.
+
 ```
 ✅ "Reservado! Quadra 1 • 19:00–20:00."
 ❌ "Sua reserva foi processada com sucesso."
 ```
 
 **Empty states:** foco em ação.
+
 ```
 ✅ "Nenhuma reserva ainda. [Reservar quadra]"
 ❌ "Você não possui registros para visualizar."
@@ -233,14 +251,14 @@ CTA LANDING:     "Faça o Klub acontecer."
 
 ### Naming canônico das features
 
-| Backend | UI label |
-|---------|----------|
-| Klub | Klub |
-| Space | Quadra |
-| Booking | Reserva |
-| TournamentMatch | Partida |
-| Tournament | Torneio |
-| Ranking | Ranking |
+| Backend               | UI label  |
+| --------------------- | --------- |
+| Klub                  | Klub      |
+| Space                 | Quadra    |
+| Booking               | Reserva   |
+| TournamentMatch       | Partida   |
+| Tournament            | Torneio   |
+| Ranking               | Ranking   |
 | PlayerSportEnrollment | Inscrição |
 
 ---
@@ -254,21 +272,21 @@ CTA LANDING:     "Faça o Klub acontecer."
 ## Prompt 0 — Setup do design system
 
 ```
-Estou construindo o DraftKlub, plataforma SaaS para clubes brasileiros 
+Estou construindo o DraftKlub, plataforma SaaS para clubes brasileiros
 de esportes de raquete (tennis, squash, padel, beach tênis).
 
 Tagline: "Onde o Klub acontece."
 
-Tom desejado da copy: simples (não corporativo), foco em ação, 
-comunidade como protagonista. Microcopy curta e direta — "Reserve 
+Tom desejado da copy: simples (não corporativo), foco em ação,
+comunidade como protagonista. Microcopy curta e direta — "Reserve
 sua quadra" em vez de "Sistema de gestão de reservas".
 
 A plataforma é híbrida B2B+B2C:
 - B2B: clubes administram torneios, reservas de quadras, rankings
-- B2C: jogadores reservam quadras, jogam torneios, acompanham rankings 
+- B2C: jogadores reservam quadras, jogam torneios, acompanham rankings
   cross-clube
 
-Quero que use o design system abaixo como ponto de partida — pode 
+Quero que use o design system abaixo como ponto de partida — pode
 sugerir refinamentos mas mantenha a essência.
 
 PALETA — TEMA CLARO:
@@ -306,7 +324,7 @@ TIPOGRAFIA:
 - Monospace: JetBrains Mono (IDs, scores)
 
 ESCALA TIPOGRÁFICA (mobile-first):
-2xs 10px / xs 12px / sm 14px / base 16px / lg 18px / xl 20px / 
+2xs 10px / xs 12px / sm 14px / base 16px / lg 18px / xl 20px /
 2xl 24px / 3xl 30px / 4xl 36px
 
 ESPAÇAMENTO: grid 8pt — tokens 4, 8, 12, 16, 24, 32, 48, 64
@@ -319,7 +337,7 @@ SOMBRAS: 5 níveis de elevação (xs/sm/md/lg/xl)
 
 PERSONALIDADE:
 - Profissionalismo esportivo brasileiro
-- Confiável (Klub Admin 60 anos), Vibrante (Player 30 anos), 
+- Confiável (Klub Admin 60 anos), Vibrante (Player 30 anos),
   Direto (Staff balcão)
 - Mobile-first (80% dos usos)
 - Dark mode obrigatório (toggle no header)
@@ -339,10 +357,10 @@ REFERÊNCIAS:
 - Strava (vibração esportiva)
 - Notion (hierarquia visual)
 
-Comece criando o design system completo: tokens, primitives 
-(button, input, badge, card, modal), e me mostre uma preview de 
-exemplo aplicando essa identidade num card de torneio com 
-informações: nome, modalidade, status, próxima partida, players 
+Comece criando o design system completo: tokens, primitives
+(button, input, badge, card, modal), e me mostre uma preview de
+exemplo aplicando essa identidade num card de torneio com
+informações: nome, modalidade, status, próxima partida, players
 inscritos.
 ```
 
@@ -423,7 +441,7 @@ Tom:
 ## Prompt 3 — Calendar de quadras (TELA CRÍTICA)
 
 ```
-Crie a tela de calendar de quadras do DraftKlub. Esta é a tela mais 
+Crie a tela de calendar de quadras do DraftKlub. Esta é a tela mais
 importante da plataforma — usada várias vezes ao dia por todos os perfis.
 
 Contexto:
@@ -685,12 +703,14 @@ Localização: apps/web na turborepo
 
 **Frontend mínimo focado em validação.** Construir 4-5 telas críticas
 consumindo o backend real, pra:
+
 1. Pegar bugs de DX da API
 2. Validar contradições entre endpoints
 3. Construir intuição do produto
 4. Foundation pro Dia 11+ completo
 
 **Out of scope desse mínimo:**
+
 - Telas de admin (gerenciar Klub, criar torneio)
 - Notificações push
 - Mobile app nativo (Dia 12)
@@ -771,23 +791,23 @@ Em vez disso, usar `@theme` no CSS:
 
 ```css
 /* src/app/globals.css */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --color-primary: #0E7C66;
-  --color-primary-soft: #14A085;
-  --color-secondary: #DC4F2F;
-  --color-accent: #F59E0B;
-  --color-background: #FAFAF9;
-  --color-surface: #FFFFFF;
+  --color-primary: #0e7c66;
+  --color-primary-soft: #14a085;
+  --color-secondary: #dc4f2f;
+  --color-accent: #f59e0b;
+  --color-background: #fafaf9;
+  --color-surface: #ffffff;
   /* ... resto da paleta */
-  
+
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
 @theme dark {
-  --color-primary: #14B89A;
+  --color-primary: #14b89a;
   /* ... overrides do tema escuro */
 }
 ```
@@ -814,6 +834,7 @@ export const googleProvider = new GoogleAuthProvider();
 ```
 
 `src/lib/auth/AuthContext.tsx`:
+
 - Provider que escuta `onAuthStateChanged`
 - Expõe `user`, `loading`, `signIn`, `signOut`
 - Hook `useAuth()` pra acessar
@@ -827,10 +848,7 @@ import { auth } from '@/lib/auth/firebase';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
-export async function apiClient(
-  path: string,
-  options: RequestInit = {},
-): Promise<any> {
+export async function apiClient(path: string, options: RequestInit = {}): Promise<any> {
   const token = await auth.currentUser?.getIdToken();
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -861,6 +879,7 @@ export class APIError extends Error {
 ```
 
 `src/lib/api/hooks/`:
+
 - `useKlubCalendar(klubId, date)`
 - `useBooking(bookingId)`
 - `useCreateBooking()`
@@ -932,12 +951,14 @@ GET  /klub-sports/:id/ranking            # rankings
 ## D11.5 Deploy
 
 ### 5.1 Cloud Run com Next.js
+
 - Mesmo padrão do `api`
 - `Dockerfile` em `apps/web/Dockerfile`
 - Cloud Build trigger em `apps/web/cloudbuild.yaml`
 - Service: `draftklub-web`
 
 ### 5.2 Domínio
+
 - `www.draftklub.com` → Cloud Run service via Cloud Run domain mapping
 - HTTPS automático via Google managed cert
 - DNS já configurado em `draftklub.com` (apontar CNAME `www` pra `ghs.googlehosted.com`)
@@ -987,7 +1008,7 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=<your-project>
 5. Quando aprovar designs:
    - Aproveita o handoff bundle pro Claude Code
    - OU exporta como HTML/figma e me manda
-6. Volta aqui — eu finalizo BRIEFING_DIA11_FRONTEND.md com 
+6. Volta aqui — eu finalizo BRIEFING_DIA11_FRONTEND.md com
    os tokens reais e o que aprendemos dos designs
 7. Claude Code constrói Dia 11 mínimo
 ```

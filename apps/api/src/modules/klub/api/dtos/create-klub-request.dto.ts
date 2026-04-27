@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 export const CreateKlubRequestSchema = z.object({
   name: z.string().min(2).max(100),
-  type: z.enum(['sports_club', 'condo', 'school', 'public_space', 'academy', 'individual'])
+  type: z
+    .enum(['sports_club', 'condo', 'school', 'public_space', 'academy', 'individual'])
     .default('sports_club'),
   city: z.string().min(2).max(100),
   state: z.string().length(2),

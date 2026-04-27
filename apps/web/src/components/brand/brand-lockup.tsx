@@ -40,10 +40,8 @@ const SIZES: Record<LockupSize, { mark: number; word: number; gap: number }> = {
 export function BrandLockup({ size = 'lg', tone = 'dark', className }: BrandLockupProps) {
   const dims = SIZES[size];
   const markTone: BrandTone = tone === 'light' ? 'light' : 'primary';
-  const wordColor =
-    tone === 'light' ? 'rgb(255 255 255)' : 'hsl(var(--foreground))';
-  const klubColor =
-    tone === 'light' ? 'hsl(var(--brand-primary-300))' : 'hsl(var(--primary))';
+  const wordColor = tone === 'light' ? 'rgb(255 255 255)' : 'hsl(var(--foreground))';
+  const klubColor = tone === 'light' ? 'hsl(var(--brand-primary-300))' : 'hsl(var(--primary))';
 
   return (
     <span

@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  UseGuards,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { BookingFacade } from '../public/booking.facade';
 
@@ -28,6 +21,10 @@ export class SpaceAvailabilityController {
     if (matchType && matchType !== 'singles' && matchType !== 'doubles') {
       throw new BadRequestException('matchType must be singles or doubles');
     }
-    return this.facade.getSpaceAvailability(spaceId, date, matchType as 'singles' | 'doubles' | undefined);
+    return this.facade.getSpaceAvailability(
+      spaceId,
+      date,
+      matchType as 'singles' | 'doubles' | undefined,
+    );
   }
 }

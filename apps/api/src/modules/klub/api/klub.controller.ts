@@ -17,10 +17,7 @@ export class KlubController {
 
   @Post()
   @RequirePolicy('klub.create')
-  async createKlub(
-    @Body() body: unknown,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  async createKlub(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateKlubSchema.parse(body);
     return this.klubFacade.createKlub({ ...dto, createdById: user.userId });
   }
@@ -42,10 +39,7 @@ export class KlubController {
    */
   @Post('slug/:slug/join')
   @RequirePolicy('klub.join_via_link')
-  async joinKlubBySlug(
-    @Param('slug') slug: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  async joinKlubBySlug(@Param('slug') slug: string, @CurrentUser() user: AuthenticatedUser) {
     return this.klubFacade.joinKlubBySlug(slug, user.userId);
   }
 
@@ -55,31 +49,28 @@ export class KlubController {
   }
 
   @Post(':id/members')
-  @RequirePolicy('klub.members.add', (req) => ({ klubId: (req as { params: { id: string } }).params.id }))
-  async addMember(
-    @Param('id') klubId: string,
-    @Body() body: unknown,
-  ) {
+  @RequirePolicy('klub.members.add', (req) => ({
+    klubId: (req as { params: { id: string } }).params.id,
+  }))
+  async addMember(@Param('id') klubId: string, @Body() body: unknown) {
     const dto = AddMemberSchema.parse(body);
     return this.klubFacade.addMember({ klubId, ...dto });
   }
 
   @Post(':id/media')
-  @RequirePolicy('klub.media.add', (req) => ({ klubId: (req as { params: { id: string } }).params.id }))
-  async addMedia(
-    @Param('id') klubId: string,
-    @Body() body: unknown,
-  ) {
+  @RequirePolicy('klub.media.add', (req) => ({
+    klubId: (req as { params: { id: string } }).params.id,
+  }))
+  async addMedia(@Param('id') klubId: string, @Body() body: unknown) {
     const dto = AddMediaSchema.parse(body);
     return this.klubFacade.addMedia(klubId, dto);
   }
 
   @Post(':id/sport-interests')
-  @RequirePolicy('klub.sportInterests.add', (req) => ({ klubId: (req as { params: { id: string } }).params.id }))
-  async addSportInterest(
-    @Param('id') klubId: string,
-    @Body() body: unknown,
-  ) {
+  @RequirePolicy('klub.sportInterests.add', (req) => ({
+    klubId: (req as { params: { id: string } }).params.id,
+  }))
+  async addSportInterest(@Param('id') klubId: string, @Body() body: unknown) {
     const dto = AddSportInterestSchema.parse(body);
     return this.klubFacade.addSportInterest(klubId, dto.sportName);
   }
