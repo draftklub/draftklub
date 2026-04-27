@@ -2,10 +2,12 @@
 
 import {
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updateProfile,
   onAuthStateChanged as firebaseOnAuthStateChanged,
   type User as FirebaseUser,
   type Unsubscribe,
@@ -36,6 +38,34 @@ export async function loginWithGoogle(): Promise<FirebaseUser> {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     const cred = await signInWithPopup(getFirebaseAuth(), provider);
+    return cred.user;
+  } catch (err) {
+    throw mapFirebaseError(err);
+  }
+}
+
+/**
+ * Cria conta com email + senha + nome opcional. Após criar, o user
+ * fica logado automaticamente (Firebase Auth retorna a credential).
+ *
+ * Política de senha (server-side, Firebase Auth project config):
+ * - min 8 chars
+ * - pelo menos 1 numero
+ *
+ * O frontend valida o mesmo antes de chamar pra UX boa, mas o server
+ * é a autoridade. Erros do servidor (`auth/weak-password` etc) caem
+ * no `mapFirebaseError`.
+ */
+export async function signupWithEmail(
+  email: string,
+  password: string,
+  displayName?: string,
+): Promise<FirebaseUser> {
+  try {
+    const cred = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
+    if (displayName && displayName.trim().length > 0) {
+      await updateProfile(cred.user, { displayName: displayName.trim() });
+    }
     return cred.user;
   } catch (err) {
     throw mapFirebaseError(err);
@@ -116,4 +146,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   'auth/account-exists-with-different-credential':
     'Já existe uma conta com este e-mail usando outro método de login.',
   'auth/missing-email': 'Informe o e-mail.',
+  'auth/email-already-in-use': 'Já existe uma conta com este e-mail. Use o login.',
+  'auth/weak-password': 'Senha muito fraca. Use ao menos 8 caracteres e 1 número.',
+  'auth/password-does-not-meet-requirements':
+    'Senha não atende aos requisitos: mínimo 8 caracteres com 1 número.',
 };
