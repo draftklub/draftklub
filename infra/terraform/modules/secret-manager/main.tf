@@ -7,6 +7,10 @@ locals {
     "jwt-secret",
     "playwright-test-email",
     "playwright-test-password",
+    # Sprint D PR3 — Resend (https://resend.com) pra emails transacionais.
+    # Sem valor populado, EmailService cai em log-only mode (não envia).
+    # Popular via: gcloud secrets versions add resend-api-key --data-file=-
+    "resend-api-key",
   ]
 }
 

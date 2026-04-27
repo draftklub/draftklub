@@ -33,7 +33,12 @@ export class EmailService {
   private readonly defaultFrom: string;
 
   constructor(config: ConfigService) {
-    this.apiKey = config.get<string>('RESEND_API_KEY');
+    const raw = config.get<string>('RESEND_API_KEY');
+    // Resend keys reais sempre começam com `re_` (api.resend.com/docs).
+    // Qualquer outro valor (placeholder, vazio, undefined) cai em log-only
+    // mode — útil pra dev e pro setup operacional onde o secret existe
+    // mas ainda não foi populado com a key real.
+    this.apiKey = raw?.startsWith('re_') ? raw : undefined;
     this.defaultFrom = config.get<string>('EMAIL_FROM') ?? 'DraftKlub <noreply@draftklub.com>';
   }
 

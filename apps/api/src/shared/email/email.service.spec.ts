@@ -33,12 +33,24 @@ describe('EmailService', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('com RESEND_API_KEY sem prefixo re_ (placeholder) cai em log-only', async () => {
+    const service = buildService({ RESEND_API_KEY: 'PLACEHOLDER_NOT_REAL_KEY' });
+    const result = await service.send({
+      to: 'a@b.com',
+      subject: 'X',
+      html: '<p>X</p>',
+      text: 'X',
+    });
+    expect(result.ok).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('chama Resend com Authorization Bearer e payload correto quando key configurada', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ id: 'msg-123' }),
     });
-    const service = buildService({ RESEND_API_KEY: 'test-key' });
+    const service = buildService({ RESEND_API_KEY: 're_test-key' });
     const result = await service.send({
       to: 'creator@klub.com',
       subject: 'Aprovado',
@@ -50,7 +62,7 @@ describe('EmailService', () => {
     const call = fetchMock.mock.calls[0] as [string, RequestInit] | undefined;
     const init = call?.[1];
     const headers = init?.headers as Record<string, string> | undefined;
-    expect(headers?.Authorization).toBe('Bearer test-key');
+    expect(headers?.Authorization).toBe('Bearer re_test-key');
     const body = JSON.parse((init?.body as string) ?? '{}') as Record<string, unknown>;
     expect(body.to).toEqual(['creator@klub.com']);
     expect(body.subject).toBe('Aprovado');
@@ -62,7 +74,7 @@ describe('EmailService', () => {
       status: 422,
       text: () => Promise.resolve('invalid email'),
     });
-    const service = buildService({ RESEND_API_KEY: 'test-key' });
+    const service = buildService({ RESEND_API_KEY: 're_test-key' });
     const result = await service.send({
       to: 'bad',
       subject: 'X',
@@ -79,7 +91,7 @@ describe('EmailService', () => {
       status: 503,
       text: () => Promise.resolve('upstream'),
     });
-    const service = buildService({ RESEND_API_KEY: 'test-key' });
+    const service = buildService({ RESEND_API_KEY: 're_test-key' });
     const result = await service.send({ to: 'a', subject: 'X', html: 'X', text: 'X' });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.retryable).toBe(true);
@@ -91,7 +103,7 @@ describe('EmailService', () => {
       status: 429,
       text: () => Promise.resolve('rate limit'),
     });
-    const service = buildService({ RESEND_API_KEY: 'test-key' });
+    const service = buildService({ RESEND_API_KEY: 're_test-key' });
     const result = await service.send({ to: 'a', subject: 'X', html: 'X', text: 'X' });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.retryable).toBe(true);
@@ -99,7 +111,7 @@ describe('EmailService', () => {
 
   it('network error cai em retryable', async () => {
     fetchMock.mockRejectedValueOnce(new Error('ECONNRESET'));
-    const service = buildService({ RESEND_API_KEY: 'test-key' });
+    const service = buildService({ RESEND_API_KEY: 're_test-key' });
     const result = await service.send({ to: 'a', subject: 'X', html: 'X', text: 'X' });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.retryable).toBe(true);

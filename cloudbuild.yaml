@@ -163,8 +163,8 @@ steps:
       - '--project=$_PROJECT_ID'
       - '--region=$_REGION'
       - '--image=$_API_IMAGE:$COMMIT_SHA'
-      - '--set-secrets=DATABASE_URL=database-url:latest,ENCRYPTION_KEY=encryption-key:latest'
-      - '--set-env-vars=NODE_ENV=production,LOG_LEVEL=info,OTEL_ENABLED=false,OTEL_SERVICE_NAME=draftklub-api,CORS_ORIGINS=$_WEB_CORS_ORIGINS'
+      - '--set-secrets=DATABASE_URL=database-url:latest,ENCRYPTION_KEY=encryption-key:latest,RESEND_API_KEY=resend-api-key:latest'
+      - '--set-env-vars=NODE_ENV=production,LOG_LEVEL=info,OTEL_ENABLED=false,OTEL_SERVICE_NAME=draftklub-api,CORS_ORIGINS=$_WEB_CORS_ORIGINS,EMAIL_FROM=$_EMAIL_FROM,APP_BASE_URL=$_APP_BASE_URL'
     waitFor: ['migrate']
 
   # ─────────────────────────────────────────
@@ -207,6 +207,12 @@ substitutions:
   _NEXT_PUBLIC_FIREBASE_APP_ID: ''
   _NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'draftklub-dev.firebasestorage.app'
   _NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '598839404621'
+  # Sprint D PR3 — email transacional (Resend). Sobrescreva via trigger
+  # substitution em produção (ex: noreply@draftklub.com após verificação
+  # do domínio na Resend). Default seguro pra dev: o secret resend-api-key
+  # vazio mantém EmailService em log-only mode.
+  _EMAIL_FROM: 'DraftKlub <onboarding@resend.dev>'
+  _APP_BASE_URL: 'https://draftklub.com'
 
 options:
   logging: CLOUD_LOGGING_ONLY
