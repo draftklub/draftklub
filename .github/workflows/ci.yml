@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: pnpm --filter @draftklub/api exec prisma generate
+
       - name: Format check
         run: pnpm format:check
 
