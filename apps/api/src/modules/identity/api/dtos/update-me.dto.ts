@@ -1,9 +1,11 @@
 import { z } from 'zod';
+import { DocumentVO } from '../../../klub/domain/value-objects/document.vo';
 
 /**
  * PATCH /me — todos campos opcionais. Backend só atualiza fields
  * presentes no body (Prisma update parcial). State em maiúsculas (UF
- * Brasil).
+ * Brasil). CPF chega só dígitos (11 chars), validado por DocumentVO
+ * (módulo 11).
  */
 export const UpdateMeSchema = z.object({
   fullName: z.string().min(2).max(100).optional(),
@@ -21,6 +23,26 @@ export const UpdateMeSchema = z.object({
     .length(2)
     .regex(/^[A-Z]{2}$/, 'UF deve ser 2 letras maiúsculas')
     .optional(),
+
+  // CPF — chega só dígitos do frontend; validador módulo 11.
+  documentNumber: z
+    .string()
+    .length(11)
+    .regex(/^\d{11}$/, 'CPF deve ter 11 dígitos')
+    .refine((v) => DocumentVO.validateCPF(v), 'CPF inválido')
+    .optional(),
+  documentType: z.enum(['cpf', 'rg', 'passport', 'other']).optional(),
+
+  // Endereço — todos opcionais, mas usuário tipicamente preenche junto.
+  cep: z
+    .string()
+    .length(8)
+    .regex(/^\d{8}$/, 'CEP deve ter 8 dígitos')
+    .optional(),
+  addressStreet: z.string().min(2).max(200).optional(),
+  addressNumber: z.string().min(1).max(20).optional(),
+  addressComplement: z.string().max(100).optional(),
+  addressNeighborhood: z.string().min(2).max(100).optional(),
 });
 
 export type UpdateMeDto = z.infer<typeof UpdateMeSchema>;

@@ -29,6 +29,13 @@ describe('GetMeHandler', () => {
         gender: 'male',
         city: 'Rio de Janeiro',
         state: 'RJ',
+        cep: '22440000',
+        addressStreet: 'Av Atlântica',
+        addressNumber: '1500',
+        addressComplement: 'apto 301',
+        addressNeighborhood: 'Copacabana',
+        documentNumber: '11144477735',
+        documentType: 'cpf',
       },
     });
 
@@ -45,6 +52,13 @@ describe('GetMeHandler', () => {
       gender: 'male',
       city: 'Rio de Janeiro',
       state: 'RJ',
+      cep: '22440000',
+      addressStreet: 'Av Atlântica',
+      addressNumber: '1500',
+      addressComplement: 'apto 301',
+      addressNeighborhood: 'Copacabana',
+      documentNumber: '11144477735',
+      documentType: 'cpf',
       roleAssignments: [],
     });
   });
@@ -62,6 +76,13 @@ describe('GetMeHandler', () => {
         gender: null,
         city: null,
         state: null,
+        cep: null,
+        addressStreet: null,
+        addressNumber: null,
+        addressComplement: null,
+        addressNeighborhood: null,
+        documentNumber: null,
+        documentType: null,
       },
     });
 
@@ -72,6 +93,10 @@ describe('GetMeHandler', () => {
     expect(result.gender).toBeNull();
     expect(result.city).toBeNull();
     expect(result.state).toBeNull();
+    expect(result.cep).toBeNull();
+    expect(result.addressStreet).toBeNull();
+    expect(result.documentNumber).toBeNull();
+    expect(result.documentType).toBeNull();
   });
 
   it('lança NotFoundException quando user não existe', async () => {
@@ -92,6 +117,13 @@ describe('GetMeHandler', () => {
         gender: null,
         city: null,
         state: null,
+        cep: null,
+        addressStreet: null,
+        addressNumber: null,
+        addressComplement: null,
+        addressNeighborhood: null,
+        documentNumber: null,
+        documentType: null,
       },
     });
 

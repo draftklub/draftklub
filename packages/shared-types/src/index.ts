@@ -108,6 +108,15 @@ export interface MeResponse {
   city: string | null;
   /** UF Brasil, 2 chars maiúsculo (ex `RJ`). */
   state: string | null;
+  /** CEP brasileiro só dígitos, 8 chars (ex `22440000`). */
+  cep: string | null;
+  addressStreet: string | null;
+  addressNumber: string | null;
+  addressComplement: string | null;
+  addressNeighborhood: string | null;
+  /** CPF só dígitos, 11 chars. Após setado, geralmente não muda. */
+  documentNumber: string | null;
+  documentType: DocumentType | null;
   roleAssignments: RoleAssignment[];
 }
 

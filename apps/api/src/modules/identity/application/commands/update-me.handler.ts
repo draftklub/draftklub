@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Gender, MeResponse, RoleAssignment } from '@draftklub/shared-types';
+import type { DocumentType, Gender, MeResponse, RoleAssignment } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import type { UpdateMeDto } from '../../api/dtos/update-me.dto';
 
@@ -32,6 +32,18 @@ export class UpdateMeHandler {
     if (dto.gender !== undefined) data.gender = dto.gender;
     if (dto.city !== undefined) data.city = dto.city;
     if (dto.state !== undefined) data.state = dto.state;
+    if (dto.cep !== undefined) data.cep = dto.cep;
+    if (dto.addressStreet !== undefined) data.addressStreet = dto.addressStreet;
+    if (dto.addressNumber !== undefined) data.addressNumber = dto.addressNumber;
+    if (dto.addressComplement !== undefined) data.addressComplement = dto.addressComplement;
+    if (dto.addressNeighborhood !== undefined) data.addressNeighborhood = dto.addressNeighborhood;
+    if (dto.documentNumber !== undefined) {
+      data.documentNumber = dto.documentNumber;
+      // Setar CPF -> implicitamente seta type='cpf' se não veio explícito.
+      data.documentType = dto.documentType ?? 'cpf';
+    } else if (dto.documentType !== undefined) {
+      data.documentType = dto.documentType;
+    }
 
     let user;
     try {
@@ -63,6 +75,13 @@ export class UpdateMeHandler {
       gender: (user.gender as Gender | null) ?? null,
       city: user.city,
       state: user.state,
+      cep: user.cep,
+      addressStreet: user.addressStreet,
+      addressNumber: user.addressNumber,
+      addressComplement: user.addressComplement,
+      addressNeighborhood: user.addressNeighborhood,
+      documentNumber: user.documentNumber,
+      documentType: (user.documentType as DocumentType | null) ?? null,
       roleAssignments,
     };
   }

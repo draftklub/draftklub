@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, Plus, Search } from 'lucide-react';
 import type { UserKlubMembership } from '@draftklub/shared-types';
 import { useAuth } from '@/components/auth-provider';
+import { EmailVerifyBanner } from '@/components/email-verify-banner';
 import { getMyKlubs } from '@/lib/api/me';
 import { readLastKlubSlug } from '@/lib/last-klub-cookie';
 
@@ -43,6 +44,7 @@ export default function HomePage() {
   return (
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
       <div className="mx-auto max-w-4xl">
+        <EmailVerifyBanner />
         <header className="mb-10">
           <h1
             className="font-display text-[28px] font-bold md:text-[34px]"

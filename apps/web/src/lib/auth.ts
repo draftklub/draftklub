@@ -9,6 +9,7 @@ import {
   linkWithPopup,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
+  sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -218,6 +219,20 @@ function requireCurrentUser(): FirebaseUser {
   const user = getFirebaseAuth().currentUser;
   if (!user) throw new Error('Sessão expirada. Faça login novamente.');
   return user;
+}
+
+/**
+ * Envia email de verificação pro user atual. Lança se sem user logado.
+ * O link no email leva pra um domínio Firebase (configurável no Console);
+ * após click, `user.emailVerified` vira true no próximo refresh do token.
+ */
+export async function sendEmailVerify(): Promise<void> {
+  const user = requireCurrentUser();
+  try {
+    await sendEmailVerification(user);
+  } catch (err) {
+    throw mapFirebaseError(err);
+  }
 }
 
 /**

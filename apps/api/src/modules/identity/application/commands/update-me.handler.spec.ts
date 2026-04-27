@@ -22,6 +22,13 @@ function buildHandler(opts: { update?: object | Error } = {}) {
           gender: null,
           city: null,
           state: null,
+          cep: null,
+          addressStreet: null,
+          addressNumber: null,
+          addressComplement: null,
+          addressNeighborhood: null,
+          documentNumber: null,
+          documentType: null,
           ...(opts.update ?? {}),
           ...args.data,
         };
@@ -114,6 +121,32 @@ describe('UpdateMeSchema (Zod)', () => {
 
   it('rejeita birthDate em formato inválido', () => {
     const result = UpdateMeSchema.safeParse({ birthDate: '15/05/1990' });
+    expect(result.success).toBe(false);
+  });
+
+  it('aceita CPF válido (11 dígitos com checksum correto)', () => {
+    // CPF teste válido pelo módulo 11
+    const result = UpdateMeSchema.safeParse({ documentNumber: '11144477735' });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejeita CPF com checksum inválido', () => {
+    const result = UpdateMeSchema.safeParse({ documentNumber: '12345678900' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejeita CPF com formato (deve ser só dígitos)', () => {
+    const result = UpdateMeSchema.safeParse({ documentNumber: '111.444.777-35' });
+    expect(result.success).toBe(false);
+  });
+
+  it('aceita CEP de 8 dígitos', () => {
+    const result = UpdateMeSchema.safeParse({ cep: '22440000' });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejeita CEP com hífen', () => {
+    const result = UpdateMeSchema.safeParse({ cep: '22440-000' });
     expect(result.success).toBe(false);
   });
 });

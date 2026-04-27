@@ -46,6 +46,11 @@ model User {
   // 'male' | 'female' | 'undisclosed'
   city           String?
   state          String?   @db.Char(2)
+  cep            String?   @db.Char(8)
+  addressStreet  String?   @map("address_street")
+  addressNumber  String?   @map("address_number")
+  addressComplement     String?   @map("address_complement")
+  addressNeighborhood   String?   @map("address_neighborhood")
 
   kind            String    @default("regular")
   // 'regular' | 'guest'

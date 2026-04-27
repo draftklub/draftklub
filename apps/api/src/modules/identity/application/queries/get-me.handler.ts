@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Gender, MeResponse, RoleAssignment } from '@draftklub/shared-types';
+import type { DocumentType, Gender, MeResponse, RoleAssignment } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 /**
@@ -35,6 +35,13 @@ export class GetMeHandler {
       gender: (user.gender as Gender | null) ?? null,
       city: user.city,
       state: user.state,
+      cep: user.cep,
+      addressStreet: user.addressStreet,
+      addressNumber: user.addressNumber,
+      addressComplement: user.addressComplement,
+      addressNeighborhood: user.addressNeighborhood,
+      documentNumber: user.documentNumber,
+      documentType: (user.documentType as DocumentType | null) ?? null,
       roleAssignments,
     };
   }
