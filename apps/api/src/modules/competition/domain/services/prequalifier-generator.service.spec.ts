@@ -92,9 +92,7 @@ describe('PrequalifierGeneratorService', () => {
   });
 
   it('rejeita se menos de 2 categorias', () => {
-    const categories = [
-      { id: 'cat-a', name: 'A', order: 0, players: makePlayers(4) },
-    ];
+    const categories = [{ id: 'cat-a', name: 'A', order: 0, players: makePlayers(4) }];
     expect(() => service.generate(categories, 1)).toThrow('Need at least 2 categories');
   });
 

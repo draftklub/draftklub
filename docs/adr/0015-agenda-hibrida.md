@@ -6,6 +6,7 @@
 ## Contexto
 
 Torneios de clubes têm restrições reais de agenda:
+
 - Datas em que o clube tem disponibilidade exclusiva para o torneio
 - Janelas de horário (clube abre/fecha)
 - Quadras disponíveis (subset do total do clube)
@@ -24,13 +25,13 @@ sistema aloca automaticamente cada partida em um slot livre via algoritmo guloso
 
 ```jsonc
 {
-  "availableDates": ["2026-05-10", "2026-05-11"],  // YYYY-MM-DD
-  "startHour": 8,                                   // 0-23
-  "endHour": 22,                                    // 1-24
+  "availableDates": ["2026-05-10", "2026-05-11"], // YYYY-MM-DD
+  "startHour": 8, // 0-23
+  "endHour": 22, // 1-24
   "matchDurationMinutes": 90,
   "breakBetweenMatchesMinutes": 15,
-  "spaceIds": ["uuid1", "uuid2"],                   // quadras
-  "restRuleMinutes": 60                             // descanso entre partidas do mesmo jogador
+  "spaceIds": ["uuid1", "uuid2"], // quadras
+  "restRuleMinutes": 60, // descanso entre partidas do mesmo jogador
 }
 ```
 

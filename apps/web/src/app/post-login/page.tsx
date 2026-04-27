@@ -51,8 +51,7 @@ function PostLoginRouter() {
         }
 
         const lastSlug = readLastKlubSlug();
-        const lastStillValid =
-          lastSlug && klubs.some((k) => k.klubSlug === lastSlug);
+        const lastStillValid = lastSlug && klubs.some((k) => k.klubSlug === lastSlug);
         if (lastStillValid) {
           router.replace(`/k/${lastSlug}/dashboard`);
         } else {

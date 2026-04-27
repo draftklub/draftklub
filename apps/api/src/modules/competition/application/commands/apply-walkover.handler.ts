@@ -43,8 +43,7 @@ export class ApplyWalkoverHandler {
       throw new BadRequestException('Winner must be one of the match players');
     }
 
-    const loserId =
-      cmd.winnerId === match.player1Id ? match.player2Id : match.player1Id;
+    const loserId = cmd.winnerId === match.player1Id ? match.player2Id : match.player1Id;
     const player1Id = match.player1Id;
     const player2Id = match.player2Id;
 

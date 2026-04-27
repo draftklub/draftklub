@@ -61,9 +61,7 @@ export class ExtendBookingHandler {
       throw new BadRequestException('Cannot extend operational blocks');
     }
     if (booking.status !== 'confirmed') {
-      throw new BadRequestException(
-        `Cannot extend booking in status '${booking.status}'`,
-      );
+      throw new BadRequestException(`Cannot extend booking in status '${booking.status}'`);
     }
     if (!booking.endsAt) {
       throw new BadRequestException('Cannot extend booking without endsAt');
@@ -76,9 +74,7 @@ export class ExtendBookingHandler {
 
     const isPrimaryPlayer = booking.primaryPlayerId === cmd.requestedById;
     const otherPlayers = (booking.otherPlayers as { userId?: string }[] | null) ?? [];
-    const isInOtherPlayers = otherPlayers.some(
-      (p) => p.userId === cmd.requestedById,
-    );
+    const isInOtherPlayers = otherPlayers.some((p) => p.userId === cmd.requestedById);
     const isParticipant = isPrimaryPlayer || isInOtherPlayers;
 
     if (!cmd.isStaff && !isParticipant) {
@@ -103,9 +99,7 @@ export class ExtendBookingHandler {
       }
     }
 
-    const newEndsAt = new Date(
-      booking.endsAt.getTime() + cmd.additionalMinutes * 60_000,
-    );
+    const newEndsAt = new Date(booking.endsAt.getTime() + cmd.additionalMinutes * 60_000);
 
     const spaceConflict = await this.prisma.booking.findFirst({
       where: {
@@ -131,10 +125,7 @@ export class ExtendBookingHandler {
     );
 
     if (crosses && finalBand) {
-      if (
-        otherPlayers.length > 0 &&
-        !this.hourBandResolver.bandAllowsGuests(finalBand)
-      ) {
+      if (otherPlayers.length > 0 && !this.hourBandResolver.bandAllowsGuests(finalBand)) {
         throw new BadRequestException(
           `Extension crosses into '${finalBand.type}' band which does not allow guests`,
         );

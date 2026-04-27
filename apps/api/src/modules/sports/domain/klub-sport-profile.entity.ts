@@ -13,8 +13,16 @@ export interface KlubSportProfileProps {
 export class KlubSportProfileEntity {
   constructor(private readonly props: KlubSportProfileProps) {}
 
-  get id(): string { return this.props.id; }
-  get klubId(): string { return this.props.klubId; }
-  get sportCode(): string { return this.props.sportCode; }
-  get isActive(): boolean { return this.props.status === 'active'; }
+  get id(): string {
+    return this.props.id;
+  }
+  get klubId(): string {
+    return this.props.klubId;
+  }
+  get sportCode(): string {
+    return this.props.sportCode;
+  }
+  get isActive(): boolean {
+    return this.props.status === 'active';
+  }
 }

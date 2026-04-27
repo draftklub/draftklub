@@ -26,6 +26,7 @@ interface TournamentFormatStrategy {
 ```
 
 Implementations:
+
 - **KnockoutStrategy** — single-elimination ATP-style, reutiliza `BracketGeneratorService`
 - **RoundRobinStrategy** — todas as partidas entre todos os jogadores (circle method)
 - **GroupsKnockoutStrategy** (9D.2) — fase de grupos + bracket de classificados
@@ -34,11 +35,13 @@ Implementations:
 ### Responsabilidades
 
 **Strategy:**
+
 - Valida se a categoria tem condições para o formato (ex: round-robin exige 3+ jogadores)
 - Gera todos os match records da categoria (sem persistência)
 - Define status e fase iniciais do torneio
 
 **DrawTournamentHandler:**
+
 - Fetch tournament + entries + categories
 - Computa ratings e seeds
 - Executa prequalifier logic (9C) — filtra jogadores das fronteiras, cria pseudo-players TBD

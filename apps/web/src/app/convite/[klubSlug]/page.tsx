@@ -105,16 +105,13 @@ export default function ConvitePage() {
         >
           {klub.name}
         </h1>
-        <p className="mt-1 font-mono text-[12px] text-muted-foreground">
-          /k/{klub.slug}
-        </p>
+        <p className="mt-1 font-mono text-[12px] text-muted-foreground">/k/{klub.slug}</p>
       </div>
 
       {!user ? (
         <div className="mt-8 flex flex-col items-center gap-4">
           <p className="text-center text-[14px] text-muted-foreground">
-            Entra com sua conta pra aceitar o convite. Sem conta? Crie uma com
-            o botão Google.
+            Entra com sua conta pra aceitar o convite. Sem conta? Crie uma com o botão Google.
           </p>
           <LoginForm formWidth={320} />
         </div>
@@ -148,8 +145,7 @@ export default function ConvitePage() {
             )}
           </button>
           <p className="mt-2 text-center text-[11.5px] text-muted-foreground">
-            Você vai entrar como <b>Jogador</b>. O Klub Admin pode promover
-            depois.
+            Você vai entrar como <b>Jogador</b>. O Klub Admin pode promover depois.
           </p>
         </div>
       )}

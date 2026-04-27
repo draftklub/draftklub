@@ -8,10 +8,12 @@ const PRIMARY_ID = '00000000-0000-0000-0001-000000000bbb';
 const OTHER_PLAYER_ID = '00000000-0000-0000-0001-000000000ccc';
 const PROFILE_ID = '00000000-0000-0000-0010-000000000001';
 
-function makeService(opts: {
-  enrollment?: { status: string } | null;
-  hasProfile?: boolean;
-} = {}) {
+function makeService(
+  opts: {
+    enrollment?: { status: string } | null;
+    hasProfile?: boolean;
+  } = {},
+) {
   const profileFindFirst = vi
     .fn()
     .mockResolvedValue(opts.hasProfile === false ? null : { id: PROFILE_ID });
@@ -88,9 +90,7 @@ describe('BookingVisibilityService', () => {
   it('SPORTS_COMMITTEE da mesma modalidade -> full', async () => {
     const r = await svc.resolve({
       ...baseCtx,
-      viewerRoles: [
-        { role: 'SPORTS_COMMITTEE', scopeKlubId: KLUB_ID, scopeSportId: 'tennis' },
-      ],
+      viewerRoles: [{ role: 'SPORTS_COMMITTEE', scopeKlubId: KLUB_ID, scopeSportId: 'tennis' }],
     });
     expect(r).toBe('full');
   });
@@ -98,9 +98,7 @@ describe('BookingVisibilityService', () => {
   it('SPORTS_COMMITTEE de outra modalidade -> limited (sem enrollment)', async () => {
     const r = await svc.resolve({
       ...baseCtx,
-      viewerRoles: [
-        { role: 'SPORTS_COMMITTEE', scopeKlubId: KLUB_ID, scopeSportId: 'squash' },
-      ],
+      viewerRoles: [{ role: 'SPORTS_COMMITTEE', scopeKlubId: KLUB_ID, scopeSportId: 'squash' }],
     });
     expect(r).toBe('limited');
   });

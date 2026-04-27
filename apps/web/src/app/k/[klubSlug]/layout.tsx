@@ -4,11 +4,7 @@ import { Sidebar } from '@/components/dashboard/sidebar';
 import { ActiveKlubGate } from '@/components/active-klub-gate';
 import { PersonaSwitcher } from '@/components/dashboard/persona-switcher';
 
-export default function KlubScopedLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function KlubScopedLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
       <ActiveKlubProvider>

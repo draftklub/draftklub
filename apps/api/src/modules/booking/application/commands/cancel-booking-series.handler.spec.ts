@@ -25,18 +25,20 @@ function makePrisma(overrides: {
   const tx = makeTx();
   const prisma = {
     bookingSeries: {
-      findUnique: vi.fn().mockResolvedValue(
-        overrides.series
-          ? { id: SERIES_ID, status: 'active', ...overrides.series }
-          : null,
-      ),
+      findUnique: vi
+        .fn()
+        .mockResolvedValue(
+          overrides.series ? { id: SERIES_ID, status: 'active', ...overrides.series } : null,
+        ),
     },
     booking: {
       findUnique: vi.fn().mockResolvedValue(overrides.booking ?? null),
       findMany: vi.fn().mockResolvedValue(overrides.seriesBookings ?? []),
-      update: vi.fn().mockImplementation((args: { where: { id: string } }) =>
-        Promise.resolve({ id: args.where.id, status: 'cancelled' }),
-      ),
+      update: vi
+        .fn()
+        .mockImplementation((args: { where: { id: string } }) =>
+          Promise.resolve({ id: args.where.id, status: 'cancelled' }),
+        ),
     },
     $transaction: vi.fn(async (fn: (t: typeof tx) => Promise<unknown>) => fn(tx)),
   };
@@ -95,9 +97,7 @@ describe('CancelBookingSeriesHandler', () => {
       isStaff: false,
     });
     expect(result.cancelled).toEqual(['b2', 'b3', 'b4']);
-    expect((result as { newSeriesEndsOn?: string }).newSeriesEndsOn).toBe(
-      pivotDate.toISOString(),
-    );
+    expect((result as { newSeriesEndsOn?: string }).newSeriesEndsOn).toBe(pivotDate.toISOString());
     expect(tx.bookingSeries.update).toHaveBeenCalledWith({
       where: { id: SERIES_ID },
       data: { endsOn: pivotDate },

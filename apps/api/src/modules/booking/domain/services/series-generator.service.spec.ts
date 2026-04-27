@@ -84,9 +84,7 @@ describe('SeriesGeneratorService', () => {
 
   it('rejeita endsOn antes de startsOn', () => {
     expect(() =>
-      svc.generate(
-        base({ startsOn: new Date('2026-02-01Z'), endsOn: new Date('2026-01-01Z') }),
-      ),
+      svc.generate(base({ startsOn: new Date('2026-02-01Z'), endsOn: new Date('2026-01-01Z') })),
     ).toThrow(/endsOn/);
   });
 

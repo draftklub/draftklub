@@ -69,8 +69,7 @@ export default function LoginPage() {
               textWrap: 'balance',
             }}
           >
-            Onde o{' '}
-            <span style={{ color: 'hsl(var(--brand-primary-300))' }}>Klub</span>
+            Onde o <span style={{ color: 'hsl(var(--brand-primary-300))' }}>Klub</span>
             <br />
             acontece.
           </h1>
@@ -82,8 +81,8 @@ export default function LoginPage() {
               textWrap: 'pretty',
             }}
           >
-            Reservas, rankings, torneios e a vida do clube — tudo num lugar só.
-            Feito pelos clubes, para os clubes brasileiros.
+            Reservas, rankings, torneios e a vida do clube — tudo num lugar só. Feito pelos clubes,
+            para os clubes brasileiros.
           </p>
         </div>
 
@@ -109,16 +108,14 @@ export default function LoginPage() {
           aria-hidden="true"
           className="pointer-events-none absolute -right-20 -top-32 h-[280px] w-[280px] rounded-full lg:hidden"
           style={{
-            background:
-              'radial-gradient(circle, hsl(var(--primary) / 0.10) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(var(--primary) / 0.10) 0%, transparent 70%)',
           }}
         />
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -bottom-40 -left-24 h-[320px] w-[320px] rounded-full lg:hidden"
           style={{
-            background:
-              'radial-gradient(circle, hsl(var(--accent) / 0.07) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(var(--accent) / 0.07) 0%, transparent 70%)',
           }}
         />
 
@@ -149,9 +146,7 @@ export default function LoginPage() {
             >
               Entrar
             </h2>
-            <p className="mb-7 text-sm text-muted-foreground">
-              Acesse sua conta no clube.
-            </p>
+            <p className="mb-7 text-sm text-muted-foreground">Acesse sua conta no clube.</p>
             <LoginForm formWidth="100%" />
             <div className="mt-8 border-t border-border pt-5 text-center text-[13px] text-muted-foreground">
               Sem conta?{' '}
@@ -176,8 +171,7 @@ export default function LoginPage() {
               style={{
                 width: 'min(100%, 480px)',
                 padding: '36px 40px',
-                boxShadow:
-                  '0 1px 2px rgb(0 0 0 / 0.04), 0 12px 32px -12px rgb(0 0 0 / 0.10)',
+                boxShadow: '0 1px 2px rgb(0 0 0 / 0.04), 0 12px 32px -12px rgb(0 0 0 / 0.10)',
               }}
             >
               <LoginForm formWidth="100%" />

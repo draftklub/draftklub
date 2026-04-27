@@ -4,11 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
-import type {
-  Klub,
-  KlubType,
-  SportCatalog,
-} from '@draftklub/shared-types';
+import type { Klub, KlubType, SportCatalog } from '@draftklub/shared-types';
 import { AuthGuard } from '@/components/auth-guard';
 import { ApiError } from '@/lib/api/client';
 import { createKlub, getKlubBySlug } from '@/lib/api/klubs';
@@ -277,13 +273,20 @@ interface Step1Props {
   onNext: () => void;
 }
 
-function Step1({ name, setName, slug, setSlug, type, setType, error, checking, onNext }: Step1Props) {
+function Step1({
+  name,
+  setName,
+  slug,
+  setSlug,
+  type,
+  setType,
+  error,
+  checking,
+  onNext,
+}: Step1Props) {
   return (
     <div className="flex flex-col gap-5">
-      <h2
-        className="font-display text-[18px] font-bold"
-        style={{ letterSpacing: '-0.01em' }}
-      >
+      <h2 className="font-display text-[18px] font-bold" style={{ letterSpacing: '-0.01em' }}>
         Sobre o Klub
       </h2>
 
@@ -389,10 +392,7 @@ function Step2({ sports, error, selected, onToggle, onBack, onNext }: Step2Props
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2
-          className="font-display text-[18px] font-bold"
-          style={{ letterSpacing: '-0.01em' }}
-        >
+        <h2 className="font-display text-[18px] font-bold" style={{ letterSpacing: '-0.01em' }}>
           Modalidades iniciais
         </h2>
         <p className="mt-1 text-[13px] text-muted-foreground">
@@ -502,10 +502,7 @@ function Step3({
 
   return (
     <div className="flex flex-col gap-5">
-      <h2
-        className="font-display text-[18px] font-bold"
-        style={{ letterSpacing: '-0.01em' }}
-      >
+      <h2 className="font-display text-[18px] font-bold" style={{ letterSpacing: '-0.01em' }}>
         Confirmar
       </h2>
 
@@ -513,10 +510,7 @@ function Step3({
         <Row label="Nome" value={name} />
         <Row label="URL" value={`/k/${slug}`} mono />
         <Row label="Tipo" value={typeLabel} />
-        <Row
-          label="Modalidades"
-          value={selectedSportsList.map((s) => s.name).join(', ')}
-        />
+        <Row label="Modalidades" value={selectedSportsList.map((s) => s.name).join(', ')} />
         <Row label="Plano" value="Trial (30 dias)" />
       </dl>
 

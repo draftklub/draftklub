@@ -31,9 +31,7 @@ export class CancelBookingSeriesHandler {
     }
 
     if (cmd.mode !== 'all' && !cmd.bookingId) {
-      throw new BadRequestException(
-        `mode '${cmd.mode}' requires bookingId in the request body`,
-      );
+      throw new BadRequestException(`mode '${cmd.mode}' requires bookingId in the request body`);
     }
 
     if (cmd.mode === 'this_only') {
@@ -45,9 +43,7 @@ export class CancelBookingSeriesHandler {
         throw new BadRequestException('Booking does not belong to this series');
       }
       if (!['pending', 'confirmed'].includes(booking.status)) {
-        throw new BadRequestException(
-          `Cannot cancel booking in status '${booking.status}'`,
-        );
+        throw new BadRequestException(`Cannot cancel booking in status '${booking.status}'`);
       }
 
       const updated = await this.prisma.booking.update({

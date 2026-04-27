@@ -188,7 +188,6 @@ steps:
           --set-env-vars=NODE_ENV=production
     waitFor: ['push-web']
 
-
 substitutions:
   _PROJECT_ID: 'draftklub-dev'
   _REGION: 'southamerica-east1'

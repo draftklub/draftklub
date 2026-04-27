@@ -12,10 +12,7 @@ export class TournamentScheduleController {
 
   @Post()
   @RequirePolicy('tournament.manage', { resolveKlubIdFrom: 'tournament:tournamentId' })
-  async schedule(
-    @Param('tournamentId') tournamentId: string,
-    @Body() body: unknown,
-  ) {
+  async schedule(@Param('tournamentId') tournamentId: string, @Body() body: unknown) {
     const hasConfig = body && typeof body === 'object' && Object.keys(body).length > 0;
     const config = hasConfig ? ScheduleConfigSchema.parse(body) : undefined;
     return this.facade.scheduleTournament({ tournamentId, config });

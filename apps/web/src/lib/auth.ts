@@ -18,10 +18,7 @@ export type { FirebaseUser };
  * Login com email + senha. Erros conhecidos são re-emitidos com
  * mensagens em PT-BR.
  */
-export async function loginWithEmail(
-  email: string,
-  password: string,
-): Promise<FirebaseUser> {
+export async function loginWithEmail(email: string, password: string): Promise<FirebaseUser> {
   try {
     const cred = await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
     return cred.user;
@@ -88,9 +85,7 @@ export async function getIdToken(forceRefresh = false): Promise<string | null> {
  * Inscreve callback pra mudanças de auth state. Retorna unsubscribe.
  * Use no `AuthProvider`, não em componentes individuais.
  */
-export function subscribeToAuthState(
-  cb: (user: FirebaseUser | null) => void,
-): Unsubscribe {
+export function subscribeToAuthState(cb: (user: FirebaseUser | null) => void): Unsubscribe {
   return firebaseOnAuthStateChanged(getFirebaseAuth(), cb);
 }
 
@@ -113,14 +108,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   'auth/user-disabled': 'Esta conta está desativada. Fale com o seu Klub.',
   'auth/user-not-found': 'Não encontramos uma conta com este e-mail.',
   'auth/wrong-password': 'E-mail ou senha incorretos. Confira e tente de novo.',
-  'auth/too-many-requests':
-    'Muitas tentativas seguidas. Tente novamente em alguns minutos.',
-  'auth/network-request-failed':
-    'Sem conexão. Verifique sua internet e tente de novo.',
-  'auth/popup-closed-by-user':
-    'Você fechou o popup do Google antes de concluir.',
-  'auth/popup-blocked':
-    'O navegador bloqueou o popup do Google. Habilite e tente de novo.',
+  'auth/too-many-requests': 'Muitas tentativas seguidas. Tente novamente em alguns minutos.',
+  'auth/network-request-failed': 'Sem conexão. Verifique sua internet e tente de novo.',
+  'auth/popup-closed-by-user': 'Você fechou o popup do Google antes de concluir.',
+  'auth/popup-blocked': 'O navegador bloqueou o popup do Google. Habilite e tente de novo.',
   'auth/cancelled-popup-request': 'Login com Google cancelado.',
   'auth/account-exists-with-different-credential':
     'Já existe uma conta com este e-mail usando outro método de login.',

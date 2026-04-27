@@ -69,9 +69,7 @@ export function KlubSwitcher() {
           >
             {klub?.name ?? 'Klub'}
           </h1>
-          <p className="mt-0.5 truncate font-mono text-[10.5px] text-muted-foreground">
-            /{slug}
-          </p>
+          <p className="mt-0.5 truncate font-mono text-[10.5px] text-muted-foreground">/{slug}</p>
         </div>
         <ChevronDown
           className={cn(
@@ -90,9 +88,7 @@ export function KlubSwitcher() {
             <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
               Klub atual
             </p>
-            <p className="mt-1 truncate text-[13.5px] font-semibold">
-              {klub?.name ?? 'Klub'}
-            </p>
+            <p className="mt-1 truncate text-[13.5px] font-semibold">{klub?.name ?? 'Klub'}</p>
           </div>
 
           <div className="px-3 pb-2 pt-3">
@@ -101,14 +97,10 @@ export function KlubSwitcher() {
             </p>
             <ul className="mt-1.5 flex flex-col gap-0.5">
               {klubs === null && !loadError ? (
-                <li className="px-2 py-2 text-[12px] text-muted-foreground">
-                  Carregando…
-                </li>
+                <li className="px-2 py-2 text-[12px] text-muted-foreground">Carregando…</li>
               ) : null}
               {loadError ? (
-                <li className="px-2 py-2 text-[12px] text-destructive">
-                  {loadError}
-                </li>
+                <li className="px-2 py-2 text-[12px] text-destructive">{loadError}</li>
               ) : null}
               {klubs && others.length === 0 && !loadError ? (
                 <li className="px-2 py-2 text-[12px] text-muted-foreground">

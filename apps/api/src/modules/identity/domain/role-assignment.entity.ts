@@ -19,11 +19,21 @@ export interface RoleAssignmentProps {
 export class RoleAssignmentEntity {
   constructor(private readonly props: RoleAssignmentProps) {}
 
-  get id(): string { return this.props.id; }
-  get userId(): string { return this.props.userId; }
-  get role(): Role { return this.props.role; }
-  get scopeKlubId(): string | null { return this.props.scopeKlubId ?? null; }
-  get scopeSportId(): string | null { return this.props.scopeSportId ?? null; }
+  get id(): string {
+    return this.props.id;
+  }
+  get userId(): string {
+    return this.props.userId;
+  }
+  get role(): Role {
+    return this.props.role;
+  }
+  get scopeKlubId(): string | null {
+    return this.props.scopeKlubId ?? null;
+  }
+  get scopeSportId(): string | null {
+    return this.props.scopeSportId ?? null;
+  }
 
   matchesScope(klubId?: string, sportId?: string): boolean {
     const klubMatch = this.props.scopeKlubId == null || this.props.scopeKlubId === klubId;

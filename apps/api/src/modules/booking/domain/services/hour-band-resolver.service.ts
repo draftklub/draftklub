@@ -60,9 +60,7 @@ export class HourBandResolverService {
 
     const duration = matching.durationByMatchType[matchType];
     if (!duration) {
-      throw new BadRequestException(
-        `Band '${matching.type}' does not allow ${matchType}`,
-      );
+      throw new BadRequestException(`Band '${matching.type}' does not allow ${matchType}`);
     }
 
     return {
@@ -108,10 +106,7 @@ export class HourBandResolverService {
     const hour = d.getUTCHours();
     return (
       hourBands.find(
-        (b) =>
-          b.daysOfWeek.includes(dayOfWeek) &&
-          hour >= b.startHour &&
-          hour < b.endHour,
+        (b) => b.daysOfWeek.includes(dayOfWeek) && hour >= b.startHour && hour < b.endHour,
       ) ?? null
     );
   }

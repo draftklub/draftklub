@@ -1,4 +1,5 @@
 # BRIEFING — DraftKlub Onda 1
+
 ## Integração + Layer Zero
 
 **Versão:** 1.0
@@ -20,23 +21,24 @@ DraftKlub é uma plataforma SaaS multi-tenant para clubes brasileiros de esporte
 
 ## 2. Decisões já fechadas
 
-| Tópico | Decisão |
-|---|---|
-| Tagline | "Onde o Klub acontece." |
-| Logo canônica | Opção 10 (chevron + gradient verde) — PNG já em `apps/web/public/icon-{192,512}.png` + dark variants |
-| Paleta | Verde `#0E7C66` primary, terracota `#DC4F2F` accent, âmbar `#F59E0B` (hour bands prime time + tier premium) |
-| Fonts | Inter (UI), Geist (display ≥32px), JetBrains Mono (números/IDs) |
-| Tenancy | Multi-Klub (Player em N Klubs) |
-| Klub ativo | URL-based: `/k/:slug/...` |
-| Onboarding de Klub | Híbrido: self-service em `/criar-klub` + sales-led em `/quero-criar-klub` |
-| Pricing | Slot dinâmico via API (NÃO hardcode); placeholder atual R$9,90/mês |
-| Feature gating | Tabela `features` no banco com tier (free/premium/disabled), hook `useFeature(id)`, guard idêntico no backend |
+| Tópico             | Decisão                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- |
+| Tagline            | "Onde o Klub acontece."                                                                                       |
+| Logo canônica      | Opção 10 (chevron + gradient verde) — PNG já em `apps/web/public/icon-{192,512}.png` + dark variants          |
+| Paleta             | Verde `#0E7C66` primary, terracota `#DC4F2F` accent, âmbar `#F59E0B` (hour bands prime time + tier premium)   |
+| Fonts              | Inter (UI), Geist (display ≥32px), JetBrains Mono (números/IDs)                                               |
+| Tenancy            | Multi-Klub (Player em N Klubs)                                                                                |
+| Klub ativo         | URL-based: `/k/:slug/...`                                                                                     |
+| Onboarding de Klub | Híbrido: self-service em `/criar-klub` + sales-led em `/quero-criar-klub`                                     |
+| Pricing            | Slot dinâmico via API (NÃO hardcode); placeholder atual R$9,90/mês                                            |
+| Feature gating     | Tabela `features` no banco com tier (free/premium/disabled), hook `useFeature(id)`, guard idêntico no backend |
 
 ---
 
 ## 3. O que JÁ existe (NÃO recriar)
 
 ### Backend (`apps/api`) — completo o suficiente pra Onda 1
+
 - 32 controllers, 72 endpoints, 24 models, 256 testes verdes
 - Auth via Firebase Admin SDK + sync de User no DB no primeiro request
 - PolicyEngine + PolicyGuard com escopo de Klub aplicado
@@ -52,6 +54,7 @@ DraftKlub é uma plataforma SaaS multi-tenant para clubes brasileiros de esporte
 - Cloud Run em produção (`southamerica-east1`)
 
 ### Frontend (`apps/web`) — scaffold inicial
+
 - Next.js 15 App Router + React 19 + Tailwind 4 + TypeScript 5.9
 - Tokens DraftKlub aplicados em `globals.css`
 - Logo canônica em `public/` com auto-swap dark mode
@@ -61,6 +64,7 @@ DraftKlub é uma plataforma SaaS multi-tenant para clubes brasileiros de esporte
 - Build/lint/typecheck verdes
 
 ### Tooling
+
 - pnpm 10.6.5 + Turborepo 2.9
 - Cloud Build CI/CD pro `apps/api` (sem step pro `apps/web` ainda)
 - GitHub Actions com lint+typecheck+test
@@ -72,28 +76,33 @@ DraftKlub é uma plataforma SaaS multi-tenant para clubes brasileiros de esporte
 ### Fase A — Integração viva (sem isso, nada conecta)
 
 **A.1 — CORS no `apps/api`**
+
 - Habilitar `app.enableCors(...)` no `main.ts`
 - Origens: `http://localhost:3001` (dev), `https://draftklub.com`, `https://www.draftklub.com`, `https://staging.draftklub.com`
 - `credentials: true`
 - Configurável via env var `CORS_ORIGINS` (CSV)
 
 **A.2 — Firebase Auth real no `apps/web`**
+
 - Substituir `apps/web/src/lib/auth-stub.ts` mantendo a interface (`loginWithEmail`, `loginWithGoogle`, `logout`, `onAuthStateChanged`, `getIdToken`)
 - Init em `apps/web/src/lib/firebase.ts` usando env vars `NEXT_PUBLIC_FIREBASE_*`
 - Guard de rota: redirect pra `/login` se não autenticado em rotas protegidas
 
 **A.3 — Cliente API tipado em `apps/web`**
+
 - `apps/web/src/lib/api/client.ts` — fetch wrapper com bearer token automático (puxa do Firebase)
 - `apps/web/src/lib/api/{me,klubs,memberships,enrollments,sports}.ts` — funções tipadas por recurso
 - Tipos importados de `@draftklub/shared-types`
 
 **A.4 — Popular `@draftklub/shared-types`**
+
 - Hoje é placeholder. Adicionar response shapes derivadas do schema Prisma do api.
 - Mínimo pra Onda 1: `User`, `Klub`, `KlubConfig`, `KlubSportProfile`, `Membership`, `RoleAssignment`, `MeResponse`, `SportCatalog`, `PlayerSportEnrollment`
 - Importar em apps/api e apps/web — fonte de verdade compartilhada
 - TypeScript puro (não classes), sem leak de Prisma internals
 
 **A.5 — Active Klub via URL**
+
 - Hook `useActiveKlub()` que lê `params.klubSlug` da URL
 - Layout `apps/web/src/app/k/[klubSlug]/layout.tsx` que valida membership do user e redireciona pra `/sem-acesso` se não tiver
 - Helper `requireMembership(klubSlug)` server-side via `GET /klubs/slug/:slug` + verificação de membership em `/me`
@@ -101,6 +110,7 @@ DraftKlub é uma plataforma SaaS multi-tenant para clubes brasileiros de esporte
 ### Fase B — Layer Zero UI
 
 **B.1 — Pós-login router**
+
 - Após login bem-sucedido, chamar `GET /me`
 - Lógica:
   - 0 memberships → redirect `/criar-klub`
@@ -109,11 +119,13 @@ DraftKlub é uma plataforma SaaS multi-tenant para clubes brasileiros de esporte
 - Persistir último Klub visitado em cookie pra UX boa em retornos
 
 **B.2 — Klub picker (duas variantes)**
+
 - **Full-page** em `/escolher-klub`: grid de cards com nome, slug, logo (placeholder se sem media), role do user no Klub, modalidades ativas. Click → `/k/:slug/dashboard`
 - **Switcher inline** na topbar do `/k/:slug/...`: dropdown compacto tipo Slack workspace switcher, lista de Klubs do user + "Mudar de Klub" → vai pra `/escolher-klub`
 - Estados: loading skeleton, erro de fetch (raro, mostrar retry)
 
 **B.3 — Self-service Klub creation: `/criar-klub`**
+
 - Formulário em 3 etapas (steps inline numa mesma página, não wizard com URLs separadas):
   1. **Sobre o Klub:** nome, slug (auto-gerado do nome via slugify, editável, validar uniqueness antes de submeter próxima etapa), tipo (`sports_club` / `condo` / `school` / `public_space` / `academy` / `individual`), plano (default `trial`)
   2. **Modalidades iniciais:** multi-select de `SportCatalog` (busca em `GET /sports`). Mínimo 1.
@@ -126,6 +138,7 @@ DraftKlub é uma plataforma SaaS multi-tenant para clubes brasileiros de esporte
 - NÃO escopar nesta fase: KlubMedia upload, KlubConfig avançado (defaults razoáveis), KlubSportInterest
 
 **B.4 — Sales-led intake: `/quero-criar-klub`**
+
 - Página pública (fora do guard de auth, acessível em `draftklub.com/quero-criar-klub`)
 - Formulário simples: nome do contato, email, telefone (opcional), nome do clube proposto, número aproximado de quadras, mensagem livre
 - Submit: `POST /klub-requests`
@@ -133,6 +146,7 @@ DraftKlub é uma plataforma SaaS multi-tenant para clubes brasileiros de esporte
 - Tom: convidativo, comunidade. Layout simples, mobile-first.
 
 **B.5 — Aceite de convite: `/convite/:token`**
+
 - Página pública (não exige login pré-existente)
 - Fluxo:
   - Backend resolve token → retorna Klub + email convidado + role oferecida
@@ -141,6 +155,7 @@ DraftKlub é uma plataforma SaaS multi-tenant para clubes brasileiros de esporte
 - **GAP DE BACKEND PROVÁVEL:** o `POST /klubs/:id/members` atual exige user existente. Pra fluxo de convite com link, pode precisar de endpoint novo `POST /klubs/:id/invitations` + `POST /invitations/:token/accept`. **VERIFICAR primeiro; se não existir, propor opção pragmática nesta Onda:** Klub Admin gera link copiável `/criar-conta?invite=:klubSlug` que captura o email no signup e chama `/klubs/:id/members` no backend após criação do user.
 
 **B.6 — Inscrição em modalidade: `/k/:slug/modalidades`**
+
 - Lista todas as `KlubSportProfile` do Klub (de `GET /klubs/:id/sports`)
 - Pra cada uma:
   - Status do user atual: não inscrito / pending / active / suspended
@@ -150,17 +165,20 @@ DraftKlub é uma plataforma SaaS multi-tenant para clubes brasileiros de esporte
 ### Fase C — Refator do Dashboard atual
 
 **C.1 — Mover Dashboard pra rota Klub-scoped**
+
 - De `/dashboard` → `/k/:slug/dashboard`
 - Mover layout `apps/web/src/app/dashboard/layout.tsx` pra `apps/web/src/app/k/[klubSlug]/(dashboard)/layout.tsx` ou estrutura equivalente
 - Redirect `/dashboard` → resolução via `/post-login` logic
 
 **C.2 — Plugar dados reais**
+
 - Tirar "Klub Carioca de Tênis" hardcoded — usar `useActiveKlub().name`
 - KPIs: criar agregação client-side a partir de `GET /klubs/:klubId/bookings`, `GET /klubs/:klubId/calendar`, `GET /klubs/:klubId/sports/:sport/enrollments` enquanto endpoint dedicado não existe (`GET /klubs/:id/dashboard-stats` é candidato natural pra Onda 2 se a agregação client-side ficar pesada)
 - Feed "Atividade recente": usar `GET /klubs/:klubId/bookings` recentes
 - "Próximos torneios": iterar nas `KlubSportProfile` ativas + `GET /klubs/:klubId/sports/:sport/tournaments` filtrado por status `in_progress` ou `prequalifying`
 
 **C.3 — Persona switcher (dev-only)**
+
 - Em ambiente dev (`process.env.NODE_ENV === 'development'`), botão flutuante pra alternar visualização Player Free / Player Premium / Klub Admin
 - Em produção, persona é determinada pelos roleAssignments reais do user
 
@@ -238,17 +256,17 @@ Investigar primeiro, codar depois. Cada item é uma pergunta a responder lendo o
 
 ## 9. Sugestão de PRs (escopo focado)
 
-| PR | Escopo | Estimativa |
-|---|---|---|
-| 1 | Fase A.1 (CORS) + A.4 (shared-types base) | 2-3h |
-| 2 | Fase A.2 (Firebase Auth real) + A.3 (API client) | 3-4h |
-| 3 | Fase A.5 (active Klub via URL) + Fase C.1 (move dashboard) | 2-3h |
-| 4 | Fase B.3 (criar Klub) | 4-6h |
-| 5 | Fase B.1 + B.2 (post-login + picker) | 3-4h |
-| 6 | Fase B.4 (sales-led intake) | 1-2h |
-| 7 | Fase B.6 (inscrição modalidade) | 3-4h |
-| 8 | Fase B.5 (aceite de convite — depende de gap analysis) | 3-6h |
-| 9 | Fase C.2 (Dashboard com dados reais) + C.3 (persona switcher) | 3-4h |
-| 10 | Deploy `apps/web` no Cloud Run + DNS staging | 2-3h |
+| PR  | Escopo                                                        | Estimativa |
+| --- | ------------------------------------------------------------- | ---------- |
+| 1   | Fase A.1 (CORS) + A.4 (shared-types base)                     | 2-3h       |
+| 2   | Fase A.2 (Firebase Auth real) + A.3 (API client)              | 3-4h       |
+| 3   | Fase A.5 (active Klub via URL) + Fase C.1 (move dashboard)    | 2-3h       |
+| 4   | Fase B.3 (criar Klub)                                         | 4-6h       |
+| 5   | Fase B.1 + B.2 (post-login + picker)                          | 3-4h       |
+| 6   | Fase B.4 (sales-led intake)                                   | 1-2h       |
+| 7   | Fase B.6 (inscrição modalidade)                               | 3-4h       |
+| 8   | Fase B.5 (aceite de convite — depende de gap analysis)        | 3-6h       |
+| 9   | Fase C.2 (Dashboard com dados reais) + C.3 (persona switcher) | 3-4h       |
+| 10  | Deploy `apps/web` no Cloud Run + DNS staging                  | 2-3h       |
 
 Total estimado: 26-39h de trabalho do Claude Code, dependendo de quanto investigação revela.

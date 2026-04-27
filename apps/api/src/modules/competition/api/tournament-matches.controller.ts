@@ -21,10 +21,7 @@ export class TournamentMatchesController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const dto = ReportMatchSchema.parse(body);
-    const isCommittee = await this.facade.userIsCommitteeForTournament(
-      user.userId,
-      tournamentId,
-    );
+    const isCommittee = await this.facade.userIsCommitteeForTournament(user.userId, tournamentId);
     return this.facade.reportTournamentMatch({
       tournamentId,
       matchId,

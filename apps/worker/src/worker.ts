@@ -6,7 +6,10 @@ import { WorkerModule } from './worker.module';
 async function bootstrap(): Promise<void> {
   // HTTP server sobe PRIMEIRO — Cloud Run exige resposta rápida na porta
   const port = parseInt(process.env.PORT ?? '8080', 10);
-  const server = http.createServer((_, res) => { res.writeHead(200); res.end('ok'); });
+  const server = http.createServer((_, res) => {
+    res.writeHead(200);
+    res.end('ok');
+  });
   await new Promise<void>((resolve) => server.listen(port, resolve));
   console.log(`Worker HTTP health server listening on port ${port}`);
 

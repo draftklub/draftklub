@@ -51,26 +51,15 @@ export type CancellationMode = 'free' | 'with_deadline' | 'staff_only';
 
 export type AgendaVisibility = 'public' | 'private';
 
-export type ExtensionMode =
-  | 'disabled'
-  | 'player'
-  | 'staff_approval'
-  | 'staff_only';
+export type ExtensionMode = 'disabled' | 'player' | 'staff_approval' | 'staff_only';
 
 export type GuestsAddedBy = 'player' | 'staff' | 'both';
 
-export type TournamentBookingConflictMode =
-  | 'block_avulso'
-  | 'auto_cancel_avulso'
-  | 'staff_decides';
+export type TournamentBookingConflictMode = 'block_avulso' | 'auto_cancel_avulso' | 'staff_decides';
 
 export type SportProfileStatus = 'active' | 'inactive';
 
-export type EnrollmentStatus =
-  | 'pending'
-  | 'active'
-  | 'suspended'
-  | 'cancelled';
+export type EnrollmentStatus = 'pending' | 'active' | 'suspended' | 'cancelled';
 
 // ─── User ───────────────────────────────────────────────────────────────
 

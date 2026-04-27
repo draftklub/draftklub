@@ -13,10 +13,7 @@ export class PointsSchemasController {
   constructor(private readonly facade: CompetitionFacade) {}
 
   @Get()
-  async list(
-    @Param('klubId') klubId: string,
-    @Param('sportCode') sportCode: string,
-  ) {
+  async list(@Param('klubId') klubId: string, @Param('sportCode') sportCode: string) {
     return this.facade.listPointsSchemas(klubId, sportCode);
   }
 

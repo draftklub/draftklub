@@ -118,7 +118,13 @@ async function main(): Promise<void> {
   const spaces = [
     { name: 'Quadra 1', sportCode: 'tennis', surface: 'clay', indoor: false, hasLighting: true },
     { name: 'Quadra 2', sportCode: 'tennis', surface: 'clay', indoor: false, hasLighting: true },
-    { name: 'Quadra 3', sportCode: 'squash', surface: 'synthetic', indoor: true, hasLighting: true },
+    {
+      name: 'Quadra 3',
+      sportCode: 'squash',
+      surface: 'synthetic',
+      indoor: true,
+      hasLighting: true,
+    },
   ];
 
   const HOUR_BANDS_TENNIS = [
@@ -628,5 +634,8 @@ async function main(): Promise<void> {
 }
 
 main()
-  .catch((e) => { console.error(e); process.exit(1); })
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
   .finally(() => prisma.$disconnect());

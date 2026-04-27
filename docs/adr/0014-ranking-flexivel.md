@@ -6,6 +6,7 @@
 ## Contexto
 
 Diferentes Klubs querem rankings com regras diferentes:
+
 - "Ranking ELO" só com partidas avulsas
 - "Ranking de Torneio 2026" só com pontos de torneio
 - "Ranking Combinado" com peso configurável
@@ -21,28 +22,33 @@ conquista (pontos por colocação em torneio). São campos separados.
 com defaults conservadores na migration 9D.1):
 
 **Fontes (boolean flags):**
+
 - `includesCasualMatches` (default true) — partidas avulsas (source='casual')
 - `includesTournamentMatches` (default true) — partidas de torneio (source='tournament')
 - `includesTournamentPoints` (default false) — pontos de torneio
   (Tournament.pointsApplied + pointsSchema)
 
 **Ordenação:**
+
 - `orderBy: 'rating' | 'tournament_points' | 'combined'` (default 'rating')
 - `combinedWeight: { ratingWeight: number; pointsWeight: number }` (JSON)
   — usado quando orderBy='combined'
 
 **Janela temporal:**
+
 - `windowType: 'all_time' | 'season' | 'semester' | 'last_weeks' | 'last_tournaments'` (default 'all_time')
 - `windowSize: int?` — pra last_weeks: número de semanas
 - `windowStartDate: timestamptz?` — pra season/semester: início da janela
 
 `PlayerRankingEntry` ganha:
+
 - `tournamentPoints: int @default(0)` — separado de rating
 - `lastTournamentAppliedAt: timestamptz?` — controle de aplicação
 
 ### Recomputação
 
 `RankingRecomputeService.recompute(rankingId)`:
+
 1. Lê o ranking
 2. Constrói filtro de fontes (`source` em ['casual', 'tournament', ...])
 3. Constrói filtro temporal (`playedAt >= dateFilter`) baseado em windowType
@@ -64,6 +70,7 @@ com defaults conservadores na migration 9D.1):
 
 Quando `tournament.status` vira `'finished'` (em `TournamentProgressionService.advance()`),
 chama `ApplyTournamentPointsService.apply()`:
+
 - Verifica `tournament.pointsApplied` (idempotência)
 - Lê `tournament.ranking` — se `includesTournamentPoints=false`, marca aplicado
   com 0 pontos (evita retentativas)

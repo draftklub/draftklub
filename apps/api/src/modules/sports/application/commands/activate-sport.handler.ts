@@ -35,7 +35,8 @@ export class ActivateSportHandler {
       const engine = await this.prisma.ratingEngine.findUnique({
         where: { code: cmd.defaultRatingEngine },
       });
-      if (!engine) throw new NotFoundException(`Rating engine '${cmd.defaultRatingEngine}' not found`);
+      if (!engine)
+        throw new NotFoundException(`Rating engine '${cmd.defaultRatingEngine}' not found`);
     }
 
     if (existing) {

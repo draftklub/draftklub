@@ -52,20 +52,22 @@ interface ConfigOverrides {
   cancellationWindowHours: number;
 }
 
-function makePrisma(overrides: {
-  space?: SpaceOverrides;
-  klubConfig?: ConfigOverrides;
-  spaceConflict?: { id: string; startsAt: Date; endsAt: Date } | null;
-  playerOverlaps?: {
-    id: string;
-    startsAt: Date;
-    endsAt: Date;
-    primaryPlayerId: string | null;
-    otherPlayers: unknown;
-  }[];
-  otherOverlaps?: { id: string; otherPlayers: unknown }[];
-  isMember?: boolean;
-} = {}) {
+function makePrisma(
+  overrides: {
+    space?: SpaceOverrides;
+    klubConfig?: ConfigOverrides;
+    spaceConflict?: { id: string; startsAt: Date; endsAt: Date } | null;
+    playerOverlaps?: {
+      id: string;
+      startsAt: Date;
+      endsAt: Date;
+      primaryPlayerId: string | null;
+      otherPlayers: unknown;
+    }[];
+    otherOverlaps?: { id: string; otherPlayers: unknown }[];
+    isMember?: boolean;
+  } = {},
+) {
   const space = {
     bookingActive: overrides.space?.bookingActive ?? true,
     status: overrides.space?.status ?? 'active',
@@ -101,12 +103,10 @@ function makePrisma(overrides: {
           ),
       },
       membership: {
-        findFirst: vi
+        findFirst: vi.fn().mockResolvedValue(overrides.isMember === false ? null : { id: 'm1' }),
+        findMany: vi
           .fn()
-          .mockResolvedValue(overrides.isMember === false ? null : { id: 'm1' }),
-        findMany: vi.fn().mockResolvedValue(
-          overrides.isMember === false ? [] : [{ userId: 'any' }],
-        ),
+          .mockResolvedValue(overrides.isMember === false ? [] : [{ userId: 'any' }]),
       },
       booking: {
         findFirst: bookingFindFirst,
@@ -114,9 +114,11 @@ function makePrisma(overrides: {
           .fn()
           .mockResolvedValueOnce(overrides.playerOverlaps ?? [])
           .mockResolvedValueOnce(overrides.otherOverlaps ?? []),
-        create: vi.fn().mockImplementation((args: { data: unknown }) =>
-          Promise.resolve({ id: 'new-b', ...(args.data as object) }),
-        ),
+        create: vi
+          .fn()
+          .mockImplementation((args: { data: unknown }) =>
+            Promise.resolve({ id: 'new-b', ...(args.data as object) }),
+          ),
       },
     },
   };
@@ -152,7 +154,11 @@ describe('CreateBookingHandler', () => {
     const mock = makePrisma();
     attach(mock.prisma);
     const result = await handler.execute({ ...baseCmd });
-    expect(result).toMatchObject({ status: 'confirmed', creationMode: 'direct', matchType: 'singles' });
+    expect(result).toMatchObject({
+      status: 'confirmed',
+      creationMode: 'direct',
+      matchType: 'singles',
+    });
   });
 
   it('calcula endsAt da banda (singles regular = 60min)', async () => {
@@ -199,9 +205,9 @@ describe('CreateBookingHandler', () => {
   it('rejeita matchType nao permitido pelo Space', async () => {
     const mock = makePrisma({ space: { allowedMatchTypes: ['singles'] } });
     attach(mock.prisma);
-    await expect(
-      handler.execute({ ...baseCmd, matchType: 'doubles' }),
-    ).rejects.toThrow(/does not allow doubles/);
+    await expect(handler.execute({ ...baseCmd, matchType: 'doubles' })).rejects.toThrow(
+      /does not allow doubles/,
+    );
   });
 
   it('rejeita doubles em prime band (que so tem singles)', async () => {
@@ -236,7 +242,11 @@ describe('CreateBookingHandler', () => {
 
   it('rejeita com 409 quando ha space conflict', async () => {
     const mock = makePrisma({
-      spaceConflict: { id: 'existing-1', startsAt: baseCmd.startsAt, endsAt: new Date(baseCmd.startsAt.getTime() + 60 * 60_000) },
+      spaceConflict: {
+        id: 'existing-1',
+        startsAt: baseCmd.startsAt,
+        endsAt: new Date(baseCmd.startsAt.getTime() + 60 * 60_000),
+      },
     });
     attach(mock.prisma);
     await expect(handler.execute({ ...baseCmd })).rejects.toMatchObject({
@@ -266,9 +276,7 @@ describe('CreateBookingHandler', () => {
     attach(mock.prisma);
     const past = new Date(Date.now() - 24 * 3_600_000);
     past.setUTCHours(13, 0, 0, 0);
-    await expect(
-      handler.execute({ ...baseCmd, startsAt: past }),
-    ).rejects.toThrow(/past/);
+    await expect(handler.execute({ ...baseCmd, startsAt: past })).rejects.toThrow(/past/);
   });
 
   // ─── 10D: cenarios de guests + responsibleMember ────────────
@@ -287,8 +295,9 @@ describe('CreateBookingHandler', () => {
   it('10D: Cenario B - cria guest e adiciona', async () => {
     const mock = makePrisma();
     // Mock GuestUserService via injecting through handler
-    const guestSvc = (handler as unknown as { guestUserService: { createOrGet: ReturnType<typeof vi.fn> } })
-      .guestUserService;
+    const guestSvc = (
+      handler as unknown as { guestUserService: { createOrGet: ReturnType<typeof vi.fn> } }
+    ).guestUserService;
     guestSvc.createOrGet = vi.fn().mockResolvedValue({
       id: 'guest-new',
       fullName: 'Carlos Silva',
@@ -296,9 +305,7 @@ describe('CreateBookingHandler', () => {
     attach(mock.prisma);
     const result = await handler.execute({
       ...baseCmd,
-      otherPlayers: [
-        { guest: { firstName: 'Carlos', lastName: 'Silva', email: 'c@x.com' } },
-      ],
+      otherPlayers: [{ guest: { firstName: 'Carlos', lastName: 'Silva', email: 'c@x.com' } }],
     });
     const r = result as unknown as { otherPlayers: { userId: string; name: string }[] };
     expect(r.otherPlayers[0]?.userId).toBe('guest-new');
@@ -332,9 +339,7 @@ describe('CreateBookingHandler', () => {
     await expect(
       handler.execute({
         ...baseCmd,
-        otherPlayers: [
-          { guest: { firstName: 'Carlos', lastName: 'Silva', email: 'c@x.com' } },
-        ],
+        otherPlayers: [{ guest: { firstName: 'Carlos', lastName: 'Silva', email: 'c@x.com' } }],
       }),
     ).rejects.toThrow(/does not allow players to add guests/);
   });
@@ -355,9 +360,9 @@ describe('CreateBookingHandler', () => {
     mock.prisma.membership.findFirst = vi.fn().mockResolvedValue(null);
     mock.prisma.membership.findMany = vi.fn().mockResolvedValue([{ userId: USER_ID }]);
     attach(mock.prisma);
-    await expect(
-      handler.execute({ ...baseCmd, responsibleMemberId: PLAYER2_ID }),
-    ).rejects.toThrow(/responsibleMemberId must be an active member/);
+    await expect(handler.execute({ ...baseCmd, responsibleMemberId: PLAYER2_ID })).rejects.toThrow(
+      /responsibleMemberId must be an active member/,
+    );
   });
 
   it('10D: responsibleMemberId default = primary se primary eh member', async () => {

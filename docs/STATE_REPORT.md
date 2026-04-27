@@ -47,7 +47,7 @@ Outras pastas root: `.editorconfig`, `.prettierrc.json`, `.nvmrc` (24), `.vscode
 - **Validation:** Zod 3.24 com helper `uuidString()` (regex permissivo, aceita seed UUIDs além de RFC 4122)
 - **Auth:** Firebase Admin SDK 13.8 (Identity Platform indireto via Firebase Auth)
 - **Testing:** Vitest 2.1 (unitário) + Jest config para E2E (não usado ainda)
-- **Logging/tracing:** Pino + OpenTelemetry (auto-instrumentations + OTLP gRPC exporter, *opt-in* via `OTEL_ENABLED`)
+- **Logging/tracing:** Pino + OpenTelemetry (auto-instrumentations + OTLP gRPC exporter, _opt-in_ via `OTEL_ENABLED`)
 
 ### Organização (DDD-lite)
 
@@ -101,44 +101,47 @@ modules/<name>/
 
 **Schemas:** `identity`, `audit`, `klub`, `space`, `sports`, `booking`.
 
-| Schema | Model (table) | Colunas-chave |
-|---|---|---|
-| audit | `OutboxEvent` (outbox_events) | id, eventType, payload Json, status, occurredAt — pronta pra notifications, sem consumer ainda |
-| identity | `User` (users) | id, firebaseUid? (nullable — guests), email (unique), fullName, phone?, kind (`regular`/`guest`), documentNumber?, documentType?, deletedAt |
-| identity | `Membership` (memberships) | id, userId, klubId, status (`active`), type (`member`/`staff`/`guest`), unique(user, klub) |
-| identity | `RoleAssignment` (role_assignments) | id, userId, role, scopeKlubId?, scopeSportId?, grantedAt |
-| klub | `Klub` (klubs) | id, name, slug, type, plan, status, parentKlubId?, isGroup, deletedAt |
-| klub | `KlubConfig` (klub_configs) | klubId(unique), accessMode, bookingModes (Json), cancellationMode, agendaVisibility, openingHour, closingHour, openDays, maxRecurrenceMonths, extensionMode, guestsAddedBy, tournamentBookingConflictMode |
-| klub | `KlubSportProfile` (klub_sport_profiles) | id, klubId, sportCode, defaultRatingEngine, defaultInitialRating, status, unique(klub, sport) |
-| klub | `KlubSportInterest` (klub_sport_interests) | id, klubId, sportName |
-| klub | `KlubRequest` (klub_requests) | id, contactName, contactEmail, ... (form de "quero criar Klub") |
-| klub | `KlubMedia` (klub_media) | id, klubId, kind, url |
-| klub | `PlayerSportEnrollment` (player_sport_enrollments) | id, userId, klubSportProfileId, status (`pending`/`active`/`suspended`/`cancelled`), approvedById?, approvedAt?, suspendedAt?, cancelledAt?, unique(user, profile) |
-| klub | `KlubSportRanking` (klub_sport_rankings) | id, klubSportId, name, type, ratingEngine, ratingConfig, includesCasualMatches, includesTournamentMatches, orderBy, windowType |
-| klub | `PlayerRankingEntry` (player_ranking_entries) | id, rankingId, userId, rating, ratingSource, wins/losses/draws |
-| klub | `MatchResult` (match_results) | id, rankingId, player1/2Id, winnerId?, score?, status (`pending_confirmation`/`confirmed`/`reverted`), ratingDelta1/2, player1/2RatingBefore/After, source, tournamentMatchId? |
-| klub | `RankingPointsSchema` (ranking_points_schemas) | id, klubSportId, name, points (Json) — schemas de pontos para torneios |
-| klub | `Tournament` (tournaments) | id, klubSportId, rankingId, name, format, status (`draft`/`prequalifying`/`in_progress`/`finished`/`cancelled`), drawDate, scheduleConfig (Json), pointsApplied, cancelledAt?, cancelledById?, cancellationReason? |
-| klub | `TournamentCategory` (tournament_categories) | id, tournamentId, name, order, maxPlayers?, min/maxRatingExpected?, pointsSchemaId |
-| klub | `TournamentEntry` (tournament_entries) | id, tournamentId, categoryId, userId, status (`pending`/`approved`/`rejected`/`withdrawn`), seed? |
-| klub | `TournamentMatch` (tournament_matches) | id, tournamentId, categoryId, phase, round, bracketPosition (unique), player1/2Id?, winnerId?, matchResultId?, nextMatchId?, nextMatchSlot ('top'/'bottom'), status, matchKind (`main`/`prequalifier`/`group`), spaceId?, scheduledFor? |
-| klub | `TournamentMatchRevert` (tournament_match_reverts) | id, tournamentMatchId, revertedById, revertedAt, reason?, previousState (JSONB snapshot) |
-| sports | `SportCatalog` (catalog) | code (PK), name, description |
-| sports | `RatingEngine` (rating_engines) | code (PK), name |
-| space | `Space` (spaces) | id, klubId, name, type, sportCode?, surface?, indoor, hasLighting, slotGranularityMinutes, slotDefaultDurationMinutes, hourBands (Json), allowedMatchTypes (Json), bookingActive |
-| booking | `Booking` (bookings) | id, klubId, spaceId, startsAt, endsAt?, bookingType (`player_match`/`player_free_play`/`maintenance`/`weather_closed`/`staff_blocked`/`tournament_match`), creationMode, status, primaryPlayerId?, otherPlayers (Json), matchType?, responsibleMemberId?, extensions (Json), tournamentMatchId? (unique), bookingSeriesId?, autoCancelledByBookingId?, cancellationReason? |
-| booking | `BookingSeries` (booking_series) | id, klubId, spaceId, frequency (`weekly`/`biweekly`/`monthly`), interval, daysOfWeek (Json), startsOn, endsOn, durationMinutes, startHour, startMinute, primaryPlayerId? |
+| Schema   | Model (table)                                      | Colunas-chave                                                                                                                                                                                                                                                                                                                                                              |
+| -------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| audit    | `OutboxEvent` (outbox_events)                      | id, eventType, payload Json, status, occurredAt — pronta pra notifications, sem consumer ainda                                                                                                                                                                                                                                                                             |
+| identity | `User` (users)                                     | id, firebaseUid? (nullable — guests), email (unique), fullName, phone?, kind (`regular`/`guest`), documentNumber?, documentType?, deletedAt                                                                                                                                                                                                                                |
+| identity | `Membership` (memberships)                         | id, userId, klubId, status (`active`), type (`member`/`staff`/`guest`), unique(user, klub)                                                                                                                                                                                                                                                                                 |
+| identity | `RoleAssignment` (role_assignments)                | id, userId, role, scopeKlubId?, scopeSportId?, grantedAt                                                                                                                                                                                                                                                                                                                   |
+| klub     | `Klub` (klubs)                                     | id, name, slug, type, plan, status, parentKlubId?, isGroup, deletedAt                                                                                                                                                                                                                                                                                                      |
+| klub     | `KlubConfig` (klub_configs)                        | klubId(unique), accessMode, bookingModes (Json), cancellationMode, agendaVisibility, openingHour, closingHour, openDays, maxRecurrenceMonths, extensionMode, guestsAddedBy, tournamentBookingConflictMode                                                                                                                                                                  |
+| klub     | `KlubSportProfile` (klub_sport_profiles)           | id, klubId, sportCode, defaultRatingEngine, defaultInitialRating, status, unique(klub, sport)                                                                                                                                                                                                                                                                              |
+| klub     | `KlubSportInterest` (klub_sport_interests)         | id, klubId, sportName                                                                                                                                                                                                                                                                                                                                                      |
+| klub     | `KlubRequest` (klub_requests)                      | id, contactName, contactEmail, ... (form de "quero criar Klub")                                                                                                                                                                                                                                                                                                            |
+| klub     | `KlubMedia` (klub_media)                           | id, klubId, kind, url                                                                                                                                                                                                                                                                                                                                                      |
+| klub     | `PlayerSportEnrollment` (player_sport_enrollments) | id, userId, klubSportProfileId, status (`pending`/`active`/`suspended`/`cancelled`), approvedById?, approvedAt?, suspendedAt?, cancelledAt?, unique(user, profile)                                                                                                                                                                                                         |
+| klub     | `KlubSportRanking` (klub_sport_rankings)           | id, klubSportId, name, type, ratingEngine, ratingConfig, includesCasualMatches, includesTournamentMatches, orderBy, windowType                                                                                                                                                                                                                                             |
+| klub     | `PlayerRankingEntry` (player_ranking_entries)      | id, rankingId, userId, rating, ratingSource, wins/losses/draws                                                                                                                                                                                                                                                                                                             |
+| klub     | `MatchResult` (match_results)                      | id, rankingId, player1/2Id, winnerId?, score?, status (`pending_confirmation`/`confirmed`/`reverted`), ratingDelta1/2, player1/2RatingBefore/After, source, tournamentMatchId?                                                                                                                                                                                             |
+| klub     | `RankingPointsSchema` (ranking_points_schemas)     | id, klubSportId, name, points (Json) — schemas de pontos para torneios                                                                                                                                                                                                                                                                                                     |
+| klub     | `Tournament` (tournaments)                         | id, klubSportId, rankingId, name, format, status (`draft`/`prequalifying`/`in_progress`/`finished`/`cancelled`), drawDate, scheduleConfig (Json), pointsApplied, cancelledAt?, cancelledById?, cancellationReason?                                                                                                                                                         |
+| klub     | `TournamentCategory` (tournament_categories)       | id, tournamentId, name, order, maxPlayers?, min/maxRatingExpected?, pointsSchemaId                                                                                                                                                                                                                                                                                         |
+| klub     | `TournamentEntry` (tournament_entries)             | id, tournamentId, categoryId, userId, status (`pending`/`approved`/`rejected`/`withdrawn`), seed?                                                                                                                                                                                                                                                                          |
+| klub     | `TournamentMatch` (tournament_matches)             | id, tournamentId, categoryId, phase, round, bracketPosition (unique), player1/2Id?, winnerId?, matchResultId?, nextMatchId?, nextMatchSlot ('top'/'bottom'), status, matchKind (`main`/`prequalifier`/`group`), spaceId?, scheduledFor?                                                                                                                                    |
+| klub     | `TournamentMatchRevert` (tournament_match_reverts) | id, tournamentMatchId, revertedById, revertedAt, reason?, previousState (JSONB snapshot)                                                                                                                                                                                                                                                                                   |
+| sports   | `SportCatalog` (catalog)                           | code (PK), name, description                                                                                                                                                                                                                                                                                                                                               |
+| sports   | `RatingEngine` (rating_engines)                    | code (PK), name                                                                                                                                                                                                                                                                                                                                                            |
+| space    | `Space` (spaces)                                   | id, klubId, name, type, sportCode?, surface?, indoor, hasLighting, slotGranularityMinutes, slotDefaultDurationMinutes, hourBands (Json), allowedMatchTypes (Json), bookingActive                                                                                                                                                                                           |
+| booking  | `Booking` (bookings)                               | id, klubId, spaceId, startsAt, endsAt?, bookingType (`player_match`/`player_free_play`/`maintenance`/`weather_closed`/`staff_blocked`/`tournament_match`), creationMode, status, primaryPlayerId?, otherPlayers (Json), matchType?, responsibleMemberId?, extensions (Json), tournamentMatchId? (unique), bookingSeriesId?, autoCancelledByBookingId?, cancellationReason? |
+| booking  | `BookingSeries` (booking_series)                   | id, klubId, spaceId, frequency (`weekly`/`biweekly`/`monthly`), interval, daysOfWeek (Json), startsOn, endsOn, durationMinutes, startHour, startMinute, primaryPlayerId?                                                                                                                                                                                                   |
 
 ### Endpoints (72 endpoints em 33 controllers)
 
 **Health (público):**
+
 - `GET /health` — heartbeat
 - `GET /ready` — DB readiness
 
 **Identity:**
+
 - `GET /me` — user atual + roleAssignments (auth required)
 
 **Klubs:**
+
 - `GET /klubs` — lista (policy `klub.list`)
 - `GET /klubs/:id` — detalhe completo (config 15 campos via `mapKlubConfig`)
 - `GET /klubs/slug/:slug`
@@ -148,14 +151,17 @@ modules/<name>/
 - `POST /klubs/:id/sport-interests` — interest em sport não-cadastrado
 
 **Klub Requests (forms públicos de "quero criar Klub"):**
+
 - `POST /klub-requests`
 - `GET /klub-requests`
 
 **Sports (catalog read-only + per-Klub):**
+
 - `GET /sports`, `GET /sports/:code`
 - `GET /klubs/:klubId/sports`, `GET /klubs/:klubId/sports/:code`, `POST /klubs/:klubId/sports/:code` (adiciona profile)
 
 **Enrollments (W2.3 — Player × KlubSportProfile):**
+
 - `POST /klubs/:klubId/sports/:sportCode/enrollments` — player solicita (pending)
 - `POST /klubs/:klubId/sports/:sportCode/enrollments/admin` — comissão cria direto (active)
 - `GET /klubs/:klubId/sports/:sportCode/enrollments` — lista (committee)
@@ -164,6 +170,7 @@ modules/<name>/
 - `GET /users/:userId/enrollments`
 
 **Rankings:**
+
 - `GET /klubs/:klubId/sports/:sportCode/rankings` — lista
 - `GET /klubs/:klubId/sports/:sportCode/rankings/:rankingId` — detalhe + entries
 - `POST /klubs/:klubId/sports/:sportCode/rankings` — cria ranking
@@ -172,10 +179,12 @@ modules/<name>/
 - `POST /jobs/recompute-temporal-rankings` — internal job (sem auth, IP-restrict no Cloud Run)
 
 **Matches (casual):**
+
 - `POST /matches` — submete resultado casual
 - `POST /matches/:id/confirm` — opponent confirma
 
 **Tournaments:**
+
 - `GET /klubs/:klubId/sports/:sportCode/tournaments` | `:id`
 - `POST /klubs/:klubId/sports/:sportCode/tournaments` — cria
 - `POST /tournaments/:id/draw` — gera bracket
@@ -192,10 +201,12 @@ modules/<name>/
 - `POST /tournament-matches/:matchId/revert` — **W2.4** — atomic revert + cascade 1 nível
 
 **Points schemas:**
+
 - `GET /klubs/:klubId/sports/:sportCode/points-schemas`
 - `POST /klubs/:klubId/sports/:sportCode/points-schemas`
 
 **Bookings (módulo principal):**
+
 - `POST /klubs/:klubId/bookings` — cria (cenário A: User existente, cenário B: cria guest)
 - `GET /klubs/:klubId/bookings` — lista filtros space/start/status/primaryPlayer
 - `GET /klubs/:klubId/calendar?date=` — calendar diário
@@ -235,20 +246,24 @@ modules/<name>/
 ## 3. packages/
 
 ### `@draftklub/shared-types`
+
 - **Estado:** placeholder. `src/index.ts` tem só `export type Placeholder = string;`
 - **Build:** `tsc --project tsconfig.json` para `dist/`
 - **Consumidores:** nenhum (apps/api e apps/worker não importam)
 
 ### `@draftklub/sport-strategies`
+
 - **Conteúdo:** `SportStrategy` interface, `TennisStrategy` (Elo + win/loss config), tipos `Match`/`MatchResult`/`RatingDelta`/`TournamentFormat`, `RatingEngineCode = 'elo' | 'points' | 'win_loss'`
 - **Tests:** 14 testes (Vitest)
 - **Consumidores:** apenas `apps/api` (`"@draftklub/sport-strategies": "workspace:^"`)
 
 ### `@draftklub/eslint-config`
+
 - 4 configs: `base.js`, `nestjs.js`, `nextjs.js`, `react-native.js`
 - Consumidores: apps/api, apps/worker (referenciam `nestjs.js`)
 
 ### `@draftklub/tsconfig`
+
 - 5 configs: `base.json`, `library.json`, `nestjs.json`, `nextjs.json`, `react-native.json`
 - Consumidores: todos (apps + packages estendem)
 
@@ -292,6 +307,7 @@ OTEL_SERVICE_NAME=draftklub-api
 ```
 
 **Em prod (injetado pelo Cloud Build deploy step):**
+
 - `DATABASE_URL` → Secret Manager `database-url:latest`
 - `ENCRYPTION_KEY` → Secret Manager `encryption-key:latest`
 - `NODE_ENV=production`, `LOG_LEVEL=info`, `OTEL_ENABLED=false`, `OTEL_SERVICE_NAME=draftklub-api`
@@ -309,6 +325,7 @@ OTEL_SERVICE_NAME=draftklub-api
 **Trigger:** push em `main` (branch).
 
 **Steps:**
+
 1. **CI** (Node 24 alpine): `pnpm install --frozen-lockfile` → `prisma generate` → `pnpm turbo run typecheck lint test`
 2. **build-api**: docker build via `apps/api/Dockerfile` (BuildKit cache from `:latest`)
 3. **build-worker**: paralelo
@@ -329,6 +346,7 @@ OTEL_SERVICE_NAME=draftklub-api
 ### Domínio mapeado
 
 **Não localizei nenhuma referência a `domain mapping` ou `gcloud beta run domain-mappings` no repo:**
+
 - `cloudbuild.yaml` não mapeia domínio.
 - `infra/terraform/` não tem recurso `google_cloud_run_domain_mapping` nem `google_dns_*`.
 

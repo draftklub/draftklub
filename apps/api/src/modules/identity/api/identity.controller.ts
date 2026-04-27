@@ -26,9 +26,7 @@ export class IdentityController {
    * e pelo Klub switcher inline. Filtra Klubs soft-deleted.
    */
   @Get('me/klubs')
-  async listMyKlubs(
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<UserKlubMembership[]> {
+  async listMyKlubs(@CurrentUser() user: AuthenticatedUser): Promise<UserKlubMembership[]> {
     return this.getMyKlubs.execute(user.userId);
   }
 }

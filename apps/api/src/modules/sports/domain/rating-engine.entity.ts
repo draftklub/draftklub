@@ -10,9 +10,15 @@ export interface RatingEngineProps {
 export class RatingEngineEntity {
   constructor(private readonly props: RatingEngineProps) {}
 
-  get code(): string { return this.props.code; }
-  get name(): string { return this.props.name; }
-  get defaultConfig(): Record<string, unknown> { return this.props.defaultConfig; }
+  get code(): string {
+    return this.props.code;
+  }
+  get name(): string {
+    return this.props.name;
+  }
+  get defaultConfig(): Record<string, unknown> {
+    return this.props.defaultConfig;
+  }
 
   validateConfig(config: Record<string, unknown>): { valid: boolean; errors: string[] } {
     const errors: string[] = [];

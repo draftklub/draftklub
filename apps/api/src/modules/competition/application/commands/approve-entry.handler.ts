@@ -33,10 +33,7 @@ export class ApproveEntryHandler {
       throw new BadRequestException(`Cannot approve from status: ${entry.status}`);
     }
 
-    const categoryId = this.allocator.allocate(
-      entry.ratingAtEntry,
-      entry.tournament.categories,
-    );
+    const categoryId = this.allocator.allocate(entry.ratingAtEntry, entry.tournament.categories);
 
     return this.prisma.tournamentEntry.update({
       where: { id: entry.id },

@@ -50,10 +50,7 @@ export function getCorsOrigins(env: NodeJS.ProcessEnv = process.env): string[] {
     ];
   }
   if (nodeEnv === 'staging') {
-    return [
-      'https://staging.draftklub.com',
-      'https://app-staging.draftklub.com',
-    ];
+    return ['https://staging.draftklub.com', 'https://app-staging.draftklub.com'];
   }
   // development / test
   return ['http://localhost:3001', 'http://127.0.0.1:3001'];

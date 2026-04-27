@@ -42,24 +42,25 @@ export class RankingRecomputeService {
       return { rebuiltEntries: 0 };
     }
 
-    const matches = sources.length > 0
-      ? await this.prisma.matchResult.findMany({
-          where: {
-            rankingId,
-            status: 'confirmed',
-            isWalkover: false,
-            source: { in: sources },
-            ...(dateFilter ? { playedAt: dateFilter } : {}),
-          },
-          orderBy: { playedAt: 'asc' },
-          select: {
-            player1Id: true,
-            player2Id: true,
-            winnerId: true,
-            playedAt: true,
-          },
-        })
-      : [];
+    const matches =
+      sources.length > 0
+        ? await this.prisma.matchResult.findMany({
+            where: {
+              rankingId,
+              status: 'confirmed',
+              isWalkover: false,
+              source: { in: sources },
+              ...(dateFilter ? { playedAt: dateFilter } : {}),
+            },
+            orderBy: { playedAt: 'asc' },
+            select: {
+              player1Id: true,
+              player2Id: true,
+              winnerId: true,
+              playedAt: true,
+            },
+          })
+        : [];
 
     const ratings = new Map<string, number>();
     const wins = new Map<string, number>();
@@ -94,10 +95,7 @@ export class RankingRecomputeService {
       ? await this.computeTournamentPoints(rankingId, dateFilter)
       : new Map<string, number>();
 
-    const allUserIds = new Set<string>([
-      ...ratings.keys(),
-      ...tournamentPoints.keys(),
-    ]);
+    const allUserIds = new Set<string>([...ratings.keys(), ...tournamentPoints.keys()]);
 
     await this.prisma.$transaction(async (tx) => {
       await tx.playerRankingEntry.deleteMany({ where: { rankingId } });
@@ -180,9 +178,8 @@ export class RankingRecomputeService {
         if (!entry.finalPosition) continue;
         const cat = t.categories.find((c) => c.id === entry.categoryId);
         if (!cat) continue;
-        const schemaPoints = (cat.pointsSchema.points as Record<string, number>)[
-          entry.finalPosition
-        ] ?? 0;
+        const schemaPoints =
+          (cat.pointsSchema.points as Record<string, number>)[entry.finalPosition] ?? 0;
         points.set(entry.userId, (points.get(entry.userId) ?? 0) + schemaPoints);
       }
     }

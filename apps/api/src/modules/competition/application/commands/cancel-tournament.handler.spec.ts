@@ -18,15 +18,16 @@ interface FakeTx {
   };
 }
 
-function buildPrisma(opts: {
-  tournament: FakeTournament;
-  bookingsToCancel?: { id: string }[];
-}) {
-  const txTournamentUpdate = vi.fn().mockImplementation(({ where, data }: { where: { id: string }; data: unknown }) =>
-    Promise.resolve({ id: where.id, ...(data as object) }),
-  );
+function buildPrisma(opts: { tournament: FakeTournament; bookingsToCancel?: { id: string }[] }) {
+  const txTournamentUpdate = vi
+    .fn()
+    .mockImplementation(({ where, data }: { where: { id: string }; data: unknown }) =>
+      Promise.resolve({ id: where.id, ...(data as object) }),
+    );
   const txBookingFindMany = vi.fn().mockResolvedValue(opts.bookingsToCancel ?? []);
-  const txBookingUpdateMany = vi.fn().mockResolvedValue({ count: opts.bookingsToCancel?.length ?? 0 });
+  const txBookingUpdateMany = vi
+    .fn()
+    .mockResolvedValue({ count: opts.bookingsToCancel?.length ?? 0 });
 
   const tx: FakeTx = {
     tournament: { update: txTournamentUpdate },
@@ -59,7 +60,9 @@ describe('CancelTournamentHandler', () => {
     });
     attach(mock.prisma);
     const result = await handler.execute({ tournamentId: TOURNAMENT_ID, cancelledById: STAFF_ID });
-    const updateCall = mock.spies.txTournamentUpdate.mock.calls[0]?.[0] as { data: { status: string; cancelledById: string } };
+    const updateCall = mock.spies.txTournamentUpdate.mock.calls[0]?.[0] as {
+      data: { status: string; cancelledById: string };
+    };
     expect(updateCall.data.status).toBe('cancelled');
     expect(updateCall.data.cancelledById).toBe(STAFF_ID);
     expect(result.cancelledBookings).toEqual([]);
@@ -81,7 +84,9 @@ describe('CancelTournamentHandler', () => {
       reason: 'rain forecast',
     });
     expect(result.cancelledBookings).toEqual(['b1', 'b2']);
-    const updateManyCall = mock.spies.txBookingUpdateMany.mock.calls[0]?.[0] as { data: { status: string; cancellationReason: string } };
+    const updateManyCall = mock.spies.txBookingUpdateMany.mock.calls[0]?.[0] as {
+      data: { status: string; cancellationReason: string };
+    };
     expect(updateManyCall.data.status).toBe('cancelled');
     expect(updateManyCall.data.cancellationReason).toBe(`tournament_cancelled:${TOURNAMENT_ID}`);
   });
@@ -121,7 +126,9 @@ describe('CancelTournamentHandler', () => {
       cancelledById: STAFF_ID,
       reason: 'sponsor desistiu',
     });
-    const updateCall = mock.spies.txTournamentUpdate.mock.calls[0]?.[0] as { data: { cancellationReason: string } };
+    const updateCall = mock.spies.txTournamentUpdate.mock.calls[0]?.[0] as {
+      data: { cancellationReason: string };
+    };
     expect(updateCall.data.cancellationReason).toBe('sponsor desistiu');
   });
 });

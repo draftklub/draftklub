@@ -8,9 +8,33 @@ import { createKlubRequest } from '@/lib/api/klub-requests';
 import { cn } from '@/lib/utils';
 
 const BRAZILIAN_STATES = [
-  'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
-  'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN',
-  'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO',
+  'AC',
+  'AL',
+  'AM',
+  'AP',
+  'BA',
+  'CE',
+  'DF',
+  'ES',
+  'GO',
+  'MA',
+  'MG',
+  'MS',
+  'MT',
+  'PA',
+  'PB',
+  'PE',
+  'PI',
+  'PR',
+  'RJ',
+  'RN',
+  'RO',
+  'RR',
+  'RS',
+  'SC',
+  'SE',
+  'SP',
+  'TO',
 ] as const;
 
 type Status = 'idle' | 'submitting' | 'sent' | 'error';
@@ -75,7 +99,8 @@ export default function QueroCriarKlubPage() {
           Quero criar um Klub
         </h1>
         <p className="mt-2 text-[15px] text-muted-foreground">
-          Conta um pouco do seu Klub. Nosso time entra em contato em até 2 dias úteis pra montar tudo junto.
+          Conta um pouco do seu Klub. Nosso time entra em contato em até 2 dias úteis pra montar
+          tudo junto.
         </p>
 
         <form
@@ -146,7 +171,9 @@ export default function QueroCriarKlubPage() {
                   required
                   className={cn(inputCls, 'pr-2')}
                 >
-                  <option value="" disabled>—</option>
+                  <option value="" disabled>
+                    —
+                  </option>
                   {BRAZILIAN_STATES.map((uf) => (
                     <option key={uf} value={uf}>
                       {uf}
@@ -220,7 +247,8 @@ function SentScreen({ contactName }: { contactName: string }) {
           Recebemos seu pedido, {firstName}!
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Nosso time vai analisar e entrar em contato em até 2 dias úteis pelo e-mail e telefone que você passou.
+          Nosso time vai analisar e entrar em contato em até 2 dias úteis pelo e-mail e telefone que
+          você passou.
         </p>
         <Link
           href="/login"

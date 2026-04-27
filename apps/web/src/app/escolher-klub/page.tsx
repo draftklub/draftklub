@@ -220,10 +220,7 @@ function SkeletonGrid() {
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <li
-          key={i}
-          className="h-[124px] animate-pulse rounded-xl border border-border bg-card"
-        />
+        <li key={i} className="h-[124px] animate-pulse rounded-xl border border-border bg-card" />
       ))}
     </ul>
   );

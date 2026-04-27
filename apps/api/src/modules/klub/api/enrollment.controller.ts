@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Param,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { z } from 'zod';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { PolicyGuard } from '../../../shared/auth/policy.guard';
@@ -57,10 +48,7 @@ export class EnrollmentScopeController {
   @RequirePolicy('klub.members.read', (req) => ({
     klubId: (req as { params: { klubId: string } }).params.klubId,
   }))
-  async list(
-    @Param('klubId') klubId: string,
-    @Param('sportCode') sportCode: string,
-  ) {
+  async list(@Param('klubId') klubId: string, @Param('sportCode') sportCode: string) {
     return this.facade.listEnrollmentsByProfile(klubId, sportCode);
   }
 }

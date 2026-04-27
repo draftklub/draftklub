@@ -24,11 +24,7 @@ const PUBLIC_AUTHENTICATED_ACTIONS: ReadonlySet<string> = new Set([
 
 @Injectable()
 export class PolicyEngine {
-  can(
-    user: AuthenticatedUser,
-    action: string,
-    resource: ResourceContext = {},
-  ): boolean {
+  can(user: AuthenticatedUser, action: string, resource: ResourceContext = {}): boolean {
     if (user.roleAssignments.some((r) => r.role === 'SUPER_ADMIN')) {
       return true;
     }
@@ -75,7 +71,9 @@ export class PolicyEngine {
         return true;
 
       case 'SPORTS_COMMITTEE':
-        return ['tournament', 'match', 'ranking', 'rating', 'klub', 'sport', 'booking'].includes(domain);
+        return ['tournament', 'match', 'ranking', 'rating', 'klub', 'sport', 'booking'].includes(
+          domain,
+        );
 
       case 'TEACHER':
         return domain === 'academy' || domain === 'class';

@@ -36,9 +36,11 @@ describe('ApproveExtensionHandler', () => {
 
   it('aprova pending: status->approved e atualiza endsAt', async () => {
     const booking = bookingWithExtension('pending');
-    const update = vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) =>
-      Promise.resolve({ ...booking, ...data }),
-    );
+    const update = vi
+      .fn()
+      .mockImplementation(({ data }: { data: Record<string, unknown> }) =>
+        Promise.resolve({ ...booking, ...data }),
+      );
     attach({
       booking: {
         findUnique: vi.fn().mockResolvedValue(booking),

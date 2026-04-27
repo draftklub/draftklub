@@ -7,6 +7,7 @@
 
 Comissão reporta resultado errado de uma partida de torneio. Hoje não há
 como desfazer:
+
 - Rating delta já foi aplicado em `PlayerRankingEntry`
 - `winnerId` ficou registrado em `TournamentMatch`
 - Match seguinte (`nextMatch`) recebeu o player vencedor no slot
@@ -34,11 +35,11 @@ rating deltas, próximo match afetado.
      a. Cria `TournamentMatchRevert` com snapshot
      b. Reverte rating: incrementa rating dos players com delta inverso
      c. `TournamentMatch` volta a `status='scheduled'`,
-        `winnerId=null`, `matchResultId=null`, `completedAt=null`
+     `winnerId=null`, `matchResultId=null`, `completedAt=null`
      d. `MatchResult` vinculado: `status='reverted'` (preserva histórico)
      e. Cascade no `nextMatch`: limpa slot ocupado pelo winner.
-        Se `nextMatch.status='completed'`, também volta a `scheduled`
-        (limpa winnerId/matchResultId/completedAt) — **1 nível só**.
+     Se `nextMatch.status='completed'`, também volta a `scheduled`
+     (limpa winnerId/matchResultId/completedAt) — **1 nível só**.
 
 ### Permission
 
@@ -63,6 +64,6 @@ verdade pra histórico é a tabela `tournament_match_reverts`.
   pra rating, deve usar revert + relógio + report novo manualmente.
 - `MatchResult.status='reverted'` é estado novo — código que filtra por
   status precisa lidar (já filtra por `'confirmed'` para inclusão em
-  rankings). 
+  rankings).
 - Sem desfazer points-applied: pontos de torneio aplicados continuam
   aplicados. Refaz manualmente se necessário.

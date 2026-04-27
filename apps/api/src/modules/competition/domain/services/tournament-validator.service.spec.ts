@@ -31,10 +31,7 @@ describe('TournamentValidatorService', () => {
 
   it('rejeita drawDate > mainStartDate sem pré', () => {
     expect(() =>
-      service.validateDates(
-        { ...baseDates, drawDate: new Date('2026-05-11T00:00:00Z') },
-        false,
-      ),
+      service.validateDates({ ...baseDates, drawDate: new Date('2026-05-11T00:00:00Z') }, false),
     ).toThrow();
   });
 

@@ -24,7 +24,9 @@ export class TournamentValidatorService {
 
     if (hasPrequalifiers) {
       if (!dates.prequalifierStartDate || !dates.prequalifierEndDate) {
-        errors.push('prequalifierStartDate and prequalifierEndDate required when hasPrequalifiers=true');
+        errors.push(
+          'prequalifierStartDate and prequalifierEndDate required when hasPrequalifiers=true',
+        );
       } else {
         if (dates.drawDate > dates.prequalifierStartDate) {
           errors.push('prequalifierStartDate must be after drawDate');
@@ -68,9 +70,7 @@ export class TournamentValidatorService {
     }
 
     if (numCategories < 2) {
-      throw new BadRequestException(
-        'Prequalifiers require at least 2 categories',
-      );
+      throw new BadRequestException('Prequalifiers require at least 2 categories');
     }
   }
 }

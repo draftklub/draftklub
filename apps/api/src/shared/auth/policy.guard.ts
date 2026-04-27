@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { FastifyRequest } from 'fastify';
 import { POLICY_KEY, type PolicyMetadata } from './require-policy.decorator';
@@ -30,7 +25,9 @@ export class PolicyGuard implements CanActivate {
 
     if (!policy) return true;
 
-    const request = context.switchToHttp().getRequest<FastifyRequest & { user: AuthenticatedUser }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<FastifyRequest & { user: AuthenticatedUser }>();
     const user = request.user;
 
     if (!user) {
@@ -54,10 +51,7 @@ export class PolicyGuard implements CanActivate {
       if (klubId) {
         resource = { ...resource, klubId };
       }
-    } else if (
-      policy.resolveKlubIdFrom === 'tournament-match:matchId' &&
-      !resource.klubId
-    ) {
+    } else if (policy.resolveKlubIdFrom === 'tournament-match:matchId' && !resource.klubId) {
       const klubId = await this.resolveKlubIdFromTournamentMatchParam(request);
       if (klubId) {
         resource = { ...resource, klubId };
@@ -71,9 +65,7 @@ export class PolicyGuard implements CanActivate {
     return true;
   }
 
-  private async resolveKlubIdFromTournamentParam(
-    request: FastifyRequest,
-  ): Promise<string | null> {
+  private async resolveKlubIdFromTournamentParam(request: FastifyRequest): Promise<string | null> {
     const params = (request.params ?? {}) as Record<string, string | undefined>;
     const tournamentId = params.tournamentId;
 
@@ -91,9 +83,7 @@ export class PolicyGuard implements CanActivate {
     return tournament?.klubSport.klubId ?? null;
   }
 
-  private async resolveKlubIdFromRankingParam(
-    request: FastifyRequest,
-  ): Promise<string | null> {
+  private async resolveKlubIdFromRankingParam(request: FastifyRequest): Promise<string | null> {
     const params = (request.params ?? {}) as Record<string, string | undefined>;
     const rankingId = params.id ?? params.rankingId;
 
@@ -109,9 +99,7 @@ export class PolicyGuard implements CanActivate {
     return ranking?.klubSport.klubId ?? null;
   }
 
-  private async resolveKlubIdFromBookingParam(
-    request: FastifyRequest,
-  ): Promise<string | null> {
+  private async resolveKlubIdFromBookingParam(request: FastifyRequest): Promise<string | null> {
     const params = (request.params ?? {}) as Record<string, string | undefined>;
     const bookingId = params.bookingId;
 

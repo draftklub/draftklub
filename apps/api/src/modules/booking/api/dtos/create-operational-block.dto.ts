@@ -19,10 +19,9 @@ export const CreateOperationalBlockSchema = z
       })
       .optional(),
   })
-  .refine(
-    (d) => !d.endsAt || new Date(d.endsAt) > new Date(d.startsAt),
-    { message: 'endsAt must be after startsAt when provided' },
-  );
+  .refine((d) => !d.endsAt || new Date(d.endsAt) > new Date(d.startsAt), {
+    message: 'endsAt must be after startsAt when provided',
+  });
 
 export const CloseOperationalBlockSchema = z.object({
   endsAt: z.string().datetime().optional(),

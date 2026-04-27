@@ -6,6 +6,7 @@
 ## Contexto
 
 Klubs brasileiros têm necessidades diversas de reserva de quadra:
+
 - Públicos com reserva direta (member self-service)
 - Públicos com aprovação por staff antes de confirmar
 - Públicos onde só staff cadastra (clubes mais formais)
@@ -37,10 +38,12 @@ popula `accessMode`); deprecated, removível em wave 2.
 ### Model `Booking`
 
 Tipos discrimináveis (`bookingType`) para acomodar expansão futura:
+
 - `player_match` / `player_free_play` (10A)
 - `maintenance` / `weather_closed` / `staff_blocked` (10B)
 
 Modo de criação (`creationMode`):
+
 - `direct` — player cria e fica `confirmed`
 - `staff_approval` — player cria, fica `pending`, staff aprova
 - `staff_assisted` — staff cria diretamente como `confirmed`
@@ -63,6 +66,7 @@ outro booking pode ter sido criado entre creation e approval).
 
 `STAFF` é uma role nova adicionada ao PolicyEngine (não havia antes).
 Operações:
+
 - `booking.create` — PLAYER (member), STAFF, KLUB_ADMIN, SPORTS_COMMITTEE, SUPER_ADMIN
 - `booking.approve` — STAFF, KLUB_ADMIN, SUPER_ADMIN
 - `booking.cancel_others` — STAFF, KLUB_ADMIN, SUPER_ADMIN

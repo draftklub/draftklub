@@ -6,6 +6,7 @@
 ## Contexto
 
 Klubs precisam de:
+
 1. Convidados que jogam acompanhando membros (Cenário A: User existente,
    Cenário B: pessoa externa cadastrada na hora)
 2. Visibilidade granular de bookings (privacidade entre modalidades, mas

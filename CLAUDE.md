@@ -60,8 +60,8 @@ estar em `infra/terraform/` ou Cloud DNS.
 - **Migrations aditivas** — cada feature gera migration própria, nunca alterar
   migration já aplicada. Pause obrigatório pra revisão de SQL antes de aplicar.
 - **PolicyEngine + KlubIdResolver** — endpoints usam `@RequirePolicy(action,
-  { resolveKlubIdFrom: 'tournament:tournamentId' | 'booking:bookingId' |
-  'ranking:id' | 'tournament-match:matchId' })`. Toda action precisa estar
+{ resolveKlubIdFrom: 'tournament:tournamentId' | 'booking:bookingId' |
+'ranking:id' | 'tournament-match:matchId' })`. Toda action precisa estar
   refletida no engine ou em testes.
 - **BookingPresenter** — qualquer endpoint que retorna booking aplica o presenter
   pra resolver visibility (full|limited) baseado no viewer + roles + enrollment.

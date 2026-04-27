@@ -56,8 +56,7 @@ export class SeriesGeneratorService {
   }
 
   private generateWeekly(input: SeriesGenerationInput): GeneratedOccurrence[] {
-    const effectiveInterval =
-      input.frequency === 'biweekly' ? input.interval * 2 : input.interval;
+    const effectiveInterval = input.frequency === 'biweekly' ? input.interval * 2 : input.interval;
 
     const dayNumbers = new Set(input.daysOfWeek);
     const result: GeneratedOccurrence[] = [];
@@ -86,9 +85,7 @@ export class SeriesGeneratorService {
             input.startMinute,
           ),
         );
-        const occurrenceEnd = new Date(
-          occurrenceStart.getTime() + input.durationMinutes * 60_000,
-        );
+        const occurrenceEnd = new Date(occurrenceStart.getTime() + input.durationMinutes * 60_000);
         if (
           occurrenceStart.getTime() >= input.startsOn.getTime() &&
           occurrenceStart.getTime() <= endMs
@@ -121,9 +118,7 @@ export class SeriesGeneratorService {
 
       if (occurrenceStart.getTime() > endMs) break;
       if (occurrenceStart.getTime() >= input.startsOn.getTime()) {
-        const occurrenceEnd = new Date(
-          occurrenceStart.getTime() + input.durationMinutes * 60_000,
-        );
+        const occurrenceEnd = new Date(occurrenceStart.getTime() + input.durationMinutes * 60_000);
         result.push({ startsAt: occurrenceStart, endsAt: occurrenceEnd });
       }
 

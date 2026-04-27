@@ -122,7 +122,12 @@ export function PersonaSwitcher() {
       >
         <Eye className="size-3.5 text-muted-foreground" />
         {PERSONA_LABELS[persona]}
-        <ChevronUp className={cn('size-3.5 text-muted-foreground transition-transform', open && 'rotate-180')} />
+        <ChevronUp
+          className={cn(
+            'size-3.5 text-muted-foreground transition-transform',
+            open && 'rotate-180',
+          )}
+        />
       </button>
     </div>
   );

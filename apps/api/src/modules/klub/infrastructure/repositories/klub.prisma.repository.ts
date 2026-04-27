@@ -50,9 +50,8 @@ export class KlubPrismaRepository {
           createdById: data.createdById,
           plan: data.plan,
           status: data.plan === 'trial' ? 'trial' : 'active',
-          trialEndsAt: data.plan === 'trial'
-            ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-            : null,
+          trialEndsAt:
+            data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
           config: {
             create: {},
           },

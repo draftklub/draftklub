@@ -32,15 +32,15 @@ export class DocumentVO {
 
   static tryCreate(value: string, type: DocumentType): DocumentVO | null {
     try {
-      return type === 'cpf'
-        ? DocumentVO.createCPF(value)
-        : DocumentVO.createCNPJ(value);
+      return type === 'cpf' ? DocumentVO.createCPF(value) : DocumentVO.createCNPJ(value);
     } catch {
       return null;
     }
   }
 
-  get value(): string { return this.raw; }
+  get value(): string {
+    return this.raw;
+  }
 
   hint(): string {
     if (this.type === 'cpf') {

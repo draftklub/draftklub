@@ -21,7 +21,7 @@ export class ListBookingsHandler {
         ...(filters.spaceId ? { spaceId: filters.spaceId } : {}),
         ...(filters.status ? { status: filters.status } : {}),
         ...(filters.primaryPlayerId ? { primaryPlayerId: filters.primaryPlayerId } : {}),
-        ...((filters.startsAfter || filters.startsBefore)
+        ...(filters.startsAfter || filters.startsBefore
           ? {
               startsAt: {
                 ...(filters.startsAfter ? { gte: filters.startsAfter } : {}),

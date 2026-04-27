@@ -27,15 +27,17 @@ interface BookingFixture {
   _extensionMode: string;
 }
 
-function makeBooking(overrides: {
-  primaryPlayerId?: string;
-  otherPlayers?: { userId: string; name: string }[];
-  endsAt?: Date;
-  status?: string;
-  bookingType?: string;
-  extensionMode?: string;
-  hourBands?: unknown[];
-} = {}): BookingFixture {
+function makeBooking(
+  overrides: {
+    primaryPlayerId?: string;
+    otherPlayers?: { userId: string; name: string }[];
+    endsAt?: Date;
+    status?: string;
+    bookingType?: string;
+    extensionMode?: string;
+    hourBands?: unknown[];
+  } = {},
+): BookingFixture {
   const endsAt = overrides.endsAt ?? nowMinusOneHour();
   return {
     id: BOOKING_ID,
@@ -60,9 +62,11 @@ function makePrisma(booking: BookingFixture, conflict?: { id: string }) {
     booking: {
       findUnique: vi.fn().mockResolvedValue(booking),
       findFirst: vi.fn().mockResolvedValue(conflict ?? null),
-      update: vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) =>
-        Promise.resolve({ ...booking, ...data }),
-      ),
+      update: vi
+        .fn()
+        .mockImplementation(({ data }: { data: Record<string, unknown> }) =>
+          Promise.resolve({ ...booking, ...data }),
+        ),
     },
     klub: {
       findUnique: vi.fn().mockResolvedValue({

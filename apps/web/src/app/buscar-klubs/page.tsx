@@ -38,8 +38,8 @@ export default function BuscarKlubsPage() {
               Buscar Klubs vai chegar
             </h1>
             <p className="mt-2 text-[14.5px] text-muted-foreground">
-              A gente está preparando a busca por Klubs públicos. Quando
-              ficar pronto, a gente avisa.
+              A gente está preparando a busca por Klubs públicos. Quando ficar pronto, a gente
+              avisa.
             </p>
             <p className="mt-1.5 text-[13.5px] text-muted-foreground">
               Por enquanto, dois caminhos:
@@ -49,17 +49,15 @@ export default function BuscarKlubsPage() {
               <li className="flex items-start gap-2">
                 <span className="mt-1.5 size-1 shrink-0 rounded-full bg-foreground/40" />
                 <span>
-                  Se você já é sócio de um clube,{' '}
-                  <b className="font-semibold">peça um convite</b> pra
-                  comissão técnica ou Klub Admin.
+                  Se você já é sócio de um clube, <b className="font-semibold">peça um convite</b>{' '}
+                  pra comissão técnica ou Klub Admin.
                 </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-1.5 size-1 shrink-0 rounded-full bg-foreground/40" />
                 <span>
-                  Se você é dono ou opera um clube,{' '}
-                  <b className="font-semibold">crie o seu Klub</b> agora —
-                  você vira Klub Admin automaticamente.
+                  Se você é dono ou opera um clube, <b className="font-semibold">crie o seu Klub</b>{' '}
+                  agora — você vira Klub Admin automaticamente.
                 </span>
               </li>
             </ul>

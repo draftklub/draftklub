@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { SyncUserHandler, type SyncUserCommand, type SyncUserResult } from '../application/commands/sync-user.handler';
+import {
+  SyncUserHandler,
+  type SyncUserCommand,
+  type SyncUserResult,
+} from '../application/commands/sync-user.handler';
 import { GetUserByFirebaseUidHandler } from '../application/queries/get-user-by-firebase-uid.handler';
 
 @Injectable()

@@ -58,8 +58,8 @@ export default function RecuperarSenhaPage() {
           Esqueceu a senha?
         </h1>
         <p className="mt-2 text-[15px] text-muted-foreground">
-          Informa o seu e-mail. Se ele estiver cadastrado, a gente manda
-          um link pra você criar uma nova senha.
+          Informa o seu e-mail. Se ele estiver cadastrado, a gente manda um link pra você criar uma
+          nova senha.
         </p>
 
         <form
@@ -68,10 +68,7 @@ export default function RecuperarSenhaPage() {
           noValidate
         >
           <div>
-            <label
-              htmlFor="email"
-              className="mb-1.5 block text-[13px] font-medium text-foreground"
-            >
+            <label htmlFor="email" className="mb-1.5 block text-[13px] font-medium text-foreground">
               E-mail
             </label>
             <input
@@ -137,8 +134,8 @@ function SentScreen() {
           Confere sua caixa de entrada
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Se esse e-mail estiver cadastrado, você vai receber o link em
-          alguns minutos. Não esquece de olhar a pasta de spam.
+          Se esse e-mail estiver cadastrado, você vai receber o link em alguns minutos. Não esquece
+          de olhar a pasta de spam.
         </p>
         <Link
           href="/login"

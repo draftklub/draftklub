@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { SeriesGeneratorService } from '../../domain/services/series-generator.service';
@@ -45,9 +41,7 @@ export class CreateOperationalBlockHandler {
       // endsAt is optional for weather_closed (open-ended)
     } else {
       if (!cmd.endsAt) {
-        throw new BadRequestException(
-          `endsAt is required for blockType '${cmd.blockType}'`,
-        );
+        throw new BadRequestException(`endsAt is required for blockType '${cmd.blockType}'`);
       }
     }
 
@@ -93,10 +87,7 @@ export class CreateOperationalBlockHandler {
     return this.createRecurrentBlocks(cmd, config.maxRecurrenceMonths);
   }
 
-  private async createSingleBlock(
-    cmd: CreateOperationalBlockCommand,
-    _maxMonths: number,
-  ) {
+  private async createSingleBlock(cmd: CreateOperationalBlockCommand, _maxMonths: number) {
     return this.prisma.$transaction(async (tx) => {
       const block = await tx.booking.create({
         data: {
@@ -130,10 +121,7 @@ export class CreateOperationalBlockHandler {
     });
   }
 
-  private async createRecurrentBlocks(
-    cmd: CreateOperationalBlockCommand,
-    maxMonths: number,
-  ) {
+  private async createRecurrentBlocks(cmd: CreateOperationalBlockCommand, maxMonths: number) {
     const recurrence = cmd.recurrence;
     if (!recurrence) {
       throw new BadRequestException('recurrence config is missing');
@@ -145,9 +133,7 @@ export class CreateOperationalBlockHandler {
     const rangeMs = recurrence.endsOn.getTime() - cmd.startsAt.getTime();
     const maxMs = maxMonths * 31 * 24 * 60 * 60_000;
     if (rangeMs > maxMs) {
-      throw new BadRequestException(
-        `Recurrence range exceeds maxRecurrenceMonths (${maxMonths})`,
-      );
+      throw new BadRequestException(`Recurrence range exceeds maxRecurrenceMonths (${maxMonths})`);
     }
 
     const occurrences = this.generator.generate({

@@ -1,21 +1,11 @@
-import {
-  Controller,
-  Post,
-  Patch,
-  Param,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { PolicyGuard } from '../../../shared/auth/policy.guard';
 import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
 import { CurrentUser } from '../../../shared/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.interface';
 import { BookingFacade } from '../public/booking.facade';
-import {
-  ExtendBookingSchema,
-  RejectExtensionSchema,
-} from './dtos/extend-booking.dto';
+import { ExtendBookingSchema, RejectExtensionSchema } from './dtos/extend-booking.dto';
 
 @Controller('bookings/:bookingId/extensions')
 @UseGuards(FirebaseAuthGuard, PolicyGuard)

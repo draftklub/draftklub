@@ -35,7 +35,5 @@ export function listKlubBookings(
     if (typeof v === 'string') qs.set(k, v);
   }
   const suffix = qs.toString();
-  return apiFetch<BookingListItem[]>(
-    `/klubs/${klubId}/bookings${suffix ? `?${suffix}` : ''}`,
-  );
+  return apiFetch<BookingListItem[]>(`/klubs/${klubId}/bookings${suffix ? `?${suffix}` : ''}`);
 }

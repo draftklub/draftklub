@@ -94,11 +94,7 @@ function eliminationPosition(phase: string): string {
 export class TournamentProgressionService {
   constructor(private readonly pointsService: ApplyTournamentPointsService) {}
 
-  async advance(
-    tx: TxLike,
-    match: ProgressionContext,
-    winnerId: string,
-  ): Promise<void> {
+  async advance(tx: TxLike, match: ProgressionContext, winnerId: string): Promise<void> {
     if (match.phase === 'prequalifier' || match.matchKind === 'prequalifier') {
       await this.resolvePrequalifierSlots(tx, {
         id: match.id,
@@ -113,18 +109,12 @@ export class TournamentProgressionService {
     if (match.matchKind === 'group' && match.categoryId && match.bracketPosition) {
       const groupId = parseGroupIdFromBracketPosition(match.bracketPosition);
       if (groupId) {
-        await this.maybeResolveGroupStandings(
-          tx,
-          match.tournamentId,
-          match.categoryId,
-          groupId,
-        );
+        await this.maybeResolveGroupStandings(tx, match.tournamentId, match.categoryId, groupId);
       }
       return;
     }
 
-    const loserId =
-      match.player1Id === winnerId ? match.player2Id : match.player1Id;
+    const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
 
     if (loserId) {
       await tx.tournamentEntry.updateMany({
@@ -162,11 +152,7 @@ export class TournamentProgressionService {
     });
   }
 
-  async propagateBye(
-    tx: TxLike,
-    match: ProgressionContext,
-    winnerId: string,
-  ): Promise<void> {
+  async propagateBye(tx: TxLike, match: ProgressionContext, winnerId: string): Promise<void> {
     if (!match.nextMatchId) return;
     const slotField = match.nextMatchSlot === 'top' ? 'player1Id' : 'player2Id';
     await tx.tournamentMatch.update({
@@ -176,10 +162,7 @@ export class TournamentProgressionService {
     await this.markScheduledIfReady(tx, match.nextMatchId);
   }
 
-  async resolvePrequalifierSlots(
-    tx: TxLike,
-    prequalifierMatch: PrequalifierMatch,
-  ): Promise<void> {
+  async resolvePrequalifierSlots(tx: TxLike, prequalifierMatch: PrequalifierMatch): Promise<void> {
     const loserId =
       prequalifierMatch.winnerId === prequalifierMatch.player1Id
         ? prequalifierMatch.player2Id
@@ -265,9 +248,9 @@ export class TournamentProgressionService {
       seed2: number | null;
     }[];
 
-    const allDone = groupMatches.length > 0 && groupMatches.every((m) =>
-      ['completed', 'walkover'].includes(m.status),
-    );
+    const allDone =
+      groupMatches.length > 0 &&
+      groupMatches.every((m) => ['completed', 'walkover'].includes(m.status));
     if (!allDone) return;
 
     const standings = this.computeGroupStandings(groupMatches);
@@ -357,9 +340,7 @@ export class TournamentProgressionService {
       if (wa !== wb) return wb - wa;
 
       const direct = matches.find(
-        (m) =>
-          (m.player1Id === a && m.player2Id === b) ||
-          (m.player1Id === b && m.player2Id === a),
+        (m) => (m.player1Id === a && m.player2Id === b) || (m.player1Id === b && m.player2Id === a),
       );
       if (direct?.winnerId === a) return -1;
       if (direct?.winnerId === b) return 1;
