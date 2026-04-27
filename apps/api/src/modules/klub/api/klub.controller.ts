@@ -11,6 +11,11 @@ import { AddMediaSchema } from './dtos/add-media.dto';
 import { AddSportInterestSchema } from './dtos/add-sport-interest.dto';
 import { DiscoverKlubsQuerySchema } from './dtos/discover-klubs.dto';
 import { CheckSlugQuerySchema } from './dtos/check-slug.dto';
+import {
+  ListMembershipRequestsQuerySchema,
+  RejectMembershipRequestSchema,
+  RequestMembershipSchema,
+} from './dtos/membership-request.dto';
 
 @Controller('klubs')
 @UseGuards(FirebaseAuthGuard, PolicyGuard)
@@ -90,6 +95,27 @@ export class KlubController {
     return this.klubFacade.joinKlubBySlug(slug, user.userId);
   }
 
+  /**
+   * Sprint C — solicitar entrada em Klub privado. Backend cria
+   * MembershipRequest pending; KLUB_ADMIN decide via /klubs/:id/membership-requests.
+   * Mesma policy `klub.join_via_link` (qualquer auth user pode pedir).
+   */
+  @Post('slug/:slug/request-join')
+  @RequirePolicy('klub.join_via_link')
+  async requestJoinBySlug(
+    @Param('slug') slug: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = RequestMembershipSchema.parse(body);
+    return this.klubFacade.requestMembership({
+      klubSlug: slug,
+      userId: user.userId,
+      message: dto.message,
+      attachmentUrl: dto.attachmentUrl,
+    });
+  }
+
   @Get(':id')
   async getKlub(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.klubFacade.getKlubById(id, user.userId);
@@ -120,5 +146,51 @@ export class KlubController {
   async addSportInterest(@Param('id') klubId: string, @Body() body: unknown) {
     const dto = AddSportInterestSchema.parse(body);
     return this.klubFacade.addSportInterest(klubId, dto.sportName);
+  }
+
+  // ─── Sprint C: membership requests (KLUB_ADMIN per-klub) ────
+
+  @Get(':id/membership-requests')
+  @RequirePolicy('klub.membershipRequests.read', (req) => ({
+    klubId: (req as { params: { id: string } }).params.id,
+  }))
+  async listMembershipRequests(@Param('id') klubId: string, @Query() query: unknown) {
+    const dto = ListMembershipRequestsQuerySchema.parse(query);
+    return this.klubFacade.listMembershipRequests({ klubId, ...dto });
+  }
+
+  @Post(':id/membership-requests/:reqId/approve')
+  @RequirePolicy('klub.membershipRequests.decide', (req) => ({
+    klubId: (req as { params: { id: string } }).params.id,
+  }))
+  async approveMembershipRequest(
+    @Param('id') klubId: string,
+    @Param('reqId') reqId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.klubFacade.approveMembershipRequest({
+      klubId,
+      requestId: reqId,
+      decidedById: user.userId,
+    });
+  }
+
+  @Post(':id/membership-requests/:reqId/reject')
+  @RequirePolicy('klub.membershipRequests.decide', (req) => ({
+    klubId: (req as { params: { id: string } }).params.id,
+  }))
+  async rejectMembershipRequest(
+    @Param('id') klubId: string,
+    @Param('reqId') reqId: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = RejectMembershipRequestSchema.parse(body);
+    return this.klubFacade.rejectMembershipRequest({
+      klubId,
+      requestId: reqId,
+      decidedById: user.userId,
+      reason: dto.reason,
+    });
   }
 }

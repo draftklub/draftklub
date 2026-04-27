@@ -3,26 +3,54 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { EmailService } from '../email/email.service';
+import { EmailService, type SendEmailResult } from '../email/email.service';
 import { renderKlubApprovedEmail } from '../email/templates/klub-review-approved.template';
 import { renderKlubRejectedEmail } from '../email/templates/klub-review-rejected.template';
+import { renderMembershipRequestCreatedEmail } from '../email/templates/membership-request-created.template';
+import { renderMembershipRequestApprovedEmail } from '../email/templates/membership-request-approved.template';
+import { renderMembershipRequestRejectedEmail } from '../email/templates/membership-request-rejected.template';
 
-type HandledEventType = 'klub.review.approved' | 'klub.review.rejected';
+type HandledEventType =
+  | 'klub.review.approved'
+  | 'klub.review.rejected'
+  | 'klub.membership_request.created'
+  | 'klub.membership_request.approved'
+  | 'klub.membership_request.rejected';
+
+const HANDLED_EVENT_TYPES: HandledEventType[] = [
+  'klub.review.approved',
+  'klub.review.rejected',
+  'klub.membership_request.created',
+  'klub.membership_request.approved',
+  'klub.membership_request.rejected',
+];
 
 const MAX_ATTEMPTS = 5;
 const BATCH_SIZE = 10;
 
+interface RenderedEmail {
+  subject: string;
+  html: string;
+  text: string;
+}
+
+interface DispatchPlan {
+  recipients: string[];
+  rendered: RenderedEmail;
+}
+
 /**
- * Sprint D PR3 — worker que consome OutboxEvents e dispara emails de
- * aprovação/rejeição pra criadores de Klubs. Usa SELECT...FOR UPDATE
- * SKIP LOCKED pra coordenar múltiplos workers (Cloud Run pode ter N
- * instâncias rodando o mesmo cron).
+ * Worker que consome OutboxEvents e dispara emails. Usa SELECT FOR
+ * UPDATE SKIP LOCKED pra coordenar múltiplas instâncias.
  *
- * Backoff: até MAX_ATTEMPTS tentativas; falhas não-retryable (4xx do
- * Resend) marcam direto como `dead`. 5xx/network ficam `pending` com
- * `attempts++` e voltam pro próximo ciclo.
+ * Backoff: até MAX_ATTEMPTS tentativas; falhas não-retryable marcam
+ * direto como `dead`. 5xx/network ficam `pending` com `attempts++`.
  *
- * Roda a cada 30s. Cron desabilitado em test/CI via NODE_ENV check.
+ * Sprint C: além de klub.review.* (Sprint D PR3), agora também
+ * processa klub.membership_request.{created,approved,rejected}. Pro
+ * .created, fanout pra todos KLUB_ADMINs do Klub (geralmente 1 pessoa).
+ *
+ * Roda a cada 30s. Cron desabilitado em NODE_ENV=test.
  */
 @Injectable()
 export class OutboxProcessorService {
@@ -58,9 +86,6 @@ export class OutboxProcessorService {
     let sent = 0;
     let failed = 0;
 
-    // Locking: pega só eventos que essa instância consegue lock exclusivo.
-    // Em modo single-instance Cloud Run não importa; em múltiplas
-    // instâncias evita disparar email duplicado.
     const events = await this.prisma.$queryRaw<
       {
         id: string;
@@ -68,16 +93,16 @@ export class OutboxProcessorService {
         payload: Prisma.JsonValue;
         attempts: number;
       }[]
-    >`
+    >(Prisma.sql`
       SELECT id, event_type, payload, attempts
       FROM audit.outbox_events
       WHERE status = 'pending'
-        AND event_type IN ('klub.review.approved', 'klub.review.rejected')
+        AND event_type = ANY(${HANDLED_EVENT_TYPES}::text[])
         AND attempts < ${MAX_ATTEMPTS}
       ORDER BY occurred_at ASC
       LIMIT ${BATCH_SIZE}
       FOR UPDATE SKIP LOCKED
-    `;
+    `);
 
     for (const event of events) {
       processed++;
@@ -103,44 +128,37 @@ export class OutboxProcessorService {
     payload: Prisma.JsonObject,
   ): Promise<'sent' | 'failed' | 'dead'> {
     try {
-      const recipient = await this.resolveRecipientEmail(payload);
-      if (!recipient) {
-        // Sem email do criador (user deletado?) — marca como dead.
-        await this.markDead(id, 'recipient unresolved');
+      const plan = await this.planDispatch(eventType, payload);
+      if (!plan || plan.recipients.length === 0) {
+        await this.markDead(id, 'no recipients resolved');
         return 'dead';
       }
 
-      const rendered =
-        eventType === 'klub.review.approved'
-          ? renderKlubApprovedEmail({
-              klubName: this.str(payload, 'klubName') ?? 'seu Klub',
-              klubSlug: this.str(payload, 'klubSlug') ?? '',
-              appBaseUrl: this.appBaseUrl,
-            })
-          : renderKlubRejectedEmail({
-              klubName: this.str(payload, 'klubName') ?? 'seu Klub',
-              reason: this.str(payload, 'reason') ?? 'Sem motivo registrado.',
-              appBaseUrl: this.appBaseUrl,
-            });
+      // Fan-out: envia individualmente. Em retry pode duplicar pra
+      // sucessos parciais, aceitável pro MVP (KLUB_ADMINs costumam ser 1).
+      const results = await Promise.all(
+        plan.recipients.map((to) =>
+          this.email.send({
+            to,
+            subject: plan.rendered.subject,
+            html: plan.rendered.html,
+            text: plan.rendered.text,
+          }),
+        ),
+      );
 
-      const result = await this.email.send({
-        to: recipient,
-        subject: rendered.subject,
-        html: rendered.html,
-        text: rendered.text,
-      });
-
-      if (result.ok) {
+      const allOk = results.every((r) => r.ok);
+      if (allOk) {
         await this.markSent(id);
         return 'sent';
       }
 
-      if (!result.retryable) {
-        await this.markDead(id, result.error);
+      const firstFailure = results.find((r): r is Extract<SendEmailResult, { ok: false }> => !r.ok);
+      if (firstFailure && !firstFailure.retryable) {
+        await this.markDead(id, firstFailure.error);
         return 'dead';
       }
-
-      await this.markRetry(id, result.error);
+      await this.markRetry(id, firstFailure?.error ?? 'unknown');
       return 'failed';
     } catch (err) {
       const msg = (err as Error).message;
@@ -150,14 +168,113 @@ export class OutboxProcessorService {
     }
   }
 
-  private async resolveRecipientEmail(payload: Prisma.JsonObject): Promise<string | null> {
-    const createdById = this.str(payload, 'createdById');
-    if (!createdById) return null;
+  private async planDispatch(
+    eventType: HandledEventType,
+    payload: Prisma.JsonObject,
+  ): Promise<DispatchPlan | null> {
+    if (eventType === 'klub.review.approved') {
+      const recipient = await this.resolveUserEmail(this.str(payload, 'createdById'));
+      if (!recipient) return null;
+      return {
+        recipients: [recipient],
+        rendered: renderKlubApprovedEmail({
+          klubName: this.str(payload, 'klubName') ?? 'seu Klub',
+          klubSlug: this.str(payload, 'klubSlug') ?? '',
+          appBaseUrl: this.appBaseUrl,
+        }),
+      };
+    }
+    if (eventType === 'klub.review.rejected') {
+      const recipient = await this.resolveUserEmail(this.str(payload, 'createdById'));
+      if (!recipient) return null;
+      return {
+        recipients: [recipient],
+        rendered: renderKlubRejectedEmail({
+          klubName: this.str(payload, 'klubName') ?? 'seu Klub',
+          reason: this.str(payload, 'reason') ?? 'Sem motivo registrado.',
+          appBaseUrl: this.appBaseUrl,
+        }),
+      };
+    }
+    if (eventType === 'klub.membership_request.created') {
+      const klubId = this.str(payload, 'klubId');
+      const userId = this.str(payload, 'userId');
+      if (!klubId || !userId) return null;
+      const [admins, applicant, request] = await Promise.all([
+        this.resolveKlubAdminEmails(klubId),
+        this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { fullName: true },
+        }),
+        // Re-pesca a request pra ler message — payload do outbox não inclui.
+        this.prisma.membershipRequest.findUnique({
+          where: { id: this.str(payload, 'requestId') ?? '' },
+          select: { message: true },
+        }),
+      ]);
+      if (admins.length === 0) return null;
+      const klubSlug = await this.resolveKlubSlug(klubId);
+      return {
+        recipients: admins,
+        rendered: renderMembershipRequestCreatedEmail({
+          klubName: this.str(payload, 'klubName') ?? 'seu Klub',
+          klubSlug: klubSlug ?? '',
+          applicantName: applicant?.fullName ?? 'Um jogador',
+          message: request?.message ?? '(sem mensagem)',
+          appBaseUrl: this.appBaseUrl,
+        }),
+      };
+    }
+    if (eventType === 'klub.membership_request.approved') {
+      const recipient = await this.resolveUserEmail(this.str(payload, 'userId'));
+      if (!recipient) return null;
+      return {
+        recipients: [recipient],
+        rendered: renderMembershipRequestApprovedEmail({
+          klubName: this.str(payload, 'klubName') ?? 'seu Klub',
+          klubSlug: this.str(payload, 'klubSlug') ?? '',
+          appBaseUrl: this.appBaseUrl,
+        }),
+      };
+    }
+    if (eventType === 'klub.membership_request.rejected') {
+      const recipient = await this.resolveUserEmail(this.str(payload, 'userId'));
+      if (!recipient) return null;
+      return {
+        recipients: [recipient],
+        rendered: renderMembershipRequestRejectedEmail({
+          klubName: this.str(payload, 'klubName') ?? 'seu Klub',
+          reason: this.str(payload, 'reason') ?? 'Sem motivo registrado.',
+          appBaseUrl: this.appBaseUrl,
+        }),
+      };
+    }
+    return null;
+  }
+
+  private async resolveUserEmail(userId: string | null): Promise<string | null> {
+    if (!userId) return null;
     const user = await this.prisma.user.findUnique({
-      where: { id: createdById },
+      where: { id: userId },
       select: { email: true },
     });
     return user?.email ?? null;
+  }
+
+  private async resolveKlubAdminEmails(klubId: string): Promise<string[]> {
+    const admins = await this.prisma.roleAssignment.findMany({
+      where: { scopeKlubId: klubId, role: 'KLUB_ADMIN' },
+      select: { user: { select: { email: true } } },
+    });
+    return admins.map((a) => a.user.email).filter((e): e is string => !!e);
+  }
+
+  private async resolveKlubSlug(klubId: string): Promise<string | null> {
+    const k = await this.prisma.klub.findUnique({
+      where: { id: klubId },
+      select: { slug: true },
+    });
+    return k?.slug ?? null;
   }
 
   private str(obj: Prisma.JsonObject, key: string): string | null {

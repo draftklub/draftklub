@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import {
   CreateKlubHandler,
   type CreateKlubCommand,
@@ -26,6 +26,24 @@ import {
   RejectKlubHandler,
   type RejectKlubCommand,
 } from '../application/admin/reject-klub.handler';
+import {
+  RequestMembershipHandler,
+  type RequestMembershipCommand,
+} from '../application/membership-requests/request-membership.handler';
+import {
+  ListMembershipRequestsHandler,
+  type ListMembershipRequestsCommand,
+} from '../application/membership-requests/list-membership-requests.handler';
+import {
+  ApproveMembershipRequestHandler,
+  type ApproveMembershipRequestCommand,
+} from '../application/membership-requests/approve-membership-request.handler';
+import {
+  RejectMembershipRequestHandler,
+  type RejectMembershipRequestCommand,
+} from '../application/membership-requests/reject-membership-request.handler';
+import { ListMyRequestsHandler } from '../application/membership-requests/list-my-requests.handler';
+import { CancelMyRequestHandler } from '../application/membership-requests/cancel-my-request.handler';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import type { DiscoverKlubsQueryDto } from '../api/dtos/discover-klubs.dto';
 import type { CheckSlugQueryDto } from '../api/dtos/check-slug.dto';
@@ -89,6 +107,12 @@ export class KlubFacade {
     private readonly updatePendingKlubHandler: UpdatePendingKlubHandler,
     private readonly approveKlubHandler: ApproveKlubHandler,
     private readonly rejectKlubHandler: RejectKlubHandler,
+    private readonly requestMembershipHandler: RequestMembershipHandler,
+    private readonly listMembershipRequestsHandler: ListMembershipRequestsHandler,
+    private readonly approveMembershipRequestHandler: ApproveMembershipRequestHandler,
+    private readonly rejectMembershipRequestHandler: RejectMembershipRequestHandler,
+    private readonly listMyRequestsHandler: ListMyRequestsHandler,
+    private readonly cancelMyRequestHandler: CancelMyRequestHandler,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -159,6 +183,31 @@ export class KlubFacade {
     return this.rejectKlubHandler.execute(cmd);
   }
 
+  // ─── Sprint C: membership requests ─────────────────────────
+  async requestMembership(cmd: RequestMembershipCommand) {
+    return this.requestMembershipHandler.execute(cmd);
+  }
+
+  async listMembershipRequests(cmd: ListMembershipRequestsCommand) {
+    return this.listMembershipRequestsHandler.execute(cmd);
+  }
+
+  async approveMembershipRequest(cmd: ApproveMembershipRequestCommand) {
+    return this.approveMembershipRequestHandler.execute(cmd);
+  }
+
+  async rejectMembershipRequest(cmd: RejectMembershipRequestCommand) {
+    return this.rejectMembershipRequestHandler.execute(cmd);
+  }
+
+  async listMyMembershipRequests(userId: string) {
+    return this.listMyRequestsHandler.execute(userId);
+  }
+
+  async cancelMyMembershipRequest(input: { requestId: string; userId: string }) {
+    return this.cancelMyRequestHandler.execute(input);
+  }
+
   async addMember(cmd: AddMemberCommand) {
     return this.addMemberHandler.execute(cmd);
   }
@@ -168,9 +217,21 @@ export class KlubFacade {
    * adiciona o user atual como PLAYER. Idempotente. Bloqueia se Klub
    * está em review pendente/rejeitado (Sprint D PR1) — chamada do
    * handler já retorna 404 nesses casos.
+   *
+   * Sprint C: Klubs com `accessMode='private'` rejeitam direct join —
+   * user precisa passar pelo flow MembershipRequest. Frontend chama
+   * `requestMembership` em vez de `joinKlubBySlug` quando vê accessMode
+   * privado, mas backend protege também.
    */
   async joinKlubBySlug(slug: string, userId: string) {
     const klub = await this.getKlubBySlugHandler.execute(slug, userId);
+    if (klub.accessMode === 'private') {
+      throw new ForbiddenException({
+        type: 'request_required',
+        message:
+          'Este Klub é privado. Envie uma solicitação de entrada — o admin vai revisar.',
+      });
+    }
     return this.addMemberHandler.execute({
       klubId: klub.id,
       userId,

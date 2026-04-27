@@ -165,6 +165,49 @@ export interface AdminPendingKlubsPage {
  * Receita pra audit, endereço granular, e flag de conflito de slug
  * pra UI bloquear "Aprovar" enquanto não resolve.
  */
+/**
+ * Sprint C PR1 — pedido de entrada em Klub privado.
+ * Status:
+ *  - 'pending'   — aguardando decisão do KLUB_ADMIN.
+ *  - 'approved'  — aprovado; Membership + RoleAssignment PLAYER criados.
+ *  - 'rejected'  — rejeitado pelo admin (com `rejectionReason`).
+ *  - 'cancelled' — solicitante cancelou antes da decisão.
+ */
+export type MembershipRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+export interface MembershipRequest {
+  id: string;
+  klubId: string;
+  userId: string;
+  status: MembershipRequestStatus;
+  message: string;
+  attachmentUrl: string | null;
+  decisionAt: string | null;
+  decidedById: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Item da lista admin (`GET /klubs/:klubId/membership-requests`). */
+export interface MembershipRequestAdminItem extends MembershipRequest {
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    avatarUrl: string | null;
+  };
+}
+
+/** Item da lista do user (`GET /me/membership-requests`). */
+export interface MembershipRequestForUser extends MembershipRequest {
+  klub: {
+    id: string;
+    slug: string;
+    name: string;
+  };
+}
+
 export interface AdminPendingKlubDetail {
   id: string;
   name: string;

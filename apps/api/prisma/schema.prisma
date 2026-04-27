@@ -80,6 +80,8 @@ model User {
   tournamentEntries TournamentEntry[]    @relation("TournamentEntries")
   responsibleForBookings Booking[]       @relation("ResponsibleMember")
   sportEnrollments       PlayerSportEnrollment[]
+  membershipRequests          MembershipRequest[] @relation("UserMembershipRequests")
+  decidedMembershipRequests   MembershipRequest[] @relation("DecidedMembershipRequests")
 
   @@map("users")
   @@schema("identity")
@@ -100,6 +102,33 @@ model Membership {
   @@unique([userId, klubId])
   @@map("memberships")
   @@schema("identity")
+}
+
+// Sprint C PR1 — pedido de entrada em Klub privado (accessMode='private').
+// Usuário submete com mensagem (ex: nº de matrícula); KLUB_ADMIN do
+// Klub aprova/rejeita. Aprovação cria Membership + RoleAssignment PLAYER
+// (na mesma tx). Unique parcial garante 1 pendente por (klub, user) —
+// histórico de rejected/cancelled fica disponível.
+model MembershipRequest {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId          String    @map("klub_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  status          String    @default("pending")
+  // 'pending' | 'approved' | 'rejected' | 'cancelled'
+  message         String
+  attachmentUrl   String?   @map("attachment_url")
+  decisionAt      DateTime? @map("decision_at") @db.Timestamptz
+  decidedById     String?   @map("decided_by_id") @db.Uuid
+  rejectionReason String?   @map("rejection_reason")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  klub      Klub @relation("KlubMembershipRequests", fields: [klubId], references: [id], onDelete: Cascade)
+  user      User @relation("UserMembershipRequests", fields: [userId], references: [id])
+  decidedBy User? @relation("DecidedMembershipRequests", fields: [decidedById], references: [id])
+
+  @@map("membership_requests")
+  @@schema("klub")
 }
 
 model RoleAssignment {
@@ -230,11 +259,12 @@ model Klub {
   updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
 
-  config         KlubConfig?
-  sportProfiles  KlubSportProfile[]  @relation("KlubSportProfiles")
-  sportInterests KlubSportInterest[] @relation("KlubSportInterests")
-  media          KlubMedia[]
-  memberships    Membership[] @relation("KlubMemberships")
+  config             KlubConfig?
+  sportProfiles      KlubSportProfile[]  @relation("KlubSportProfiles")
+  sportInterests     KlubSportInterest[] @relation("KlubSportInterests")
+  media              KlubMedia[]
+  memberships        Membership[]        @relation("KlubMemberships")
+  membershipRequests MembershipRequest[] @relation("KlubMembershipRequests")
 
   @@map("klubs")
   @@schema("klub")

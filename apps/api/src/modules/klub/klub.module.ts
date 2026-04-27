@@ -12,6 +12,13 @@ import { UpdatePendingKlubHandler } from './application/admin/update-pending-klu
 import { ApproveKlubHandler } from './application/admin/approve-klub.handler';
 import { RejectKlubHandler } from './application/admin/reject-klub.handler';
 import { AdminKlubController } from './api/admin-klub.controller';
+import { RequestMembershipHandler } from './application/membership-requests/request-membership.handler';
+import { ListMembershipRequestsHandler } from './application/membership-requests/list-membership-requests.handler';
+import { ApproveMembershipRequestHandler } from './application/membership-requests/approve-membership-request.handler';
+import { RejectMembershipRequestHandler } from './application/membership-requests/reject-membership-request.handler';
+import { ListMyRequestsHandler } from './application/membership-requests/list-my-requests.handler';
+import { CancelMyRequestHandler } from './application/membership-requests/cancel-my-request.handler';
+import { MeMembershipRequestsController } from './api/me-membership-requests.controller';
 import { AddMemberHandler } from './application/commands/add-member.handler';
 import { CreateKlubRequestHandler } from './application/commands/create-klub-request.handler';
 import { ListKlubRequestsHandler } from './application/queries/list-klub-requests.handler';
@@ -45,6 +52,7 @@ import { IdentityModule } from '../identity/identity.module';
   controllers: [
     KlubController,
     AdminKlubController,
+    MeMembershipRequestsController,
     KlubRequestController,
     EnrollmentScopeController,
     EnrollmentActionsController,
@@ -63,6 +71,12 @@ import { IdentityModule } from '../identity/identity.module';
     UpdatePendingKlubHandler,
     ApproveKlubHandler,
     RejectKlubHandler,
+    RequestMembershipHandler,
+    ListMembershipRequestsHandler,
+    ApproveMembershipRequestHandler,
+    RejectMembershipRequestHandler,
+    ListMyRequestsHandler,
+    CancelMyRequestHandler,
     AddMemberHandler,
     CreateKlubRequestHandler,
     ListKlubRequestsHandler,
