@@ -42,3 +42,9 @@ export function updateSpace(
     json: input,
   });
 }
+
+export function deleteSpace(klubId: string, spaceId: string): Promise<{ id: string }> {
+  return apiFetch<{ id: string }>(`/klubs/${klubId}/spaces/${spaceId}`, {
+    method: 'DELETE',
+  });
+}

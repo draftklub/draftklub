@@ -7,6 +7,7 @@ import {
   CalendarCheck,
   CalendarDays,
   Home,
+  LayoutGrid,
   Plus,
   Search,
   Mail,
@@ -227,6 +228,13 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
                       label="Configurar Klub"
                       icon={Sparkles}
                       active={pathname === `/k/${activeKlubSlug}/onboarding`}
+                      onNavigate={onClose}
+                    />
+                    <NavLink
+                      href={`/k/${activeKlubSlug}/quadras`}
+                      label="Quadras"
+                      icon={LayoutGrid}
+                      active={pathname === `/k/${activeKlubSlug}/quadras`}
                       onNavigate={onClose}
                     />
                     <NavLink

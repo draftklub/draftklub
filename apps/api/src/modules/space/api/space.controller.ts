@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
 import { PolicyGuard } from '../../../shared/auth/policy.guard';
@@ -43,5 +43,13 @@ export class SpaceController {
   ) {
     const dto = UpdateSpaceSchema.parse(body);
     return this.facade.updateSpace({ klubId, spaceId, patch: dto });
+  }
+
+  @Delete(':spaceId')
+  @RequirePolicy('klub.spaces.delete', (req) => ({
+    klubId: (req as { params: { klubId: string } }).params.klubId,
+  }))
+  async delete(@Param('klubId') klubId: string, @Param('spaceId') spaceId: string) {
+    return this.facade.deleteSpace({ klubId, spaceId });
   }
 }

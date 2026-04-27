@@ -4,6 +4,7 @@ import { SpaceFacade } from './public/space.facade';
 import { CreateSpaceHandler } from './application/create-space.handler';
 import { ListKlubSpacesHandler } from './application/list-klub-spaces.handler';
 import { UpdateSpaceHandler } from './application/update-space.handler';
+import { DeleteSpaceHandler } from './application/delete-space.handler';
 import { SpaceController } from './api/space.controller';
 import { IdentityModule } from '../identity/identity.module';
 
@@ -19,6 +20,7 @@ import { IdentityModule } from '../identity/identity.module';
     CreateSpaceHandler,
     ListKlubSpacesHandler,
     UpdateSpaceHandler,
+    DeleteSpaceHandler,
   ],
   exports: [SpaceFacade],
 })
