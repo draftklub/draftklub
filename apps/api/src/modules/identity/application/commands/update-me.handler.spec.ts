@@ -3,10 +3,13 @@ import { NotFoundException } from '@nestjs/common';
 import { UpdateMeHandler } from './update-me.handler';
 import { UpdateMeSchema } from '../../api/dtos/update-me.dto';
 import type { PrismaService } from '../../../../shared/prisma/prisma.service';
+import type { CepGeocoderService } from '../../../../shared/geocoding/cep-geocoder.service';
 
 const USER_ID = '00000000-0000-0000-0001-000000000aaa';
 
-function buildHandler(opts: { update?: object | Error } = {}) {
+function buildHandler(
+  opts: { update?: object | Error; geocode?: { latitude: number; longitude: number } | null } = {},
+) {
   const prisma = {
     user: {
       update: vi.fn((args: { data: Record<string, unknown> }) => {
@@ -27,6 +30,8 @@ function buildHandler(opts: { update?: object | Error } = {}) {
           addressNumber: null,
           addressComplement: null,
           addressNeighborhood: null,
+          latitude: null,
+          longitude: null,
           documentNumber: null,
           documentType: null,
           notificationPrefs: {},
@@ -37,8 +42,14 @@ function buildHandler(opts: { update?: object | Error } = {}) {
       }),
     },
   };
-  const handler = new UpdateMeHandler(prisma as unknown as PrismaService);
-  return { handler, prisma };
+  const geocoder = {
+    geocode: vi.fn(() => Promise.resolve(opts.geocode ?? null)),
+  };
+  const handler = new UpdateMeHandler(
+    prisma as unknown as PrismaService,
+    geocoder as unknown as CepGeocoderService,
+  );
+  return { handler, prisma, geocoder };
 }
 
 describe('UpdateMeHandler', () => {

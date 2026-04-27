@@ -51,6 +51,10 @@ model User {
   addressNumber  String?   @map("address_number")
   addressComplement     String?   @map("address_complement")
   addressNeighborhood   String?   @map("address_neighborhood")
+  latitude       Float?
+  longitude      Float?
+  // Geocoded via CEP (BrasilAPI v2). Fallback pra "próximos a mim"
+  // quando user nega geolocation do browser.
 
   kind            String    @default("regular")
   // 'regular' | 'guest'

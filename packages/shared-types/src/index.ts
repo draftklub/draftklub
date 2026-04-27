@@ -142,6 +142,9 @@ export interface MeResponse {
   addressNumber: string | null;
   addressComplement: string | null;
   addressNeighborhood: string | null;
+  /** Lat/lng geocodados via CEP (BrasilAPI). Null se geocoding falhou. */
+  latitude: number | null;
+  longitude: number | null;
   /** CPF só dígitos, 11 chars. Após setado, geralmente não muda. */
   documentNumber: string | null;
   documentType: DocumentType | null;
@@ -193,6 +196,11 @@ export interface KlubDiscoveryResult {
   state: string | null;
   sports: string[];
   accessMode: KlubAccessMode;
+  /** Lat/lng do Klub (geocodado via CEP). Null se Klub não tem CEP ou geocoding falhou. */
+  latitude: number | null;
+  longitude: number | null;
+  /** Distância em km do user até o Klub (Haversine). Null se busca não usou geo. */
+  distanceKm: number | null;
 }
 
 export interface KlubConfig {

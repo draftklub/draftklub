@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Loader2, Plus, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, MapPin, Plus, Search } from 'lucide-react';
 import type {
   KlubAccessMode,
   KlubDiscoveryResult,
@@ -37,6 +37,14 @@ export default function BuscarKlubsPage() {
   const [state, setState] = React.useState('');
   const [sport, setSport] = React.useState('');
 
+  // Geo (Sprint B+1)
+  const [useGeo, setUseGeo] = React.useState(false);
+  const [geoCoords, setGeoCoords] = React.useState<{ lat: number; lng: number } | null>(null);
+  const [geoStatus, setGeoStatus] = React.useState<
+    'idle' | 'requesting' | 'granted' | 'denied' | 'fallback' | 'unavailable'
+  >('idle');
+  const [radiusKm, setRadiusKm] = React.useState(25);
+
   // Resultados
   const [results, setResults] = React.useState<KlubDiscoveryResult[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -63,8 +71,46 @@ export default function BuscarKlubsPage() {
     return () => clearTimeout(id);
   }, [q]);
 
+  // Browser geolocation request quando user toggla "Próximos a mim".
+  // Estratégia: tenta browser geo; se denied/unavailable, usa lat/lng
+  // do user (geocodado via CEP no /perfil) como fallback.
+  React.useEffect(() => {
+    if (!useGeo) {
+      setGeoCoords(null);
+      setGeoStatus('idle');
+      return;
+    }
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      // Sem API → fallback direto
+      if (typeof me?.latitude === 'number' && typeof me?.longitude === 'number') {
+        setGeoCoords({ lat: me.latitude, lng: me.longitude });
+        setGeoStatus('fallback');
+      } else {
+        setGeoStatus('unavailable');
+      }
+      return;
+    }
+    setGeoStatus('requesting');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeoCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoStatus('granted');
+      },
+      () => {
+        if (typeof me?.latitude === 'number' && typeof me?.longitude === 'number') {
+          setGeoCoords({ lat: me.latitude, lng: me.longitude });
+          setGeoStatus('fallback');
+        } else {
+          setGeoStatus('denied');
+        }
+      },
+      { timeout: 8000, maximumAge: 60_000 },
+    );
+  }, [useGeo, me?.latitude, me?.longitude]);
+
   // Fetch quando algum filtro muda (com debounce no q)
-  const hasAnyFilter = debouncedQ.length >= 2 || state.length > 0 || sport.length > 0;
+  const hasAnyFilter =
+    debouncedQ.length >= 2 || state.length > 0 || sport.length > 0 || (useGeo && !!geoCoords);
 
   React.useEffect(() => {
     if (!hasAnyFilter) {
@@ -78,6 +124,9 @@ export default function BuscarKlubsPage() {
       q: debouncedQ.length >= 2 ? debouncedQ : undefined,
       state: state || undefined,
       sport: sport || undefined,
+      lat: useGeo && geoCoords ? geoCoords.lat : undefined,
+      lng: useGeo && geoCoords ? geoCoords.lng : undefined,
+      radiusKm: useGeo && geoCoords ? radiusKm : undefined,
     })
       .then((data) => {
         if (!cancelled) setResults(data);
@@ -89,7 +138,7 @@ export default function BuscarKlubsPage() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQ, state, sport, hasAnyFilter, reloadToken]);
+  }, [debouncedQ, state, sport, hasAnyFilter, reloadToken, useGeo, geoCoords, radiusKm]);
 
   return (
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
@@ -153,6 +202,53 @@ export default function BuscarKlubsPage() {
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Geolocation toggle + radius slider */}
+        <div className="mb-8 flex flex-col gap-3 rounded-xl border border-border bg-card/40 p-4 sm:flex-row sm:items-center sm:gap-5">
+          <button
+            type="button"
+            onClick={() => setUseGeo((v) => !v)}
+            className={cn(
+              'inline-flex h-9 items-center gap-2 rounded-lg px-3.5 text-[13px] font-semibold transition-colors',
+              useGeo
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                : 'border border-border bg-background hover:bg-muted',
+            )}
+          >
+            {geoStatus === 'requesting' ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <MapPin className="size-3.5" />
+            )}
+            Próximos a mim
+          </button>
+
+          {useGeo ? (
+            <div className="flex flex-1 flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-3">
+                <label htmlFor="radius" className="text-[12.5px] font-medium text-muted-foreground">
+                  Raio
+                </label>
+                <span className="text-[12.5px] font-semibold tabular-nums">{radiusKm} km</span>
+              </div>
+              <input
+                id="radius"
+                type="range"
+                min={5}
+                max={100}
+                step={5}
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(Number(e.target.value))}
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary"
+              />
+              <GeoStatusHint status={geoStatus} />
+            </div>
+          ) : (
+            <p className="text-[12.5px] text-muted-foreground">
+              Use sua localização pra ver os Klubs mais próximos por distância.
+            </p>
+          )}
         </div>
 
         {/* Conteúdo */}
@@ -252,6 +348,12 @@ function KlubCard({
           <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
             {klub.city ?? '—'}
             {klub.state ? ` · ${klub.state}` : ''}
+            {typeof klub.distanceKm === 'number' ? (
+              <span className="ml-1.5 inline-flex items-center gap-0.5 text-[hsl(var(--brand-primary-600))]">
+                <MapPin className="size-3" />
+                {formatDistance(klub.distanceKm)}
+              </span>
+            ) : null}
           </p>
         </div>
       </div>
@@ -305,6 +407,51 @@ function KlubCard({
       </div>
     </div>
   );
+}
+
+function GeoStatusHint({
+  status,
+}: {
+  status: 'idle' | 'requesting' | 'granted' | 'denied' | 'fallback' | 'unavailable';
+}) {
+  if (status === 'requesting') {
+    return <p className="text-[11.5px] text-muted-foreground">Pedindo permissão de localização…</p>;
+  }
+  if (status === 'granted') {
+    return <p className="text-[11.5px] text-muted-foreground">Usando sua localização atual.</p>;
+  }
+  if (status === 'fallback') {
+    return (
+      <p className="text-[11.5px] text-muted-foreground">
+        Localização do navegador negada — usando o CEP do seu perfil.
+      </p>
+    );
+  }
+  if (status === 'denied') {
+    return (
+      <p className="text-[11.5px] text-destructive">
+        Localização negada e sem CEP no perfil.{' '}
+        <Link href="/perfil" className="underline">
+          Cadastre seu CEP
+        </Link>{' '}
+        pra usar este filtro.
+      </p>
+    );
+  }
+  if (status === 'unavailable') {
+    return (
+      <p className="text-[11.5px] text-destructive">
+        Seu navegador não suporta localização. Cadastre seu CEP no perfil.
+      </p>
+    );
+  }
+  return null;
+}
+
+function formatDistance(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)} m`;
+  if (km < 10) return `${km.toFixed(1)} km`;
+  return `${Math.round(km)} km`;
 }
 
 function KlubAvatar({ name }: { name: string }) {

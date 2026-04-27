@@ -97,6 +97,9 @@ export class KlubFacade {
       limit: input.limit,
       userCity: user?.city ?? null,
       userState: user?.state ?? null,
+      lat: input.lat,
+      lng: input.lng,
+      radiusKm: input.radiusKm,
     });
   }
 

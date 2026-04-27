@@ -1,6 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { KlubPrismaRepository } from '../../infrastructure/repositories/klub.prisma.repository';
 import { EncryptionService } from '../../../../shared/encryption/encryption.service';
+import { CepGeocoderService } from '../../../../shared/geocoding/cep-geocoder.service';
 import { DocumentVO } from '../../domain/value-objects/document.vo';
 import type { DocumentType } from '../../domain/value-objects/document.vo';
 
@@ -28,6 +29,9 @@ export interface CreateKlubCommand {
   /** Sprint B: 'public' (entrada livre) | 'private' (request flow Sprint C). */
   accessMode?: 'public' | 'private';
   cep?: string;
+  /** Sprint B+1: lat/lng — geocodados auto via CEP se não fornecidos. */
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface CreateKlubResult {
@@ -46,6 +50,7 @@ export class CreateKlubHandler {
   constructor(
     private readonly klubRepo: KlubPrismaRepository,
     private readonly encryption: EncryptionService,
+    private readonly geocoder: CepGeocoderService,
   ) {}
 
   async execute(cmd: CreateKlubCommand): Promise<CreateKlubResult> {
@@ -91,7 +96,18 @@ export class CreateKlubHandler {
       discoverable: cmd.discoverable ?? false,
       accessMode: cmd.accessMode ?? 'public',
       cep: cmd.cep,
+      ...(cmd.cep ? await this.geocodeOrEmpty(cmd.cep) : {}),
     });
+  }
+
+  /**
+   * Geocoda CEP via BrasilAPI; falha silenciosa retorna `{}` (Klub
+   * fica sem lat/lng e cai em tier-sort no /klubs/discover).
+   */
+  private async geocodeOrEmpty(cep: string): Promise<{ latitude?: number; longitude?: number }> {
+    const coords = await this.geocoder.geocode(cep);
+    if (!coords) return {};
+    return { latitude: coords.latitude, longitude: coords.longitude };
   }
 
   /**

@@ -7,6 +7,7 @@ import { PrismaModule } from './shared/prisma/prisma.module';
 import { HealthModule } from './shared/health/health.module';
 import { AuthModule } from './shared/auth/auth.module';
 import { EncryptionModule } from './shared/encryption/encryption.module';
+import { GeocodingModule } from './shared/geocoding/geocoding.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { KlubModule } from './modules/klub/klub.module';
 import { SportsModule } from './modules/sports/sports.module';
@@ -39,6 +40,7 @@ import { BookingModule } from './modules/booking/booking.module';
     FirebaseModule,
     AuthModule,
     EncryptionModule,
+    GeocodingModule,
     PrismaModule,
     HealthModule,
     IdentityModule,

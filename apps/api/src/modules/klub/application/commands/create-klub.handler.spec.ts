@@ -3,6 +3,7 @@ import { ConflictException } from '@nestjs/common';
 import { CreateKlubHandler } from './create-klub.handler';
 import type { KlubPrismaRepository } from '../../infrastructure/repositories/klub.prisma.repository';
 import type { EncryptionService } from '../../../../shared/encryption/encryption.service';
+import type { CepGeocoderService } from '../../../../shared/geocoding/cep-geocoder.service';
 
 const NEW_KLUB_ID = '00000000-0000-0000-0099-000000000001';
 const USER_ID = '00000000-0000-0000-0001-000000000aaa';
@@ -38,12 +39,17 @@ function buildHandler(
     encrypt: vi.fn().mockReturnValue({ encrypted: 'enc', iv: 'iv' }),
   };
 
+  const geocoder = {
+    geocode: vi.fn(() => Promise.resolve(null)),
+  };
+
   const handler = new CreateKlubHandler(
     repo as unknown as KlubPrismaRepository,
     encryption as unknown as EncryptionService,
+    geocoder as unknown as CepGeocoderService,
   );
 
-  return { handler, repo, encryption };
+  return { handler, repo, encryption, geocoder };
 }
 
 describe('CreateKlubHandler — slug optional + auto-generated', () => {

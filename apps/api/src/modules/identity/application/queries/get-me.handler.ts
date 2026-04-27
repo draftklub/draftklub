@@ -46,6 +46,8 @@ export class GetMeHandler {
       addressNumber: user.addressNumber,
       addressComplement: user.addressComplement,
       addressNeighborhood: user.addressNeighborhood,
+      latitude: user.latitude,
+      longitude: user.longitude,
       documentNumber: user.documentNumber,
       documentType: (user.documentType as DocumentType | null) ?? null,
       notificationPrefs: (user.notificationPrefs as NotificationPrefs | null) ?? {},

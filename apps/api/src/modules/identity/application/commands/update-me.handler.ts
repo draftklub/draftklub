@@ -7,6 +7,7 @@ import type {
   RoleAssignment,
 } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { CepGeocoderService } from '../../../../shared/geocoding/cep-geocoder.service';
 import type { UpdateMeDto } from '../../api/dtos/update-me.dto';
 
 export interface UpdateMeCommand {
@@ -23,7 +24,10 @@ export interface UpdateMeCommand {
  */
 @Injectable()
 export class UpdateMeHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly geocoder: CepGeocoderService,
+  ) {}
 
   async execute(cmd: UpdateMeCommand): Promise<MeResponse> {
     const { userId, dto, roleAssignments } = cmd;
@@ -38,7 +42,14 @@ export class UpdateMeHandler {
     if (dto.gender !== undefined) data.gender = dto.gender;
     if (dto.city !== undefined) data.city = dto.city;
     if (dto.state !== undefined) data.state = dto.state;
-    if (dto.cep !== undefined) data.cep = dto.cep;
+    if (dto.cep !== undefined) {
+      data.cep = dto.cep;
+      // Geocoding CEP -> lat/lng. Falha silenciosa: deixa null e usuário
+      // cai em fallback de browser geolocation no /buscar-klubs.
+      const coords = dto.cep ? await this.geocoder.geocode(dto.cep) : null;
+      data.latitude = coords?.latitude ?? null;
+      data.longitude = coords?.longitude ?? null;
+    }
     if (dto.addressStreet !== undefined) data.addressStreet = dto.addressStreet;
     if (dto.addressNumber !== undefined) data.addressNumber = dto.addressNumber;
     if (dto.addressComplement !== undefined) data.addressComplement = dto.addressComplement;
@@ -91,6 +102,8 @@ export class UpdateMeHandler {
       addressNumber: user.addressNumber,
       addressComplement: user.addressComplement,
       addressNeighborhood: user.addressNeighborhood,
+      latitude: user.latitude,
+      longitude: user.longitude,
       documentNumber: user.documentNumber,
       documentType: (user.documentType as DocumentType | null) ?? null,
       notificationPrefs: (user.notificationPrefs as NotificationPrefs | null) ?? {},

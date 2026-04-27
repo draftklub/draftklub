@@ -11,6 +11,8 @@ interface MockKlub {
   city: string | null;
   state: string | null;
   accessMode: string | null;
+  latitude: number | null;
+  longitude: number | null;
   sportProfiles: { sportCode: string }[];
 }
 
@@ -39,6 +41,8 @@ const k = (
   state: string | null = null,
   accessMode = 'public',
   sportCodes: string[] = ['tennis'],
+  latitude: number | null = null,
+  longitude: number | null = null,
 ): MockKlub => ({
   id,
   name,
@@ -48,6 +52,8 @@ const k = (
   city,
   state,
   accessMode,
+  latitude,
+  longitude,
   sportProfiles: sportCodes.map((c) => ({ sportCode: c })),
 });
 
@@ -126,5 +132,40 @@ describe('DiscoverKlubsHandler', () => {
     const { handler } = buildHandler({ rows });
     const result = await handler.execute({});
     expect(result[0]?.accessMode).toBe('public');
+  });
+
+  it('com lat/lng: ordena por distância ASC e popula distanceKm', async () => {
+    // User no Rio (-22.9, -43.2). Niterói ~10km, SP ~360km.
+    const rows: MockKlub[] = [
+      k('sp', 'SP Klub', 'São Paulo', 'SP', 'public', ['tennis'], -23.55, -46.63),
+      k('nit', 'Niterói Klub', 'Niterói', 'RJ', 'public', ['tennis'], -22.88, -43.1),
+    ];
+    const { handler } = buildHandler({ rows });
+    const result = await handler.execute({ lat: -22.9, lng: -43.2 });
+    expect(result.map((r) => r.name)).toEqual(['Niterói Klub', 'SP Klub']);
+    expect(result[0]?.distanceKm).not.toBeNull();
+    expect(result[0]?.distanceKm).toBeLessThan(20);
+    expect(result[1]?.distanceKm).toBeGreaterThan(300);
+  });
+
+  it('com radiusKm: filtra resultados fora do raio', async () => {
+    const rows: MockKlub[] = [
+      k('sp', 'SP Klub', 'São Paulo', 'SP', 'public', ['tennis'], -23.55, -46.63),
+      k('nit', 'Niterói Klub', 'Niterói', 'RJ', 'public', ['tennis'], -22.88, -43.1),
+    ];
+    const { handler } = buildHandler({ rows });
+    const result = await handler.execute({ lat: -22.9, lng: -43.2, radiusKm: 50 });
+    expect(result.map((r) => r.name)).toEqual(['Niterói Klub']);
+  });
+
+  it('com geo: Klubs sem lat/lng vão pro fim sem distance', async () => {
+    const rows: MockKlub[] = [
+      k('nogeo', 'Klub Sem Geo', 'Rio', 'RJ'),
+      k('nit', 'Niterói Klub', 'Niterói', 'RJ', 'public', ['tennis'], -22.88, -43.1),
+    ];
+    const { handler } = buildHandler({ rows });
+    const result = await handler.execute({ lat: -22.9, lng: -43.2 });
+    expect(result.map((r) => r.name)).toEqual(['Niterói Klub', 'Klub Sem Geo']);
+    expect(result[1]?.distanceKm).toBeNull();
   });
 });

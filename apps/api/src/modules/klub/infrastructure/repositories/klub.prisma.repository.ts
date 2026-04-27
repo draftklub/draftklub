@@ -24,6 +24,8 @@ export interface CreateKlubData {
   discoverable?: boolean;
   accessMode?: string;
   cep?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 @Injectable()
@@ -55,6 +57,8 @@ export class KlubPrismaRepository {
           discoverable: data.discoverable ?? false,
           accessMode: data.accessMode ?? 'public',
           cep: data.cep,
+          latitude: data.latitude,
+          longitude: data.longitude,
           status: data.plan === 'trial' ? 'trial' : 'active',
           trialEndsAt:
             data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,

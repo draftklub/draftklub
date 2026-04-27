@@ -69,12 +69,17 @@ export interface DiscoverKlubsParams {
   state?: string;
   sport?: string;
   limit?: number;
+  /** Sprint B+1: lat/lng (browser geolocation ou fallback CEP do user). */
+  lat?: number;
+  lng?: number;
+  /** Sprint B+1: raio em km. Sem geo presente, ignorado pelo backend. */
+  radiusKm?: number;
 }
 
 /**
  * GET /klubs/discover — lista Klubs com `discoverable=true`. Filtros
- * opcionais; backend ordena por tier (mesma cidade > mesmo estado >
- * resto, alfabético dentro). Liberado pra qualquer auth user.
+ * opcionais; backend ordena por distância (Haversine) quando lat/lng
+ * são enviados, senão por tier (mesma cidade > mesmo estado > resto).
  */
 export function discoverKlubs(p: DiscoverKlubsParams = {}): Promise<KlubDiscoveryResult[]> {
   const qs = new URLSearchParams();
@@ -82,6 +87,9 @@ export function discoverKlubs(p: DiscoverKlubsParams = {}): Promise<KlubDiscover
   if (p.state) qs.set('state', p.state);
   if (p.sport) qs.set('sport', p.sport);
   if (p.limit) qs.set('limit', String(p.limit));
+  if (typeof p.lat === 'number') qs.set('lat', String(p.lat));
+  if (typeof p.lng === 'number') qs.set('lng', String(p.lng));
+  if (typeof p.radiusKm === 'number') qs.set('radiusKm', String(p.radiusKm));
   const suffix = qs.toString();
   return apiFetch<KlubDiscoveryResult[]>(`/klubs/discover${suffix ? `?${suffix}` : ''}`);
 }

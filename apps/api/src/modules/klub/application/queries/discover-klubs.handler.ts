@@ -7,27 +7,33 @@ export interface DiscoverKlubsCommand {
   state?: string;
   sport?: string;
   limit?: number;
-  /** city/state do user — usados pra ordenar por proximidade alfabético dentro do tier. */
+  /** city/state do user — usados pra ordenar por proximidade alfabético dentro do tier (fallback quando não há geo). */
   userCity?: string | null;
   userState?: string | null;
+  /** Geo do user (browser geolocation ou fallback CEP). Quando presente,
+   *  sort vira distance ASC (Haversine) em vez de tier-based. */
+  lat?: number;
+  lng?: number;
+  /** Raio em km. Se omitido com lat/lng setados, sort por distância sem cap. */
+  radiusKm?: number;
 }
 
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 50;
+const EARTH_RADIUS_KM = 6371;
 
 /**
  * Lista Klubs públicos (`discoverable=true`) filtrados por nome, UF e
- * esporte ativo. Sort tier-based:
+ * esporte ativo.
  *
- * - Tier 0: mesma cidade do user
- * - Tier 1: mesmo estado, cidade diferente
- * - Tier 2: outro estado
+ * Ordenação:
+ * - Com `lat`/`lng`: distance ASC (Haversine). `radiusKm` filtra
+ *   resultados fora do raio. Klubs sem lat/lng vão pro fim.
+ * - Sem geo: tier-based (mesma cidade > mesmo estado > resto), alfabético
+ *   dentro de cada tier.
  *
- * Dentro de cada tier, alfabético por nome (ASC). Tier-aware sort feito
- * em memória após query Prisma — sem escala explosiva (limit ≤ 50).
- *
- * Sprint B: sem geo (lat/lng/distance). Sprint B+1 adiciona radius
- * Haversine.
+ * Sort feito em memória (limit ≤ 50). PostGIS pode entrar em sprint
+ * futuro se base crescer.
  */
 @Injectable()
 export class DiscoverKlubsHandler {
@@ -35,6 +41,10 @@ export class DiscoverKlubsHandler {
 
   async execute(cmd: DiscoverKlubsCommand): Promise<KlubDiscoveryResult[]> {
     const limit = Math.min(cmd.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const userLat = cmd.lat;
+    const userLng = cmd.lng;
+    const radiusKm = cmd.radiusKm;
+    const hasGeo = typeof userLat === 'number' && typeof userLng === 'number';
 
     const where: Record<string, unknown> = {
       discoverable: true,
@@ -54,6 +64,10 @@ export class DiscoverKlubsHandler {
       };
     }
 
+    // Quando geo + radiusKm: pegamos mais que `limit` pra ter margem
+    // pós-filtro Haversine. Cap em MAX_LIMIT*2 pra não explodir.
+    const fetchTake = hasGeo ? Math.min(limit * 3, MAX_LIMIT * 3) : limit;
+
     const klubs = await this.prisma.klub.findMany({
       where,
       include: {
@@ -63,8 +77,48 @@ export class DiscoverKlubsHandler {
         },
       },
       orderBy: { name: 'asc' },
-      take: limit,
+      take: fetchTake,
     });
+
+    if (hasGeo && typeof userLat === 'number' && typeof userLng === 'number') {
+      const withDistance = klubs.map((k) => {
+        const kLat = k.latitude !== null ? Number(k.latitude) : null;
+        const kLng = k.longitude !== null ? Number(k.longitude) : null;
+        const dist =
+          kLat !== null && kLng !== null && Number.isFinite(kLat) && Number.isFinite(kLng)
+            ? haversineKm(userLat, userLng, kLat, kLng)
+            : null;
+        return { klub: k, kLat, kLng, dist };
+      });
+
+      const filtered =
+        typeof radiusKm === 'number'
+          ? withDistance.filter((x) => x.dist !== null && x.dist <= radiusKm)
+          : withDistance;
+
+      const sorted = filtered.sort((a, b) => {
+        if (a.dist === null && b.dist === null)
+          return a.klub.name.localeCompare(b.klub.name, 'pt-BR');
+        if (a.dist === null) return 1;
+        if (b.dist === null) return -1;
+        return a.dist - b.dist;
+      });
+
+      return sorted.slice(0, limit).map(({ klub, kLat, kLng, dist }) => ({
+        id: klub.id,
+        name: klub.name,
+        slug: klub.slug,
+        type: klub.type as KlubDiscoveryResult['type'],
+        status: klub.status as KlubDiscoveryResult['status'],
+        city: klub.city,
+        state: klub.state,
+        sports: klub.sportProfiles.map((s) => s.sportCode),
+        accessMode: (klub.accessMode as KlubAccessMode) ?? 'public',
+        latitude: kLat,
+        longitude: kLng,
+        distanceKm: dist !== null ? Math.round(dist * 10) / 10 : null,
+      }));
+    }
 
     const tierOf = (city: string | null, state: string | null): number => {
       if (cmd.userCity && city && cmd.userCity === city) return 0;
@@ -73,16 +127,13 @@ export class DiscoverKlubsHandler {
     };
 
     const ranked = klubs
-      .map((k) => ({
-        klub: k,
-        tier: tierOf(k.city, k.state),
-      }))
+      .map((k) => ({ klub: k, tier: tierOf(k.city, k.state) }))
       .sort((a, b) => {
         if (a.tier !== b.tier) return a.tier - b.tier;
         return a.klub.name.localeCompare(b.klub.name, 'pt-BR');
       });
 
-    return ranked.map(({ klub }) => ({
+    return ranked.slice(0, limit).map(({ klub }) => ({
       id: klub.id,
       name: klub.name,
       slug: klub.slug,
@@ -92,6 +143,20 @@ export class DiscoverKlubsHandler {
       state: klub.state,
       sports: klub.sportProfiles.map((s) => s.sportCode),
       accessMode: (klub.accessMode as KlubAccessMode) ?? 'public',
+      latitude: klub.latitude !== null ? Number(klub.latitude) : null,
+      longitude: klub.longitude !== null ? Number(klub.longitude) : null,
+      distanceKm: null,
     }));
   }
+}
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (deg: number): number => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return EARTH_RADIUS_KM * c;
 }
