@@ -36,6 +36,7 @@ describe('GetMeHandler', () => {
         addressNeighborhood: 'Copacabana',
         documentNumber: '11144477735',
         documentType: 'cpf',
+        notificationPrefs: { email: { booking: false } },
       },
     });
 
@@ -59,6 +60,7 @@ describe('GetMeHandler', () => {
       addressNeighborhood: 'Copacabana',
       documentNumber: '11144477735',
       documentType: 'cpf',
+      notificationPrefs: { email: { booking: false } },
       roleAssignments: [],
     });
   });
@@ -83,6 +85,7 @@ describe('GetMeHandler', () => {
         addressNeighborhood: null,
         documentNumber: null,
         documentType: null,
+        notificationPrefs: {},
       },
     });
 
@@ -124,6 +127,7 @@ describe('GetMeHandler', () => {
         addressNeighborhood: null,
         documentNumber: null,
         documentType: null,
+        notificationPrefs: {},
       },
     });
 

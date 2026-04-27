@@ -3,10 +3,11 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Plus, Search, Mail, LogOut, Loader2, User, X } from 'lucide-react';
+import { Home, Plus, Search, Mail, LogOut, Loader2, Moon, Sun, User, X } from 'lucide-react';
 import type { UserKlubMembership, Role } from '@draftklub/shared-types';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { useAuth } from '@/components/auth-provider';
+import { useTheme } from '@/components/theme-provider';
 import { getMyKlubs } from '@/lib/api/me';
 import { logout } from '@/lib/auth';
 import { forgetLastKlubSlug } from '@/lib/last-klub-cookie';
@@ -36,6 +37,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
+  const { resolvedTheme, setTheme } = useTheme();
   const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
 
   React.useEffect(() => {
@@ -174,14 +176,26 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
               ) : null}
             </div>
           </Link>
-          <button
-            type="button"
-            onClick={() => void handleLogout()}
-            className="mt-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <LogOut className="size-4" />
-            Sair
-          </button>
+          <div className="mt-1 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              aria-label={
+                resolvedTheme === 'dark' ? 'Mudar pra tema claro' : 'Mudar pra tema escuro'
+              }
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              {resolvedTheme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleLogout()}
+              className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <LogOut className="size-4" />
+              Sair
+            </button>
+          </div>
         </div>
       </aside>
     </>

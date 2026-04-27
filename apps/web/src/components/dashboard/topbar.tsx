@@ -1,7 +1,6 @@
 'use client';
 
-import { Bell, Moon, Search, Sun } from 'lucide-react';
-import { useTheme } from '@/components/theme-provider';
+import { Bell, Search } from 'lucide-react';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { cn } from '@/lib/utils';
 
@@ -17,13 +16,11 @@ interface TopbarProps {
 /**
  * Topbar contextual de páginas Klub-scoped. Mostra nome do Klub ativo
  * (estático — sidebar persistente cuida de troca/navegação),
- * subtítulo, sport tabs e ações: theme toggle, notificações, search.
+ * subtítulo, sport tabs e ações: notificações, search.
  *
- * Logout vive na sidebar agora; KlubSwitcher também (sidebar lista
- * Seus Klubs).
+ * Theme toggle e logout vivem na sidebar persistente (PR-A7).
  */
 export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
-  const { resolvedTheme, setTheme } = useTheme();
   const { klub, slug } = useActiveKlub();
 
   return (
@@ -72,15 +69,6 @@ export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
             className="h-8.5 w-full rounded-[9px] border border-border bg-background pl-8 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
           />
         </div>
-
-        <button
-          type="button"
-          className="relative inline-flex size-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Alternar tema"
-          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-        >
-          {resolvedTheme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
-        </button>
 
         <button
           type="button"

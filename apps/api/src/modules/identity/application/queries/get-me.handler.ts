@@ -1,5 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { DocumentType, Gender, MeResponse, RoleAssignment } from '@draftklub/shared-types';
+import type {
+  DocumentType,
+  Gender,
+  MeResponse,
+  NotificationPrefs,
+  RoleAssignment,
+} from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 /**
@@ -42,6 +48,7 @@ export class GetMeHandler {
       addressNeighborhood: user.addressNeighborhood,
       documentNumber: user.documentNumber,
       documentType: (user.documentType as DocumentType | null) ?? null,
+      notificationPrefs: (user.notificationPrefs as NotificationPrefs | null) ?? {},
       roleAssignments,
     };
   }

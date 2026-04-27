@@ -1,5 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { DocumentType, Gender, MeResponse, RoleAssignment } from '@draftklub/shared-types';
+import type {
+  DocumentType,
+  Gender,
+  MeResponse,
+  NotificationPrefs,
+  RoleAssignment,
+} from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import type { UpdateMeDto } from '../../api/dtos/update-me.dto';
 
@@ -44,6 +50,11 @@ export class UpdateMeHandler {
     } else if (dto.documentType !== undefined) {
       data.documentType = dto.documentType;
     }
+    if (dto.notificationPrefs !== undefined) {
+      // Replace wholesale — UI envia objeto canônico completo. Onda 3
+      // pode evoluir pra deep-merge se útil.
+      data.notificationPrefs = dto.notificationPrefs;
+    }
 
     let user;
     try {
@@ -82,6 +93,7 @@ export class UpdateMeHandler {
       addressNeighborhood: user.addressNeighborhood,
       documentNumber: user.documentNumber,
       documentType: (user.documentType as DocumentType | null) ?? null,
+      notificationPrefs: (user.notificationPrefs as NotificationPrefs | null) ?? {},
       roleAssignments,
     };
   }

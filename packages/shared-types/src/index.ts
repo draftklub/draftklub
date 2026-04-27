@@ -29,6 +29,27 @@ export type DocumentType = 'cpf' | 'rg' | 'passport' | 'other';
 
 export type Gender = 'male' | 'female' | 'undisclosed';
 
+/**
+ * Preferências de notificação. Shape canônico salvo em jsonb. Toggles
+ * faltantes são interpretados como `true` (default opt-in pra todos
+ * tipos; user opta-out explicitamente).
+ *
+ * Sprint atual (Onda 2 PR-A7): só persistência. Mailer integration
+ * (consume essas prefs) é Onda 3.
+ */
+export interface NotificationPrefs {
+  email?: {
+    enrollment?: boolean; // approvação/rejeição de inscrição em modalidade
+    booking?: boolean; // confirmação/cancelamento de reserva
+    tournament?: boolean; // próximo torneio inscrito
+    invitation?: boolean; // convite recebido
+    announcement?: boolean; // anúncio do Klub Admin
+  };
+}
+
+/** Tema da UI. `'system'` segue prefers-color-scheme do navegador. */
+export type ThemePreference = 'light' | 'dark' | 'system';
+
 export type MembershipType = 'member' | 'guest' | 'staff';
 
 export type MembershipStatus = 'active' | 'inactive' | 'suspended';
@@ -124,6 +145,7 @@ export interface MeResponse {
   /** CPF só dígitos, 11 chars. Após setado, geralmente não muda. */
   documentNumber: string | null;
   documentType: DocumentType | null;
+  notificationPrefs: NotificationPrefs;
   roleAssignments: RoleAssignment[];
 }
 

@@ -61,6 +61,10 @@ model User {
 
   consentGivenAt DateTime? @map("consent_given_at") @db.Timestamptz
   consentVersion String?   @map("consent_version")
+
+  notificationPrefs Json @default("{}") @map("notification_prefs")
+  // Shape: { email: { enrollment, booking, tournament, invitation, announcement } }
+  // Defaults interpretados client-side: missing key → true.
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz

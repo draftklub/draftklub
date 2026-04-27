@@ -1,4 +1,10 @@
-import type { DocumentType, Gender, MeResponse, UserKlubMembership } from '@draftklub/shared-types';
+import type {
+  DocumentType,
+  Gender,
+  MeResponse,
+  NotificationPrefs,
+  UserKlubMembership,
+} from '@draftklub/shared-types';
 import { apiFetch } from './client';
 
 /** GET /me — identidade do user logado (Firebase + DB) + roleAssignments. */
@@ -26,6 +32,7 @@ export interface UpdateMeInput {
   addressNeighborhood?: string;
   documentNumber?: string;
   documentType?: DocumentType;
+  notificationPrefs?: NotificationPrefs;
 }
 
 /** PATCH /me — atualiza campos do user logado. */

@@ -43,6 +43,22 @@ export const UpdateMeSchema = z.object({
   addressNumber: z.string().min(1).max(20).optional(),
   addressComplement: z.string().max(100).optional(),
   addressNeighborhood: z.string().min(2).max(100).optional(),
+
+  // Notification prefs (jsonb shape canônico). UI envia objeto completo
+  // ou parcial; backend faz merge/replace via Prisma update.
+  notificationPrefs: z
+    .object({
+      email: z
+        .object({
+          enrollment: z.boolean().optional(),
+          booking: z.boolean().optional(),
+          tournament: z.boolean().optional(),
+          invitation: z.boolean().optional(),
+          announcement: z.boolean().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 export type UpdateMeDto = z.infer<typeof UpdateMeSchema>;

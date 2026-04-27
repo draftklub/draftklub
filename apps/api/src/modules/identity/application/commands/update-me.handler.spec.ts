@@ -29,6 +29,7 @@ function buildHandler(opts: { update?: object | Error } = {}) {
           addressNeighborhood: null,
           documentNumber: null,
           documentType: null,
+          notificationPrefs: {},
           ...(opts.update ?? {}),
           ...args.data,
         };
