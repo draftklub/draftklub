@@ -27,6 +27,8 @@ export type UserKind = 'regular' | 'guest';
 
 export type DocumentType = 'cpf' | 'rg' | 'passport' | 'other';
 
+export type Gender = 'male' | 'female' | 'undisclosed';
+
 export type MembershipType = 'member' | 'guest' | 'staff';
 
 export type MembershipStatus = 'active' | 'inactive' | 'suspended';
@@ -97,6 +99,15 @@ export interface MeResponse {
   id: string;
   email: string;
   firebaseUid: string | null;
+  fullName: string;
+  phone: string | null;
+  /** ISO `YYYY-MM-DD` — só a parte de data, sem time. */
+  birthDate: string | null;
+  avatarUrl: string | null;
+  gender: Gender | null;
+  city: string | null;
+  /** UF Brasil, 2 chars maiúsculo (ex `RJ`). */
+  state: string | null;
   roleAssignments: RoleAssignment[];
 }
 

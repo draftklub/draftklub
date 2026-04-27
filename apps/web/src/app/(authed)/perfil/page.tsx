@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import type { UserInfo } from 'firebase/auth';
+import type { Gender, MeResponse } from '@draftklub/shared-types';
 import { useAuth } from '@/components/auth-provider';
 import {
   changePassword,
@@ -11,10 +12,32 @@ import {
   unlinkProvider,
   updateDisplayName,
 } from '@/lib/auth';
+import { getMe, updateMe } from '@/lib/api/me';
+import { BRAZILIAN_STATES, isBrazilianState } from '@/lib/brazilian-states';
 import { cn } from '@/lib/utils';
 
 export default function PerfilPage() {
   const { user } = useAuth();
+  const [me, setMe] = React.useState<MeResponse | null>(null);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [reloadToken, setReloadToken] = React.useState(0);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setLoadError(null);
+    setMe(null);
+    getMe()
+      .then((data) => {
+        if (!cancelled) setMe(data);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setLoadError(err instanceof Error ? err.message : 'Erro ao carregar perfil');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadToken]);
 
   return (
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
@@ -31,11 +54,23 @@ export default function PerfilPage() {
           </p>
         </header>
 
-        {!user ? (
+        {loadError ? (
+          <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-5 text-sm text-destructive">
+            <p>{loadError}</p>
+            <button
+              type="button"
+              onClick={() => setReloadToken((n) => n + 1)}
+              className="mt-3 inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <Loader2 className="size-3.5" />
+              Tentar de novo
+            </button>
+          </div>
+        ) : !me || !user ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : (
           <div className="flex flex-col gap-8">
-            <IdentitySection displayName={user.displayName ?? ''} email={user.email ?? ''} />
+            <IdentitySection initial={me} onUpdated={(next) => setMe(next)} />
             <AccessSection email={user.email ?? ''} providerData={user.providerData} />
             <DangerZone />
           </div>
@@ -47,28 +82,85 @@ export default function PerfilPage() {
 
 // ─── Identidade ─────────────────────────────────────────────────────────
 
-function IdentitySection({ displayName, email }: { displayName: string; email: string }) {
-  const [name, setName] = React.useState(displayName);
+interface IdentitySectionProps {
+  initial: MeResponse;
+  onUpdated: (next: MeResponse) => void;
+}
+
+function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
+  const [name, setName] = React.useState(initial.fullName);
+  const [phone, setPhone] = React.useState(initial.phone ?? '');
+  const [birthDate, setBirthDate] = React.useState(initial.birthDate ?? '');
+  const [gender, setGender] = React.useState<Gender | ''>(initial.gender ?? '');
+  const [city, setCity] = React.useState(initial.city ?? '');
+  const [state, setState] = React.useState(initial.state ?? '');
   const [status, setStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = React.useState('');
 
   React.useEffect(() => {
-    setName(displayName);
-  }, [displayName]);
+    setName(initial.fullName);
+    setPhone(initial.phone ?? '');
+    setBirthDate(initial.birthDate ?? '');
+    setGender(initial.gender ?? '');
+    setCity(initial.city ?? '');
+    setState(initial.state ?? '');
+  }, [initial]);
 
-  const dirty = name.trim() !== displayName.trim();
+  const dirty =
+    name.trim() !== initial.fullName.trim() ||
+    phone !== (initial.phone ?? '') ||
+    birthDate !== (initial.birthDate ?? '') ||
+    gender !== (initial.gender ?? '') ||
+    city !== (initial.city ?? '') ||
+    state !== (initial.state ?? '');
+
+  function clearStatusOnChange() {
+    if (status === 'error' || status === 'saved') setStatus('idle');
+  }
+
+  function validate(): string | null {
+    if (name.trim().length < 2) return 'Nome muito curto (mínimo 2 caracteres).';
+    if (state.length > 0 && !isBrazilianState(state)) return 'UF inválida.';
+    if (birthDate.length > 0) {
+      const d = new Date(`${birthDate}T00:00:00Z`);
+      if (Number.isNaN(d.getTime())) return 'Data de nascimento inválida.';
+      if (d.getTime() > Date.now()) return 'Data de nascimento não pode ser no futuro.';
+    }
+    if (phone.length > 30) return 'Telefone muito longo.';
+    return null;
+  }
 
   async function handleSave() {
     if (!dirty || status === 'saving') return;
-    if (name.trim().length < 2) {
+    const err = validate();
+    if (err) {
       setStatus('error');
-      setErrorMsg('Nome muito curto (mínimo 2 caracteres).');
+      setErrorMsg(err);
       return;
     }
+
     setStatus('saving');
     setErrorMsg('');
+
+    const nameChanged = name.trim() !== initial.fullName.trim();
+
     try {
-      await updateDisplayName(name);
+      const promises: Promise<unknown>[] = [];
+      if (nameChanged) promises.push(updateDisplayName(name));
+      promises.push(
+        updateMe({
+          fullName: nameChanged ? name.trim() : undefined,
+          phone: phone || undefined,
+          birthDate: birthDate || undefined,
+          gender: gender || undefined,
+          city: city || undefined,
+          state: state || undefined,
+        }),
+      );
+      const results = await Promise.all(promises);
+      // Última promise é sempre o updateMe e retorna MeResponse atualizado.
+      const updated = results[results.length - 1] as MeResponse;
+      onUpdated(updated);
       setStatus('saved');
       setTimeout(() => setStatus('idle'), 2000);
     } catch (err) {
@@ -85,17 +177,125 @@ function IdentitySection({ displayName, email }: { displayName: string; email: s
           value={name}
           onChange={(e) => {
             setName(e.target.value);
-            if (status === 'error' || status === 'saved') setStatus('idle');
+            clearStatusOnChange();
           }}
           className={inputCls(status === 'error')}
         />
       </Field>
+
       <Field label="E-mail" hint="Gerenciado pelo provedor de login. Não dá pra editar aqui.">
-        <input type="email" value={email} disabled className={inputCls(false)} />
+        <input type="email" value={initial.email} disabled className={inputCls(false)} />
       </Field>
+
+      <Field label="Telefone" hint="Opcional. Usamos pra contato em torneios e notificações.">
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => {
+            setPhone(e.target.value);
+            clearStatusOnChange();
+          }}
+          placeholder="(21) 9 9999-9999"
+          autoComplete="tel"
+          className={inputCls(false)}
+        />
+      </Field>
+
+      <Field label="Data de nascimento" hint="Opcional. Usamos pra categorias de torneio.">
+        <input
+          type="date"
+          value={birthDate}
+          onChange={(e) => {
+            setBirthDate(e.target.value);
+            clearStatusOnChange();
+          }}
+          max={new Date().toISOString().slice(0, 10)}
+          className={inputCls(false)}
+        />
+      </Field>
+
+      <Field label="Gênero" hint="Opcional. Usamos pra categorias de torneio.">
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              { value: 'male' as const, label: 'Masculino' },
+              { value: 'female' as const, label: 'Feminino' },
+              { value: 'undisclosed' as const, label: 'Prefiro não dizer' },
+            ] satisfies { value: Gender; label: string }[]
+          ).map((opt) => {
+            const isOn = gender === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  setGender(opt.value);
+                  clearStatusOnChange();
+                }}
+                className={cn(
+                  'inline-flex h-9 items-center rounded-lg border px-3 text-[12.5px] font-medium transition-colors',
+                  isOn
+                    ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+                    : 'border-border bg-transparent text-foreground hover:bg-muted',
+                )}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+          {gender ? (
+            <button
+              type="button"
+              onClick={() => {
+                setGender('');
+                clearStatusOnChange();
+              }}
+              className="inline-flex h-9 items-center rounded-lg bg-transparent px-2 text-[11.5px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Limpar
+            </button>
+          ) : null}
+        </div>
+      </Field>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_120px]">
+        <Field label="Cidade">
+          <input
+            type="text"
+            value={city}
+            onChange={(e) => {
+              setCity(e.target.value);
+              clearStatusOnChange();
+            }}
+            placeholder="Ex: Rio de Janeiro"
+            className={inputCls(false)}
+          />
+        </Field>
+        <Field label="UF">
+          <select
+            value={state}
+            onChange={(e) => {
+              setState(e.target.value);
+              clearStatusOnChange();
+            }}
+            className={cn(
+              inputCls(status === 'error' && state.length > 0 && !isBrazilianState(state)),
+              'pr-2',
+            )}
+          >
+            <option value="">—</option>
+            {BRAZILIAN_STATES.map((uf) => (
+              <option key={uf} value={uf}>
+                {uf}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
+
       <FormFooter
         error={status === 'error' ? errorMsg : null}
-        success={status === 'saved' ? 'Nome atualizado.' : null}
+        success={status === 'saved' ? 'Perfil atualizado.' : null}
       >
         <button
           type="button"

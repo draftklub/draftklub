@@ -3,6 +3,8 @@ import { UserPrismaRepository } from './infrastructure/repositories/user.prisma.
 import { SyncUserHandler } from './application/commands/sync-user.handler';
 import { GetUserByFirebaseUidHandler } from './application/queries/get-user-by-firebase-uid.handler';
 import { GetMyKlubsHandler } from './application/queries/get-my-klubs.handler';
+import { GetMeHandler } from './application/queries/get-me.handler';
+import { UpdateMeHandler } from './application/commands/update-me.handler';
 import { IdentityFacade } from './public/identity.facade';
 import { IdentityController } from './api/identity.controller';
 import { FirebaseAuthGuard } from '../../shared/auth/firebase-auth.guard';
@@ -14,6 +16,8 @@ import { FirebaseAuthGuard } from '../../shared/auth/firebase-auth.guard';
     SyncUserHandler,
     GetUserByFirebaseUidHandler,
     GetMyKlubsHandler,
+    GetMeHandler,
+    UpdateMeHandler,
     IdentityFacade,
     FirebaseAuthGuard,
   ],

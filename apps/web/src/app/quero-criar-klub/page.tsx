@@ -5,37 +5,8 @@ import Link from 'next/link';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { createKlubRequest } from '@/lib/api/klub-requests';
+import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
 import { cn } from '@/lib/utils';
-
-const BRAZILIAN_STATES = [
-  'AC',
-  'AL',
-  'AM',
-  'AP',
-  'BA',
-  'CE',
-  'DF',
-  'ES',
-  'GO',
-  'MA',
-  'MG',
-  'MS',
-  'MT',
-  'PA',
-  'PB',
-  'PE',
-  'PI',
-  'PR',
-  'RJ',
-  'RN',
-  'RO',
-  'RR',
-  'RS',
-  'SC',
-  'SE',
-  'SP',
-  'TO',
-] as const;
 
 type Status = 'idle' | 'submitting' | 'sent' | 'error';
 

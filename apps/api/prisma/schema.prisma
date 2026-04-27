@@ -42,6 +42,10 @@ model User {
   fullName       String    @map("full_name")
   birthDate      DateTime? @map("birth_date") @db.Date
   avatarUrl      String?   @map("avatar_url")
+  gender         String?
+  // 'male' | 'female' | 'undisclosed'
+  city           String?
+  state          String?   @db.Char(2)
 
   kind            String    @default("regular")
   // 'regular' | 'guest'

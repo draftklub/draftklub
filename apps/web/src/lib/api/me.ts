@@ -1,9 +1,29 @@
-import type { MeResponse, UserKlubMembership } from '@draftklub/shared-types';
+import type { Gender, MeResponse, UserKlubMembership } from '@draftklub/shared-types';
 import { apiFetch } from './client';
 
-/** GET /me — identidade do user logado + roleAssignments. */
+/** GET /me — identidade do user logado (Firebase + DB) + roleAssignments. */
 export function getMe(): Promise<MeResponse> {
   return apiFetch<MeResponse>('/me');
+}
+
+/**
+ * Body do PATCH /me — todos campos opcionais. Backend só atualiza
+ * fields enviados (Prisma update parcial). State em maiúsculas (UF).
+ * birthDate em ISO `YYYY-MM-DD`.
+ */
+export interface UpdateMeInput {
+  fullName?: string;
+  phone?: string;
+  birthDate?: string;
+  avatarUrl?: string;
+  gender?: Gender;
+  city?: string;
+  state?: string;
+}
+
+/** PATCH /me — atualiza campos do user logado. */
+export function updateMe(input: UpdateMeInput): Promise<MeResponse> {
+  return apiFetch<MeResponse>('/me', { method: 'PATCH', json: input });
 }
 
 /**
