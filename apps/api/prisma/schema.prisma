@@ -927,6 +927,10 @@ model Booking {
   cancelledAt     DateTime? @map("cancelled_at") @db.Timestamptz
   cancellationReason String? @map("cancellation_reason")
 
+  // Sprint Polish PR-A — timestamp do envio do lembrete 24h antes.
+  // Cron escaneia bookings em [now+23h, now+25h] com este campo NULL.
+  reminderSentAt  DateTime? @map("reminder_sent_at") @db.Timestamptz
+
   notes           String?
 
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
