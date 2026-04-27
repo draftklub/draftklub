@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateSpaceHandler, type CreateSpaceCommand } from '../application/create-space.handler';
 import { ListKlubSpacesHandler } from '../application/list-klub-spaces.handler';
 import { UpdateSpaceHandler, type UpdateSpaceCommand } from '../application/update-space.handler';
+import { DeleteSpaceHandler, type DeleteSpaceCommand } from '../application/delete-space.handler';
 
 @Injectable()
 export class SpaceFacade {
@@ -9,6 +10,7 @@ export class SpaceFacade {
     private readonly createHandler: CreateSpaceHandler,
     private readonly listHandler: ListKlubSpacesHandler,
     private readonly updateHandler: UpdateSpaceHandler,
+    private readonly deleteHandler: DeleteSpaceHandler,
   ) {}
 
   createSpace(cmd: CreateSpaceCommand) {
@@ -21,5 +23,9 @@ export class SpaceFacade {
 
   updateSpace(cmd: UpdateSpaceCommand) {
     return this.updateHandler.execute(cmd);
+  }
+
+  deleteSpace(cmd: DeleteSpaceCommand) {
+    return this.deleteHandler.execute(cmd);
   }
 }
