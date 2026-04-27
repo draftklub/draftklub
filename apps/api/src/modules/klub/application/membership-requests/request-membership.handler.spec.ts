@@ -17,9 +17,7 @@ function buildHandler(opts: {
   membership?: { status: string } | null;
   duplicatePending?: boolean;
 }) {
-  const klubFindUnique = vi.fn(() =>
-    Promise.resolve(opts.klub === undefined ? null : opts.klub),
-  );
+  const klubFindUnique = vi.fn(() => Promise.resolve(opts.klub === undefined ? null : opts.klub));
   const membershipFindUnique = vi.fn(() => Promise.resolve(opts.membership ?? null));
   const requestCreate = vi.fn(() => {
     if (opts.duplicatePending) {
@@ -30,8 +28,8 @@ function buildHandler(opts: {
     }
     return Promise.resolve({ id: 'req-1', klubId: opts.klub?.id ?? 'k1' });
   });
-  const outboxCreate = vi.fn(
-    (_args: { data: { eventType: string; payload: unknown } }) => Promise.resolve({}),
+  const outboxCreate = vi.fn((_args: { data: { eventType: string; payload: unknown } }) =>
+    Promise.resolve({}),
   );
   const tx = {
     membershipRequest: { create: requestCreate },
@@ -70,9 +68,9 @@ describe('RequestMembershipHandler', () => {
 
   it('rejeita BadRequest quando mensagem < 10 chars', async () => {
     const { handler } = buildHandler({ klub: PRIVATE_KLUB });
-    await expect(
-      handler.execute({ klubSlug: 'x', userId: 'u', message: 'curto' }),
-    ).rejects.toThrow(BadRequestException);
+    await expect(handler.execute({ klubSlug: 'x', userId: 'u', message: 'curto' })).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('rejeita 404 quando Klub não existe ou pending review', async () => {

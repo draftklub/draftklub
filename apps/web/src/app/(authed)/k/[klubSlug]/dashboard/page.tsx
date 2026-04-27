@@ -16,7 +16,10 @@ import { Topbar } from '@/components/dashboard/topbar';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { listKlubTournaments, type TournamentListItem } from '@/lib/api/tournaments';
 import { listKlubSports } from '@/lib/api/sports';
+import { listKlubSpaces } from '@/lib/api/spaces';
 import { listKlubBookings, type BookingListItem } from '@/lib/api/bookings';
+import Link from 'next/link';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const HOURS: { h: string; pct: number; prime: boolean }[] = [
@@ -114,6 +117,7 @@ export default function DashboardPage() {
     <>
       <Topbar subtitle={todayHeader()} activeSport="Tennis" />
       <main className="flex-1 overflow-y-auto px-8 py-6">
+        <OnboardingBanner />
         {/* KPI row */}
         <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {KPIS.map((kpi) => (
@@ -160,6 +164,52 @@ export default function DashboardPage() {
         </section>
       </main>
     </>
+  );
+}
+
+// ─── Onboarding nudge ────────────────────────────────────────────────
+
+function OnboardingBanner() {
+  const { klub } = useActiveKlub();
+  const [needsOnboarding, setNeedsOnboarding] = React.useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    if (!klub) return;
+    let cancelled = false;
+    void listKlubSpaces(klub.id)
+      .then((spaces) => {
+        if (!cancelled) setNeedsOnboarding(spaces.length === 0);
+      })
+      .catch(() => {
+        if (!cancelled) setNeedsOnboarding(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [klub?.id]);
+
+  if (!klub || !needsOnboarding) return null;
+
+  return (
+    <Link
+      href={`/k/${klub.slug}/onboarding`}
+      className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-[hsl(var(--brand-primary-600))]">
+          <Sparkles className="size-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="font-display text-[14px] font-bold leading-tight">
+            Configure seu Klub pra começar a receber reservas
+          </p>
+          <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+            Habilita modalidades, cria a primeira quadra e define horários — leva uns 3 minutos.
+          </p>
+        </div>
+      </div>
+      <ArrowRight className="size-4 shrink-0 text-[hsl(var(--brand-primary-600))]" />
+    </Link>
   );
 }
 

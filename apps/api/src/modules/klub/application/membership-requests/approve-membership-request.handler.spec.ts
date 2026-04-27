@@ -12,17 +12,15 @@ interface MockReq {
 }
 
 function buildHandler(opts: { req?: MockReq | null; existingRole?: { id: string } | null } = {}) {
-  const reqFind = vi.fn(() =>
-    Promise.resolve(opts.req === undefined ? null : opts.req),
-  );
-  const reqUpdate = vi.fn(
-    (_args: { where: { id: string }; data: Record<string, unknown> }) => Promise.resolve({}),
+  const reqFind = vi.fn(() => Promise.resolve(opts.req === undefined ? null : opts.req));
+  const reqUpdate = vi.fn((_args: { where: { id: string }; data: Record<string, unknown> }) =>
+    Promise.resolve({}),
   );
   const membershipUpsert = vi.fn(() => Promise.resolve({}));
   const roleFind = vi.fn(() => Promise.resolve(opts.existingRole ?? null));
   const roleCreate = vi.fn(() => Promise.resolve({}));
-  const outboxCreate = vi.fn(
-    (_args: { data: { eventType: string; payload: unknown } }) => Promise.resolve({}),
+  const outboxCreate = vi.fn((_args: { data: { eventType: string; payload: unknown } }) =>
+    Promise.resolve({}),
   );
   const tx = {
     membershipRequest: { findUnique: reqFind, update: reqUpdate },

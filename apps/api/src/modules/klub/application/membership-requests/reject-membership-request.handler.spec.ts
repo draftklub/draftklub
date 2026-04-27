@@ -3,18 +3,20 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { RejectMembershipRequestHandler } from './reject-membership-request.handler';
 import type { PrismaService } from '../../../../shared/prisma/prisma.service';
 
-function buildHandler(req: {
-  id: string;
-  klubId: string;
-  userId: string;
-  status: string;
-  klub: { name: string };
-} | null) {
-  const update = vi.fn(
-    (_args: { where: { id: string }; data: Record<string, unknown> }) => Promise.resolve({}),
+function buildHandler(
+  req: {
+    id: string;
+    klubId: string;
+    userId: string;
+    status: string;
+    klub: { name: string };
+  } | null,
+) {
+  const update = vi.fn((_args: { where: { id: string }; data: Record<string, unknown> }) =>
+    Promise.resolve({}),
   );
-  const outbox = vi.fn(
-    (_args: { data: { eventType: string; payload: unknown } }) => Promise.resolve({}),
+  const outbox = vi.fn((_args: { data: { eventType: string; payload: unknown } }) =>
+    Promise.resolve({}),
   );
   const tx = {
     membershipRequest: {

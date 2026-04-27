@@ -228,8 +228,7 @@ export class KlubFacade {
     if (klub.accessMode === 'private') {
       throw new ForbiddenException({
         type: 'request_required',
-        message:
-          'Este Klub é privado. Envie uma solicitação de entrada — o admin vai revisar.',
+        message: 'Este Klub é privado. Envie uma solicitação de entrada — o admin vai revisar.',
       });
     }
     return this.addMemberHandler.execute({

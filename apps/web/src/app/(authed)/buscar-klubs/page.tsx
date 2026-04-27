@@ -492,7 +492,11 @@ function RequestMembershipModal({
             disabled={message.trim().length < 10 || submitting}
             className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
           >
-            {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
+            {submitting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Check className="size-3.5" />
+            )}
             Enviar solicitação
           </button>
         </div>

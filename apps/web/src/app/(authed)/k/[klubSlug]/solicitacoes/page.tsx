@@ -2,18 +2,8 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import {
-  AlertCircle,
-  ArrowLeft,
-  Check,
-  CheckCircle2,
-  Loader2,
-  X,
-} from 'lucide-react';
-import type {
-  MembershipRequestAdminItem,
-  MembershipRequestStatus,
-} from '@draftklub/shared-types';
+import { AlertCircle, ArrowLeft, Check, CheckCircle2, Loader2, X } from 'lucide-react';
+import type { MembershipRequestAdminItem, MembershipRequestStatus } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import {
@@ -82,9 +72,21 @@ export default function SolicitacoesPage() {
         </header>
 
         <div className="flex gap-1 border-b border-border">
-          <TabButton active={status === 'pending'} onClick={() => setStatus('pending')} label="Pendentes" />
-          <TabButton active={status === 'approved'} onClick={() => setStatus('approved')} label="Aprovadas" />
-          <TabButton active={status === 'rejected'} onClick={() => setStatus('rejected')} label="Rejeitadas" />
+          <TabButton
+            active={status === 'pending'}
+            onClick={() => setStatus('pending')}
+            label="Pendentes"
+          />
+          <TabButton
+            active={status === 'approved'}
+            onClick={() => setStatus('approved')}
+            label="Aprovadas"
+          />
+          <TabButton
+            active={status === 'rejected'}
+            onClick={() => setStatus('rejected')}
+            label="Rejeitadas"
+          />
         </div>
 
         {actionMessage ? (
@@ -106,7 +108,9 @@ export default function SolicitacoesPage() {
         ) : items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-10 text-center">
             <p className="font-display text-base font-bold">
-              Nada {status === 'pending' ? 'pendente' : status === 'approved' ? 'aprovado' : 'rejeitado'}.
+              Nada{' '}
+              {status === 'pending' ? 'pendente' : status === 'approved' ? 'aprovado' : 'rejeitado'}
+              .
             </p>
           </div>
         ) : (
@@ -250,7 +254,11 @@ function RequestCard({
             disabled={approving}
             className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[hsl(142_71%_32%)] px-3.5 text-[13px] font-semibold text-white hover:bg-[hsl(142_71%_28%)] disabled:opacity-60"
           >
-            {approving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
+            {approving ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Check className="size-3.5" />
+            )}
             Aprovar
           </button>
           <button
@@ -350,7 +358,11 @@ function RejectModal({
             disabled={reason.trim().length < 10 || submitting}
             className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
           >
-            {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
+            {submitting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <X className="size-3.5" />
+            )}
             Rejeitar
           </button>
         </div>
@@ -367,7 +379,11 @@ function UserAvatar({ name, url }: { name: string; url: string | null }) {
       className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full font-display text-base font-bold text-white"
       style={
         url
-          ? { backgroundImage: `url(${url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+          ? {
+              backgroundImage: `url(${url})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }
           : { background: `hsl(${hue} 55% 42%)` }
       }
       aria-label={name}

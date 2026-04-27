@@ -416,6 +416,46 @@ export interface KlubSportProfile {
   addedAt: string;
 }
 
+// ─── Space (quadra) ─────────────────────────────────────────────────────
+
+export type SpaceType = 'court' | 'room' | 'pool' | 'field' | 'other';
+export type SpaceSurface = 'clay' | 'hard' | 'grass' | 'synthetic' | 'carpet';
+export type SpaceStatus = 'active' | 'maintenance' | 'inactive';
+export type MatchType = 'singles' | 'doubles';
+export type HourBandType = 'off_peak' | 'regular' | 'prime';
+
+export interface HourBand {
+  type: HourBandType;
+  /** 0-23 */
+  startHour: number;
+  /** 1-24, exclusivo (band cobre [startHour, endHour)). */
+  endHour: number;
+  /** ISO weekday: 1=Mon, 7=Sun. */
+  daysOfWeek: number[];
+  durationByMatchType: { singles?: number; doubles?: number };
+}
+
+export interface Space {
+  id: string;
+  klubId: string;
+  name: string;
+  type: SpaceType;
+  sportCode: string | null;
+  surface: SpaceSurface | null;
+  indoor: boolean;
+  hasLighting: boolean;
+  maxPlayers: number;
+  description: string | null;
+  status: SpaceStatus;
+  bookingActive: boolean;
+  slotGranularityMinutes: number;
+  slotDefaultDurationMinutes: number;
+  hourBands: HourBand[];
+  allowedMatchTypes: MatchType[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Membership ─────────────────────────────────────────────────────────
 
 export interface Membership {

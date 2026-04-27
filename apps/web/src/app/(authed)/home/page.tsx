@@ -7,10 +7,7 @@ import type { MembershipRequestForUser, UserKlubMembership } from '@draftklub/sh
 import { useAuth } from '@/components/auth-provider';
 import { EmailVerifyBanner } from '@/components/email-verify-banner';
 import { getMyKlubs } from '@/lib/api/me';
-import {
-  cancelMyMembershipRequest,
-  listMyMembershipRequests,
-} from '@/lib/api/membership-requests';
+import { cancelMyMembershipRequest, listMyMembershipRequests } from '@/lib/api/membership-requests';
 import { readLastKlubSlug } from '@/lib/last-klub-cookie';
 
 /**
@@ -23,9 +20,9 @@ export default function HomePage() {
   const { user } = useAuth();
   const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
   const [lastKlub, setLastKlub] = React.useState<UserKlubMembership | null>(null);
-  const [pendingRequests, setPendingRequests] = React.useState<
-    MembershipRequestForUser[] | null
-  >(null);
+  const [pendingRequests, setPendingRequests] = React.useState<MembershipRequestForUser[] | null>(
+    null,
+  );
   const [requestsReloadToken, setRequestsReloadToken] = React.useState(0);
 
   React.useEffect(() => {

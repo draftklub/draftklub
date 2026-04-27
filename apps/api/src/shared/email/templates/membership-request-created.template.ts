@@ -11,9 +11,11 @@ export interface MembershipRequestCreatedTemplateInput {
   appBaseUrl: string;
 }
 
-export function renderMembershipRequestCreatedEmail(
-  input: MembershipRequestCreatedTemplateInput,
-): { subject: string; html: string; text: string } {
+export function renderMembershipRequestCreatedEmail(input: MembershipRequestCreatedTemplateInput): {
+  subject: string;
+  html: string;
+  text: string;
+} {
   const reviewUrl = `${input.appBaseUrl}/k/${input.klubSlug}/solicitacoes`;
   const subject = `Nova solicitação de entrada — ${input.klubName}`;
 

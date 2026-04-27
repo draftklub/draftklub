@@ -52,10 +52,7 @@ export function listKlubMembershipRequests(
   );
 }
 
-export function approveMembershipRequest(
-  klubId: string,
-  reqId: string,
-): Promise<{ id: string }> {
+export function approveMembershipRequest(klubId: string, reqId: string): Promise<{ id: string }> {
   return apiFetch(`/klubs/${klubId}/membership-requests/${reqId}/approve`, {
     method: 'POST',
   });

@@ -15,16 +15,16 @@ export function renderKlubApprovedEmail(input: KlubApprovedTemplateInput): {
   html: string;
   text: string;
 } {
-  const dashboardUrl = `${input.appBaseUrl}/k/${input.klubSlug}/dashboard`;
+  const dashboardUrl = `${input.appBaseUrl}/k/${input.klubSlug}/onboarding`;
   const subject = `${input.klubName} foi aprovado na DraftKlub`;
 
   const text = [
     `Olá!`,
     ``,
     `Tudo certo: o cadastro do ${input.klubName} foi aprovado pela nossa equipe.`,
-    `Você já pode entrar e começar a configurar quadras, modalidades e convidar jogadores.`,
+    `Próximo passo é configurar modalidades, criar suas quadras e definir horários — fizemos um wizard rápido (3 passos, ~3min):`,
     ``,
-    `Acessar dashboard: ${dashboardUrl}`,
+    `Configurar agora: ${dashboardUrl}`,
     ``,
     `Qualquer dúvida, é só responder este email.`,
     ``,
@@ -48,13 +48,13 @@ export function renderKlubApprovedEmail(input: KlubApprovedTemplateInput): {
           <tr>
             <td style="padding:16px 32px 8px 32px;font-size:14.5px;line-height:1.6;color:#404040;">
               <p style="margin:0 0 12px 0;">Tudo certo. A equipe revisou os dados e seu Klub já pode entrar em operação.</p>
-              <p style="margin:0 0 12px 0;">Você pode começar a configurar quadras, cadastrar modalidades e convidar jogadores.</p>
+              <p style="margin:0 0 12px 0;">Próximo passo: configurar modalidades, criar suas quadras e definir horários. Fizemos um wizard rápido (3 passos, ~3min) pra te guiar.</p>
             </td>
           </tr>
           <tr>
             <td style="padding:16px 32px 32px 32px;">
               <a href="${dashboardUrl}" style="display:inline-block;background-color:#0f172a;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:8px;">
-                Acessar dashboard
+                Configurar agora
               </a>
             </td>
           </tr>

@@ -20,8 +20,8 @@ describe('HourBandsArraySchema', () => {
 
   it('aceita até 20 bandas', () => {
     // 20 bandas em dias diferentes pra evitar overlap
-    const bands = Array.from({ length: 7 }).flatMap((_, dayIdx) =>
-      [
+    const bands = Array.from({ length: 7 })
+      .flatMap((_, dayIdx) => [
         band({
           type: 'off_peak',
           startHour: 6,
@@ -34,8 +34,8 @@ describe('HourBandsArraySchema', () => {
           endHour: 18,
           daysOfWeek: [dayIdx + 1],
         }),
-      ],
-    ).slice(0, 14);
+      ])
+      .slice(0, 14);
     const r = HourBandsArraySchema.safeParse(bands);
     expect(r.success).toBe(true);
   });

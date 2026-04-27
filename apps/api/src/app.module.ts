@@ -14,6 +14,7 @@ import { EmailModule } from './shared/email/email.module';
 import { OutboxModule } from './shared/outbox/outbox.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { KlubModule } from './modules/klub/klub.module';
+import { SpaceModule } from './modules/space/space.module';
 import { SportsModule } from './modules/sports/sports.module';
 import { RankingModule } from './modules/ranking/ranking.module';
 import { CompetitionModule } from './modules/competition/competition.module';
@@ -53,6 +54,7 @@ import { BookingModule } from './modules/booking/booking.module';
     OutboxModule,
     IdentityModule,
     KlubModule,
+    SpaceModule,
     SportsModule,
     RankingModule,
     CompetitionModule,

@@ -18,8 +18,8 @@ function buildProcessor(opts: {
 }) {
   const queryRaw = vi.fn(() => Promise.resolve(opts.events ?? []));
   const executeRaw = vi.fn(() => Promise.resolve(1));
-  const update = vi.fn(
-    (_args: { where: { id: string }; data: Record<string, unknown> }) => Promise.resolve({}),
+  const update = vi.fn((_args: { where: { id: string }; data: Record<string, unknown> }) =>
+    Promise.resolve({}),
   );
   const findUnique = vi.fn((_args: { where: { id: string } }) =>
     Promise.resolve(
@@ -34,9 +34,8 @@ function buildProcessor(opts: {
     outboxEvent: { update },
   };
 
-  const sendMock = vi.fn(
-    (_input: { to: string; subject: string; html: string; text: string }) =>
-      Promise.resolve<SendEmailResult>(opts.sendResult ?? { ok: true, id: 'msg-1' }),
+  const sendMock = vi.fn((_input: { to: string; subject: string; html: string; text: string }) =>
+    Promise.resolve<SendEmailResult>(opts.sendResult ?? { ok: true, id: 'msg-1' }),
   );
   const email = { send: sendMock };
 

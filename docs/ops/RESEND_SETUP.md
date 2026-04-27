@@ -9,17 +9,19 @@ warnings no Cloud Run logs ao invés de email enviado.
 ## Escopo
 
 Os passos abaixo são **manuais** porque envolvem:
+
 - Conta externa (Resend)
 - DNS dos domínios oficiais (`draftklub.com` + `draftklub.com.br`)
 - Secret Manager do GCP (escrita de valor)
 - Trigger de Cloud Build (próximo deploy aplica)
 
 Código necessário já está commitado:
+
 - `infra/terraform/modules/secret-manager/main.tf` — recurso
   `resend-api-key` (cria o secret vazio, sem version).
 - `cloudbuild.yaml` — `--set-secrets=RESEND_API_KEY=resend-api-key:latest`
-  + `--set-env-vars=EMAIL_FROM=...,APP_BASE_URL=...` (com substitutions
-  `_EMAIL_FROM` e `_APP_BASE_URL`).
+  - `--set-env-vars=EMAIL_FROM=...,APP_BASE_URL=...` (com substitutions
+    `_EMAIL_FROM` e `_APP_BASE_URL`).
 
 ## Sequência
 
@@ -118,6 +120,7 @@ gcloud run services describe draftklub-api \
 ```
 
 Trigger um email real (forma mais rápida):
+
 1. Aprove um Klub pendente em `/admin/cadastros` ou aprove uma
    `MembershipRequest`.
 2. Aguarde até 30s (cron do `OutboxProcessor`).
@@ -140,10 +143,11 @@ LIMIT 20;
 ## Sem fazer setup
 
 Sem o secret populado:
+
 - Cloud Build vai falhar no step `deploy-api` (`--set-secrets` exige
   uma version do secret existir).
 - **Workaround**: popule com placeholder vazio: `printf '' | gcloud
-  secrets versions add resend-api-key --data-file=-`. EmailService
+secrets versions add resend-api-key --data-file=-`. EmailService
   detecta `apiKey` vazio e cai em log-only mode. Tudo funciona, só
   emails não saem.
 
@@ -153,5 +157,5 @@ Sem o secret populado:
   alerta de upgrade chega via dashboard.
 - **Reputação de domínio**: SPF/DKIM via Resend dão deliverability boa
   por default. Adicione DMARC (`_dmarc.draftklub.com TXT "v=DMARC1;
-  p=none; rua=mailto:postmaster@draftklub.com"`) pra monitorar bounces.
+p=none; rua=mailto:postmaster@draftklub.com"`) pra monitorar bounces.
 - **DKIM rotation**: Resend roda automaticamente; não precisa intervir.

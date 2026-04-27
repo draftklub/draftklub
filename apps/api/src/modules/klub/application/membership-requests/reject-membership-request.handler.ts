@@ -18,9 +18,7 @@ export class RejectMembershipRequestHandler {
   async execute(cmd: RejectMembershipRequestCommand): Promise<{ id: string }> {
     const reason = cmd.reason.trim();
     if (reason.length < MIN_REASON) {
-      throw new BadRequestException(
-        `Motivo precisa ter pelo menos ${MIN_REASON} caracteres.`,
-      );
+      throw new BadRequestException(`Motivo precisa ter pelo menos ${MIN_REASON} caracteres.`);
     }
     if (reason.length > MAX_REASON) {
       throw new BadRequestException(`Motivo não pode passar de ${MAX_REASON} caracteres.`);

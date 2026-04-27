@@ -106,10 +106,7 @@ export class RequestMembershipHandler {
       });
     } catch (err) {
       // Unique parcial (1 pending por klub_id+user_id).
-      if (
-        err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
-      ) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw new ConflictException({
           type: 'duplicate_pending_request',
           message: 'Você já tem uma solicitação pendente neste Klub.',

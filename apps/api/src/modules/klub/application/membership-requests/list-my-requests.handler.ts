@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type {
-  MembershipRequestForUser,
-  MembershipRequestStatus,
-} from '@draftklub/shared-types';
+import type { MembershipRequestForUser, MembershipRequestStatus } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 @Injectable()

@@ -12,6 +12,7 @@ import {
   Loader2,
   Moon,
   Shield,
+  Sparkles,
   Sun,
   User,
   UserCheck,
@@ -194,6 +195,13 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
             <>
               <SectionLabel>Admin do {activeKlub.klubName}</SectionLabel>
               <nav className="flex flex-col gap-0.5 px-3">
+                <NavLink
+                  href={`/k/${activeKlubSlug}/onboarding`}
+                  label="Configurar Klub"
+                  icon={Sparkles}
+                  active={pathname === `/k/${activeKlubSlug}/onboarding`}
+                  onNavigate={onClose}
+                />
                 <NavLink
                   href={`/k/${activeKlubSlug}/solicitacoes`}
                   label="Solicitações"
