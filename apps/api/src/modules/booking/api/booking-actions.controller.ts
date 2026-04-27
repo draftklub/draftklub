@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { PolicyGuard } from '../../../shared/auth/policy.guard';
 import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
@@ -10,6 +10,7 @@ import {
   RejectBookingSchema,
   CancelBookingSchema,
 } from './dtos/booking-actions.dto';
+import { AddPlayersSchema } from './dtos/add-players.dto';
 
 @Controller('bookings/:bookingId')
 @UseGuards(FirebaseAuthGuard, PolicyGuard)
@@ -48,6 +49,23 @@ export class BookingActionsController {
       bookingId,
       rejectedById: user.userId,
       reason: dto.reason,
+    });
+  }
+
+  @Post('players')
+  async addPlayers(
+    @Param('bookingId') bookingId: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = AddPlayersSchema.parse(body);
+    const booking = await this.facade.getBooking(bookingId);
+    const isStaff = await this.facade.userIsStaffOfKlub(user.userId, booking.klubId);
+    return this.facade.addPlayersToBooking({
+      bookingId,
+      players: dto.players,
+      requestedById: user.userId,
+      isStaff,
     });
   }
 

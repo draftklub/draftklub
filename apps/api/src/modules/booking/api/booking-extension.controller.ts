@@ -1,4 +1,4 @@
-import { Controller, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { PolicyGuard } from '../../../shared/auth/policy.guard';
 import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
@@ -28,6 +28,20 @@ export class BookingExtensionController {
       requestedById: user.userId,
       isStaff,
     });
+  }
+}
+
+@Controller('klubs/:klubId/extensions')
+@UseGuards(FirebaseAuthGuard, PolicyGuard)
+export class KlubExtensionsController {
+  constructor(private readonly facade: BookingFacade) {}
+
+  @Get('pending')
+  @RequirePolicy('booking.approve', (req) => ({
+    klubId: (req as { params: { klubId: string } }).params.klubId,
+  }))
+  async listPending(@Param('klubId') klubId: string) {
+    return this.facade.listPendingExtensions(klubId);
   }
 }
 

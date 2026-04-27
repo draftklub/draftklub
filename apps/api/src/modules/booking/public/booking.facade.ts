@@ -52,6 +52,11 @@ import {
   RejectExtensionHandler,
   type RejectExtensionCommand,
 } from '../application/commands/reject-extension.handler';
+import {
+  AddPlayersToBookingHandler,
+  type AddPlayersToBookingCommand,
+} from '../application/commands/add-players-to-booking.handler';
+import { ListPendingExtensionsHandler } from '../application/queries/list-pending-extensions.handler';
 import { GuestUserService } from '../domain/services/guest-user.service';
 import { NotFoundException } from '@nestjs/common';
 import type { MatchType } from '../domain/services/hour-band-resolver.service';
@@ -78,6 +83,8 @@ export class BookingFacade {
     private readonly extendHandler: ExtendBookingHandler,
     private readonly approveExtensionHandler: ApproveExtensionHandler,
     private readonly rejectExtensionHandler: RejectExtensionHandler,
+    private readonly addPlayersHandler: AddPlayersToBookingHandler,
+    private readonly listPendingExtensionsHandler: ListPendingExtensionsHandler,
     private readonly guestUserService: GuestUserService,
   ) {}
 
@@ -155,6 +162,14 @@ export class BookingFacade {
 
   async rejectExtension(cmd: RejectExtensionCommand) {
     return this.rejectExtensionHandler.execute(cmd);
+  }
+
+  async addPlayersToBooking(cmd: AddPlayersToBookingCommand) {
+    return this.addPlayersHandler.execute(cmd);
+  }
+
+  async listPendingExtensions(klubId: string) {
+    return this.listPendingExtensionsHandler.execute(klubId);
   }
 
   async searchUsers(query: string, limit = 10) {

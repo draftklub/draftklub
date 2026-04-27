@@ -139,3 +139,84 @@ export interface MyBookingItem {
 export function listMyBookings(): Promise<MyBookingItem[]> {
   return apiFetch<MyBookingItem[]>(`/me/bookings`);
 }
+
+// ─── Sprint Polish PR-C ─────────────────────────────────────────────
+
+export type AddPlayerInput =
+  | { userId: string }
+  | { guest: { firstName: string; lastName: string; email: string } };
+
+/** POST /bookings/:bookingId/players — só primary player ou staff. */
+export function addPlayersToBooking(
+  bookingId: string,
+  players: AddPlayerInput[],
+): Promise<{ id: string; otherPlayers: { userId: string; name: string }[] }> {
+  return apiFetch(`/bookings/${bookingId}/players`, {
+    method: 'POST',
+    json: { players },
+  });
+}
+
+export interface BookingExtension {
+  id: string;
+  extendedFrom: string;
+  extendedTo: string;
+  mode: 'player' | 'staff_approval' | 'staff_only';
+  status: 'approved' | 'pending' | 'rejected';
+  requestedById: string;
+  requestedAt: string;
+  decidedById?: string;
+  decidedAt?: string;
+  decisionReason?: string;
+}
+
+/** POST /bookings/:bookingId/extensions — pede extensão. */
+export function requestExtension(
+  bookingId: string,
+  additionalMinutes: number,
+  notes?: string,
+): Promise<{ id: string; status: string; extension: BookingExtension }> {
+  return apiFetch(`/bookings/${bookingId}/extensions`, {
+    method: 'POST',
+    json: { additionalMinutes, notes },
+  });
+}
+
+/** PATCH /bookings/:bookingId/extensions/:extensionId/approve — staff aprova. */
+export function approveExtension(
+  bookingId: string,
+  extensionId: string,
+): Promise<{ id: string; endsAt: string }> {
+  return apiFetch(`/bookings/${bookingId}/extensions/${extensionId}/approve`, {
+    method: 'PATCH',
+    json: {},
+  });
+}
+
+/** PATCH /bookings/:bookingId/extensions/:extensionId/reject — staff rejeita. */
+export function rejectExtension(
+  bookingId: string,
+  extensionId: string,
+  reason?: string,
+): Promise<{ id: string }> {
+  return apiFetch(`/bookings/${bookingId}/extensions/${extensionId}/reject`, {
+    method: 'PATCH',
+    json: { reason },
+  });
+}
+
+export interface PendingExtensionItem {
+  bookingId: string;
+  spaceName: string | null;
+  primaryPlayerId: string | null;
+  primaryPlayerName: string | null;
+  startsAt: string;
+  endsAt: string | null;
+  extension: BookingExtension;
+  requestedByName: string | null;
+}
+
+/** GET /klubs/:klubId/extensions/pending — admin Klub vê extensões aguardando aprovação. */
+export function listPendingExtensions(klubId: string): Promise<PendingExtensionItem[]> {
+  return apiFetch<PendingExtensionItem[]>(`/klubs/${klubId}/extensions/pending`);
+}
