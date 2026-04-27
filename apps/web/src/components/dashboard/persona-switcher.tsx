@@ -92,7 +92,7 @@ export function PersonaSwitcher() {
   return (
     <div ref={ref} className="fixed bottom-4 right-4 z-50">
       {open ? (
-        <div className="mb-2 w-[220px] rounded-xl border border-border bg-card p-2 shadow-lg">
+        <div className="mb-2 w-55 rounded-xl border border-border bg-card p-2 shadow-lg">
           <p className="px-2 pb-1 pt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
             Dev · ver como
           </p>

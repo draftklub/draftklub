@@ -201,7 +201,7 @@ export default function QueroCriarKlubPage() {
                 rows={4}
                 maxLength={1000}
                 placeholder="Quadras, modalidades, prazo desejado…"
-                className={cn(inputCls, 'min-h-[88px] py-2.5')}
+                className={cn(inputCls, 'min-h-22 py-2.5')}
               />
             </Field>
           </Section>

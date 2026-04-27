@@ -105,7 +105,7 @@ export default function CriarContaPage() {
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-40 -left-24 h-80 w-[320px] rounded-full lg:hidden"
+          className="pointer-events-none absolute -bottom-40 -left-24 h-80 w-80 rounded-full lg:hidden"
           style={{
             background: 'radial-gradient(circle, hsl(var(--accent) / 0.07) 0%, transparent 70%)',
           }}

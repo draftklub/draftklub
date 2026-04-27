@@ -493,7 +493,7 @@ function HourRow({ row }: { row: { h: string; pct: number; prime: boolean } }) {
 
 function FeedIcon({ type }: { type: FeedItem['type'] }) {
   const cls = 'flex size-7.5 shrink-0 items-center justify-center rounded-lg';
-  const inner = 'size-[15px]';
+  const inner = 'size-3.75';
   if (type === 'book') {
     return (
       <span
