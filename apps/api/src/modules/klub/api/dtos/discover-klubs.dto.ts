@@ -20,6 +20,12 @@ export const DiscoverKlubsQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
   radiusKm: z.coerce.number().min(1).max(500).optional(),
+  /**
+   * Sprint B+3 — filtra Klubs que operam no período. Não checa conflito
+   * com bookings reais (filtragem mais permissiva, evita query pesada);
+   * caso o Klub esteja 100% lotado, user verá ao clicar em /reservar.
+   */
+  period: z.enum(['morning', 'afternoon', 'evening']).optional(),
 });
 
 export type DiscoverKlubsQueryDto = z.infer<typeof DiscoverKlubsQuerySchema>;

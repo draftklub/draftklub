@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import type { KlubAccessMode, KlubDiscoveryResult } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
+export type DiscoveryPeriod = 'morning' | 'afternoon' | 'evening';
+
 export interface DiscoverKlubsCommand {
   q?: string;
   state?: string;
@@ -16,11 +18,19 @@ export interface DiscoverKlubsCommand {
   lng?: number;
   /** Raio em km. Se omitido com lat/lng setados, sort por distância sem cap. */
   radiusKm?: number;
+  /** Sprint B+3 — filtra Klubs com Spaces operando no período. */
+  period?: DiscoveryPeriod;
 }
 
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 50;
 const EARTH_RADIUS_KM = 6371;
+
+const PERIOD_RANGES: Record<DiscoveryPeriod, [number, number]> = {
+  morning: [6, 12],
+  afternoon: [12, 18],
+  evening: [18, 23],
+};
 
 /**
  * Lista Klubs públicos (`discoverable=true`) filtrados por nome, UF e
@@ -69,7 +79,7 @@ export class DiscoverKlubsHandler {
     // pós-filtro Haversine. Cap em MAX_LIMIT*2 pra não explodir.
     const fetchTake = hasGeo ? Math.min(limit * 3, MAX_LIMIT * 3) : limit;
 
-    const klubs = await this.prisma.klub.findMany({
+    const klubsRaw = await this.prisma.klub.findMany({
       where,
       include: {
         sportProfiles: {
@@ -80,6 +90,35 @@ export class DiscoverKlubsHandler {
       orderBy: { name: 'asc' },
       take: fetchTake,
     });
+
+    let klubs = klubsRaw;
+    if (cmd.period) {
+      const [periodStart, periodEnd] = PERIOD_RANGES[cmd.period];
+      const klubIds = klubsRaw.map((k) => k.id);
+      // Carrega spaces ativos de todos os klubs candidatos numa query.
+      const spaces = await this.prisma.space.findMany({
+        where: {
+          klubId: { in: klubIds },
+          deletedAt: null,
+          status: 'active',
+          bookingActive: true,
+        },
+        select: { klubId: true, hourBands: true },
+      });
+      const matchingKlubIds = new Set<string>();
+      for (const space of spaces) {
+        const bands = (space.hourBands as unknown as { startHour: number; endHour: number }[]) ?? [];
+        const operatesInPeriod = bands.some(
+          (b) =>
+            typeof b.startHour === 'number' &&
+            typeof b.endHour === 'number' &&
+            // banda intersecta período: max(start) < min(end)
+            Math.max(b.startHour, periodStart) < Math.min(b.endHour, periodEnd),
+        );
+        if (operatesInPeriod) matchingKlubIds.add(space.klubId);
+      }
+      klubs = klubsRaw.filter((k) => matchingKlubIds.has(k.id));
+    }
 
     if (hasGeo && typeof userLat === 'number' && typeof userLng === 'number') {
       const withDistance = klubs.map((k) => {

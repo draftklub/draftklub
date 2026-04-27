@@ -87,6 +87,8 @@ export interface DiscoverKlubsParams {
   lng?: number;
   /** Sprint B+1: raio em km. Sem geo presente, ignorado pelo backend. */
   radiusKm?: number;
+  /** Sprint B+3: filtra Klubs com Spaces operando no período. */
+  period?: 'morning' | 'afternoon' | 'evening';
 }
 
 /**
@@ -103,6 +105,7 @@ export function discoverKlubs(p: DiscoverKlubsParams = {}): Promise<KlubDiscover
   if (typeof p.lat === 'number') qs.set('lat', String(p.lat));
   if (typeof p.lng === 'number') qs.set('lng', String(p.lng));
   if (typeof p.radiusKm === 'number') qs.set('radiusKm', String(p.radiusKm));
+  if (p.period) qs.set('period', p.period);
   const suffix = qs.toString();
   return apiFetch<KlubDiscoveryResult[]>(`/klubs/discover${suffix ? `?${suffix}` : ''}`);
 }

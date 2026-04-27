@@ -46,6 +46,9 @@ export default function BuscarKlubsPage() {
   >('idle');
   const [radiusKm, setRadiusKm] = React.useState(25);
 
+  // Período (Sprint B+3)
+  const [period, setPeriod] = React.useState<'morning' | 'afternoon' | 'evening' | null>(null);
+
   // Resultados
   const [results, setResults] = React.useState<KlubDiscoveryResult[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -111,7 +114,11 @@ export default function BuscarKlubsPage() {
 
   // Fetch quando algum filtro muda (com debounce no q)
   const hasAnyFilter =
-    debouncedQ.length >= 2 || state.length > 0 || sport.length > 0 || (useGeo && !!geoCoords);
+    debouncedQ.length >= 2 ||
+    state.length > 0 ||
+    sport.length > 0 ||
+    (useGeo && !!geoCoords) ||
+    period !== null;
 
   React.useEffect(() => {
     if (!hasAnyFilter) {
@@ -128,6 +135,7 @@ export default function BuscarKlubsPage() {
       lat: useGeo && geoCoords ? geoCoords.lat : undefined,
       lng: useGeo && geoCoords ? geoCoords.lng : undefined,
       radiusKm: useGeo && geoCoords ? radiusKm : undefined,
+      period: period ?? undefined,
     })
       .then((data) => {
         if (!cancelled) setResults(data);
@@ -139,7 +147,17 @@ export default function BuscarKlubsPage() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQ, state, sport, hasAnyFilter, reloadToken, useGeo, geoCoords, radiusKm]);
+  }, [
+    debouncedQ,
+    state,
+    sport,
+    hasAnyFilter,
+    reloadToken,
+    useGeo,
+    geoCoords,
+    radiusKm,
+    period,
+  ]);
 
   return (
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
@@ -250,6 +268,48 @@ export default function BuscarKlubsPage() {
               Use sua localização pra ver os Klubs mais próximos por distância.
             </p>
           )}
+        </div>
+
+        {/* Período (Sprint B+3) */}
+        <div className="mb-8">
+          <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Quando vai jogar?
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                { id: 'morning', label: 'Manhã', hint: '6h–12h' },
+                { id: 'afternoon', label: 'Tarde', hint: '12h–18h' },
+                { id: 'evening', label: 'Noite', hint: '18h–23h' },
+              ] as const
+            ).map((p) => {
+              const active = period === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPeriod(active ? null : p.id)}
+                  className={cn(
+                    'inline-flex h-10 items-center gap-2 rounded-full border px-4 text-[13px] font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                    active
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-background hover:bg-muted',
+                  )}
+                >
+                  <span>{p.label}</span>
+                  <span className={cn('text-[11px]', active ? 'opacity-90' : 'text-muted-foreground')}>
+                    {p.hint}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {period ? (
+            <p className="mt-2 text-[11.5px] text-muted-foreground">
+              Mostra Klubs com quadras operando nesse período. Pode estar lotado — confira ao
+              clicar em &quot;Reservar&quot;.
+            </p>
+          ) : null}
         </div>
 
         {/* Conteúdo */}

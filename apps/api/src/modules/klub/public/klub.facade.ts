@@ -151,6 +151,7 @@ export class KlubFacade {
       lat: input.lat,
       lng: input.lng,
       radiusKm: input.radiusKm,
+      period: input.period,
     });
   }
 

@@ -16,7 +16,12 @@ interface MockKlub {
   sportProfiles: { sportCode: string }[];
 }
 
-function buildHandler(opts: { rows?: MockKlub[] } = {}) {
+interface MockSpace {
+  klubId: string;
+  hourBands: { startHour: number; endHour: number }[];
+}
+
+function buildHandler(opts: { rows?: MockKlub[]; spaces?: MockSpace[] } = {}) {
   let lastWhere: Record<string, unknown> | null = null;
   const prisma = {
     klub: {
@@ -24,6 +29,9 @@ function buildHandler(opts: { rows?: MockKlub[] } = {}) {
         lastWhere = args.where;
         return Promise.resolve(opts.rows ?? []);
       }),
+    },
+    space: {
+      findMany: vi.fn(() => Promise.resolve(opts.spaces ?? [])),
     },
   };
   const handler = new DiscoverKlubsHandler(prisma as unknown as PrismaService);
@@ -167,5 +175,35 @@ describe('DiscoverKlubsHandler', () => {
     const result = await handler.execute({ lat: -22.9, lng: -43.2 });
     expect(result.map((r) => r.name)).toEqual(['Niterói Klub', 'Klub Sem Geo']);
     expect(result[1]?.distanceKm).toBeNull();
+  });
+
+  it('period=morning: filtra Klubs com Spaces operando manhã (6h-12h)', async () => {
+    const rows: MockKlub[] = [
+      k('a', 'Klub Manhã'),
+      k('b', 'Klub Só Noite'),
+    ];
+    const spaces: MockSpace[] = [
+      { klubId: 'a', hourBands: [{ startHour: 8, endHour: 18 }] },
+      { klubId: 'b', hourBands: [{ startHour: 18, endHour: 22 }] },
+    ];
+    const { handler } = buildHandler({ rows, spaces });
+    const result = await handler.execute({ period: 'morning' });
+    expect(result.map((r) => r.name)).toEqual(['Klub Manhã']);
+  });
+
+  it('period=evening: aceita banda que toca o início do período', async () => {
+    const rows: MockKlub[] = [k('a', 'Klub Evening')];
+    const spaces: MockSpace[] = [{ klubId: 'a', hourBands: [{ startHour: 18, endHour: 22 }] }];
+    const { handler } = buildHandler({ rows, spaces });
+    const result = await handler.execute({ period: 'evening' });
+    expect(result).toHaveLength(1);
+  });
+
+  it('period sem nenhum Space matching retorna lista vazia', async () => {
+    const rows: MockKlub[] = [k('a', 'Klub')];
+    const spaces: MockSpace[] = [{ klubId: 'a', hourBands: [{ startHour: 5, endHour: 6 }] }];
+    const { handler } = buildHandler({ rows, spaces });
+    const result = await handler.execute({ period: 'evening' });
+    expect(result).toHaveLength(0);
   });
 });
