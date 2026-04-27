@@ -18,10 +18,14 @@ export default function PostLoginPage() {
 /**
  * Roteador pós-login: chama `GET /me/klubs` e redireciona conforme o
  * número de Klubs do user:
- * - 0 → `/criar-klub`
+ * - 0 → `/escolher-klub` (empty state com 3 paths: buscar, criar, intake)
  * - 1 → `/k/:slug/dashboard` direto
  * - N + cookie `dk_last_klub_slug` ainda válido → `/k/:slug/dashboard`
  * - N sem cookie ou cookie stale → `/escolher-klub`
+ *
+ * O 0-memberships antes ia direto pra `/criar-klub`, mas a maioria dos
+ * usuários novos quer entrar num Klub existente — não criar um. O
+ * `/escolher-klub` agora oferece os 3 caminhos.
  */
 function PostLoginRouter() {
   const router = useRouter();
@@ -36,7 +40,7 @@ function PostLoginRouter() {
       .then((klubs) => {
         if (cancelled) return;
         if (klubs.length === 0) {
-          router.replace('/criar-klub');
+          router.replace('/escolher-klub');
           return;
         }
 

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, Loader2, Plus } from 'lucide-react';
+import { ChevronRight, Loader2, Plus, Search } from 'lucide-react';
 import type { UserKlubMembership, Role, KlubPlan } from '@draftklub/shared-types';
 import { AuthGuard } from '@/components/auth-guard';
 import { getMyKlubs } from '@/lib/api/me';
@@ -49,6 +49,8 @@ function PickerScreen() {
     }
   }, [klubs, router]);
 
+  const hasKlubs = klubs !== null && klubs.length > 0;
+
   return (
     <main className="min-h-screen bg-background px-6 py-12 md:py-16">
       <div className="mx-auto max-w-4xl">
@@ -57,10 +59,12 @@ function PickerScreen() {
             className="font-display text-[28px] font-bold md:text-[34px]"
             style={{ letterSpacing: '-0.02em' }}
           >
-            Escolha um Klub
+            {hasKlubs ? 'Escolha um Klub' : 'Bora encontrar seu Klub'}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground md:text-base">
-            Você participa de mais de um Klub. Clica pra entrar.
+            {hasKlubs
+              ? 'Você participa de mais de um Klub. Clica pra entrar.'
+              : 'Entre num Klub que já existe ou crie o seu.'}
           </p>
         </header>
 
@@ -71,16 +75,16 @@ function PickerScreen() {
         ) : klubs.length === 0 ? (
           <EmptyState />
         ) : (
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {klubs.map((k) => (
-              <li key={k.klubId}>
-                <KlubCard klub={k} />
-              </li>
-            ))}
-            <li>
-              <CreateKlubCard />
-            </li>
-          </ul>
+          <>
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {klubs.map((k) => (
+                <li key={k.klubId}>
+                  <KlubCard klub={k} />
+                </li>
+              ))}
+            </ul>
+            <CompactPaths />
+          </>
         )}
       </div>
     </main>
@@ -117,15 +121,42 @@ function KlubCard({ klub }: { klub: UserKlubMembership }) {
   );
 }
 
-function CreateKlubCard() {
+/**
+ * Paths compactos pro user com N memberships: aparece abaixo do grid
+ * de Klubs ativos, sem deslocar o foco principal. Mesmas 3 ações do
+ * EmptyState mas em formato discreto (links secundários).
+ */
+function CompactPaths() {
   return (
-    <Link
-      href="/criar-klub"
-      className="flex h-full min-h-[120px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-transparent p-5 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-card hover:text-foreground"
-    >
-      <Plus className="size-5" strokeWidth={1.8} />
-      <span className="mt-2 text-sm font-medium">Criar novo Klub</span>
-    </Link>
+    <div className="mt-10 border-t border-border pt-6">
+      <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        Outras opções
+      </p>
+      <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-3">
+        <Link
+          href="/buscar-klubs"
+          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-transparent px-4 text-[13px] font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          <Search className="size-3.5 text-muted-foreground" />
+          Procurar um Klub
+        </Link>
+        <Link
+          href="/criar-klub"
+          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-transparent px-4 text-[13px] font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          <Plus className="size-3.5 text-muted-foreground" />
+          Criar meu Klub
+        </Link>
+      </div>
+      <p className="mt-4 text-center text-[12px] text-muted-foreground">
+        <Link
+          href="/quero-criar-klub"
+          className="underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Sou dono de um clube e quero saber mais
+        </Link>
+      </p>
+    </div>
   );
 }
 
@@ -215,19 +246,39 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   );
 }
 
+/**
+ * Empty state pro user com 0 memberships. 3 caminhos:
+ * - "Procurar um Klub" → discovery (placeholder por enquanto, /buscar-klubs)
+ * - "Criar meu Klub" → self-service (/criar-klub)
+ * - Link sutil "Sou dono de um clube..." → sales-led intake (/quero-criar-klub)
+ */
 function EmptyState() {
   return (
-    <div className="mx-auto max-w-md rounded-xl border border-dashed border-border p-8 text-center">
-      <h2 className="font-display text-lg font-bold">Você ainda não tem Klub</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Crie um Klub agora pra começar — você vira Klub Admin automaticamente.
+    <div className="mx-auto max-w-xl rounded-xl border border-border bg-card p-8 md:p-10">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:gap-3">
+        <Link
+          href="/buscar-klubs"
+          className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-[10px] bg-primary px-5 text-[15px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <Search className="size-4" />
+          Procurar um Klub
+        </Link>
+        <Link
+          href="/criar-klub"
+          className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-[10px] border border-border bg-transparent px-5 text-[15px] font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          <Plus className="size-4" />
+          Criar meu Klub
+        </Link>
+      </div>
+      <p className="mt-6 text-center text-[12.5px] text-muted-foreground">
+        <Link
+          href="/quero-criar-klub"
+          className="underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Sou dono de um clube e quero saber mais
+        </Link>
       </p>
-      <Link
-        href="/criar-klub"
-        className="mt-4 inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-      >
-        Criar Klub
-      </Link>
     </div>
   );
 }
