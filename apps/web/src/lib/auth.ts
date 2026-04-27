@@ -2,6 +2,7 @@
 
 import {
   GoogleAuthProvider,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -47,6 +48,30 @@ export async function loginWithGoogle(): Promise<FirebaseUser> {
 /** Logout. Limpa o token local + state. */
 export async function logout(): Promise<void> {
   await signOut(getFirebaseAuth());
+}
+
+/**
+ * Manda email de reset de senha. Por boa prática (não vazar se o email
+ * existe ou não), nunca lance erro pra `auth/user-not-found` no caller —
+ * a UI deve mostrar a mesma mensagem de "se existir, mandamos o link"
+ * independente do resultado. Outros erros (rede, rate limit) seguem
+ * propagando.
+ */
+export async function sendPasswordReset(email: string): Promise<void> {
+  try {
+    await sendPasswordResetEmail(getFirebaseAuth(), email);
+  } catch (err) {
+    // Engole erro de "user not found" pra não vazar existência de email.
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'code' in err &&
+      (err as { code: string }).code === 'auth/user-not-found'
+    ) {
+      return;
+    }
+    throw mapFirebaseError(err);
+  }
 }
 
 /**
@@ -99,4 +124,5 @@ const ERROR_MESSAGES: Record<string, string> = {
   'auth/cancelled-popup-request': 'Login com Google cancelado.',
   'auth/account-exists-with-different-credential':
     'Já existe uma conta com este e-mail usando outro método de login.',
+  'auth/missing-email': 'Informe o e-mail.',
 };

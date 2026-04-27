@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { CourtPattern } from '@/components/brand/court-pattern';
 import { LoginForm } from '@/components/login/login-form';
@@ -154,7 +155,12 @@ export default function LoginPage() {
             <LoginForm formWidth="100%" />
             <div className="mt-8 border-t border-border pt-5 text-center text-[13px] text-muted-foreground">
               Sem conta?{' '}
-              <span className="font-medium text-foreground">Fale com seu Klub.</span>
+              <Link
+                href="/criar-conta"
+                className="font-medium text-foreground transition-colors hover:text-primary"
+              >
+                Criar conta
+              </Link>
             </div>
           </div>
 
@@ -182,7 +188,12 @@ export default function LoginPage() {
         {/* Footer (mobile/tablet) */}
         <div className="relative z-10 px-6 pb-7 text-center text-[13px] text-muted-foreground md:pb-10 md:text-sm lg:hidden">
           Sem conta?{' '}
-          <span className="font-medium text-foreground">Fale com seu Klub.</span>
+          <Link
+            href="/criar-conta"
+            className="font-medium text-foreground transition-colors hover:text-primary"
+          >
+            Criar conta
+          </Link>
         </div>
       </section>
     </main>

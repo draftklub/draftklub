@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -143,14 +144,13 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
           <label htmlFor="password" className="text-[13px] font-medium text-foreground">
             Senha
           </label>
-          <button
-            type="button"
+          <Link
+            href="/recuperar-senha"
             tabIndex={-1}
             className="text-xs text-muted-foreground transition-colors hover:text-primary"
-            onClick={(e) => e.preventDefault()}
           >
             Esqueci minha senha
-          </button>
+          </Link>
         </div>
         <div className="relative">
           <input
@@ -247,7 +247,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
         ) : (
           <>
             <GoogleIcon size={18} />
-            Entrar com Google
+            Continuar com Google
           </>
         )}
       </button>
