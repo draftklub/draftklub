@@ -1,32 +1,45 @@
 import type {
+  CheckSlugResponse,
+  CnpjLookupResult,
   Klub,
   KlubAccessMode,
+  KlubAddressSource,
   KlubDiscoveryResult,
   KlubPlan,
   KlubType,
 } from '@draftklub/shared-types';
 import { apiFetch } from './client';
 
+/**
+ * Sprint D PR1: `entityType` virou obrigatório, `slug` foi removido (backend
+ * gera servidor-side a partir de name+neighborhood+city). PJ exige `document`
+ * (CNPJ); PF exige `creatorCpf` apenas se o user não tem CPF cadastrado no
+ * /perfil.
+ */
 export interface CreateKlubInput {
   name: string;
-  /** Opcional. Se omitido, backend gera. Conflito → 409 com type='slug_unavailable'. */
-  slug?: string;
   type?: KlubType;
   city?: string;
   state?: string;
   timezone?: string;
   email?: string;
   phone?: string;
-  entityType?: 'pj' | 'pf';
+  entityType: 'pj' | 'pf';
+  /** CNPJ só dígitos (14). Obrigatório se entityType='pj'. */
   document?: string;
+  /** CPF só dígitos (11). Obrigatório se entityType='pf' e user.documentNumber=null. */
+  creatorCpf?: string;
   legalName?: string;
   sportCodes?: string[];
   plan?: KlubPlan;
-  /** Sprint B: opt-in pra `GET /klubs/discover`. Default false. */
   discoverable?: boolean;
-  /** Sprint B: 'public' (entrada livre) | 'private' (precisa request — Sprint C). */
   accessMode?: KlubAccessMode;
   cep?: string;
+  addressStreet?: string;
+  addressNumber?: string;
+  addressComplement?: string;
+  addressNeighborhood?: string;
+  addressSource?: KlubAddressSource;
 }
 
 /** GET /klubs — lista global (auth required, requer policy klub.list). */
@@ -92,4 +105,31 @@ export function discoverKlubs(p: DiscoverKlubsParams = {}): Promise<KlubDiscover
   if (typeof p.radiusKm === 'number') qs.set('radiusKm', String(p.radiusKm));
   const suffix = qs.toString();
   return apiFetch<KlubDiscoveryResult[]>(`/klubs/discover${suffix ? `?${suffix}` : ''}`);
+}
+
+/**
+ * Sprint D PR1 — preview live de slug pro /criar-klub. Backend calcula
+ * `nome+bairro+cidade` e responde se está livre. Não bloqueia submit.
+ */
+export interface CheckSlugParams {
+  name: string;
+  neighborhood?: string;
+  city?: string;
+}
+
+export function checkKlubSlug(p: CheckSlugParams): Promise<CheckSlugResponse> {
+  const qs = new URLSearchParams();
+  qs.set('name', p.name);
+  if (p.neighborhood) qs.set('neighborhood', p.neighborhood);
+  if (p.city) qs.set('city', p.city);
+  return apiFetch<CheckSlugResponse>(`/klubs/check-slug?${qs.toString()}`);
+}
+
+/**
+ * Sprint D PR1 — consulta CNPJ na BrasilAPI via backend. Falha silenciosa
+ * (rede/404) retorna null; UI cai em manual.
+ */
+export function lookupCnpj(cnpj: string): Promise<CnpjLookupResult | null> {
+  const digits = cnpj.replace(/\D/g, '');
+  return apiFetch<CnpjLookupResult | null>(`/klubs/cnpj-lookup?cnpj=${digits}`);
 }

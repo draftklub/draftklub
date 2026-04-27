@@ -27,7 +27,9 @@ export default function HomePage() {
         if (cancelled) return;
         setKlubs(data);
         const lastSlug = readLastKlubSlug();
-        const last = lastSlug ? (data.find((k) => k.klubSlug === lastSlug) ?? null) : null;
+        const last = lastSlug
+          ? (data.find((k) => k.klubSlug === lastSlug && k.reviewStatus === 'approved') ?? null)
+          : null;
         setLastKlub(last);
       })
       .catch(() => {
@@ -144,9 +146,12 @@ export default function HomePage() {
 }
 
 function KlubCard({ klub }: { klub: UserKlubMembership }) {
+  const pending = klub.reviewStatus === 'pending';
+  const rejected = klub.reviewStatus === 'rejected';
+  const href = pending || rejected ? '/criar-klub/sucesso' : `/k/${klub.klubSlug}/dashboard`;
   return (
     <Link
-      href={`/k/${klub.klubSlug}/dashboard`}
+      href={href}
       className="group flex h-full flex-col rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-sm"
     >
       <div className="flex items-center gap-3">
@@ -158,6 +163,15 @@ function KlubCard({ klub }: { klub: UserKlubMembership }) {
           </p>
         </div>
       </div>
+      {pending ? (
+        <span className="mt-2.5 inline-flex w-fit items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+          Em análise
+        </span>
+      ) : rejected ? (
+        <span className="mt-2.5 inline-flex w-fit items-center rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-destructive">
+          Rejeitado
+        </span>
+      ) : null}
     </Link>
   );
 }

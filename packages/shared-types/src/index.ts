@@ -73,6 +73,60 @@ export type KlubStatus = 'trial' | 'active' | 'suspended' | 'cancelled';
  */
 export type KlubAccessMode = 'public' | 'private';
 
+/**
+ * Sprint D PR1 — review administrativo do cadastro do Klub. Ortogonal
+ * a `status` (trial/active/...) e `kycStatus`. Klub fica oculto até
+ * `approved`. SUPER_ADMIN da plataforma decide via /admin/cadastros (PR2).
+ */
+export type KlubReviewStatus = 'pending' | 'approved' | 'rejected';
+
+/**
+ * Origem dos campos de endereço do Klub. Anti-divergência: campos
+ * preenchidos via Receita Federal (BrasilAPI CNPJ lookup) ficam
+ * read-only no UI até user "Editar manualmente".
+ */
+export type KlubAddressSource = 'cnpj_lookup' | 'manual';
+
+/** Situação cadastral retornada pelo BrasilAPI CNPJ. Snapshot pra audit. */
+export type CnpjSituacao = 'ativa' | 'baixada' | 'suspensa' | 'inapta' | 'nula';
+
+/**
+ * Resultado normalizado da consulta de CNPJ via BrasilAPI v1
+ * (https://brasilapi.com.br/api/cnpj/v1/{cnpj}). Backend devolve
+ * pra autopopular o /criar-klub e salva snapshot completo no DB.
+ */
+export interface CnpjLookupResult {
+  razaoSocial: string | null;
+  nomeFantasia: string | null;
+  situacaoCadastral: CnpjSituacao | null;
+  descricaoSituacao: string | null;
+  dataSituacao: string | null;
+  endereco: {
+    logradouro: string | null;
+    numero: string | null;
+    complemento: string | null;
+    bairro: string | null;
+    municipio: string | null;
+    uf: string | null;
+    cep: string | null;
+  };
+  contato: {
+    telefone: string | null;
+    email: string | null;
+  };
+  capitalSocial: number | null;
+  atividadePrimaria: string | null;
+  dataAbertura: string | null;
+  raw: Record<string, unknown>;
+}
+
+export interface CheckSlugResponse {
+  slug: string;
+  available: boolean;
+  suggestedSlug: string | null;
+  conflictKlubName: string | null;
+}
+
 export type AccessMode = 'public' | 'members_only';
 
 export type BookingMode = 'direct' | 'staff_approval' | 'staff_only';
@@ -179,6 +233,14 @@ export interface Klub {
   accessMode: KlubAccessMode;
   /** CEP só dígitos (8 chars). Source pra geocoding (Sprint B+1). */
   cep: string | null;
+  /** Endereço granular (Sprint D PR1). */
+  addressStreet: string | null;
+  addressNumber: string | null;
+  addressComplement: string | null;
+  addressNeighborhood: string | null;
+  /** Status de aprovação na plataforma (Sprint D PR1). */
+  reviewStatus: KlubReviewStatus;
+  reviewRejectionReason: string | null;
   createdAt: string;
 }
 
@@ -264,6 +326,9 @@ export interface UserKlubMembership {
   /** Role mais alta do user nesse Klub. Null se só Membership sem role. */
   role: Role | null;
   joinedAt: string;
+  /** Sprint D PR1: status do cadastro na plataforma. */
+  reviewStatus: KlubReviewStatus;
+  reviewRejectionReason: string | null;
 }
 
 // ─── Sports ─────────────────────────────────────────────────────────────

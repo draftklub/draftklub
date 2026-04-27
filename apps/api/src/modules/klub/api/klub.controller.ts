@@ -10,6 +10,7 @@ import { AddMemberSchema } from './dtos/add-member.dto';
 import { AddMediaSchema } from './dtos/add-media.dto';
 import { AddSportInterestSchema } from './dtos/add-sport-interest.dto';
 import { DiscoverKlubsQuerySchema } from './dtos/discover-klubs.dto';
+import { CheckSlugQuerySchema } from './dtos/check-slug.dto';
 
 @Controller('klubs')
 @UseGuards(FirebaseAuthGuard, PolicyGuard)
@@ -45,9 +46,38 @@ export class KlubController {
     return this.klubFacade.discoverKlubs({ ...dto, userId: user.userId });
   }
 
+  /**
+   * Preview de slug pro /criar-klub (Sprint D PR1). Calcula
+   * `nome+bairro+cidade` server-side e retorna se está livre. NÃO
+   * bloqueia submit em caso de conflito — admin desambigua na PR2.
+   *
+   * Rota literal: DEVE ficar antes de `:id`.
+   */
+  @Get('check-slug')
+  @RequirePolicy('klub.check-slug')
+  async checkSlug(@Query() query: unknown) {
+    const dto = CheckSlugQuerySchema.parse(query);
+    return this.klubFacade.checkSlug(dto);
+  }
+
+  /**
+   * Preview de CNPJ lookup pra autopopular endereço no /criar-klub. Backend
+   * delega pra BrasilAPI; falha silenciosa retorna `null` (frontend cai
+   * em manual). Aberto pra qualquer auth user — não vaza dado próprio
+   * da plataforma.
+   */
+  @Get('cnpj-lookup')
+  @RequirePolicy('klub.cnpj-lookup')
+  async cnpjLookup(@Query('cnpj') cnpj: string) {
+    if (!cnpj || !/^\d{14}$/.test(cnpj)) {
+      return null;
+    }
+    return this.klubFacade.lookupCnpj(cnpj);
+  }
+
   @Get('slug/:slug')
-  async getKlubBySlug(@Param('slug') slug: string) {
-    return this.klubFacade.getKlubBySlug(slug);
+  async getKlubBySlug(@Param('slug') slug: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.klubFacade.getKlubBySlug(slug, user.userId);
   }
 
   /**
@@ -61,8 +91,8 @@ export class KlubController {
   }
 
   @Get(':id')
-  async getKlub(@Param('id') id: string) {
-    return this.klubFacade.getKlubById(id);
+  async getKlub(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.klubFacade.getKlubById(id, user.userId);
   }
 
   @Post(':id/members')

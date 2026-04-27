@@ -1,18 +1,22 @@
 import { describe, it, expect, vi } from 'vitest';
-import { ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { CreateKlubHandler } from './create-klub.handler';
 import type { KlubPrismaRepository } from '../../infrastructure/repositories/klub.prisma.repository';
 import type { EncryptionService } from '../../../../shared/encryption/encryption.service';
 import type { CepGeocoderService } from '../../../../shared/geocoding/cep-geocoder.service';
+import type { CnpjLookupService } from '../../../../shared/lookup/cnpj-lookup.service';
+import type { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 const NEW_KLUB_ID = '00000000-0000-0000-0099-000000000001';
 const USER_ID = '00000000-0000-0000-0001-000000000aaa';
 
-function buildHandler(
-  opts: {
-    existingSlugs?: string[];
-  } = {},
-) {
+interface BuildOpts {
+  existingSlugs?: string[];
+  existingUserCpf?: string | null;
+  cnpjLookup?: { razaoSocial?: string; situacaoCadastral?: string } | null;
+}
+
+function buildHandler(opts: BuildOpts = {}) {
   const repo = {
     findBySlug: vi.fn((slug: string) => {
       if (opts.existingSlugs?.includes(slug)) {
@@ -20,18 +24,17 @@ function buildHandler(
       }
       return Promise.resolve(null);
     }),
-    create: vi.fn(
-      (data: { name: string; slug: string; type: string; plan: string; createdById?: string }) =>
-        Promise.resolve({
-          id: NEW_KLUB_ID,
-          name: data.name,
-          slug: data.slug,
-          type: data.type,
-          plan: data.plan,
-          status: data.plan === 'trial' ? 'trial' : 'active',
-          city: null,
-          state: null,
-        }),
+    create: vi.fn((data: { name: string; slug: string; type: string; plan: string }) =>
+      Promise.resolve({
+        id: NEW_KLUB_ID,
+        name: data.name,
+        slug: data.slug,
+        type: data.type,
+        plan: data.plan,
+        status: data.plan === 'trial' ? 'trial' : 'active',
+        city: null,
+        state: null,
+      }),
     ),
   };
 
@@ -43,88 +46,173 @@ function buildHandler(
     geocode: vi.fn(() => Promise.resolve(null)),
   };
 
+  const cnpjLookup = {
+    lookup: vi.fn(() =>
+      Promise.resolve(
+        opts.cnpjLookup === undefined
+          ? null
+          : opts.cnpjLookup === null
+            ? null
+            : {
+                razaoSocial: opts.cnpjLookup.razaoSocial ?? null,
+                nomeFantasia: null,
+                situacaoCadastral: opts.cnpjLookup.situacaoCadastral ?? 'ativa',
+                descricaoSituacao: null,
+                dataSituacao: null,
+                endereco: {
+                  logradouro: null,
+                  numero: null,
+                  complemento: null,
+                  bairro: null,
+                  municipio: null,
+                  uf: null,
+                  cep: null,
+                },
+                contato: { telefone: null, email: null },
+                capitalSocial: null,
+                atividadePrimaria: null,
+                dataAbertura: null,
+                raw: {},
+              },
+      ),
+    ),
+  };
+
+  const userUpdate = vi.fn(() => Promise.resolve({}));
+  const prisma = {
+    user: {
+      findUnique: vi.fn(() => Promise.resolve({ documentNumber: opts.existingUserCpf ?? null })),
+      update: userUpdate,
+    },
+  };
+
   const handler = new CreateKlubHandler(
     repo as unknown as KlubPrismaRepository,
     encryption as unknown as EncryptionService,
     geocoder as unknown as CepGeocoderService,
+    cnpjLookup as unknown as CnpjLookupService,
+    prisma as unknown as PrismaService,
   );
 
-  return { handler, repo, encryption, geocoder };
+  return { handler, repo, encryption, geocoder, cnpjLookup, prisma, userUpdate };
 }
 
-describe('CreateKlubHandler — slug optional + auto-generated', () => {
-  it('gera slug do name quando slug nao eh fornecido', async () => {
-    const { handler, repo } = buildHandler();
+// CPFs de teste com checksum válido (módulo 11)
+const VALID_CPF = '11144477735';
+const VALID_CNPJ = '11222333000181'; // checksum não validado pra CNPJ no DocumentVO se algoritmo aceitar
 
+describe('CreateKlubHandler — Sprint D PR1 (review pending + CNPJ lookup + CPF inline)', () => {
+  it('PJ exige CNPJ; rejeita BadRequest se ausente', async () => {
+    const { handler } = buildHandler();
+    await expect(
+      handler.execute({
+        name: 'Test Klub',
+        entityType: 'pj',
+        createdById: USER_ID,
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('PF exige CPF; rejeita BadRequest se user.documentNumber=null e creatorCpf ausente', async () => {
+    const { handler } = buildHandler({ existingUserCpf: null });
+    await expect(
+      handler.execute({
+        name: 'PF Klub',
+        entityType: 'pf',
+        createdById: USER_ID,
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('PF salva CPF no User quando User.documentNumber=null e creatorCpf é válido', async () => {
+    const { handler, userUpdate } = buildHandler({ existingUserCpf: null });
     const result = await handler.execute({
-      name: 'Tennis Club Carioca',
+      name: 'PF Klub',
+      entityType: 'pf',
+      creatorCpf: VALID_CPF,
       createdById: USER_ID,
     });
-
-    expect(result.slug).toBe('tennis-club-carioca');
-    expect(repo.findBySlug).toHaveBeenCalledWith('tennis-club-carioca');
+    expect(userUpdate).toHaveBeenCalledWith({
+      where: { id: USER_ID },
+      data: { documentNumber: VALID_CPF, documentType: 'cpf' },
+    });
+    expect(result.reviewStatus).toBe('pending');
   });
 
-  it('faz fallback pra base+city quando slug base ja existe', async () => {
-    const { handler } = buildHandler({ existingSlugs: ['tennis-clube'] });
+  it('PF rejeita Conflict se creatorCpf difere do User.documentNumber existente', async () => {
+    const { handler } = buildHandler({ existingUserCpf: '52998224725' });
+    await expect(
+      handler.execute({
+        name: 'PF Klub',
+        entityType: 'pf',
+        creatorCpf: VALID_CPF,
+        createdById: USER_ID,
+      }),
+    ).rejects.toThrow(ConflictException);
+  });
 
+  it('PF aceita sem creatorCpf quando User já tem documentNumber', async () => {
+    const { handler, userUpdate } = buildHandler({ existingUserCpf: VALID_CPF });
     const result = await handler.execute({
-      name: 'Tennis Clube',
-      city: 'São Paulo',
+      name: 'PF Klub',
+      entityType: 'pf',
       createdById: USER_ID,
     });
-
-    expect(result.slug).toBe('tennis-clube-sao-paulo');
+    expect(userUpdate).not.toHaveBeenCalled();
+    expect(result.reviewStatus).toBe('pending');
   });
-});
 
-describe('CreateKlubHandler — slug provided by client', () => {
-  it('aceita slug do cliente quando disponivel', async () => {
-    const { handler, repo } = buildHandler();
-
+  it('slug é gerado de name+neighborhood+city, sem slug do cliente', async () => {
+    const { handler, repo } = buildHandler({ existingUserCpf: VALID_CPF });
     const result = await handler.execute({
-      name: 'Klub Custom',
-      slug: 'meu-slug-favorito',
-      createdById: USER_ID,
-    });
-
-    expect(result.slug).toBe('meu-slug-favorito');
-    expect(repo.findBySlug).toHaveBeenCalledWith('meu-slug-favorito');
-    // Nao deve cair no generateSlug; valida-se chamando findBySlug exatamente uma vez
-    expect(repo.findBySlug).toHaveBeenCalledTimes(1);
-  });
-
-  it('rejeita 409 ConflictException quando slug fornecido ja esta em uso', async () => {
-    const { handler } = buildHandler({ existingSlugs: ['tennis-rj'] });
-
-    const promise = handler.execute({
-      name: 'Outro Klub',
-      slug: 'tennis-rj',
-      createdById: USER_ID,
-    });
-
-    await expect(promise).rejects.toThrow(ConflictException);
-    await expect(promise).rejects.toMatchObject({
-      response: expect.objectContaining({
-        type: 'slug_unavailable',
-        slug: 'tennis-rj',
-      }) as Record<string, unknown>,
-    });
-  });
-
-  it('nao chama generateSlug nem o fallback de cidade quando slug eh fornecido', async () => {
-    const { handler, repo } = buildHandler();
-
-    await handler.execute({
-      name: 'Qualquer Coisa',
-      slug: 'slug-explicito',
+      name: 'Tennis Club',
+      entityType: 'pf',
+      addressNeighborhood: 'Botafogo',
       city: 'Rio de Janeiro',
       createdById: USER_ID,
     });
+    expect(result.slug).toBe('tennis-club-botafogo-rio-de-janeiro');
+    expect(repo.findBySlug).toHaveBeenCalledWith('tennis-club-botafogo-rio-de-janeiro');
+  });
 
-    // findBySlug deve ser chamado apenas pra validar 'slug-explicito',
-    // nao pra checar variantes do generateSlug.
-    expect(repo.findBySlug).toHaveBeenCalledTimes(1);
-    expect(repo.findBySlug).toHaveBeenCalledWith('slug-explicito');
+  it('slug ganha sufixo -2 quando base já existe', async () => {
+    const { handler } = buildHandler({
+      existingUserCpf: VALID_CPF,
+      existingSlugs: ['tennis-club-botafogo'],
+    });
+    const result = await handler.execute({
+      name: 'Tennis Club',
+      entityType: 'pf',
+      addressNeighborhood: 'Botafogo',
+      createdById: USER_ID,
+    });
+    expect(result.slug).toBe('tennis-club-botafogo-2');
+  });
+
+  it('PJ chama CnpjLookupService e popula legalName se ausente', async () => {
+    const { handler, cnpjLookup, repo } = buildHandler({
+      cnpjLookup: { razaoSocial: 'TENNIS CLUB LTDA', situacaoCadastral: 'ativa' },
+    });
+    await handler.execute({
+      name: 'Tennis Club',
+      entityType: 'pj',
+      document: VALID_CNPJ,
+      createdById: USER_ID,
+    });
+    expect(cnpjLookup.lookup).toHaveBeenCalled();
+    const repoCall = repo.create.mock.calls[0]?.[0] as Record<string, unknown> | undefined;
+    expect(repoCall?.legalName).toBe('TENNIS CLUB LTDA');
+    expect(repoCall?.cnpjStatus).toBe('ativa');
+    expect(repoCall?.reviewStatus).toBe('pending');
+  });
+
+  it('reviewStatus do resultado sempre vem como pending', async () => {
+    const { handler } = buildHandler({ existingUserCpf: VALID_CPF });
+    const result = await handler.execute({
+      name: 'Klub PF',
+      entityType: 'pf',
+      createdById: USER_ID,
+    });
+    expect(result.reviewStatus).toBe('pending');
   });
 });

@@ -8,6 +8,7 @@ import { HealthModule } from './shared/health/health.module';
 import { AuthModule } from './shared/auth/auth.module';
 import { EncryptionModule } from './shared/encryption/encryption.module';
 import { GeocodingModule } from './shared/geocoding/geocoding.module';
+import { LookupModule } from './shared/lookup/lookup.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { KlubModule } from './modules/klub/klub.module';
 import { SportsModule } from './modules/sports/sports.module';
@@ -41,6 +42,7 @@ import { BookingModule } from './modules/booking/booking.module';
     AuthModule,
     EncryptionModule,
     GeocodingModule,
+    LookupModule,
     PrismaModule,
     HealthModule,
     IdentityModule,

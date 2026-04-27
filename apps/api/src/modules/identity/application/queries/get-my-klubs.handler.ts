@@ -33,6 +33,8 @@ export class GetMyKlubsHandler {
             plan: true,
             status: true,
             deletedAt: true,
+            reviewStatus: true,
+            reviewRejectionReason: true,
           },
         },
       },
@@ -72,6 +74,8 @@ export class GetMyKlubsHandler {
         membershipStatus: m.status as UserKlubMembership['membershipStatus'],
         role: role as UserKlubMembership['role'],
         joinedAt: m.joinedAt.toISOString(),
+        reviewStatus: m.klub.reviewStatus as UserKlubMembership['reviewStatus'],
+        reviewRejectionReason: m.klub.reviewRejectionReason,
       };
     });
   }

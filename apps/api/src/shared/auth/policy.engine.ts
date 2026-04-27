@@ -25,6 +25,11 @@ const PUBLIC_AUTHENTICATED_ACTIONS: ReadonlySet<string> = new Set([
   'klub.create',
   'klub.join_via_link',
   'klub.discover',
+  // Sprint D PR1: preview de slug pro /criar-klub. Só leitura, não vaza
+  // dados sensíveis (só nome de Klubs públicos em conflito).
+  'klub.check-slug',
+  // Sprint D PR1: preview de CNPJ lookup (BrasilAPI) pro /criar-klub.
+  'klub.cnpj-lookup',
 ]);
 
 @Injectable()

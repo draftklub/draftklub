@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 export interface CreateKlubData {
@@ -26,6 +27,16 @@ export interface CreateKlubData {
   cep?: string;
   latitude?: number;
   longitude?: number;
+  // Sprint D PR1
+  addressStreet?: string;
+  addressNumber?: string;
+  addressComplement?: string;
+  addressNeighborhood?: string;
+  addressSource?: string;
+  cnpjStatus?: string;
+  cnpjStatusCheckedAt?: Date;
+  cnpjLookupData?: Record<string, unknown>;
+  reviewStatus?: string;
 }
 
 @Injectable()
@@ -59,6 +70,17 @@ export class KlubPrismaRepository {
           cep: data.cep,
           latitude: data.latitude,
           longitude: data.longitude,
+          addressStreet: data.addressStreet,
+          addressNumber: data.addressNumber,
+          addressComplement: data.addressComplement,
+          addressNeighborhood: data.addressNeighborhood,
+          addressSource: data.addressSource,
+          cnpjStatus: data.cnpjStatus,
+          cnpjStatusCheckedAt: data.cnpjStatusCheckedAt,
+          cnpjLookupData: data.cnpjLookupData
+            ? (data.cnpjLookupData as Prisma.InputJsonValue)
+            : undefined,
+          reviewStatus: data.reviewStatus ?? 'pending',
           status: data.plan === 'trial' ? 'trial' : 'active',
           trialEndsAt:
             data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,

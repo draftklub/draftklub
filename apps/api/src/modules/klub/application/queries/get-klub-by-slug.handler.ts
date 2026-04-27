@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { KlubAccessMode } from '@draftklub/shared-types';
+import type { KlubAccessMode, KlubReviewStatus } from '@draftklub/shared-types';
 import { KlubPrismaRepository } from '../../infrastructure/repositories/klub.prisma.repository';
 import { mapKlubConfig } from '../mappers/klub-config.mapper';
 
@@ -7,9 +7,16 @@ import { mapKlubConfig } from '../mappers/klub-config.mapper';
 export class GetKlubBySlugHandler {
   constructor(private readonly klubRepo: KlubPrismaRepository) {}
 
-  async execute(slug: string) {
+  /**
+   * Sprint D PR1: pendentes ficam visíveis só pro criador. Demais 404.
+   */
+  async execute(slug: string, viewerId?: string) {
     const klub = await this.klubRepo.findBySlug(slug);
     if (!klub) throw new NotFoundException(`Klub '${slug}' not found`);
+
+    if (klub.reviewStatus !== 'approved' && klub.createdById !== viewerId) {
+      throw new NotFoundException(`Klub '${slug}' not found`);
+    }
 
     return {
       id: klub.id,
@@ -32,6 +39,12 @@ export class GetKlubBySlugHandler {
       discoverable: klub.discoverable,
       accessMode: (klub.accessMode as KlubAccessMode) ?? 'public',
       cep: klub.cep,
+      addressStreet: klub.addressStreet,
+      addressNumber: klub.addressNumber,
+      addressComplement: klub.addressComplement,
+      addressNeighborhood: klub.addressNeighborhood,
+      reviewStatus: klub.reviewStatus as KlubReviewStatus,
+      reviewRejectionReason: klub.reviewRejectionReason,
       createdAt: klub.createdAt,
     };
   }

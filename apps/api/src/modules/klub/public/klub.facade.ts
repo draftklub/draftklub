@@ -7,8 +7,11 @@ import { GetKlubByIdHandler } from '../application/queries/get-klub-by-id.handle
 import { GetKlubBySlugHandler } from '../application/queries/get-klub-by-slug.handler';
 import { ListKlubsHandler } from '../application/queries/list-klubs.handler';
 import { DiscoverKlubsHandler } from '../application/queries/discover-klubs.handler';
+import { CheckSlugHandler } from '../application/queries/check-slug.handler';
+import { CnpjLookupService } from '../../../shared/lookup/cnpj-lookup.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import type { DiscoverKlubsQueryDto } from '../api/dtos/discover-klubs.dto';
+import type { CheckSlugQueryDto } from '../api/dtos/check-slug.dto';
 import {
   AddMemberHandler,
   type AddMemberCommand,
@@ -62,6 +65,8 @@ export class KlubFacade {
     private readonly listEnrollmentsByProfileHandler: ListEnrollmentsByProfileHandler,
     private readonly listEnrollmentsByUserHandler: ListEnrollmentsByUserHandler,
     private readonly discoverKlubsHandler: DiscoverKlubsHandler,
+    private readonly checkSlugHandler: CheckSlugHandler,
+    private readonly cnpjLookupService: CnpjLookupService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -69,12 +74,12 @@ export class KlubFacade {
     return this.createKlubHandler.execute(cmd);
   }
 
-  async getKlubById(id: string) {
-    return this.getKlubByIdHandler.execute(id);
+  async getKlubById(id: string, viewerId?: string) {
+    return this.getKlubByIdHandler.execute(id, viewerId);
   }
 
-  async getKlubBySlug(slug: string) {
-    return this.getKlubBySlugHandler.execute(slug);
+  async getKlubBySlug(slug: string, viewerId?: string) {
+    return this.getKlubBySlugHandler.execute(slug, viewerId);
   }
 
   async listKlubs() {
@@ -103,16 +108,26 @@ export class KlubFacade {
     });
   }
 
+  async checkSlug(input: CheckSlugQueryDto) {
+    return this.checkSlugHandler.execute(input);
+  }
+
+  async lookupCnpj(cnpj: string) {
+    return this.cnpjLookupService.lookup(cnpj);
+  }
+
   async addMember(cmd: AddMemberCommand) {
     return this.addMemberHandler.execute(cmd);
   }
 
   /**
    * Aceitar convite por link compartilhado: resolve slug → Klub e
-   * adiciona o user atual como PLAYER. Idempotente.
+   * adiciona o user atual como PLAYER. Idempotente. Bloqueia se Klub
+   * está em review pendente/rejeitado (Sprint D PR1) — chamada do
+   * handler já retorna 404 nesses casos.
    */
   async joinKlubBySlug(slug: string, userId: string) {
-    const klub = await this.getKlubBySlugHandler.execute(slug);
+    const klub = await this.getKlubBySlugHandler.execute(slug, userId);
     return this.addMemberHandler.execute({
       klubId: klub.id,
       userId,

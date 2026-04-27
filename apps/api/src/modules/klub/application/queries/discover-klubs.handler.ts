@@ -49,6 +49,7 @@ export class DiscoverKlubsHandler {
     const where: Record<string, unknown> = {
       discoverable: true,
       deletedAt: null,
+      reviewStatus: 'approved',
       status: { in: ['active', 'trial'] },
     };
 

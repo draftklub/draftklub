@@ -153,6 +153,16 @@ model Klub {
   timezone    String    @default("America/Sao_Paulo")
   latitude    Decimal?  @db.Decimal(10, 8)
   longitude   Decimal?  @db.Decimal(11, 8)
+  // Endereço granular (Sprint D PR1). `address` legacy permanece pra
+  // não quebrar dados existentes; novos cadastros populam os granulares.
+  addressStreet       String? @map("address_street")
+  addressNumber       String? @map("address_number")
+  addressComplement   String? @map("address_complement")
+  addressNeighborhood String? @map("address_neighborhood")
+  addressSource       String? @map("address_source")
+  // 'cnpj_lookup' | 'manual' — origem dos campos de endereço.
+  // Anti-divergência: campos auto-preenchidos via Receita ficam
+  // read-only no UI até user explicitamente "Editar manualmente".
 
   // ─── Contato ──────────────────────────────────────────────
   email       String?
@@ -197,6 +207,23 @@ model Klub {
   onboardingSource String @default("self_service") @map("onboarding_source")
   // self_service | sales_led
   createdById String?   @map("created_by_id") @db.Uuid
+
+  // ─── CNPJ snapshot (Sprint D PR1) ─────────────────────────
+  // Snapshot da BrasilAPI no momento do cadastro. Admin usa pra
+  // auditar antes de aprovar; campo raw guarda payload completo.
+  cnpjStatus          String?   @map("cnpj_status")
+  cnpjStatusCheckedAt DateTime? @map("cnpj_status_checked_at") @db.Timestamptz
+  cnpjLookupData      Json?     @map("cnpj_lookup_data")
+
+  // ─── Review administrativo (Sprint D PR1) ─────────────────
+  // Ortogonal a `status` (trial/active/...) e a `kycStatus`. Klub
+  // só vira visível em /klubs/discover e /k/:slug quando
+  // reviewStatus='approved'. Plano comercial não muda.
+  reviewStatus           String    @default("pending") @map("review_status")
+  // 'pending' | 'approved' | 'rejected'
+  reviewDecisionAt       DateTime? @map("review_decision_at") @db.Timestamptz
+  reviewDecidedById      String?   @map("review_decided_by_id") @db.Uuid
+  reviewRejectionReason  String?   @map("review_rejection_reason")
 
   // ─── Auditoria ────────────────────────────────────────────
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
