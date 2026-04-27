@@ -39,7 +39,7 @@ export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
         ) : null}
       </div>
 
-      <div className="hidden rounded-[9px] border border-border bg-card p-[3px] lg:inline-flex">
+      <div className="hidden rounded-[9px] border border-border bg-card p-0.75 lg:inline-flex">
         {SPORTS.map((sport) => {
           const isOn = sport === activeSport;
           return (
@@ -60,7 +60,7 @@ export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
       </div>
 
       <div className="ml-auto flex items-center gap-2.5">
-        <div className="relative hidden md:block md:w-[240px]">
+        <div className="relative hidden md:block md:w-60">
           <Search
             className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"
@@ -68,7 +68,7 @@ export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
           <input
             type="search"
             placeholder="Buscar sócio, quadra…"
-            className="h-[34px] w-full rounded-[9px] border border-border bg-background pl-8 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+            className="h-8.5 w-full rounded-[9px] border border-border bg-background pl-8 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
           />
         </div>
 

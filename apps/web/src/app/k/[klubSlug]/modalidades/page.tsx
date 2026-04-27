@@ -97,7 +97,7 @@ function ModalidadesScreen() {
   return (
     <main className="flex-1 overflow-y-auto px-8 py-6">
       {isAdmin ? (
-        <div className="mb-5 inline-flex rounded-[9px] border border-border bg-card p-[3px]">
+        <div className="mb-5 inline-flex rounded-[9px] border border-border bg-card p-0.75">
           <TabButton active={tab === 'all'} onClick={() => setTab('all')}>
             Todas modalidades
           </TabButton>
@@ -274,7 +274,7 @@ function EnrollmentBadge({ status }: { status: EnrollmentStatus | null }) {
   const cfg: Record<EnrollmentStatus, { label: string; cls: string; icon: typeof Check }> = {
     pending: {
       label: 'Aguardando aprovação',
-      cls: 'bg-[hsl(var(--brand-accent-500)_/_0.14)] text-[hsl(38_92%_28%)]',
+      cls: 'bg-[hsl(var(--brand-accent-500)/0.14)] text-[hsl(38_92%_28%)]',
       icon: Clock,
     },
     active: {

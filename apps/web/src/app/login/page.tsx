@@ -49,7 +49,7 @@ export default function LoginPage() {
           <BrandLockup size="lg" tone="light" />
         </div>
 
-        <div className="relative z-10 max-w-[520px]">
+        <div className="relative z-10 max-w-130">
           <p
             className="mb-5 font-mono text-[11px] font-medium uppercase"
             style={{
@@ -74,7 +74,7 @@ export default function LoginPage() {
             acontece.
           </h1>
           <p
-            className="mt-5 max-w-[460px] text-[17px]"
+            className="mt-5 max-w-115 text-[17px]"
             style={{
               lineHeight: 1.55,
               color: 'hsl(var(--brand-primary-100) / 0.75)',
@@ -106,14 +106,14 @@ export default function LoginPage() {
         {/* Glows decorativos (mobile/tablet apenas) */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-32 h-[280px] w-[280px] rounded-full lg:hidden"
+          className="pointer-events-none absolute -right-20 -top-32 h-70 w-70 rounded-full lg:hidden"
           style={{
             background: 'radial-gradient(circle, hsl(var(--primary) / 0.10) 0%, transparent 70%)',
           }}
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-40 -left-24 h-[320px] w-[320px] rounded-full lg:hidden"
+          className="pointer-events-none absolute -bottom-40 -left-24 h-80 w-[320px] rounded-full lg:hidden"
           style={{
             background: 'radial-gradient(circle, hsl(var(--accent) / 0.07) 0%, transparent 70%)',
           }}
@@ -139,7 +139,7 @@ export default function LoginPage() {
         {/* Form area */}
         <div className="relative z-10 flex flex-1 items-center justify-center px-6 pb-4 pt-7 md:pt-12 lg:px-16 lg:py-14">
           {/* Desktop heading + form */}
-          <div className="hidden w-full max-w-[400px] lg:block">
+          <div className="hidden w-full max-w-100 lg:block">
             <h2
               className="mb-1 font-display text-[28px] font-bold text-foreground"
               style={{ letterSpacing: '-0.02em' }}

@@ -207,7 +207,7 @@ function PlanBadge({ plan }: { plan: KlubPlan }) {
       className={cn(
         'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
         isTrial
-          ? 'bg-[hsl(var(--brand-accent-500)_/_0.14)] text-[hsl(38_92%_28%)]'
+          ? 'bg-[hsl(var(--brand-accent-500)/0.14)] text-[hsl(38_92%_28%)]'
           : 'bg-muted text-muted-foreground',
       )}
     >
@@ -220,7 +220,7 @@ function SkeletonGrid() {
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <li key={i} className="h-[124px] animate-pulse rounded-xl border border-border bg-card" />
+        <li key={i} className="h-31 animate-pulse rounded-xl border border-border bg-card" />
       ))}
     </ul>
   );

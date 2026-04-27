@@ -82,7 +82,7 @@ export function KlubSwitcher() {
       {open ? (
         <div
           role="menu"
-          className="absolute left-0 top-full z-50 mt-2 w-[280px] rounded-xl border border-border bg-card shadow-lg"
+          className="absolute left-0 top-full z-50 mt-2 w-70 rounded-xl border border-border bg-card shadow-lg"
         >
           <div className="border-b border-border px-3 pb-2 pt-3">
             <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">

@@ -129,7 +129,7 @@ export default function DashboardPage() {
             className="lg:col-span-2"
             headerExtra={<OccupancyLegend />}
           >
-            <div className="flex flex-col gap-[7px]">
+            <div className="flex flex-col gap-1.75">
               {HOURS.map((row) => (
                 <HourRow key={row.h} row={row} />
               ))}
@@ -149,7 +149,7 @@ export default function DashboardPage() {
             headerExtra={
               <button
                 type="button"
-                className="rounded-lg border border-border bg-transparent px-3 py-[7px] text-[12.5px] font-medium text-foreground transition-colors hover:bg-muted"
+                className="rounded-lg border border-border bg-transparent px-3 py-1.75 text-[12.5px] font-medium text-foreground transition-colors hover:bg-muted"
               >
                 Ver tudo
               </button>
@@ -213,7 +213,7 @@ function RealTournaments() {
     return (
       <ul className="flex flex-col gap-2">
         {Array.from({ length: 3 }).map((_, i) => (
-          <li key={i} className="h-[44px] animate-pulse rounded-md bg-muted" />
+          <li key={i} className="h-11 animate-pulse rounded-md bg-muted" />
         ))}
       </ul>
     );
@@ -299,7 +299,7 @@ function RealActivityFeed() {
     return (
       <ul className="grid grid-cols-1 gap-x-8 md:grid-cols-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <li key={i} className="h-[48px] animate-pulse rounded-md bg-muted" />
+          <li key={i} className="h-12 animate-pulse rounded-md bg-muted" />
         ))}
       </ul>
     );
@@ -358,7 +358,7 @@ function KpiCard({ kpi }: { kpi: KpiData }) {
   return (
     <div className="relative rounded-xl border border-border bg-card p-5">
       <div className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-        <Icon className="size-[13px]" strokeWidth={1.8} />
+        <Icon className="size-3.25" strokeWidth={1.8} />
         {kpi.label}
       </div>
       <div
@@ -424,7 +424,7 @@ function Panel({
 }) {
   return (
     <div className={cn('rounded-xl border border-border bg-card p-5', className)}>
-      <div className="mb-[18px] flex items-start justify-between gap-3">
+      <div className="mb-4.5 flex items-start justify-between gap-3">
         <div>
           <h2
             className="mb-1 font-display text-[15px] font-bold"
@@ -470,7 +470,7 @@ function HourRow({ row }: { row: { h: string; pct: number; prime: boolean } }) {
       >
         {row.h}
       </span>
-      <div className="relative h-[22px] overflow-hidden rounded-md bg-muted">
+      <div className="relative h-5.5 overflow-hidden rounded-md bg-muted">
         <div
           className="absolute inset-y-0 left-0 rounded-md transition-[width] duration-300"
           style={{
@@ -492,7 +492,7 @@ function HourRow({ row }: { row: { h: string; pct: number; prime: boolean } }) {
 }
 
 function FeedIcon({ type }: { type: FeedItem['type'] }) {
-  const cls = 'flex size-[30px] shrink-0 items-center justify-center rounded-lg';
+  const cls = 'flex size-7.5 shrink-0 items-center justify-center rounded-lg';
   const inner = 'size-[15px]';
   if (type === 'book') {
     return (

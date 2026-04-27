@@ -111,7 +111,7 @@ export function Sidebar() {
       {/* Footer card */}
       <div className="mx-3.5 mb-4 mt-auto rounded-[10px] bg-muted p-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-[30px] items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+          <div className="flex size-7.5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
             JP
           </div>
           <div className="min-w-0">
@@ -148,14 +148,14 @@ function NavLink({
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-[11px] rounded-lg px-2.5 py-2 text-[13.5px] transition-colors',
+        'flex items-center gap-2.75 rounded-lg px-2.5 py-2 text-[13.5px] transition-colors',
         active
           ? 'bg-primary/10 font-semibold text-[hsl(var(--brand-primary-600))]'
           : 'font-medium text-foreground hover:bg-muted',
       )}
     >
       <Icon
-        className={cn('size-[17px] shrink-0', active ? 'text-primary' : 'text-muted-foreground')}
+        className={cn('size-4.25 shrink-0', active ? 'text-primary' : 'text-muted-foreground')}
         strokeWidth={1.8}
       />
       <span className="flex-1">{label}</span>
