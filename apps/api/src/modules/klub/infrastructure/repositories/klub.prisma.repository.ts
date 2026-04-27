@@ -21,6 +21,9 @@ export interface CreateKlubData {
   onboardingSource: string;
   createdById?: string;
   plan: string;
+  discoverable?: boolean;
+  accessMode?: string;
+  cep?: string;
 }
 
 @Injectable()
@@ -49,6 +52,9 @@ export class KlubPrismaRepository {
           onboardingSource: data.onboardingSource,
           createdById: data.createdById,
           plan: data.plan,
+          discoverable: data.discoverable ?? false,
+          accessMode: data.accessMode ?? 'public',
+          cep: data.cep,
           status: data.plan === 'trial' ? 'trial' : 'active',
           trialEndsAt:
             data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,

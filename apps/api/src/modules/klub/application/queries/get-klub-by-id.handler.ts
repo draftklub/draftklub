@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { KlubAccessMode } from '@draftklub/shared-types';
 import { KlubPrismaRepository } from '../../infrastructure/repositories/klub.prisma.repository';
 import { mapKlubConfig } from '../mappers/klub-config.mapper';
 
@@ -28,6 +29,9 @@ export class GetKlubByIdHandler {
       parentKlubId: klub.parentKlubId,
       sports: klub.sportProfiles.map((s) => s.sportCode),
       config: mapKlubConfig(klub.config),
+      discoverable: klub.discoverable,
+      accessMode: (klub.accessMode as KlubAccessMode) ?? 'public',
+      cep: klub.cep,
       createdAt: klub.createdAt,
     };
   }

@@ -23,6 +23,11 @@ export interface CreateKlubCommand {
   onboardingSource?: 'self_service' | 'sales_led';
   createdById?: string;
   plan?: string;
+  /** Sprint B: opt-in pra `GET /klubs/discover`. Default false. */
+  discoverable?: boolean;
+  /** Sprint B: 'public' (entrada livre) | 'private' (request flow Sprint C). */
+  accessMode?: 'public' | 'private';
+  cep?: string;
 }
 
 export interface CreateKlubResult {
@@ -83,6 +88,9 @@ export class CreateKlubHandler {
       onboardingSource: cmd.onboardingSource ?? 'self_service',
       createdById: cmd.createdById,
       plan: cmd.plan ?? 'trial',
+      discoverable: cmd.discoverable ?? false,
+      accessMode: cmd.accessMode ?? 'public',
+      cep: cmd.cep,
     });
   }
 

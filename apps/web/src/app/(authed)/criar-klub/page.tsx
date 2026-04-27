@@ -46,6 +46,8 @@ function CriarKlubFlow() {
   const [slug, setSlug] = React.useState('');
   const [slugTouched, setSlugTouched] = React.useState(false);
   const [type, setType] = React.useState<KlubType>('sports_club');
+  const [discoverable, setDiscoverable] = React.useState(false);
+  const [accessMode, setAccessMode] = React.useState<'public' | 'private'>('public');
   const [step1Error, setStep1Error] = React.useState<string | null>(null);
   const [checkingSlug, setCheckingSlug] = React.useState(false);
 
@@ -132,6 +134,8 @@ function CriarKlubFlow() {
         slug,
         type,
         sportCodes: Array.from(selectedSports),
+        discoverable,
+        accessMode: discoverable ? accessMode : 'public',
       });
 
       // Backend já cria sport profiles via sportCodes; mas se o array
@@ -195,6 +199,10 @@ function CriarKlubFlow() {
               }}
               type={type}
               setType={setType}
+              discoverable={discoverable}
+              setDiscoverable={setDiscoverable}
+              accessMode={accessMode}
+              setAccessMode={setAccessMode}
               error={step1Error}
               checking={checkingSlug}
               onNext={() => void goToStep2()}
@@ -263,6 +271,10 @@ interface Step1Props {
   setSlug: (v: string) => void;
   type: KlubType;
   setType: (v: KlubType) => void;
+  discoverable: boolean;
+  setDiscoverable: (v: boolean) => void;
+  accessMode: 'public' | 'private';
+  setAccessMode: (v: 'public' | 'private') => void;
   error: string | null;
   checking: boolean;
   onNext: () => void;
@@ -275,6 +287,10 @@ function Step1({
   setSlug,
   type,
   setType,
+  discoverable,
+  setDiscoverable,
+  accessMode,
+  setAccessMode,
   error,
   checking,
   onNext,
@@ -339,6 +355,63 @@ function Step1({
             </button>
           ))}
         </div>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-[13px] font-medium">Visibilidade</label>
+        <label className="flex items-start gap-2.5 rounded-lg border border-border bg-card p-3.5 transition-colors hover:bg-muted/40">
+          <input
+            type="checkbox"
+            checked={discoverable}
+            onChange={(e) => setDiscoverable(e.target.checked)}
+            className="mt-0.5 size-4 rounded border-input"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[13.5px] font-semibold">Permitir busca pública</p>
+            <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+              Outros jogadores podem encontrar e entrar no seu Klub via /buscar-klubs. Você sempre
+              pode mudar depois.
+            </p>
+          </div>
+        </label>
+
+        {discoverable ? (
+          <div className="mt-2 flex flex-col gap-2 pl-7">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="accessMode"
+                value="public"
+                checked={accessMode === 'public'}
+                onChange={() => setAccessMode('public')}
+                className="mt-0.5 size-4"
+              />
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium">Aberto pra qualquer Jogador</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  Click "Entrar" → vira PLAYER imediatamente.
+                </p>
+              </div>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="accessMode"
+                value="private"
+                checked={accessMode === 'private'}
+                onChange={() => setAccessMode('private')}
+                className="mt-0.5 size-4"
+              />
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium">Privado (precisa aprovação)</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  Em breve você poderá configurar comprovações (matrícula etc). Por enquanto,
+                  entradas pendentes ficam pra você aprovar manualmente.
+                </p>
+              </div>
+            </label>
+          </div>
+        ) : null}
       </div>
 
       {error ? (

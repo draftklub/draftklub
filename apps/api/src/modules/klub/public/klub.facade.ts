@@ -6,6 +6,9 @@ import {
 import { GetKlubByIdHandler } from '../application/queries/get-klub-by-id.handler';
 import { GetKlubBySlugHandler } from '../application/queries/get-klub-by-slug.handler';
 import { ListKlubsHandler } from '../application/queries/list-klubs.handler';
+import { DiscoverKlubsHandler } from '../application/queries/discover-klubs.handler';
+import { PrismaService } from '../../../shared/prisma/prisma.service';
+import type { DiscoverKlubsQueryDto } from '../api/dtos/discover-klubs.dto';
 import {
   AddMemberHandler,
   type AddMemberCommand,
@@ -58,6 +61,8 @@ export class KlubFacade {
     private readonly cancelEnrollmentHandler: CancelEnrollmentHandler,
     private readonly listEnrollmentsByProfileHandler: ListEnrollmentsByProfileHandler,
     private readonly listEnrollmentsByUserHandler: ListEnrollmentsByUserHandler,
+    private readonly discoverKlubsHandler: DiscoverKlubsHandler,
+    private readonly prisma: PrismaService,
   ) {}
 
   async createKlub(cmd: CreateKlubCommand) {
@@ -74,6 +79,25 @@ export class KlubFacade {
 
   async listKlubs() {
     return this.listKlubsHandler.execute();
+  }
+
+  /**
+   * Discovery: lista Klubs com `discoverable=true`. Busca user.city/state
+   * pra ranking por tier (mesma cidade > mesmo estado > resto).
+   */
+  async discoverKlubs(input: DiscoverKlubsQueryDto & { userId: string }) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: input.userId },
+      select: { city: true, state: true },
+    });
+    return this.discoverKlubsHandler.execute({
+      q: input.q,
+      state: input.state,
+      sport: input.sport,
+      limit: input.limit,
+      userCity: user?.city ?? null,
+      userState: user?.state ?? null,
+    });
   }
 
   async addMember(cmd: AddMemberCommand) {

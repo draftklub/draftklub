@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { CurrentUser } from '../../../shared/auth/current-user.decorator';
 import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
@@ -9,6 +9,7 @@ import { CreateKlubSchema } from './dtos/create-klub.dto';
 import { AddMemberSchema } from './dtos/add-member.dto';
 import { AddMediaSchema } from './dtos/add-media.dto';
 import { AddSportInterestSchema } from './dtos/add-sport-interest.dto';
+import { DiscoverKlubsQuerySchema } from './dtos/discover-klubs.dto';
 
 @Controller('klubs')
 @UseGuards(FirebaseAuthGuard, PolicyGuard)
@@ -26,6 +27,22 @@ export class KlubController {
   @RequirePolicy('klub.list')
   async listKlubs() {
     return this.klubFacade.listKlubs();
+  }
+
+  /**
+   * Discovery público: lista Klubs com `discoverable=true`. Filtros
+   * opcionais por nome/UF/esporte. Sort tier-based (mesma cidade do
+   * user > mesmo estado > resto, alfabético dentro). Liberado pra
+   * qualquer auth user via PUBLIC_AUTHENTICATED_ACTIONS.
+   *
+   * IMPORTANTE: rota literal — DEVE ficar antes de `:id` pra Nest
+   * matchear path antes de path-param.
+   */
+  @Get('discover')
+  @RequirePolicy('klub.discover')
+  async discoverKlubs(@Query() query: unknown, @CurrentUser() user: AuthenticatedUser) {
+    const dto = DiscoverKlubsQuerySchema.parse(query);
+    return this.klubFacade.discoverKlubs({ ...dto, userId: user.userId });
   }
 
   @Get('slug/:slug')

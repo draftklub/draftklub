@@ -4,6 +4,7 @@ import { CreateKlubHandler } from './application/commands/create-klub.handler';
 import { GetKlubByIdHandler } from './application/queries/get-klub-by-id.handler';
 import { GetKlubBySlugHandler } from './application/queries/get-klub-by-slug.handler';
 import { ListKlubsHandler } from './application/queries/list-klubs.handler';
+import { DiscoverKlubsHandler } from './application/queries/discover-klubs.handler';
 import { AddMemberHandler } from './application/commands/add-member.handler';
 import { CreateKlubRequestHandler } from './application/commands/create-klub-request.handler';
 import { ListKlubRequestsHandler } from './application/queries/list-klub-requests.handler';
@@ -47,6 +48,7 @@ import { IdentityModule } from '../identity/identity.module';
     GetKlubByIdHandler,
     GetKlubBySlugHandler,
     ListKlubsHandler,
+    DiscoverKlubsHandler,
     AddMemberHandler,
     CreateKlubRequestHandler,
     ListKlubRequestsHandler,

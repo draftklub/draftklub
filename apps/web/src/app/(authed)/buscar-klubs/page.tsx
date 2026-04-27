@@ -1,87 +1,422 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, ArrowRight, Loader2, Plus, Search } from 'lucide-react';
+import type {
+  KlubAccessMode,
+  KlubDiscoveryResult,
+  MeResponse,
+  SportCatalog,
+} from '@draftklub/shared-types';
+import { discoverKlubs, joinKlubBySlug } from '@/lib/api/klubs';
+import { listSports } from '@/lib/api/sports';
+import { getMe } from '@/lib/api/me';
+import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
+import { rememberLastKlubSlug } from '@/lib/last-klub-cookie';
+import { cn } from '@/lib/utils';
 
 /**
- * Placeholder pra discovery de Klubs públicos. Onda 1.5 não inclui
- * busca real — backend não tem endpoint nem flag `Klub.discoverable`
- * (ver plano Onda 1.5, seção out-of-scope). Onda 2 troca por listagem
- * de verdade com filtro nome/cidade.
+ * Discovery de Klubs (Sprint B). Substitui placeholder da Onda 1.5
+ * PR5. Filtros: nome (debounce 300ms), UF, esporte. Sort tier-based
+ * vem do backend. CTA depende do `accessMode`:
+ * - public: "Entrar como Jogador" via existing /klubs/slug/:slug/join
+ * - private: "Solicitar entrada" disabled (Sprint C ativa)
  *
  * AuthGuard vem do `(authed)/layout.tsx`. Sidebar persistente também.
  */
 export default function BuscarKlubsPage() {
+  const router = useRouter();
+  const [me, setMe] = React.useState<MeResponse | null>(null);
+  const [sports, setSports] = React.useState<SportCatalog[]>([]);
+
+  // Filtros
+  const [q, setQ] = React.useState('');
+  const [debouncedQ, setDebouncedQ] = React.useState('');
+  const [state, setState] = React.useState('');
+  const [sport, setSport] = React.useState('');
+
+  // Resultados
+  const [results, setResults] = React.useState<KlubDiscoveryResult[] | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [reloadToken, setReloadToken] = React.useState(0);
+
+  // Boot: carrega catálogo de sports + me (pra UI mostrar tier badges futuramente).
+  React.useEffect(() => {
+    let cancelled = false;
+    void Promise.all([listSports().catch(() => []), getMe().catch(() => null)]).then(
+      ([sportsList, meRes]) => {
+        if (cancelled) return;
+        setSports(sportsList);
+        setMe(meRes);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Debounce do search box
+  React.useEffect(() => {
+    const id = setTimeout(() => setDebouncedQ(q.trim()), 300);
+    return () => clearTimeout(id);
+  }, [q]);
+
+  // Fetch quando algum filtro muda (com debounce no q)
+  const hasAnyFilter = debouncedQ.length >= 2 || state.length > 0 || sport.length > 0;
+
+  React.useEffect(() => {
+    if (!hasAnyFilter) {
+      setResults(null);
+      setError(null);
+      return;
+    }
+    let cancelled = false;
+    setError(null);
+    discoverKlubs({
+      q: debouncedQ.length >= 2 ? debouncedQ : undefined,
+      state: state || undefined,
+      sport: sport || undefined,
+    })
+      .then((data) => {
+        if (!cancelled) setResults(data);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Erro ao buscar Klubs');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedQ, state, sport, hasAnyFilter, reloadToken]);
+
   return (
-    <main className="flex flex-1 items-start overflow-y-auto bg-background px-6 py-10 md:items-center md:py-14">
-      <div className="mx-auto w-full max-w-xl">
+    <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
+      <div className="mx-auto max-w-4xl">
         <Link
           href="/home"
-          className="mb-8 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
           Voltar pra Home
         </Link>
 
-        <div className="rounded-xl border border-border bg-card p-8 md:p-10">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-[hsl(var(--brand-primary-600))]">
-            <Search className="size-6" strokeWidth={1.8} />
-          </div>
-
+        <header className="mb-8">
           <h1
-            className="mt-5 font-display text-[24px] font-bold md:text-[28px]"
+            className="font-display text-[28px] font-bold md:text-[34px]"
             style={{ letterSpacing: '-0.02em' }}
           >
-            Buscar Klubs vai chegar
+            Buscar Klubs
           </h1>
-          <p className="mt-2 text-[14.5px] text-muted-foreground">
-            A gente está preparando a busca por Klubs públicos. Quando ficar pronto, a gente avisa.
+          <p className="mt-2 text-[15px] text-muted-foreground">
+            Encontre clubes pra entrar como sócio. Resultados ordenados pela sua localização.
           </p>
-          <p className="mt-1.5 text-[13.5px] text-muted-foreground">Por enquanto, dois caminhos:</p>
+        </header>
 
-          <ul className="mt-4 flex flex-col gap-2.5 text-[13.5px] text-foreground">
-            <li className="flex items-start gap-2">
-              <span className="mt-1.5 size-1 shrink-0 rounded-full bg-foreground/40" />
-              <span>
-                Se você já é sócio de um clube, <b className="font-semibold">peça um convite</b> pra
-                comissão técnica ou Klub Admin.
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-1.5 size-1 shrink-0 rounded-full bg-foreground/40" />
-              <span>
-                Se você é dono ou opera um clube, <b className="font-semibold">crie o seu Klub</b>{' '}
-                agora — você vira Klub Admin automaticamente.
-              </span>
-            </li>
-          </ul>
-
-          <div className="mt-7 flex flex-col gap-2.5 sm:flex-row sm:gap-3">
-            <Link
-              href="/criar-klub"
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-[10px] bg-primary px-5 text-[14.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              <Plus className="size-4" />
-              Criar meu Klub
-            </Link>
-            <Link
-              href="/home"
-              className="inline-flex h-11 flex-1 items-center justify-center rounded-[10px] border border-border bg-transparent px-5 text-[14.5px] font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              Voltar pra Home
-            </Link>
+        {/* Filtros */}
+        <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-[1fr_120px_180px]">
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Nome do Klub (mín 2 letras)"
+              className="h-11 w-full rounded-[10px] border border-input bg-background pl-9 pr-3.5 text-[15px] outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            />
           </div>
+          <select
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+          >
+            <option value="">UF</option>
+            {BRAZILIAN_STATES.map((uf) => (
+              <option key={uf} value={uf}>
+                {uf}
+              </option>
+            ))}
+          </select>
+          <select
+            value={sport}
+            onChange={(e) => setSport(e.target.value)}
+            className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+          >
+            <option value="">Modalidade</option>
+            {sports.map((s) => (
+              <option key={s.code} value={s.code}>
+                {s.name}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <p className="mt-6 text-center text-[12px] text-muted-foreground">
+        {/* Conteúdo */}
+        {error ? (
+          <ErrorState message={error} onRetry={() => setReloadToken((n) => n + 1)} />
+        ) : !hasAnyFilter ? (
+          <InitialEmptyState />
+        ) : results === null ? (
+          <SkeletonGrid />
+        ) : results.length === 0 ? (
+          <NoResultsState />
+        ) : (
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {results.map((klub) => (
+              <li key={klub.id}>
+                <KlubCard
+                  klub={klub}
+                  userCity={me?.city ?? null}
+                  userState={me?.state ?? null}
+                  onJoined={() => {
+                    rememberLastKlubSlug(klub.slug);
+                    router.push(`/k/${klub.slug}/dashboard`);
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <p className="mt-10 text-center text-[12px] text-muted-foreground">
+          Não encontrou seu clube?{' '}
+          <Link
+            href="/criar-klub"
+            className="underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Crie o seu
+          </Link>{' '}
+          ou{' '}
           <Link
             href="/quero-criar-klub"
             className="underline-offset-4 hover:text-foreground hover:underline"
           >
-            Sou dono de um clube e quero saber mais
+            avise sua administração
           </Link>
+          .
         </p>
       </div>
     </main>
+  );
+}
+
+function KlubCard({
+  klub,
+  userCity,
+  userState,
+  onJoined,
+}: {
+  klub: KlubDiscoveryResult;
+  userCity: string | null;
+  userState: string | null;
+  onJoined: () => void;
+}) {
+  const [joining, setJoining] = React.useState(false);
+  const [joinError, setJoinError] = React.useState<string | null>(null);
+
+  async function handleJoin() {
+    if (klub.accessMode !== 'public' || joining) return;
+    setJoining(true);
+    setJoinError(null);
+    try {
+      await joinKlubBySlug(klub.slug);
+      onJoined();
+    } catch (err: unknown) {
+      setJoinError(err instanceof Error ? err.message : 'Erro ao entrar no Klub.');
+      setJoining(false);
+    }
+  }
+
+  const tier =
+    userCity && klub.city && userCity === klub.city
+      ? 'same-city'
+      : userState && klub.state && userState === klub.state
+        ? 'same-state'
+        : 'far';
+
+  return (
+    <div className="flex h-full flex-col rounded-xl border border-border bg-card p-5">
+      <div className="flex items-start gap-3">
+        <KlubAvatar name={klub.name} />
+        <div className="min-w-0 flex-1">
+          <h3
+            className="truncate font-display text-[16px] font-bold leading-tight"
+            style={{ letterSpacing: '-0.01em' }}
+          >
+            {klub.name}
+          </h3>
+          <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+            {klub.city ?? '—'}
+            {klub.state ? ` · ${klub.state}` : ''}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        {tier !== 'far' ? <TierBadge tier={tier} /> : null}
+        <AccessBadge accessMode={klub.accessMode} />
+        {klub.sports.slice(0, 3).map((code) => (
+          <SportChip key={code} code={code} />
+        ))}
+        {klub.sports.length > 3 ? (
+          <span className="text-[10.5px] text-muted-foreground">+{klub.sports.length - 3}</span>
+        ) : null}
+      </div>
+
+      {joinError ? <p className="mt-3 text-[12px] text-destructive">{joinError}</p> : null}
+
+      <div className="mt-auto pt-4">
+        {klub.accessMode === 'public' ? (
+          <button
+            type="button"
+            onClick={() => void handleJoin()}
+            disabled={joining}
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {joining ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin" />
+                Entrando…
+              </>
+            ) : (
+              <>
+                Entrar como Jogador
+                <ArrowRight className="size-3.5" />
+              </>
+            )}
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled
+            title="Sprint C ativa este fluxo. Em breve."
+            className="inline-flex h-9 w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-[13px] font-medium text-muted-foreground opacity-70"
+          >
+            Solicitar entrada
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.06em]">
+              em breve
+            </span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function KlubAvatar({ name }: { name: string }) {
+  const initial = name.trim().charAt(0).toUpperCase() || 'K';
+  const hue = Array.from(name).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+  return (
+    <span
+      className="flex size-10 shrink-0 items-center justify-center rounded-lg font-display text-base font-bold text-white"
+      style={{ background: `hsl(${hue} 55% 42%)` }}
+      aria-hidden="true"
+    >
+      {initial}
+    </span>
+  );
+}
+
+function TierBadge({ tier }: { tier: 'same-city' | 'same-state' }) {
+  const label = tier === 'same-city' ? 'Na sua cidade' : 'No seu estado';
+  return (
+    <span
+      className={cn(
+        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        tier === 'same-city'
+          ? 'bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+          : 'bg-muted text-foreground',
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+function AccessBadge({ accessMode }: { accessMode: KlubAccessMode }) {
+  const isPublic = accessMode === 'public';
+  return (
+    <span
+      className={cn(
+        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        isPublic
+          ? 'bg-[hsl(142_71%_32%/0.12)] text-[hsl(142_71%_32%)]'
+          : 'bg-muted text-muted-foreground',
+      )}
+    >
+      {isPublic ? 'Aberto' : 'Privado'}
+    </span>
+  );
+}
+
+function SportChip({ code }: { code: string }) {
+  return (
+    <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-[10.5px] font-medium text-muted-foreground">
+      {code}
+    </span>
+  );
+}
+
+function SkeletonGrid() {
+  return (
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <li key={i} className="h-44 animate-pulse rounded-xl border border-border bg-card" />
+      ))}
+    </ul>
+  );
+}
+
+function InitialEmptyState() {
+  return (
+    <div className="rounded-xl border border-dashed border-border p-10 text-center">
+      <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+        <Search className="size-5" strokeWidth={1.8} />
+      </div>
+      <h2 className="mt-4 font-display text-lg font-bold">Comece a buscar</h2>
+      <p className="mt-2 text-[13.5px] text-muted-foreground">
+        Digite o nome de um Klub (mín 2 letras) ou use os filtros pra ver resultados.
+      </p>
+    </div>
+  );
+}
+
+function NoResultsState() {
+  return (
+    <div className="rounded-xl border border-dashed border-border p-10 text-center">
+      <h2 className="font-display text-lg font-bold">Nenhum Klub encontrado</h2>
+      <p className="mt-2 text-[13.5px] text-muted-foreground">
+        Tenta outros filtros — talvez o nome esteja escrito diferente, ou o Klub ainda não optou por
+        aparecer em busca.
+      </p>
+      <Link
+        href="/criar-klub"
+        className="mt-5 inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+      >
+        <Plus className="size-3.5" />
+        Criar meu Klub
+      </Link>
+    </div>
+  );
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="mx-auto max-w-md rounded-xl border border-destructive/40 bg-destructive/5 p-6 text-center">
+      <h2 className="font-display text-base font-bold text-destructive">Erro ao buscar</h2>
+      <p className="mt-1 text-[13px] text-muted-foreground">{message}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+      >
+        <Loader2 className="size-3.5" />
+        Tentar de novo
+      </button>
+    </div>
   );
 }

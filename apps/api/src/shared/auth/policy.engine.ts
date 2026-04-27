@@ -16,10 +16,15 @@ import type { ResourceContext } from './resource-context.interface';
  * o mesmo link no-op. Trade-off: qualquer pessoa com o link pode
  * entrar como PLAYER. Onda 2 vai trocar por sistema de Invitation
  * tokens revogáveis.
+ *
+ * `klub.discover`: lista Klubs públicos (`discoverable=true`) na
+ * search /klubs/discover (Onda 2 Sprint B). Endpoint só retorna
+ * Klubs que opt-in pra busca; sem dados sensíveis.
  */
 const PUBLIC_AUTHENTICATED_ACTIONS: ReadonlySet<string> = new Set([
   'klub.create',
   'klub.join_via_link',
+  'klub.discover',
 ]);
 
 @Injectable()

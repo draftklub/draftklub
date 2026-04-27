@@ -1,4 +1,10 @@
-import type { Klub, KlubType, KlubPlan } from '@draftklub/shared-types';
+import type {
+  Klub,
+  KlubAccessMode,
+  KlubDiscoveryResult,
+  KlubPlan,
+  KlubType,
+} from '@draftklub/shared-types';
 import { apiFetch } from './client';
 
 export interface CreateKlubInput {
@@ -16,6 +22,11 @@ export interface CreateKlubInput {
   legalName?: string;
   sportCodes?: string[];
   plan?: KlubPlan;
+  /** Sprint B: opt-in pra `GET /klubs/discover`. Default false. */
+  discoverable?: boolean;
+  /** Sprint B: 'public' (entrada livre) | 'private' (precisa request — Sprint C). */
+  accessMode?: KlubAccessMode;
+  cep?: string;
 }
 
 /** GET /klubs — lista global (auth required, requer policy klub.list). */
@@ -51,4 +62,26 @@ export function joinKlubBySlug(
   slug: string,
 ): Promise<{ id: string; klubId: string; userId: string }> {
   return apiFetch(`/klubs/slug/${slug}/join`, { method: 'POST' });
+}
+
+export interface DiscoverKlubsParams {
+  q?: string;
+  state?: string;
+  sport?: string;
+  limit?: number;
+}
+
+/**
+ * GET /klubs/discover — lista Klubs com `discoverable=true`. Filtros
+ * opcionais; backend ordena por tier (mesma cidade > mesmo estado >
+ * resto, alfabético dentro). Liberado pra qualquer auth user.
+ */
+export function discoverKlubs(p: DiscoverKlubsParams = {}): Promise<KlubDiscoveryResult[]> {
+  const qs = new URLSearchParams();
+  if (p.q) qs.set('q', p.q);
+  if (p.state) qs.set('state', p.state);
+  if (p.sport) qs.set('sport', p.sport);
+  if (p.limit) qs.set('limit', String(p.limit));
+  const suffix = qs.toString();
+  return apiFetch<KlubDiscoveryResult[]>(`/klubs/discover${suffix ? `?${suffix}` : ''}`);
 }

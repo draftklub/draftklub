@@ -45,6 +45,13 @@ export type KlubPlan = 'trial' | 'starter' | 'pro' | 'elite' | 'enterprise';
 
 export type KlubStatus = 'trial' | 'active' | 'suspended' | 'cancelled';
 
+/**
+ * Modo de acesso de um Klub: 'public' = qualquer auth user pode entrar
+ * direto via klub.join_via_link; 'private' = precisa MembershipRequest
+ * com aprovação do admin (Sprint C).
+ */
+export type KlubAccessMode = 'public' | 'private';
+
 export type AccessMode = 'public' | 'members_only';
 
 export type BookingMode = 'direct' | 'staff_approval' | 'staff_only';
@@ -141,7 +148,29 @@ export interface Klub {
   /** Códigos de modalidade habilitadas (lista direta — atalho da relação `sportProfiles`). */
   sports: string[];
   config: KlubConfig | null;
+  /** Aparece em `GET /klubs/discover`. Opt-in pelo Klub Admin. */
+  discoverable: boolean;
+  /** 'public' = entrada livre; 'private' = precisa aprovação (Sprint C). */
+  accessMode: KlubAccessMode;
+  /** CEP só dígitos (8 chars). Source pra geocoding (Sprint B+1). */
+  cep: string | null;
   createdAt: string;
+}
+
+/**
+ * Item retornado por `GET /klubs/discover`. Subset enxuto pra UI de
+ * busca; não inclui config, billing nem audit.
+ */
+export interface KlubDiscoveryResult {
+  id: string;
+  name: string;
+  slug: string;
+  type: KlubType;
+  status: KlubStatus;
+  city: string | null;
+  state: string | null;
+  sports: string[];
+  accessMode: KlubAccessMode;
 }
 
 export interface KlubConfig {

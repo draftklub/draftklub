@@ -32,6 +32,21 @@ export const CreateKlubSchema = z.object({
   parentKlubId: uuidString().optional(),
   isGroup: z.boolean().default(false),
   plan: z.enum(['trial', 'starter', 'pro', 'elite', 'enterprise']).default('trial'),
+  /** Se `true`, Klub aparece em GET /klubs/discover. Default `false`. */
+  discoverable: z.boolean().default(false),
+  /**
+   * 'public' = qualquer auth user pode entrar via /klubs/slug/:slug/join.
+   * 'private' = aparece em discover mas precisa MembershipRequest aprovado
+   * (Sprint C). Sprint B aceita o valor mas o flow private ainda não está
+   * ativo.
+   */
+  accessMode: z.enum(['public', 'private']).default('public'),
+  /** CEP só dígitos (8 chars). Opcional. */
+  cep: z
+    .string()
+    .length(8)
+    .regex(/^\d{8}$/, 'CEP deve ter 8 dígitos')
+    .optional(),
 });
 
 export type CreateKlubDto = z.infer<typeof CreateKlubSchema>;
