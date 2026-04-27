@@ -23,6 +23,7 @@ import {
   type ListBookingsFilters,
 } from '../application/queries/list-bookings.handler';
 import { GetBookingHandler } from '../application/queries/get-booking.handler';
+import { GetMyBookingsHandler } from '../application/queries/get-my-bookings.handler';
 import {
   CreateBookingSeriesHandler,
   type CreateBookingSeriesCommand,
@@ -69,6 +70,7 @@ export class BookingFacade {
     private readonly calendarHandler: GetKlubCalendarHandler,
     private readonly listHandler: ListBookingsHandler,
     private readonly getHandler: GetBookingHandler,
+    private readonly getMyBookingsHandler: GetMyBookingsHandler,
     private readonly createSeriesHandler: CreateBookingSeriesHandler,
     private readonly cancelSeriesHandler: CancelBookingSeriesHandler,
     private readonly createBlockHandler: CreateOperationalBlockHandler,
@@ -113,6 +115,10 @@ export class BookingFacade {
 
   async getBookingForViewer(bookingId: string, viewerId: string) {
     return this.getHandler.executeForViewer({ bookingId, viewerId });
+  }
+
+  async listMyBookings(userId: string) {
+    return this.getMyBookingsHandler.execute(userId);
   }
 
   async createBookingSeries(cmd: CreateBookingSeriesCommand) {

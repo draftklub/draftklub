@@ -119,3 +119,23 @@ export function cancelBooking(
     json: { reason },
   });
 }
+
+// ─── Sprint Polish PR-B ─────────────────────────────────────────────
+
+export interface MyBookingItem {
+  id: string;
+  startsAt: string;
+  endsAt: string | null;
+  status: string;
+  notes: string | null;
+  matchType: string | null;
+  bookingType: string;
+  primaryPlayerId: string | null;
+  klub: { id: string; slug: string; name: string };
+  space: { id: string; name: string; type: string };
+}
+
+/** GET /me/bookings — lista cross-klub das reservas do user logado. */
+export function listMyBookings(): Promise<MyBookingItem[]> {
+  return apiFetch<MyBookingItem[]>(`/me/bookings`);
+}
