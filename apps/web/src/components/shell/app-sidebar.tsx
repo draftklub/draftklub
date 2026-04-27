@@ -14,6 +14,7 @@ import {
   Shield,
   Sun,
   User,
+  UserCheck,
   X,
 } from 'lucide-react';
 import type { UserKlubMembership, Role } from '@draftklub/shared-types';
@@ -183,6 +184,27 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
             />
           ) : null}
         </nav>
+
+        {/* Klub atual — atalhos admin (Sprint C: Solicitações). */}
+        {(() => {
+          if (!activeKlubSlug) return null;
+          const activeKlub = klubs?.find((k) => k.klubSlug === activeKlubSlug);
+          if (activeKlub?.role !== 'KLUB_ADMIN') return null;
+          return (
+            <>
+              <SectionLabel>Admin do {activeKlub.klubName}</SectionLabel>
+              <nav className="flex flex-col gap-0.5 px-3">
+                <NavLink
+                  href={`/k/${activeKlubSlug}/solicitacoes`}
+                  label="Solicitações"
+                  icon={UserCheck}
+                  active={pathname === `/k/${activeKlubSlug}/solicitacoes`}
+                  onNavigate={onClose}
+                />
+              </nav>
+            </>
+          );
+        })()}
 
         {/* Footer */}
         <div className="mt-auto border-t border-border p-3">

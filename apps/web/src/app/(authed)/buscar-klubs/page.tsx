@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Loader2, MapPin, Plus, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Loader2, MapPin, Plus, Search } from 'lucide-react';
 import type {
   KlubAccessMode,
   KlubDiscoveryResult,
@@ -11,6 +11,7 @@ import type {
   SportCatalog,
 } from '@draftklub/shared-types';
 import { discoverKlubs, joinKlubBySlug } from '@/lib/api/klubs';
+import { requestMembership } from '@/lib/api/membership-requests';
 import { listSports } from '@/lib/api/sports';
 import { getMe } from '@/lib/api/me';
 import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
@@ -313,6 +314,8 @@ function KlubCard({
 }) {
   const [joining, setJoining] = React.useState(false);
   const [joinError, setJoinError] = React.useState<string | null>(null);
+  const [requestModalOpen, setRequestModalOpen] = React.useState(false);
+  const [requestSubmitted, setRequestSubmitted] = React.useState(false);
 
   async function handleJoin() {
     if (klub.accessMode !== 'public' || joining) return;
@@ -391,19 +394,108 @@ function KlubCard({
               </>
             )}
           </button>
+        ) : requestSubmitted ? (
+          <div className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/5 px-4 text-[12.5px] font-medium text-amber-700 dark:text-amber-400">
+            Solicitação enviada
+          </div>
         ) : (
           <button
             type="button"
-            disabled
-            title="Sprint C ativa este fluxo. Em breve."
-            className="inline-flex h-9 w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-[13px] font-medium text-muted-foreground opacity-70"
+            onClick={() => setRequestModalOpen(true)}
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-[13px] font-medium transition-colors hover:bg-muted"
           >
             Solicitar entrada
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.06em]">
-              em breve
-            </span>
+            <ArrowRight className="size-3.5" />
           </button>
         )}
+      </div>
+
+      {requestModalOpen ? (
+        <RequestMembershipModal
+          klubName={klub.name}
+          klubSlug={klub.slug}
+          onClose={() => setRequestModalOpen(false)}
+          onSubmitted={() => {
+            setRequestSubmitted(true);
+            setRequestModalOpen(false);
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function RequestMembershipModal({
+  klubName,
+  klubSlug,
+  onClose,
+  onSubmitted,
+}: {
+  klubName: string;
+  klubSlug: string;
+  onClose: () => void;
+  onSubmitted: () => void;
+}) {
+  const [message, setMessage] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await requestMembership(klubSlug, { message: message.trim() });
+      onSubmitted();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao enviar solicitação.');
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-xl border border-border bg-card p-5">
+        <h2 className="font-display text-lg font-bold">Solicitar entrada em {klubName}</h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          O admin do Klub vai revisar. Inclua sua matrícula, indicação ou outra informação que ajude
+          a identificar você.
+        </p>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Ex: Sou sócio nº 12345 — fui indicado pelo João da Silva."
+          rows={4}
+          maxLength={1000}
+          className="mt-3 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        />
+        <p className="mt-1 text-right text-[11px] text-muted-foreground">
+          {message.trim().length}/1000 (mín 10)
+        </p>
+        {error ? (
+          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+            {error}
+          </p>
+        ) : null}
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleSubmit()}
+            disabled={message.trim().length < 10 || submitting}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
+            Enviar solicitação
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -2,11 +2,15 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Plus, Search } from 'lucide-react';
-import type { UserKlubMembership } from '@draftklub/shared-types';
+import { ArrowRight, Loader2, Plus, Search, X } from 'lucide-react';
+import type { MembershipRequestForUser, UserKlubMembership } from '@draftklub/shared-types';
 import { useAuth } from '@/components/auth-provider';
 import { EmailVerifyBanner } from '@/components/email-verify-banner';
 import { getMyKlubs } from '@/lib/api/me';
+import {
+  cancelMyMembershipRequest,
+  listMyMembershipRequests,
+} from '@/lib/api/membership-requests';
 import { readLastKlubSlug } from '@/lib/last-klub-cookie';
 
 /**
@@ -19,6 +23,10 @@ export default function HomePage() {
   const { user } = useAuth();
   const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
   const [lastKlub, setLastKlub] = React.useState<UserKlubMembership | null>(null);
+  const [pendingRequests, setPendingRequests] = React.useState<
+    MembershipRequestForUser[] | null
+  >(null);
+  const [requestsReloadToken, setRequestsReloadToken] = React.useState(0);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -35,10 +43,18 @@ export default function HomePage() {
       .catch(() => {
         if (!cancelled) setKlubs([]);
       });
+    listMyMembershipRequests()
+      .then((data) => {
+        if (cancelled) return;
+        setPendingRequests(data.filter((r) => r.status === 'pending'));
+      })
+      .catch(() => {
+        if (!cancelled) setPendingRequests([]);
+      });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [requestsReloadToken]);
 
   const firstName = (user?.displayName ?? user?.email ?? '').split(/[\s@]/)[0] ?? '';
   const hasKlubs = klubs !== null && klubs.length > 0;
@@ -110,6 +126,25 @@ export default function HomePage() {
           </section>
         ) : null}
 
+        {/* Solicitações pendentes (Sprint C) */}
+        {pendingRequests && pendingRequests.length > 0 ? (
+          <section className="mb-8">
+            <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              Solicitações em análise
+            </h2>
+            <ul className="space-y-2">
+              {pendingRequests.map((r) => (
+                <li key={r.id}>
+                  <PendingRequestCard
+                    request={r}
+                    onCancelled={() => setRequestsReloadToken((n) => n + 1)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         {/* Atalhos */}
         <section>
           <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
@@ -142,6 +177,51 @@ export default function HomePage() {
         </p>
       </div>
     </main>
+  );
+}
+
+function PendingRequestCard({
+  request,
+  onCancelled,
+}: {
+  request: MembershipRequestForUser;
+  onCancelled: () => void;
+}) {
+  const [cancelling, setCancelling] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleCancel() {
+    if (cancelling) return;
+    setCancelling(true);
+    setError(null);
+    try {
+      await cancelMyMembershipRequest(request.id);
+      onCancelled();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao cancelar.');
+      setCancelling(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13.5px] font-semibold">{request.klub.name}</p>
+        <p className="truncate text-[11.5px] text-muted-foreground">
+          Aguardando aprovação do admin do Klub.
+        </p>
+        {error ? <p className="mt-1 text-[11px] text-destructive">{error}</p> : null}
+      </div>
+      <button
+        type="button"
+        onClick={() => void handleCancel()}
+        disabled={cancelling}
+        className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[11.5px] font-medium hover:bg-muted disabled:opacity-60"
+      >
+        {cancelling ? <Loader2 className="size-3 animate-spin" /> : <X className="size-3" />}
+        Cancelar
+      </button>
+    </div>
   );
 }
 
