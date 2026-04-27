@@ -116,8 +116,9 @@ export default function DashboardPage() {
   return (
     <>
       <Topbar subtitle={todayHeader()} activeSport="Tennis" />
-      <main className="flex-1 overflow-y-auto px-8 py-6">
+      <main className="flex-1 overflow-y-auto px-4 py-6 pb-24 md:px-8 md:pb-6">
         <OnboardingBanner />
+        <ReservarCTA />
         {/* KPI row */}
         <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {KPIS.map((kpi) => (
@@ -164,6 +165,32 @@ export default function DashboardPage() {
         </section>
       </main>
     </>
+  );
+}
+
+// ─── Reservar CTA ────────────────────────────────────────────────────
+
+function ReservarCTA() {
+  const { klub } = useActiveKlub();
+  if (!klub) return null;
+  return (
+    <Link
+      href={`/k/${klub.slug}/reservar`}
+      className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-sm md:hidden"
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <CalendarDays className="size-5" />
+        </div>
+        <div>
+          <p className="font-display text-[14px] font-bold leading-tight">Reservar quadra</p>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
+            Escolhe quadra, dia e horário em 3 toques
+          </p>
+        </div>
+      </div>
+      <ArrowRight className="size-4 text-muted-foreground" />
+    </Link>
   );
 }
 

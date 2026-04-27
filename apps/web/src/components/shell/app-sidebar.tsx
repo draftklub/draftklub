@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  CalendarDays,
   Home,
   Plus,
   Search,
@@ -186,29 +187,42 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           ) : null}
         </nav>
 
-        {/* Klub atual — atalhos admin (Sprint C: Solicitações). */}
+        {/* Klub atual — atalhos do Klub ativo. Reservar é pra qualquer
+            member; Admin do Klub vê config + solicitações. */}
         {(() => {
           if (!activeKlubSlug) return null;
           const activeKlub = klubs?.find((k) => k.klubSlug === activeKlubSlug);
-          if (activeKlub?.role !== 'KLUB_ADMIN') return null;
+          if (!activeKlub) return null;
+          const isAdmin = activeKlub.role === 'KLUB_ADMIN';
           return (
             <>
-              <SectionLabel>Admin do {activeKlub.klubName}</SectionLabel>
+              <SectionLabel>{activeKlub.klubName}</SectionLabel>
               <nav className="flex flex-col gap-0.5 px-3">
                 <NavLink
-                  href={`/k/${activeKlubSlug}/onboarding`}
-                  label="Configurar Klub"
-                  icon={Sparkles}
-                  active={pathname === `/k/${activeKlubSlug}/onboarding`}
+                  href={`/k/${activeKlubSlug}/reservar`}
+                  label="Reservar quadra"
+                  icon={CalendarDays}
+                  active={pathname === `/k/${activeKlubSlug}/reservar`}
                   onNavigate={onClose}
                 />
-                <NavLink
-                  href={`/k/${activeKlubSlug}/solicitacoes`}
-                  label="Solicitações"
-                  icon={UserCheck}
-                  active={pathname === `/k/${activeKlubSlug}/solicitacoes`}
-                  onNavigate={onClose}
-                />
+                {isAdmin ? (
+                  <>
+                    <NavLink
+                      href={`/k/${activeKlubSlug}/onboarding`}
+                      label="Configurar Klub"
+                      icon={Sparkles}
+                      active={pathname === `/k/${activeKlubSlug}/onboarding`}
+                      onNavigate={onClose}
+                    />
+                    <NavLink
+                      href={`/k/${activeKlubSlug}/solicitacoes`}
+                      label="Solicitações"
+                      icon={UserCheck}
+                      active={pathname === `/k/${activeKlubSlug}/solicitacoes`}
+                      onNavigate={onClose}
+                    />
+                  </>
+                ) : null}
               </nav>
             </>
           );
