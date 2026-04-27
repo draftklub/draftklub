@@ -161,7 +161,10 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
             onClick={onClose}
             className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-muted"
           >
-            <Avatar name={user?.displayName ?? user?.email ?? '?'} />
+            <Avatar
+              name={user?.displayName ?? user?.email ?? '?'}
+              photoUrl={user?.photoURL ?? null}
+            />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-semibold leading-tight">
                 {user?.displayName ?? user?.email?.split('@')[0] ?? 'Você'}
@@ -287,8 +290,20 @@ function KlubAvatar({ name, size = 'sm' }: { name: string; size?: 'sm' }) {
   );
 }
 
-function Avatar({ name }: { name: string }) {
+function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
   const initial = name.trim().charAt(0).toUpperCase() || '?';
+  if (photoUrl) {
+    return (
+      <span className="flex size-8 shrink-0 overflow-hidden rounded-full" aria-hidden="true">
+        <img
+          src={photoUrl}
+          alt=""
+          className="size-full object-cover"
+          referrerPolicy="no-referrer"
+        />
+      </span>
+    );
+  }
   return (
     <span
       className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-[12px] font-bold text-primary-foreground"

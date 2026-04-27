@@ -15,6 +15,7 @@ import {
 import { getMe, updateMe } from '@/lib/api/me';
 import { BRAZILIAN_STATES, isBrazilianState } from '@/lib/brazilian-states';
 import { formatCep, formatCpf, lookupCep } from '@/lib/viacep';
+import { uploadProfilePhoto } from '@/lib/storage';
 import { EmailVerifyBanner } from '@/components/email-verify-banner';
 import { cn } from '@/lib/utils';
 
@@ -86,6 +87,104 @@ export default function PerfilPage() {
 }
 
 // ─── Identidade ─────────────────────────────────────────────────────────
+
+interface AvatarRowProps {
+  userId: string;
+  avatarUrl: string | null;
+  displayName: string;
+  onUpdated: (next: MeResponse) => void;
+}
+
+function AvatarRow({ userId, avatarUrl, displayName, onUpdated }: AvatarRowProps) {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    setErrorMsg(null);
+    try {
+      const url = await uploadProfilePhoto(file, userId);
+      // Cache-bust com query param: getDownloadURL pode retornar URL
+      // estável e browsers cacheiam agressivamente.
+      const cacheBustedUrl = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
+      const updated = await updateMe({ avatarUrl: cacheBustedUrl });
+      onUpdated(updated);
+      // Sync displayName Firebase também — Firebase Auth user.photoURL
+      // é separado do backend avatarUrl. Mantém em paralelo pra UIs
+      // que leem do Firebase user direto (sidebar) sincronizem.
+      const auth = (await import('@/lib/firebase')).getFirebaseAuth();
+      const fbUser = auth.currentUser;
+      if (fbUser) {
+        const { updateProfile } = await import('firebase/auth');
+        await updateProfile(fbUser, { photoURL: cacheBustedUrl });
+      }
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Erro ao enviar foto.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  const initial = displayName.trim().charAt(0).toUpperCase() || '?';
+  const hue = Array.from(displayName).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+
+  return (
+    <div className="flex items-center gap-4">
+      <span
+        className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full font-display text-xl font-bold text-white"
+        style={{ background: `hsl(${hue} 55% 42%)` }}
+        aria-hidden="true"
+      >
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt=""
+            className="size-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          initial
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-medium">Foto de perfil</p>
+        <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+          JPEG, PNG ou WebP. Redimensionada pra 512px.
+        </p>
+        {errorMsg ? <p className="mt-1 text-[12px] text-destructive">{errorMsg}</p> : null}
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleFile(file);
+          e.target.value = '';
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3 text-[12.5px] font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {uploading ? (
+          <>
+            <Loader2 className="size-3.5 animate-spin" />
+            Enviando…
+          </>
+        ) : avatarUrl ? (
+          'Trocar foto'
+        ) : (
+          'Adicionar foto'
+        )}
+      </button>
+    </div>
+  );
+}
 
 interface IdentitySectionProps {
   initial: MeResponse;
@@ -176,6 +275,13 @@ function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
 
   return (
     <Section title="Identidade">
+      <AvatarRow
+        userId={initial.id}
+        avatarUrl={initial.avatarUrl}
+        displayName={initial.fullName}
+        onUpdated={onUpdated}
+      />
+
       <Field label="Nome">
         <input
           type="text"
