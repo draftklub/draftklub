@@ -1,42 +1,43 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { Bell, LogOut, Moon, Search, Sun } from 'lucide-react';
+import { Bell, Moon, Search, Sun } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
-import { KlubSwitcher } from '@/components/dashboard/klub-switcher';
-import { logout } from '@/lib/auth';
-import { forgetLastKlubSlug } from '@/lib/last-klub-cookie';
+import { useActiveKlub } from '@/components/active-klub-provider';
 import { cn } from '@/lib/utils';
 
 const SPORTS = ['Tennis', 'Padel', 'Squash', 'Beach'] as const;
 type Sport = (typeof SPORTS)[number];
 
 interface TopbarProps {
-  /**
-   * Subtítulo (geralmente data/hora do header). Sem `title`: agora vem
-   * do `KlubSwitcher` que lê o nome do Klub ativo via context.
-   */
+  /** Subtítulo (geralmente data/hora). Aparece sob o nome do Klub. */
   subtitle?: string;
   activeSport?: Sport;
 }
 
+/**
+ * Topbar contextual de páginas Klub-scoped. Mostra nome do Klub ativo
+ * (estático — sidebar persistente cuida de troca/navegação),
+ * subtítulo, sport tabs e ações: theme toggle, notificações, search.
+ *
+ * Logout vive na sidebar agora; KlubSwitcher também (sidebar lista
+ * Seus Klubs).
+ */
 export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
   const { resolvedTheme, setTheme } = useTheme();
-  const router = useRouter();
-
-  async function handleLogout() {
-    forgetLastKlubSlug();
-    await logout();
-    router.replace('/login');
-  }
+  const { klub, slug } = useActiveKlub();
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-6 border-b border-border bg-card px-8">
+    <header className="flex h-16 shrink-0 items-center gap-6 border-b border-border bg-card px-6 md:px-8">
       <div className="flex min-w-0 flex-col">
-        <KlubSwitcher />
-        {subtitle ? (
-          <p className="mt-0.5 truncate pl-2 text-xs text-muted-foreground">{subtitle}</p>
-        ) : null}
+        <h1
+          className="truncate font-display text-[20px] font-bold leading-none"
+          style={{ letterSpacing: '-0.02em' }}
+        >
+          {klub?.name ?? 'Klub'}
+        </h1>
+        <p className="mt-1 truncate font-mono text-[10.5px] text-muted-foreground">
+          {subtitle ?? `/k/${slug}`}
+        </p>
       </div>
 
       <div className="hidden rounded-[9px] border border-border bg-card p-0.75 lg:inline-flex">
@@ -91,15 +92,6 @@ export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
             aria-hidden="true"
             className="absolute right-2.5 top-2.5 size-1.5 rounded-full bg-accent ring-2 ring-card"
           />
-        </button>
-
-        <button
-          type="button"
-          className="relative inline-flex size-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Sair"
-          onClick={() => void handleLogout()}
-        >
-          <LogOut className="size-4" />
         </button>
       </div>
     </header>

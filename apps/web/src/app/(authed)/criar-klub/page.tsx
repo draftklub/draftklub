@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import type { Klub, KlubType, SportCatalog } from '@draftklub/shared-types';
-import { AuthGuard } from '@/components/auth-guard';
 import { ApiError } from '@/lib/api/client';
 import { createKlub, getKlubBySlug } from '@/lib/api/klubs';
 import { listSports } from '@/lib/api/sports';
@@ -32,11 +31,7 @@ function slugify(name: string): string {
 }
 
 export default function CriarKlubPage() {
-  return (
-    <AuthGuard>
-      <CriarKlubFlow />
-    </AuthGuard>
-  );
+  return <CriarKlubFlow />;
 }
 
 type Step = 1 | 2 | 3;
