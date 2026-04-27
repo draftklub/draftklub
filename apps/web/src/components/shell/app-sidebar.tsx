@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Plus, Search, Mail, LogOut, Loader2, X } from 'lucide-react';
+import { Home, Plus, Search, Mail, LogOut, Loader2, User, X } from 'lucide-react';
 import type { UserKlubMembership, Role } from '@draftklub/shared-types';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { useAuth } from '@/components/auth-provider';
@@ -100,12 +100,19 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
 
         {/* Você */}
         <SectionLabel>Você</SectionLabel>
-        <nav className="px-3 pb-2">
+        <nav className="flex flex-col gap-0.5 px-3 pb-2">
           <NavLink
             href="/home"
             label="Home"
             icon={Home}
             active={pathname === '/home'}
+            onNavigate={onClose}
+          />
+          <NavLink
+            href="/perfil"
+            label="Perfil"
+            icon={User}
+            active={pathname === '/perfil'}
             onNavigate={onClose}
           />
         </nav>
@@ -149,7 +156,11 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
 
         {/* Footer */}
         <div className="mt-auto border-t border-border p-3">
-          <div className="flex items-center gap-2.5 px-2 pb-2 pt-1">
+          <Link
+            href="/perfil"
+            onClick={onClose}
+            className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-muted"
+          >
             <Avatar name={user?.displayName ?? user?.email ?? '?'} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-semibold leading-tight">
@@ -159,11 +170,11 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
                 <p className="truncate text-[10.5px] text-muted-foreground">{user.email}</p>
               ) : null}
             </div>
-          </div>
+          </Link>
           <button
             type="button"
             onClick={() => void handleLogout()}
-            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="mt-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <LogOut className="size-4" />
             Sair

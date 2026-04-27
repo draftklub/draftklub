@@ -1,12 +1,20 @@
 'use client';
 
 import {
+  EmailAuthProvider,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  deleteUser,
+  linkWithCredential,
+  linkWithPopup,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  unlink,
+  updatePassword,
   updateProfile,
   onAuthStateChanged as firebaseOnAuthStateChanged,
   type User as FirebaseUser,
@@ -75,6 +83,141 @@ export async function signupWithEmail(
 /** Logout. Limpa o token local + state. */
 export async function logout(): Promise<void> {
   await signOut(getFirebaseAuth());
+}
+
+// ─── Profile management ─────────────────────────────────────────────────
+
+/**
+ * Identifiers dos providers do Firebase que a UI conhece. Outros
+ * (apple.com, github.com, etc.) podem aparecer mas não são suportados
+ * no fluxo de account linking atual.
+ */
+export type ProviderId = 'password' | 'google.com';
+
+/**
+ * Atualiza nome de exibição do user atual. Lança se sem user logado.
+ */
+export async function updateDisplayName(name: string): Promise<void> {
+  const user = requireCurrentUser();
+  try {
+    await updateProfile(user, { displayName: name.trim() });
+  } catch (err) {
+    throw mapFirebaseError(err);
+  }
+}
+
+/**
+ * Vincula o provider email/senha ao user atual. Usar em contas que
+ * entraram só com Google e querem definir senha pra também conseguir
+ * logar via email/senha. Idempotente: se já tem `password` provider
+ * vinculado, lança `auth/provider-already-linked`.
+ */
+export async function setPasswordOnAccount(password: string): Promise<void> {
+  const user = requireCurrentUser();
+  if (!user.email) {
+    throw new Error('Conta sem e-mail vinculado. Não dá pra definir senha.');
+  }
+  try {
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await linkWithCredential(user, credential);
+  } catch (err) {
+    throw mapFirebaseError(err);
+  }
+}
+
+/**
+ * Troca a senha do user atual. Reautentica com a senha atual antes
+ * (Firebase exige operação recente). Lança `auth/wrong-password` se
+ * `currentPassword` errado.
+ */
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const user = requireCurrentUser();
+  if (!user.email) {
+    throw new Error('Conta sem e-mail vinculado.');
+  }
+  try {
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
+  } catch (err) {
+    throw mapFirebaseError(err);
+  }
+}
+
+/**
+ * Vincula provider Google ao user atual via popup. Use quando o user
+ * só tem `password` provider e quer adicionar Google.
+ */
+export async function linkGoogleProvider(): Promise<void> {
+  const user = requireCurrentUser();
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    await linkWithPopup(user, provider);
+  } catch (err) {
+    throw mapFirebaseError(err);
+  }
+}
+
+/**
+ * Desvincula um provider do user atual. Bloqueia se for o último
+ * provider (deixaria a conta inacessível).
+ */
+export async function unlinkProvider(providerId: ProviderId): Promise<void> {
+  const user = requireCurrentUser();
+  if (user.providerData.length <= 1) {
+    throw new Error('Não dá pra desconectar o único provider — você ficaria sem como entrar.');
+  }
+  try {
+    await unlink(user, providerId);
+  } catch (err) {
+    throw mapFirebaseError(err);
+  }
+}
+
+/**
+ * Reautentica o user atual usando o provider mais conveniente.
+ * Necessário antes de operações sensíveis (delete account, mudar
+ * email). Tenta Google popup se o user tem esse provider; senão pede
+ * senha atual.
+ */
+export async function reauthenticate(currentPassword?: string): Promise<void> {
+  const user = requireCurrentUser();
+  const hasGoogle = user.providerData.some((p) => p.providerId === 'google.com');
+  try {
+    if (hasGoogle) {
+      const provider = new GoogleAuthProvider();
+      await reauthenticateWithPopup(user, provider);
+      return;
+    }
+    if (!user.email || !currentPassword) {
+      throw new Error('Informe sua senha atual pra confirmar.');
+    }
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+  } catch (err) {
+    throw mapFirebaseError(err);
+  }
+}
+
+/**
+ * Exclui o user do Firebase Auth. **Não** limpa dados de aplicação no
+ * backend — quem chama precisa coordenar com endpoint backend (TODO:
+ * `DELETE /me`). Por enquanto: backend mantém User órfão até cleanup.
+ */
+export async function deleteCurrentUser(): Promise<void> {
+  const user = requireCurrentUser();
+  try {
+    await deleteUser(user);
+  } catch (err) {
+    throw mapFirebaseError(err);
+  }
+}
+
+function requireCurrentUser(): FirebaseUser {
+  const user = getFirebaseAuth().currentUser;
+  if (!user) throw new Error('Sessão expirada. Faça login novamente.');
+  return user;
 }
 
 /**
@@ -150,4 +293,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   'auth/weak-password': 'Senha muito fraca. Use ao menos 8 caracteres e 1 número.',
   'auth/password-does-not-meet-requirements':
     'Senha não atende aos requisitos: mínimo 8 caracteres com 1 número.',
+  'auth/provider-already-linked': 'Esse método de login já está vinculado à sua conta.',
+  'auth/credential-already-in-use':
+    'Esse e-mail/senha já pertence a outra conta. Use outro e-mail.',
+  'auth/requires-recent-login': 'Operação sensível: faça login novamente e tente em seguida.',
 };
