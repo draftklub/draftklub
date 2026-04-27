@@ -289,25 +289,60 @@ export class CreateBookingHandler {
       }
     }
 
-    return this.prisma.booking.create({
-      data: {
-        klubId: cmd.klubId,
-        spaceId: cmd.spaceId,
-        startsAt: cmd.startsAt,
-        endsAt,
-        matchType: cmd.matchType,
-        bookingType: cmd.bookingType,
-        creationMode,
-        status: initialStatus,
-        primaryPlayerId: cmd.primaryPlayerId,
-        otherPlayers: resolvedOtherPlayers as unknown as Prisma.InputJsonValue,
-        responsibleMemberId: responsibleMemberId ?? null,
-        extensions: [],
-        notes: cmd.notes,
-        createdById: cmd.createdById,
-        approvedById: initialStatus === 'confirmed' ? cmd.createdById : null,
-        approvedAt: initialStatus === 'confirmed' ? new Date() : null,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.create({
+        data: {
+          klubId: cmd.klubId,
+          spaceId: cmd.spaceId,
+          startsAt: cmd.startsAt,
+          endsAt,
+          matchType: cmd.matchType,
+          bookingType: cmd.bookingType,
+          creationMode,
+          status: initialStatus,
+          primaryPlayerId: cmd.primaryPlayerId,
+          otherPlayers: resolvedOtherPlayers as unknown as Prisma.InputJsonValue,
+          responsibleMemberId: responsibleMemberId ?? null,
+          extensions: [],
+          notes: cmd.notes,
+          createdById: cmd.createdById,
+          approvedById: initialStatus === 'confirmed' ? cmd.createdById : null,
+          approvedAt: initialStatus === 'confirmed' ? new Date() : null,
+        },
+      });
+
+      // Sprint Notifications PR4 — outbox event pra worker disparar email
+      // de confirmação. Worker resolve nome do Klub/space e email do user
+      // a partir dos IDs no payload.
+      const [klub, space] = await Promise.all([
+        tx.klub.findUnique({
+          where: { id: cmd.klubId },
+          select: { name: true, slug: true },
+        }),
+        tx.space.findUnique({
+          where: { id: cmd.spaceId },
+          select: { name: true },
+        }),
+      ]);
+      await tx.outboxEvent.create({
+        data: {
+          eventType: 'booking.created',
+          payload: {
+            bookingId: booking.id,
+            klubId: cmd.klubId,
+            klubName: klub?.name ?? '',
+            klubSlug: klub?.slug ?? '',
+            spaceName: space?.name ?? '',
+            startsAt: booking.startsAt.toISOString(),
+            endsAt: booking.endsAt?.toISOString() ?? null,
+            primaryPlayerId: cmd.primaryPlayerId,
+            matchType: cmd.matchType,
+            status: initialStatus,
+          },
+        },
+      });
+
+      return booking;
     });
   }
 

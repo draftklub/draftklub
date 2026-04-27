@@ -91,37 +91,51 @@ function makePrisma(
 
   const bookingFindFirst = vi.fn().mockResolvedValueOnce(overrides.spaceConflict ?? null);
 
-  return {
-    prisma: {
-      space: { findUnique: vi.fn().mockResolvedValue(space) },
-      klub: { findUnique: vi.fn().mockResolvedValue({ config }) },
-      user: {
-        findUnique: vi
-          .fn()
-          .mockImplementation(({ where }: { where: { id: string } }) =>
-            Promise.resolve({ id: where.id, fullName: `User ${where.id}` }),
-          ),
-      },
-      membership: {
-        findFirst: vi.fn().mockResolvedValue(overrides.isMember === false ? null : { id: 'm1' }),
-        findMany: vi
-          .fn()
-          .mockResolvedValue(overrides.isMember === false ? [] : [{ userId: 'any' }]),
-      },
-      booking: {
-        findFirst: bookingFindFirst,
-        findMany: vi
-          .fn()
-          .mockResolvedValueOnce(overrides.playerOverlaps ?? [])
-          .mockResolvedValueOnce(overrides.otherOverlaps ?? []),
-        create: vi
-          .fn()
-          .mockImplementation((args: { data: unknown }) =>
-            Promise.resolve({ id: 'new-b', ...(args.data as object) }),
-          ),
-      },
+  const prisma = {
+    space: { findUnique: vi.fn().mockResolvedValue(space) },
+    klub: { findUnique: vi.fn().mockResolvedValue({ config, name: 'Klub Test', slug: 'klub-test' }) },
+    user: {
+      findUnique: vi
+        .fn()
+        .mockImplementation(({ where }: { where: { id: string } }) =>
+          Promise.resolve({ id: where.id, fullName: `User ${where.id}` }),
+        ),
     },
+    membership: {
+      findFirst: vi.fn().mockResolvedValue(overrides.isMember === false ? null : { id: 'm1' }),
+      findMany: vi
+        .fn()
+        .mockResolvedValue(overrides.isMember === false ? [] : [{ userId: 'any' }]),
+    },
+    booking: {
+      findFirst: bookingFindFirst,
+      findMany: vi
+        .fn()
+        .mockResolvedValueOnce(overrides.playerOverlaps ?? [])
+        .mockResolvedValueOnce(overrides.otherOverlaps ?? []),
+      create: vi
+        .fn()
+        .mockImplementation((args: { data: unknown }) =>
+          Promise.resolve({
+            id: 'new-b',
+            ...(args.data as object),
+            startsAt: (args.data as { startsAt: Date }).startsAt,
+            endsAt: (args.data as { endsAt?: Date }).endsAt ?? null,
+          }),
+        ),
+    },
+    outboxEvent: {
+      create: vi.fn().mockResolvedValue({ id: 'evt-1' }),
+    },
+    // $transaction passa o próprio prisma como tx (mocks não simulam
+    // transação real).
+    $transaction: vi.fn(),
   };
+  prisma.$transaction.mockImplementation(
+    async (fn: (tx: typeof prisma) => Promise<unknown>) => fn(prisma),
+  );
+
+  return { prisma };
 }
 
 describe('CreateBookingHandler', () => {

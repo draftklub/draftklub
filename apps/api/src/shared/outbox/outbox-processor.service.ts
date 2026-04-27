@@ -9,13 +9,17 @@ import { renderKlubRejectedEmail } from '../email/templates/klub-review-rejected
 import { renderMembershipRequestCreatedEmail } from '../email/templates/membership-request-created.template';
 import { renderMembershipRequestApprovedEmail } from '../email/templates/membership-request-approved.template';
 import { renderMembershipRequestRejectedEmail } from '../email/templates/membership-request-rejected.template';
+import { renderBookingConfirmedEmail } from '../email/templates/booking-confirmed.template';
+import { renderBookingCancelledEmail } from '../email/templates/booking-cancelled.template';
 
 type HandledEventType =
   | 'klub.review.approved'
   | 'klub.review.rejected'
   | 'klub.membership_request.created'
   | 'klub.membership_request.approved'
-  | 'klub.membership_request.rejected';
+  | 'klub.membership_request.rejected'
+  | 'booking.created'
+  | 'booking.cancelled';
 
 const HANDLED_EVENT_TYPES: HandledEventType[] = [
   'klub.review.approved',
@@ -23,6 +27,8 @@ const HANDLED_EVENT_TYPES: HandledEventType[] = [
   'klub.membership_request.created',
   'klub.membership_request.approved',
   'klub.membership_request.rejected',
+  'booking.created',
+  'booking.cancelled',
 ];
 
 const MAX_ATTEMPTS = 5;
@@ -245,6 +251,49 @@ export class OutboxProcessorService {
         rendered: renderMembershipRequestRejectedEmail({
           klubName: this.str(payload, 'klubName') ?? 'seu Klub',
           reason: this.str(payload, 'reason') ?? 'Sem motivo registrado.',
+          appBaseUrl: this.appBaseUrl,
+        }),
+      };
+    }
+    if (eventType === 'booking.created') {
+      // Só envia email pra bookings já confirmados; pendentes (workflow
+      // staff_approval) ainda não têm template próprio — Sprint posterior.
+      const status = this.str(payload, 'status');
+      if (status !== 'confirmed') return null;
+      const recipient = await this.resolveUserEmail(this.str(payload, 'primaryPlayerId'));
+      if (!recipient) return null;
+      return {
+        recipients: [recipient],
+        rendered: renderBookingConfirmedEmail({
+          klubName: this.str(payload, 'klubName') ?? 'seu Klub',
+          klubSlug: this.str(payload, 'klubSlug') ?? '',
+          spaceName: this.str(payload, 'spaceName') ?? 'a quadra',
+          startsAt: this.str(payload, 'startsAt') ?? new Date().toISOString(),
+          endsAt: this.str(payload, 'endsAt'),
+          matchType: this.str(payload, 'matchType') ?? 'singles',
+          appBaseUrl: this.appBaseUrl,
+        }),
+      };
+    }
+    if (eventType === 'booking.cancelled') {
+      const primaryPlayerId = this.str(payload, 'primaryPlayerId');
+      const cancelledById = this.str(payload, 'cancelledById');
+      const recipient = await this.resolveUserEmail(primaryPlayerId);
+      if (!recipient) return null;
+      const cancelledBySelf = primaryPlayerId === cancelledById;
+      const cancelledByIsStaffRaw = payload.cancelledByIsStaff;
+      const cancelledByIsStaff =
+        typeof cancelledByIsStaffRaw === 'boolean' ? cancelledByIsStaffRaw : false;
+      return {
+        recipients: [recipient],
+        rendered: renderBookingCancelledEmail({
+          klubName: this.str(payload, 'klubName') ?? 'seu Klub',
+          klubSlug: this.str(payload, 'klubSlug') ?? '',
+          spaceName: this.str(payload, 'spaceName') ?? 'a quadra',
+          startsAt: this.str(payload, 'startsAt') ?? new Date().toISOString(),
+          cancelledByIsStaff,
+          cancelledBySelf,
+          reason: this.str(payload, 'reason'),
           appBaseUrl: this.appBaseUrl,
         }),
       };

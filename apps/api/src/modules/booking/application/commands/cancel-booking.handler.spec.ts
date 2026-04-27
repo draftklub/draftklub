@@ -28,13 +28,22 @@ function makeKlub(cancellationMode: string, cancellationWindowHours = 24) {
 }
 
 function buildPrisma(booking: ReturnType<typeof makeBooking>, klub: ReturnType<typeof makeKlub>) {
-  return {
+  const prisma = {
     booking: {
       findUnique: vi.fn().mockResolvedValue(booking),
       update: vi.fn().mockResolvedValue({ ...booking, status: 'cancelled' }),
     },
-    klub: { findUnique: vi.fn().mockResolvedValue(klub) },
+    klub: {
+      findUnique: vi.fn().mockResolvedValue({ ...klub, name: 'Klub Test', slug: 'klub-test' }),
+    },
+    space: { findUnique: vi.fn().mockResolvedValue({ name: 'Quadra 1' }) },
+    outboxEvent: { create: vi.fn().mockResolvedValue({ id: 'evt-1' }) },
+    $transaction: vi.fn(),
   };
+  prisma.$transaction.mockImplementation(
+    async (fn: (tx: typeof prisma) => Promise<unknown>) => fn(prisma),
+  );
+  return prisma;
 }
 
 describe('CancelBookingHandler', () => {

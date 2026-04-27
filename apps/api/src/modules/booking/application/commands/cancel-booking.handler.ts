@@ -63,14 +63,42 @@ export class CancelBookingHandler {
       }
     }
 
-    return this.prisma.booking.update({
-      where: { id: cmd.bookingId },
-      data: {
-        status: 'cancelled',
-        cancelledById: cmd.cancelledById,
-        cancelledAt: new Date(),
-        cancellationReason: cmd.reason,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.booking.update({
+        where: { id: cmd.bookingId },
+        data: {
+          status: 'cancelled',
+          cancelledById: cmd.cancelledById,
+          cancelledAt: new Date(),
+          cancellationReason: cmd.reason,
+        },
+      });
+
+      // Sprint Notifications PR4 — outbox pra worker disparar email.
+      const space = await tx.space.findUnique({
+        where: { id: booking.spaceId },
+        select: { name: true },
+      });
+      await tx.outboxEvent.create({
+        data: {
+          eventType: 'booking.cancelled',
+          payload: {
+            bookingId: booking.id,
+            klubId: booking.klubId,
+            klubName: klub?.name ?? '',
+            klubSlug: klub?.slug ?? '',
+            spaceName: space?.name ?? '',
+            startsAt: booking.startsAt.toISOString(),
+            endsAt: booking.endsAt?.toISOString() ?? null,
+            primaryPlayerId: booking.primaryPlayerId,
+            cancelledById: cmd.cancelledById,
+            cancelledByIsStaff: cmd.isStaff,
+            reason: cmd.reason ?? null,
+          },
+        },
+      });
+
+      return updated;
     });
   }
 }
