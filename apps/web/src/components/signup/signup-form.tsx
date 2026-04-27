@@ -22,9 +22,9 @@ interface SignupFormProps {
  *  - senha: min 8 chars + ≥1 numero
  *  - confirmar: igual à senha
  *
- * Após signup, redirect pra /post-login (router decide pra onde
- * mandar baseado em /me/klubs — geralmente /escolher-klub pra user
- * novo com 0 memberships).
+ * Após signup, redirect pra /home (shell autenticado com sidebar
+ * persistente; user 0-memberships vê empty state com atalhos pra
+ * buscar/criar Klub).
  */
 export function SignupForm({ formWidth = 320 }: SignupFormProps) {
   const router = useRouter();
@@ -74,7 +74,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
       await signupWithEmail(email, password, name);
       setStatus('success');
       // Pequena pausa pro user ver a confirmação antes do redirect.
-      setTimeout(() => router.push('/post-login'), 700);
+      setTimeout(() => router.push('/home'), 700);
     } catch (err) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Erro ao criar conta. Tente de novo.');
@@ -88,7 +88,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
     try {
       await loginWithGoogle();
       setStatus('success');
-      setTimeout(() => router.push('/post-login'), 700);
+      setTimeout(() => router.push('/home'), 700);
     } catch (err) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Erro ao entrar com Google');

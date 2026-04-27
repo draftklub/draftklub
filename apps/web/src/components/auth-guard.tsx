@@ -37,16 +37,16 @@ export function AuthGuard({ children, fallbackUrl = '/login' }: AuthGuardProps) 
 }
 
 interface RedirectIfAuthenticatedProps {
-  /** Destino quando user já está logado. Default `/post-login`. */
+  /** Destino quando user já está logado. Default `/home`. */
   to?: string;
 }
 
 /**
- * Inverso do AuthGuard — redireciona pra `/post-login` (ou `to`) se o
+ * Inverso do AuthGuard — redireciona pra `/home` (ou `to`) se o
  * user já está autenticado. Coloque dentro de páginas públicas (login,
  * signup) pra evitar mostrar o form pra quem já entrou.
  */
-export function RedirectIfAuthenticated({ to = '/post-login' }: RedirectIfAuthenticatedProps) {
+export function RedirectIfAuthenticated({ to = '/home' }: RedirectIfAuthenticatedProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
 

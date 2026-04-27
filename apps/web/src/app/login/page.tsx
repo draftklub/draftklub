@@ -20,7 +20,7 @@ import { RedirectIfAuthenticated } from '@/components/auth-guard';
 export default function LoginPage() {
   return (
     <main className="min-h-screen lg:flex">
-      <RedirectIfAuthenticated to="/post-login" />
+      <RedirectIfAuthenticated to="/home" />
       {/* ───── Hero (somente desktop) ───────────────────────────── */}
       <section
         className="relative hidden overflow-hidden text-white lg:flex lg:basis-[56%] lg:flex-col lg:justify-between"

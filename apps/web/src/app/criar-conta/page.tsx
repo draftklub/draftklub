@@ -8,12 +8,12 @@ import { RedirectIfAuthenticated } from '@/components/auth-guard';
  * /criar-conta — signup público.
  *
  * Layout espelha o /login (3 tratamentos: mobile/tablet/desktop). User
- * já logado é redirecionado pra /post-login.
+ * já logado é redirecionado pra /home.
  */
 export default function CriarContaPage() {
   return (
     <main className="min-h-screen lg:flex">
-      <RedirectIfAuthenticated to="/post-login" />
+      <RedirectIfAuthenticated to="/home" />
 
       {/* ───── Hero (somente desktop) ───────────────────────────── */}
       <section

@@ -58,7 +58,7 @@ export function ActiveKlubGate({ children }: { children: React.ReactNode }) {
             />
           ) : null}
           <Link
-            href="/post-login"
+            href="/home"
             className="mt-4 inline-block text-sm text-muted-foreground underline-offset-4 hover:underline"
           >
             Voltar ao início

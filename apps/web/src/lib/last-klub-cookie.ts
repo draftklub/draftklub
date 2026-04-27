@@ -1,9 +1,9 @@
 /**
  * Cookie helpers pra persistir o último Klub visitado.
  *
- * Lido pelo `/post-login` pra encurtar o caminho de retorno: se o user
- * tem N Klubs e o último slug ainda é válido, pula direto pro dashboard
- * sem passar pelo picker.
+ * Lido pelo `/home` pra renderizar o card "Continue de onde parou"
+ * apontando pro último Klub que o user esteve. Setado pelo
+ * `ActiveKlubProvider` toda vez que um Klub resolve com sucesso.
  *
  * Escopo: client-side. Não tente ler em Server Components — esse cookie
  * é setado depois do client resolver o Klub no `ActiveKlubProvider`.
