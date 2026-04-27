@@ -11,6 +11,7 @@ import { renderMembershipRequestApprovedEmail } from '../email/templates/members
 import { renderMembershipRequestRejectedEmail } from '../email/templates/membership-request-rejected.template';
 import { renderBookingConfirmedEmail } from '../email/templates/booking-confirmed.template';
 import { renderBookingCancelledEmail } from '../email/templates/booking-cancelled.template';
+import { renderBookingReminderEmail } from '../email/templates/booking-reminder.template';
 
 type HandledEventType =
   | 'klub.review.approved'
@@ -19,7 +20,8 @@ type HandledEventType =
   | 'klub.membership_request.approved'
   | 'klub.membership_request.rejected'
   | 'booking.created'
-  | 'booking.cancelled';
+  | 'booking.cancelled'
+  | 'booking.reminder_24h';
 
 const HANDLED_EVENT_TYPES: HandledEventType[] = [
   'klub.review.approved',
@@ -29,7 +31,12 @@ const HANDLED_EVENT_TYPES: HandledEventType[] = [
   'klub.membership_request.rejected',
   'booking.created',
   'booking.cancelled',
+  'booking.reminder_24h',
 ];
+
+const REMINDER_WINDOW_HOURS_MIN = 23;
+const REMINDER_WINDOW_HOURS_MAX = 25;
+const REMINDER_BATCH_SIZE = 50;
 
 const MAX_ATTEMPTS = 5;
 const BATCH_SIZE = 10;
@@ -84,6 +91,104 @@ export class OutboxProcessorService {
     } finally {
       this.running = false;
     }
+  }
+
+  /**
+   * Sprint Polish PR-A — escaneia bookings 24h antes do startsAt e
+   * cria OutboxEvent `booking.reminder_24h`. Roda a cada 5min — janela
+   * de 2h ([+23h, +25h]) cobre o gap entre execuções sem duplicar.
+   *
+   * Atomic: update de `reminderSentAt` + insert do OutboxEvent na mesma
+   * transação previne dupla emissão se o cron rodar em 2 instâncias.
+   */
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async scanReminders(): Promise<void> {
+    if (!this.enabled) return;
+    try {
+      await this.scanRemindersBatch();
+    } catch (err) {
+      this.logger.error(`scanReminders failed: ${(err as Error).message}`);
+    }
+  }
+
+  /** Exposto pra tests chamarem manualmente. */
+  async scanRemindersBatch(): Promise<{ scheduled: number }> {
+    const now = Date.now();
+    const windowStart = new Date(now + REMINDER_WINDOW_HOURS_MIN * 3_600_000);
+    const windowEnd = new Date(now + REMINDER_WINDOW_HOURS_MAX * 3_600_000);
+
+    const candidates = await this.prisma.booking.findMany({
+      where: {
+        startsAt: { gte: windowStart, lte: windowEnd },
+        status: 'confirmed',
+        reminderSentAt: null,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        klubId: true,
+        spaceId: true,
+        primaryPlayerId: true,
+        startsAt: true,
+        endsAt: true,
+        matchType: true,
+      },
+      take: REMINDER_BATCH_SIZE,
+    });
+
+    if (candidates.length === 0) return { scheduled: 0 };
+
+    let scheduled = 0;
+    for (const b of candidates) {
+      try {
+        // Tx por booking — falha de um não bloqueia outros, e UPDATE
+        // com WHERE reminderSentAt IS NULL impede reemissão se outra
+        // instância pegou esse booking primeiro.
+        const result = await this.prisma.$transaction(async (tx) => {
+          const updated = await tx.booking.updateMany({
+            where: { id: b.id, reminderSentAt: null },
+            data: { reminderSentAt: new Date() },
+          });
+          if (updated.count === 0) return null; // perdemos a corrida
+          const [klub, space] = await Promise.all([
+            tx.klub.findUnique({
+              where: { id: b.klubId },
+              select: { name: true, slug: true },
+            }),
+            tx.space.findUnique({
+              where: { id: b.spaceId },
+              select: { name: true },
+            }),
+          ]);
+          return tx.outboxEvent.create({
+            data: {
+              eventType: 'booking.reminder_24h',
+              payload: {
+                bookingId: b.id,
+                klubId: b.klubId,
+                klubName: klub?.name ?? '',
+                klubSlug: klub?.slug ?? '',
+                spaceName: space?.name ?? '',
+                startsAt: b.startsAt.toISOString(),
+                endsAt: b.endsAt?.toISOString() ?? null,
+                primaryPlayerId: b.primaryPlayerId,
+                matchType: b.matchType ?? 'singles',
+              },
+            },
+          });
+        });
+        if (result) scheduled++;
+      } catch (err) {
+        this.logger.warn(
+          `scanReminders: booking ${b.id} skipped — ${(err as Error).message}`,
+        );
+      }
+    }
+
+    if (scheduled > 0) {
+      this.logger.log(`Reminders scheduled: ${scheduled}/${candidates.length}`);
+    }
+    return { scheduled };
   }
 
   /** Exposto pra tests + endpoints admin chamarem manualmente. */
@@ -260,10 +365,10 @@ export class OutboxProcessorService {
       // staff_approval) ainda não têm template próprio — Sprint posterior.
       const status = this.str(payload, 'status');
       if (status !== 'confirmed') return null;
-      const recipient = await this.resolveUserEmail(this.str(payload, 'primaryPlayerId'));
-      if (!recipient) return null;
+      const recipients = await this.resolveBookingRecipients(this.str(payload, 'bookingId'));
+      if (recipients.length === 0) return null;
       return {
-        recipients: [recipient],
+        recipients,
         rendered: renderBookingConfirmedEmail({
           klubName: this.str(payload, 'klubName') ?? 'seu Klub',
           klubSlug: this.str(payload, 'klubSlug') ?? '',
@@ -278,14 +383,14 @@ export class OutboxProcessorService {
     if (eventType === 'booking.cancelled') {
       const primaryPlayerId = this.str(payload, 'primaryPlayerId');
       const cancelledById = this.str(payload, 'cancelledById');
-      const recipient = await this.resolveUserEmail(primaryPlayerId);
-      if (!recipient) return null;
+      const recipients = await this.resolveBookingRecipients(this.str(payload, 'bookingId'));
+      if (recipients.length === 0) return null;
       const cancelledBySelf = primaryPlayerId === cancelledById;
       const cancelledByIsStaffRaw = payload.cancelledByIsStaff;
       const cancelledByIsStaff =
         typeof cancelledByIsStaffRaw === 'boolean' ? cancelledByIsStaffRaw : false;
       return {
-        recipients: [recipient],
+        recipients,
         rendered: renderBookingCancelledEmail({
           klubName: this.str(payload, 'klubName') ?? 'seu Klub',
           klubSlug: this.str(payload, 'klubSlug') ?? '',
@@ -298,7 +403,52 @@ export class OutboxProcessorService {
         }),
       };
     }
+    if (eventType === 'booking.reminder_24h') {
+      const recipients = await this.resolveBookingRecipients(this.str(payload, 'bookingId'));
+      if (recipients.length === 0) return null;
+      return {
+        recipients,
+        rendered: renderBookingReminderEmail({
+          klubName: this.str(payload, 'klubName') ?? 'seu Klub',
+          klubSlug: this.str(payload, 'klubSlug') ?? '',
+          spaceName: this.str(payload, 'spaceName') ?? 'a quadra',
+          startsAt: this.str(payload, 'startsAt') ?? new Date().toISOString(),
+          endsAt: this.str(payload, 'endsAt'),
+          matchType: this.str(payload, 'matchType') ?? 'singles',
+          appBaseUrl: this.appBaseUrl,
+        }),
+      };
+    }
     return null;
+  }
+
+  /**
+   * Sprint Polish PR-A — fan-out de email pro primary player + outros
+   * players com userId (guests sem User registrado são ignorados).
+   * Re-fetch do booking pelo bookingId pra dado fresh de otherPlayers
+   * (payload do outbox pode estar stale se reservas mudaram).
+   */
+  private async resolveBookingRecipients(bookingId: string | null): Promise<string[]> {
+    if (!bookingId) return [];
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { primaryPlayerId: true, otherPlayers: true },
+    });
+    if (!booking) return [];
+
+    const userIds = new Set<string>();
+    if (booking.primaryPlayerId) userIds.add(booking.primaryPlayerId);
+    const others = (booking.otherPlayers as { userId?: string }[] | null) ?? [];
+    for (const p of others) {
+      if (p.userId && typeof p.userId === 'string') userIds.add(p.userId);
+    }
+    if (userIds.size === 0) return [];
+
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: [...userIds] } },
+      select: { email: true },
+    });
+    return users.map((u) => u.email).filter((e): e is string => !!e);
   }
 
   private async resolveUserEmail(userId: string | null): Promise<string | null> {
