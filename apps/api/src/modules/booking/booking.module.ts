@@ -15,6 +15,8 @@ import { CloseOperationalBlockHandler } from './application/commands/close-opera
 import { ExtendBookingHandler } from './application/commands/extend-booking.handler';
 import { ApproveExtensionHandler } from './application/commands/approve-extension.handler';
 import { RejectExtensionHandler } from './application/commands/reject-extension.handler';
+import { AddPlayersToBookingHandler } from './application/commands/add-players-to-booking.handler';
+import { ListPendingExtensionsHandler } from './application/queries/list-pending-extensions.handler';
 import { GetSpaceAvailabilityHandler } from './application/queries/get-space-availability.handler';
 import { GetKlubCalendarHandler } from './application/queries/get-klub-calendar.handler';
 import { ListBookingsHandler } from './application/queries/list-bookings.handler';
@@ -36,6 +38,7 @@ import {
 import {
   BookingExtensionController,
   BookingExtensionActionsController,
+  KlubExtensionsController,
 } from './api/booking-extension.controller';
 import { UsersSearchController } from './api/users-search.controller';
 import { MeBookingsController } from './api/me-bookings.controller';
@@ -53,6 +56,7 @@ import { MeBookingsController } from './api/me-bookings.controller';
     OperationalBlockActionsController,
     BookingExtensionController,
     BookingExtensionActionsController,
+    KlubExtensionsController,
     UsersSearchController,
     MeBookingsController,
   ],
@@ -72,6 +76,8 @@ import { MeBookingsController } from './api/me-bookings.controller';
     ExtendBookingHandler,
     ApproveExtensionHandler,
     RejectExtensionHandler,
+    AddPlayersToBookingHandler,
+    ListPendingExtensionsHandler,
     GetSpaceAvailabilityHandler,
     GetKlubCalendarHandler,
     ListBookingsHandler,

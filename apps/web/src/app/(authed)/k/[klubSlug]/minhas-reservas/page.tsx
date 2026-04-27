@@ -11,6 +11,8 @@ import {
   Clock,
   Loader2,
   MapPin,
+  Plus,
+  Timer,
   X,
 } from 'lucide-react';
 import { ApiError } from '@/lib/api/client';
@@ -18,8 +20,10 @@ import { useActiveKlub } from '@/components/active-klub-provider';
 import { useAuth } from '@/components/auth-provider';
 import { getMe } from '@/lib/api/me';
 import {
+  addPlayersToBooking,
   cancelBooking,
   listKlubBookings,
+  requestExtension,
   type BookingListItem,
 } from '@/lib/api/bookings';
 import { cn } from '@/lib/utils';
@@ -159,7 +163,14 @@ export default function MinhasReservasPage() {
                 <li key={b.id}>
                   <BookingCard
                     booking={b}
+                    meId={meId}
                     canCancel={tab === 'upcoming' && b.status !== 'cancelled'}
+                    canAddPlayers={
+                      tab === 'upcoming' &&
+                      b.status === 'confirmed' &&
+                      b.primaryPlayerId === meId
+                    }
+                    canExtend={tab === 'upcoming' && b.status === 'confirmed'}
                     onActed={(msg) => {
                       setActionMessage(msg);
                       setReload((n) => n + 1);
@@ -201,14 +212,23 @@ function TabButton({
 
 function BookingCard({
   booking,
+  meId,
   canCancel,
+  canAddPlayers,
+  canExtend,
   onActed,
 }: {
   booking: BookingListItem;
+  meId: string | null;
   canCancel: boolean;
+  canAddPlayers: boolean;
+  canExtend: boolean;
   onActed: (msg: string) => void;
 }) {
   const [cancelOpen, setCancelOpen] = React.useState(false);
+  const [addPlayersOpen, setAddPlayersOpen] = React.useState(false);
+  const [extendOpen, setExtendOpen] = React.useState(false);
+  void meId;
   const start = new Date(booking.startsAt);
   const end = new Date(booking.endsAt);
   const date = start.toLocaleDateString('pt-BR', {
@@ -248,17 +268,42 @@ function BookingCard({
           ) : null}
         </div>
 
-        {canCancel ? (
-          <button
-            type="button"
-            onClick={() => setCancelOpen(true)}
-            className="inline-flex h-9 shrink-0 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
-          >
-            <X className="size-3" />
-            Cancelar
-          </button>
-        ) : null}
       </div>
+
+      {(canCancel || canAddPlayers || canExtend) ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          {canAddPlayers ? (
+            <button
+              type="button"
+              onClick={() => setAddPlayersOpen(true)}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[12px] font-semibold hover:bg-muted"
+            >
+              <Plus className="size-3" />
+              Adicionar player
+            </button>
+          ) : null}
+          {canExtend ? (
+            <button
+              type="button"
+              onClick={() => setExtendOpen(true)}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[12px] font-semibold hover:bg-muted"
+            >
+              <Timer className="size-3" />
+              Estender
+            </button>
+          ) : null}
+          {canCancel ? (
+            <button
+              type="button"
+              onClick={() => setCancelOpen(true)}
+              className="ml-auto inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+            >
+              <X className="size-3" />
+              Cancelar
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {cancelOpen ? (
         <CancelModal
@@ -270,6 +315,223 @@ function BookingCard({
           }}
         />
       ) : null}
+      {addPlayersOpen ? (
+        <AddPlayersModal
+          bookingId={booking.id}
+          onClose={() => setAddPlayersOpen(false)}
+          onAdded={(count) => {
+            setAddPlayersOpen(false);
+            onActed(count === 1 ? 'Player adicionado.' : `${count} players adicionados.`);
+          }}
+        />
+      ) : null}
+      {extendOpen ? (
+        <ExtendModal
+          bookingId={booking.id}
+          onClose={() => setExtendOpen(false)}
+          onRequested={(autoApproved) => {
+            setExtendOpen(false);
+            onActed(
+              autoApproved
+                ? 'Extensão aprovada. Horário atualizado.'
+                : 'Extensão solicitada — staff vai revisar.',
+            );
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function AddPlayersModal({
+  bookingId,
+  onClose,
+  onAdded,
+}: {
+  bookingId: string;
+  onClose: () => void;
+  onAdded: (count: number) => void;
+}) {
+  const [firstName, setFirstName] = React.useState('');
+  const [lastName, setLastName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleAdd() {
+    if (submitting) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      await addPlayersToBooking(bookingId, [
+        { guest: { firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim() } },
+      ]);
+      onAdded(1);
+    } catch (err: unknown) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Erro ao adicionar.',
+      );
+      setSubmitting(false);
+    }
+  }
+
+  const valid = firstName.trim() && lastName.trim() && /.+@.+\..+/.test(email);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-md rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <h2 className="font-display text-lg font-bold">Adicionar player</h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          Se o player não tem conta no DraftKlub, criamos um cadastro guest no Klub.
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <input
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="Nome"
+            maxLength={100}
+            className="rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+          />
+          <input
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder="Sobrenome"
+            maxLength={100}
+            className="rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+          />
+        </div>
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="email@example.com"
+          type="email"
+          className="mt-2 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        />
+        {error ? (
+          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+            {error}
+          </p>
+        ) : null}
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            Voltar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleAdd()}
+            disabled={!valid || submitting}
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+            Adicionar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExtendModal({
+  bookingId,
+  onClose,
+  onRequested,
+}: {
+  bookingId: string;
+  onClose: () => void;
+  onRequested: (autoApproved: boolean) => void;
+}) {
+  const [minutes, setMinutes] = React.useState(30);
+  const [notes, setNotes] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleRequest() {
+    if (submitting) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const result = await requestExtension(bookingId, minutes, notes.trim() || undefined);
+      const autoApproved = result.extension?.status === 'approved';
+      onRequested(autoApproved);
+    } catch (err: unknown) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Erro ao solicitar.',
+      );
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-md rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <h2 className="font-display text-lg font-bold">Estender reserva</h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          Dependendo da config do Klub a extensão pode ser automática ou aguardar
+          aprovação do staff.
+        </p>
+        <div className="mt-3 flex gap-2">
+          {[30, 60, 90].map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMinutes(m)}
+              className={cn(
+                'flex-1 rounded-[10px] border p-3 text-[13px] font-semibold transition-colors',
+                minutes === m
+                  ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+                  : 'border-input bg-background hover:bg-muted',
+              )}
+            >
+              +{m}min
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Motivo (opcional)"
+          rows={2}
+          maxLength={500}
+          className="mt-3 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        />
+        {error ? (
+          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+            {error}
+          </p>
+        ) : null}
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            Voltar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleRequest()}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Timer className="size-3.5" />}
+            Solicitar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

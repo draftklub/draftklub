@@ -17,6 +17,7 @@ import {
   Shield,
   Sparkles,
   Sun,
+  Timer,
   User,
   UserCheck,
   X,
@@ -242,6 +243,13 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
                       label="Solicitações"
                       icon={UserCheck}
                       active={pathname === `/k/${activeKlubSlug}/solicitacoes`}
+                      onNavigate={onClose}
+                    />
+                    <NavLink
+                      href={`/k/${activeKlubSlug}/extensions-pending`}
+                      label="Extensões"
+                      icon={Timer}
+                      active={pathname === `/k/${activeKlubSlug}/extensions-pending`}
                       onNavigate={onClose}
                     />
                   </>
