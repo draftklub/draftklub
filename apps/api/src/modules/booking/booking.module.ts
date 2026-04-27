@@ -19,6 +19,7 @@ import { GetSpaceAvailabilityHandler } from './application/queries/get-space-ava
 import { GetKlubCalendarHandler } from './application/queries/get-klub-calendar.handler';
 import { ListBookingsHandler } from './application/queries/list-bookings.handler';
 import { GetBookingHandler } from './application/queries/get-booking.handler';
+import { GetMyBookingsHandler } from './application/queries/get-my-bookings.handler';
 import { BookingFacade } from './public/booking.facade';
 import { BookingController } from './api/booking.controller';
 import { BookingActionsController } from './api/booking-actions.controller';
@@ -37,6 +38,7 @@ import {
   BookingExtensionActionsController,
 } from './api/booking-extension.controller';
 import { UsersSearchController } from './api/users-search.controller';
+import { MeBookingsController } from './api/me-bookings.controller';
 
 @Module({
   imports: [IdentityModule],
@@ -52,6 +54,7 @@ import { UsersSearchController } from './api/users-search.controller';
     BookingExtensionController,
     BookingExtensionActionsController,
     UsersSearchController,
+    MeBookingsController,
   ],
   providers: [
     SeriesGeneratorService,
@@ -73,6 +76,7 @@ import { UsersSearchController } from './api/users-search.controller';
     GetKlubCalendarHandler,
     ListBookingsHandler,
     GetBookingHandler,
+    GetMyBookingsHandler,
     BookingFacade,
   ],
   exports: [BookingFacade],
