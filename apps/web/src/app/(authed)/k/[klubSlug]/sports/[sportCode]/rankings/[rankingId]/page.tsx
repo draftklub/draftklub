@@ -3,11 +3,23 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { AlertCircle, ArrowLeft, Loader2, Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Loader2,
+  Minus,
+  Plus,
+  Swords,
+  TrendingDown,
+  TrendingUp,
+  UserPlus,
+} from 'lucide-react';
 import type { RankingDetail, RankingPlayerEntry } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
-import { getRanking } from '@/lib/api/rankings';
+import { getMe } from '@/lib/api/me';
+import { enrollPlayerInRanking, getRanking, submitCasualMatch } from '@/lib/api/rankings';
 import { cn } from '@/lib/utils';
 
 const SPORT_LABELS: Record<string, string> = {
@@ -37,12 +49,20 @@ export default function RankingDetailPage() {
   const sportLabel = SPORT_LABELS[sportCode] ?? sportCode;
 
   const [data, setData] = React.useState<RankingDetail | null>(null);
+  const [meId, setMeId] = React.useState<string | null>(null);
+  const [reload, setReload] = React.useState(0);
+  const [actionMessage, setActionMessage] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!klub) return;
     let cancelled = false;
     setError(null);
+    void getMe()
+      .then((me) => {
+        if (!cancelled) setMeId(me.id);
+      })
+      .catch(() => null);
     getRanking(klub.id, sportCode, rankingId)
       .then((row) => {
         if (!cancelled) setData(row);
@@ -61,7 +81,7 @@ export default function RankingDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [klub, sportCode, rankingId]);
+  }, [klub, sportCode, rankingId, reload]);
 
   if (!klub) return null;
 
@@ -110,12 +130,420 @@ export default function RankingDetailPage() {
               </p>
             </header>
 
+            {actionMessage ? (
+              <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+                <CheckCircle2 className="mr-1 inline size-3.5" />
+                {actionMessage}
+              </p>
+            ) : null}
+
+            <CasualMatchActions
+              klubId={klub.id}
+              sportCode={sportCode}
+              rankingId={rankingId}
+              ranking={data}
+              meId={meId}
+              onSuccess={(msg) => {
+                setActionMessage(msg);
+                setError(null);
+                setReload((n) => n + 1);
+              }}
+              onError={(msg) => {
+                setError(msg);
+                setActionMessage(null);
+              }}
+            />
+
             <PlayerTable players={data.players} orderBy={data.orderBy} />
           </>
         )}
       </div>
     </main>
   );
+}
+
+// ─── Casual match actions (PR-K3c) ──────────────────────────────────────
+
+function CasualMatchActions({
+  klubId,
+  sportCode,
+  rankingId,
+  ranking,
+  meId,
+  onSuccess,
+  onError,
+}: {
+  klubId: string;
+  sportCode: string;
+  rankingId: string;
+  ranking: RankingDetail;
+  meId: string | null;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [matchOpen, setMatchOpen] = React.useState(false);
+  const [enrolling, setEnrolling] = React.useState(false);
+
+  if (!meId) return null;
+  const isEnrolled = ranking.players.some((p) => p.userId === meId);
+  const acceptsCasual = ranking.includesCasualMatches;
+
+  if (!acceptsCasual) {
+    return (
+      <p className="rounded-xl border border-dashed border-border p-3 text-[12.5px] text-muted-foreground">
+        Esse ranking não considera partidas casuais — só matches de torneio contam.
+      </p>
+    );
+  }
+
+  async function handleEnroll() {
+    if (enrolling) return;
+    setEnrolling(true);
+    try {
+      await enrollPlayerInRanking(klubId, sportCode, rankingId);
+      onSuccess('Você entrou no ranking. Bons jogos!');
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao se inscrever no ranking.'));
+      setEnrolling(false);
+    }
+  }
+
+  return (
+    <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3.5">
+      {isEnrolled ? (
+        <>
+          <div className="text-[12.5px]">
+            <p className="font-display text-[13.5px] font-bold text-foreground">Reportar partida</p>
+            <p className="mt-0.5 text-muted-foreground">
+              Match casual entre 2 players inscritos. Após reportar, o outro precisa confirmar.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMatchOpen(true)}
+            className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            <Swords className="size-3.5" />
+            Reportar partida
+          </button>
+        </>
+      ) : (
+        <>
+          <div className="text-[12.5px]">
+            <p className="font-display text-[13.5px] font-bold text-foreground">
+              Você ainda não está nesse ranking
+            </p>
+            <p className="mt-0.5 text-muted-foreground">
+              Entre pra começar a ranquear partidas casuais.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleEnroll()}
+            disabled={enrolling}
+            className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {enrolling ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <UserPlus className="size-3.5" />
+            )}
+            Entrar no ranking
+          </button>
+        </>
+      )}
+
+      {matchOpen ? (
+        <SubmitMatchModal
+          ranking={ranking}
+          meId={meId}
+          onClose={() => setMatchOpen(false)}
+          onSuccess={(msg) => {
+            setMatchOpen(false);
+            onSuccess(msg);
+          }}
+          onError={onError}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+function SubmitMatchModal({
+  ranking,
+  meId,
+  onClose,
+  onSuccess,
+  onError,
+}: {
+  ranking: RankingDetail;
+  meId: string;
+  onClose: () => void;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  // Player1 default = me. Player2 = vazio.
+  const [player1Id, setPlayer1Id] = React.useState<string>(meId);
+  const [player2Id, setPlayer2Id] = React.useState<string>('');
+  const [winnerId, setWinnerId] = React.useState<string>('');
+  const [score, setScore] = React.useState('');
+  const [playedAt, setPlayedAt] = React.useState(formatNowLocal());
+  const [notes, setNotes] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [localError, setLocalError] = React.useState<string | null>(null);
+
+  // Player1 e Player2 não podem ser o mesmo.
+  const eligibleForP2 = ranking.players.filter((p) => p.userId !== player1Id);
+  // Auto-deselecionar player2 se ficou == player1
+  React.useEffect(() => {
+    if (player2Id === player1Id) setPlayer2Id('');
+    if (winnerId && winnerId !== player1Id && winnerId !== player2Id) setWinnerId('');
+  }, [player1Id, player2Id, winnerId]);
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setLocalError(null);
+    if (!player1Id || !player2Id) {
+      setLocalError('Escolha os 2 jogadores.');
+      return;
+    }
+    if (player1Id === player2Id) {
+      setLocalError('Player 1 e Player 2 precisam ser diferentes.');
+      return;
+    }
+    if (!winnerId) {
+      setLocalError('Escolha o vencedor.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await submitCasualMatch({
+        rankingId: ranking.id,
+        player1Id,
+        player2Id,
+        winnerId,
+        score: score.trim() || undefined,
+        playedAt: playedAt ? new Date(playedAt).toISOString() : undefined,
+        notes: notes.trim() || undefined,
+      });
+      onSuccess('Partida reportada. Aguarda confirmação do oponente.');
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao reportar partida.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-md space-y-3 rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold">Reportar partida casual</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+          >
+            ✕
+          </button>
+        </div>
+
+        {localError ? (
+          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+            <AlertCircle className="mr-1 inline size-3.5" />
+            {localError}
+          </p>
+        ) : null}
+
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Player 1
+          </p>
+          <select
+            value={player1Id}
+            onChange={(e) => setPlayer1Id(e.target.value)}
+            className={inputCls}
+          >
+            <option value={meId}>Eu</option>
+            {ranking.players
+              .filter((p) => p.userId !== meId)
+              .map((p) => (
+                <option key={p.userId} value={p.userId}>
+                  {p.fullName}
+                </option>
+              ))}
+          </select>
+        </div>
+
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Player 2
+          </p>
+          <select
+            value={player2Id}
+            onChange={(e) => setPlayer2Id(e.target.value)}
+            className={inputCls}
+          >
+            <option value="">— escolha —</option>
+            {eligibleForP2.map((p) => (
+              <option key={p.userId} value={p.userId}>
+                {p.fullName}
+                {p.userId === meId ? ' (eu)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Vencedor
+          </p>
+          <div className="space-y-1.5">
+            <WinnerOption
+              checked={winnerId === player1Id && !!player1Id}
+              onSelect={() => setWinnerId(player1Id)}
+              name={
+                player1Id === meId
+                  ? 'Eu'
+                  : (ranking.players.find((p) => p.userId === player1Id)?.fullName ?? '—')
+              }
+              disabled={!player1Id}
+            />
+            <WinnerOption
+              checked={winnerId === player2Id && !!player2Id}
+              onSelect={() => setWinnerId(player2Id)}
+              name={
+                player2Id
+                  ? (ranking.players.find((p) => p.userId === player2Id)?.fullName ?? '—')
+                  : '—'
+              }
+              disabled={!player2Id}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Score (opcional)
+            </p>
+            <input
+              value={score}
+              onChange={(e) => setScore(e.target.value)}
+              placeholder="6-3 6-2"
+              maxLength={50}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Quando
+            </p>
+            <input
+              type="datetime-local"
+              value={playedAt}
+              onChange={(e) => setPlayedAt(e.target.value)}
+              className={inputCls}
+            />
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Notas (opcional)
+          </p>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={2}
+            maxLength={500}
+            className={inputCls}
+          />
+        </div>
+
+        <p className="text-[11.5px] text-muted-foreground">
+          Após reportar, o oponente precisa confirmar pra rating ser recalculado e ranking
+          atualizado.
+        </p>
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleSubmit()}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {submitting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Plus className="size-3.5" />
+            )}
+            Reportar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WinnerOption({
+  checked,
+  onSelect,
+  name,
+  disabled,
+}: {
+  checked: boolean;
+  onSelect: () => void;
+  name: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      disabled={disabled}
+      className={cn(
+        'flex w-full items-center gap-2 rounded-lg border p-2.5 text-left text-[13px] transition-colors disabled:opacity-50',
+        checked
+          ? 'border-primary bg-primary/10 text-foreground'
+          : 'border-border bg-background hover:bg-muted',
+      )}
+    >
+      <span
+        className={cn(
+          'inline-flex size-4 shrink-0 items-center justify-center rounded-full border',
+          checked ? 'border-primary bg-primary' : 'border-input bg-background',
+        )}
+      >
+        {checked ? <span className="size-1.5 rounded-full bg-primary-foreground" /> : null}
+      </span>
+      <span className="truncate font-medium">{name}</span>
+    </button>
+  );
+}
+
+function formatNowLocal(): string {
+  // <input type="datetime-local"> espera "YYYY-MM-DDTHH:mm" sem timezone.
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+const inputCls =
+  'w-full rounded-[10px] border border-input bg-background px-3 py-2.25 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+
+function toErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) return err.message;
+  if (err instanceof Error) return err.message;
+  return fallback;
 }
 
 function PlayerTable({ players, orderBy }: { players: RankingPlayerEntry[]; orderBy: string }) {
