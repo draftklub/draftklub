@@ -127,3 +127,50 @@ export function createTournament(
     json: input,
   });
 }
+
+// ─── Mutations (Sprint K PR-K2b — draw + schedule + reporting mode) ────
+
+/** POST /tournaments/:id/draw — gera matches do bracket. */
+export function drawTournament(tournamentId: string): Promise<unknown> {
+  return apiFetch(`/tournaments/${tournamentId}/draw`, { method: 'POST', json: {} });
+}
+
+/** Config pra distribuir matches em spaces+horários. Backend usa ScheduleDistributorService. */
+export interface ScheduleConfigInput {
+  /** Datas no formato `YYYY-MM-DD`. */
+  availableDates: string[];
+  /** Hora de início (0–23). */
+  startHour: number;
+  /** Hora de fim (1–24). Maior que startHour. */
+  endHour: number;
+  /** Duração de cada match (30–360 min). */
+  matchDurationMinutes: number;
+  /** Intervalo entre matches no mesmo space (0–120 min). */
+  breakBetweenMatchesMinutes?: number;
+  /** Spaces (quadras) onde alocar matches. */
+  spaceIds: string[];
+  /** Tempo mínimo de descanso de um player entre matches (0–360 min). */
+  restRuleMinutes?: number;
+}
+
+/** POST /tournaments/:id/schedule — distribui matches em quadras+horários. */
+export function scheduleTournament(
+  tournamentId: string,
+  config?: ScheduleConfigInput,
+): Promise<unknown> {
+  return apiFetch(`/tournaments/${tournamentId}/schedule`, {
+    method: 'POST',
+    json: config ?? {},
+  });
+}
+
+/** PATCH /tournaments/:id/reporting-mode — muda modo de reportagem em massa. */
+export function updateReportingMode(
+  tournamentId: string,
+  mode: TournamentResultReportingMode,
+): Promise<unknown> {
+  return apiFetch(`/tournaments/${tournamentId}/reporting-mode`, {
+    method: 'PATCH',
+    json: { mode },
+  });
+}
