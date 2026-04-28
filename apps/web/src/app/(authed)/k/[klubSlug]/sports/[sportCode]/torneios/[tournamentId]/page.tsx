@@ -35,12 +35,15 @@ import { getMe } from '@/lib/api/me';
 import { listKlubSpaces } from '@/lib/api/spaces';
 import {
   approveTournamentEntry,
+  confirmTournamentMatch,
   drawTournament,
+  editTournamentMatch,
   getTournament,
   getTournamentBracket,
   listTournamentEntries,
   moveTournamentEntryCategory,
   registerTournamentEntry,
+  reportTournamentMatch,
   scheduleTournament,
   updateReportingMode,
   withdrawMyTournamentEntry,
@@ -167,7 +170,15 @@ export default function TournamentDetailPage() {
             <TabBar active={tab} onSelect={setTab} canManage={canManage} />
             <div className="pt-2">
               {tab === 'overview' ? <Overview tournament={tournament} /> : null}
-              {tab === 'bracket' ? <BracketView bracket={bracket} /> : null}
+              {tab === 'bracket' ? (
+                <BracketView
+                  bracket={bracket}
+                  tournament={tournament}
+                  meId={meId}
+                  canManage={canManage}
+                  onChanged={() => setReload((n) => n + 1)}
+                />
+              ) : null}
               {tab === 'entries' ? (
                 <EntriesView
                   entries={entries}
@@ -973,7 +984,19 @@ function toErrorMessage(err: unknown, fallback: string): string {
 
 // ─── Bracket view ───────────────────────────────────────────────────────
 
-function BracketView({ bracket }: { bracket: TournamentBracket | null }) {
+function BracketView({
+  bracket,
+  tournament,
+  meId,
+  canManage,
+  onChanged,
+}: {
+  bracket: TournamentBracket | null;
+  tournament: TournamentDetail;
+  meId: string | null;
+  canManage: boolean;
+  onChanged: () => void;
+}) {
   const [activeCategoryId, setActiveCategoryId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -1033,7 +1056,13 @@ function BracketView({ bracket }: { bracket: TournamentBracket | null }) {
         </div>
       ) : null}
 
-      <BracketByPhases matches={activeCategory.matches} />
+      <BracketByPhases
+        matches={activeCategory.matches}
+        tournament={tournament}
+        meId={meId}
+        canManage={canManage}
+        onChanged={onChanged}
+      />
     </div>
   );
 }
@@ -1045,7 +1074,19 @@ function BracketView({ bracket }: { bracket: TournamentBracket | null }) {
  * knockout (phases group_A/B/... + knockout). Não desenha linhas conectoras
  * — visualização é grid simples por fase.
  */
-function BracketByPhases({ matches }: { matches: TournamentMatchView[] }) {
+function BracketByPhases({
+  matches,
+  tournament,
+  meId,
+  canManage,
+  onChanged,
+}: {
+  matches: TournamentMatchView[];
+  tournament: TournamentDetail;
+  meId: string | null;
+  canManage: boolean;
+  onChanged: () => void;
+}) {
   if (matches.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
@@ -1103,18 +1144,26 @@ function BracketByPhases({ matches }: { matches: TournamentMatchView[] }) {
   const hasLosers = byPhase.losers.length > 0;
   const hasGroups = byPhase.groups.length > 0;
 
+  const sectionProps = { tournament, meId, canManage, onChanged };
+
   return (
     <div className="space-y-5">
-      {hasGroups ? <BracketSection title="Fase de grupos" phases={byPhase.groups} /> : null}
+      {hasGroups ? (
+        <BracketSection title="Fase de grupos" phases={byPhase.groups} {...sectionProps} />
+      ) : null}
       <BracketSection
         title={hasLosers ? 'Chave principal (winners)' : null}
         phases={byPhase.winners}
+        {...sectionProps}
       />
-      {hasLosers ? <BracketSection title="Repescagem (losers)" phases={byPhase.losers} /> : null}
+      {hasLosers ? (
+        <BracketSection title="Repescagem (losers)" phases={byPhase.losers} {...sectionProps} />
+      ) : null}
       {byPhase.grandFinal.length > 0 ? (
         <BracketSection
           title="Final"
           phases={[{ phase: 'grand_final', matches: byPhase.grandFinal }]}
+          {...sectionProps}
         />
       ) : null}
     </div>
@@ -1124,9 +1173,17 @@ function BracketByPhases({ matches }: { matches: TournamentMatchView[] }) {
 function BracketSection({
   title,
   phases,
+  tournament,
+  meId,
+  canManage,
+  onChanged,
 }: {
   title: string | null;
   phases: { phase: string; matches: TournamentMatchView[] }[];
+  tournament: TournamentDetail;
+  meId: string | null;
+  canManage: boolean;
+  onChanged: () => void;
 }) {
   if (phases.length === 0) return null;
   return (
@@ -1144,7 +1201,14 @@ function BracketSection({
                 {labelPhase(p.phase)}
               </p>
               {p.matches.map((m) => (
-                <MatchCard key={m.id} match={m} />
+                <MatchCard
+                  key={m.id}
+                  match={m}
+                  tournament={tournament}
+                  meId={meId}
+                  canManage={canManage}
+                  onChanged={onChanged}
+                />
               ))}
             </div>
           ))}
@@ -1171,53 +1235,108 @@ function labelPhase(phase: string): string {
   return phase;
 }
 
-function MatchCard({ match }: { match: TournamentMatchView }) {
+function MatchCard({
+  match,
+  tournament,
+  meId,
+  canManage,
+  onChanged,
+}: {
+  match: TournamentMatchView;
+  tournament: TournamentDetail;
+  meId: string | null;
+  canManage: boolean;
+  onChanged: () => void;
+}) {
+  const [open, setOpen] = React.useState(false);
   const isCompleted = match.status === 'completed';
+  const isAwaitingConfirm = match.status === 'awaiting_confirmation';
+  const isPending = match.status === 'pending';
   const isBye = match.isBye || match.status === 'bye';
   const isWalkover = match.status === 'walkover' || match.status === 'double_walkover';
 
+  const isPlayer = meId != null && (match.player1Id === meId || match.player2Id === meId);
+  const playersKnown = match.player1Id != null && match.player2Id != null;
+  // Clickable se há ação possível: pendente com players, awaiting confirm,
+  // ou completed-and-canManage (pra eventual edit/walkover futuros).
+  const actionable =
+    !isBye &&
+    ((isPending &&
+      playersKnown &&
+      (canManage || (isPlayer && tournament.resultReportingMode === 'player_with_confirm'))) ||
+      (isAwaitingConfirm && (canManage || isPlayer)) ||
+      (isCompleted && canManage));
+
   return (
-    <div
-      className={cn(
-        'rounded-lg border bg-card p-2.5 text-[12.5px]',
-        isCompleted && 'border-border',
-        isBye && 'border-dashed opacity-60',
-        isWalkover && 'border-amber-500/40 bg-amber-500/5',
-        !isCompleted && !isBye && !isWalkover && 'border-border/60',
-      )}
-    >
-      <PlayerSlot
-        name={match.player1Name}
-        seed={match.seed1}
-        tbdLabel={match.tbdPlayer1Label}
-        isWinner={isCompleted && match.winnerId === match.player1Id}
-      />
-      <div className="my-1 border-t border-border/50" />
-      <PlayerSlot
-        name={match.player2Name}
-        seed={match.seed2}
-        tbdLabel={match.tbdPlayer2Label}
-        isWinner={isCompleted && match.winnerId === match.player2Id}
-      />
-      {match.score ? (
-        <p className="mt-2 text-right text-[11px] font-mono text-muted-foreground">{match.score}</p>
+    <>
+      <button
+        type="button"
+        onClick={actionable ? () => setOpen(true) : undefined}
+        disabled={!actionable}
+        className={cn(
+          'block w-full rounded-lg border bg-card p-2.5 text-left text-[12.5px] transition-colors',
+          isCompleted && 'border-border',
+          isBye && 'border-dashed opacity-60',
+          isWalkover && 'border-amber-500/40 bg-amber-500/5',
+          isAwaitingConfirm && 'border-amber-500/40 bg-amber-500/5',
+          !isCompleted && !isBye && !isWalkover && !isAwaitingConfirm && 'border-border/60',
+          actionable && 'cursor-pointer hover:border-primary/40 hover:bg-muted/30',
+          !actionable && 'cursor-default',
+        )}
+      >
+        <PlayerSlot
+          name={match.player1Name}
+          seed={match.seed1}
+          tbdLabel={match.tbdPlayer1Label}
+          isWinner={isCompleted && match.winnerId === match.player1Id}
+        />
+        <div className="my-1 border-t border-border/50" />
+        <PlayerSlot
+          name={match.player2Name}
+          seed={match.seed2}
+          tbdLabel={match.tbdPlayer2Label}
+          isWinner={isCompleted && match.winnerId === match.player2Id}
+        />
+        {match.score ? (
+          <p className="mt-2 text-right font-mono text-[11px] text-muted-foreground">
+            {match.score}
+          </p>
+        ) : null}
+        {isWalkover ? (
+          <p className="mt-2 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-amber-700 dark:text-amber-400">
+            {match.status === 'double_walkover' ? 'WO duplo' : 'Walkover'}
+          </p>
+        ) : null}
+        {isAwaitingConfirm ? (
+          <p className="mt-2 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-amber-700 dark:text-amber-400">
+            Aguarda confirmação
+          </p>
+        ) : null}
+        {match.scheduledFor && !isCompleted ? (
+          <p className="mt-2 text-[10.5px] text-muted-foreground">
+            {new Date(match.scheduledFor).toLocaleString('pt-BR', {
+              day: '2-digit',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </p>
+        ) : null}
+      </button>
+      {open ? (
+        <MatchActionModal
+          match={match}
+          tournament={tournament}
+          isPlayer={isPlayer}
+          canManage={canManage}
+          onClose={() => setOpen(false)}
+          onChanged={() => {
+            setOpen(false);
+            onChanged();
+          }}
+        />
       ) : null}
-      {isWalkover ? (
-        <p className="mt-2 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-amber-700 dark:text-amber-400">
-          {match.status === 'double_walkover' ? 'WO duplo' : 'Walkover'}
-        </p>
-      ) : null}
-      {match.scheduledFor && !isCompleted ? (
-        <p className="mt-2 text-[10.5px] text-muted-foreground">
-          {new Date(match.scheduledFor).toLocaleString('pt-BR', {
-            day: '2-digit',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </p>
-      ) : null}
-    </div>
+    </>
   );
 }
 
@@ -1249,6 +1368,449 @@ function PlayerSlot({
       ) : null}
       <span className={cn('truncate', isWinner && 'font-semibold')}>{name}</span>
     </div>
+  );
+}
+
+// ─── Match action modal (PR-K3b) ────────────────────────────────────────
+
+function MatchActionModal({
+  match,
+  tournament,
+  isPlayer,
+  canManage,
+  onClose,
+  onChanged,
+}: {
+  match: TournamentMatchView;
+  tournament: TournamentDetail;
+  isPlayer: boolean;
+  canManage: boolean;
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const isCompleted = match.status === 'completed';
+  const isAwaitingConfirm = match.status === 'awaiting_confirmation';
+  const isPending = match.status === 'pending';
+
+  const canReport =
+    isPending &&
+    match.player1Id != null &&
+    match.player2Id != null &&
+    (canManage || (isPlayer && tournament.resultReportingMode === 'player_with_confirm'));
+  const canConfirm = isAwaitingConfirm && (canManage || isPlayer);
+  // Edit completed: só committee (vem em K4 com mais features tipo walkover).
+  const canEditCompleted = isCompleted && canManage;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-md space-y-3 rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold">
+            {isCompleted
+              ? 'Resultado registrado'
+              : isAwaitingConfirm
+                ? 'Confirmar resultado'
+                : 'Reportar resultado'}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+          >
+            ✕
+          </button>
+        </div>
+
+        <MatchSummary match={match} />
+
+        {canReport ? (
+          <ReportForm
+            match={match}
+            tournament={tournament}
+            canManage={canManage}
+            onChanged={onChanged}
+          />
+        ) : canConfirm ? (
+          <ConfirmForm match={match} tournament={tournament} onChanged={onChanged} />
+        ) : canEditCompleted ? (
+          <EditForm match={match} tournament={tournament} onChanged={onChanged} />
+        ) : (
+          <p className="rounded-lg border border-dashed border-border p-3 text-[12.5px] text-muted-foreground">
+            {isCompleted ? 'Match já encerrado.' : 'Você não pode reportar/confirmar esse match.'}
+          </p>
+        )}
+
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-background px-3 text-[12.5px] font-medium hover:bg-muted"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MatchSummary({ match }: { match: TournamentMatchView }) {
+  const winner =
+    match.winnerId === match.player1Id
+      ? match.player1Name
+      : match.winnerId === match.player2Id
+        ? match.player2Name
+        : null;
+  return (
+    <div className="rounded-lg border border-border bg-background p-3 text-[12.5px]">
+      <div className="flex items-center gap-2">
+        <span className={cn(winner === match.player1Name && 'font-semibold')}>
+          {match.player1Name ?? match.tbdPlayer1Label ?? 'A definir'}
+        </span>
+        <span className="text-muted-foreground">vs</span>
+        <span className={cn(winner === match.player2Name && 'font-semibold')}>
+          {match.player2Name ?? match.tbdPlayer2Label ?? 'A definir'}
+        </span>
+      </div>
+      {match.score ? (
+        <p className="mt-1 font-mono text-[11.5px] text-muted-foreground">{match.score}</p>
+      ) : null}
+      {match.scheduledFor ? (
+        <p className="mt-0.5 text-[11px] text-muted-foreground">
+          {new Date(match.scheduledFor).toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function ReportForm({
+  match,
+  tournament,
+  canManage,
+  onChanged,
+}: {
+  match: TournamentMatchView;
+  tournament: TournamentDetail;
+  canManage: boolean;
+  onChanged: () => void;
+}) {
+  const [winnerId, setWinnerId] = React.useState<string>('');
+  const [score, setScore] = React.useState('');
+  const [notes, setNotes] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setError(null);
+    if (!winnerId) {
+      setError('Selecione o vencedor.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await reportTournamentMatch(tournament.id, match.id, {
+        winnerId,
+        score: score.trim() || undefined,
+        notes: notes.trim() || undefined,
+      });
+      onChanged();
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, 'Erro ao reportar.'));
+      setSubmitting(false);
+    }
+  }
+
+  // Mensagem contextual sobre fluxo de confirmação
+  const willGoStraight = canManage || tournament.resultReportingMode === 'committee_only';
+
+  return (
+    <div className="space-y-2.5">
+      {error ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+          <AlertCircle className="mr-1 inline size-3.5" />
+          {error}
+        </p>
+      ) : null}
+      <div>
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          Vencedor
+        </p>
+        <div className="space-y-1.5">
+          {(() => {
+            const p1 = match.player1Id;
+            const p2 = match.player2Id;
+            return (
+              <>
+                {p1 ? (
+                  <WinnerOption
+                    checked={winnerId === p1}
+                    onSelect={() => setWinnerId(p1)}
+                    name={match.player1Name ?? '—'}
+                  />
+                ) : null}
+                {p2 ? (
+                  <WinnerOption
+                    checked={winnerId === p2}
+                    onSelect={() => setWinnerId(p2)}
+                    name={match.player2Name ?? '—'}
+                  />
+                ) : null}
+              </>
+            );
+          })()}
+        </div>
+      </div>
+      <div>
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          Score (opcional)
+        </p>
+        <input
+          value={score}
+          onChange={(e) => setScore(e.target.value)}
+          placeholder="6-3 6-2"
+          maxLength={50}
+          className={inputCls}
+        />
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Formato livre. Ex: <code>6-3 6-2</code> ou <code>6-4 3-6 7-5</code>.
+        </p>
+      </div>
+      <div>
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          Notas (opcional)
+        </p>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={2}
+          maxLength={500}
+          className={inputCls}
+        />
+      </div>
+      <p className="text-[11.5px] text-muted-foreground">
+        {willGoStraight
+          ? 'Resultado vai direto pra completed; rating recalculado e bracket avança.'
+          : 'Após reportar, o outro player precisa confirmar antes de virar oficial.'}
+      </p>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => void handleSubmit()}
+          disabled={submitting}
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <CheckCircle2 className="size-3.5" />
+          )}
+          Reportar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmForm({
+  match,
+  tournament,
+  onChanged,
+}: {
+  match: TournamentMatchView;
+  tournament: TournamentDetail;
+  onChanged: () => void;
+}) {
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleConfirm() {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await confirmTournamentMatch(tournament.id, match.id);
+      onChanged();
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, 'Erro ao confirmar.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2.5">
+      {error ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+          <AlertCircle className="mr-1 inline size-3.5" />
+          {error}
+        </p>
+      ) : null}
+      <p className="text-[12.5px] text-muted-foreground">
+        Resultado já reportado. Ao confirmar, vira oficial: rating é recalculado e bracket avança o
+        vencedor pro próximo match.
+      </p>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => void handleConfirm()}
+          disabled={submitting}
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <CheckCircle2 className="size-3.5" />
+          )}
+          Confirmar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EditForm({
+  match,
+  tournament,
+  onChanged,
+}: {
+  match: TournamentMatchView;
+  tournament: TournamentDetail;
+  onChanged: () => void;
+}) {
+  const [winnerId, setWinnerId] = React.useState<string>(match.winnerId ?? '');
+  const [score, setScore] = React.useState(match.score ?? '');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setError(null);
+    if (!winnerId) {
+      setError('Selecione o vencedor.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await editTournamentMatch(tournament.id, match.id, {
+        winnerId,
+        score: score.trim() || undefined,
+      });
+      onChanged();
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, 'Erro ao editar.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2.5">
+      {error ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+          <AlertCircle className="mr-1 inline size-3.5" />
+          {error}
+        </p>
+      ) : null}
+      <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 text-[12px] text-amber-700 dark:text-amber-400">
+        <AlertCircle className="mr-1 inline size-3.5" />
+        Editar resultado já registrado recalcula rating e pode afetar matches posteriores. Use só em
+        correção de erro óbvio.
+      </p>
+      <div>
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          Vencedor
+        </p>
+        <div className="space-y-1.5">
+          {(() => {
+            const p1 = match.player1Id;
+            const p2 = match.player2Id;
+            return (
+              <>
+                {p1 ? (
+                  <WinnerOption
+                    checked={winnerId === p1}
+                    onSelect={() => setWinnerId(p1)}
+                    name={match.player1Name ?? '—'}
+                  />
+                ) : null}
+                {p2 ? (
+                  <WinnerOption
+                    checked={winnerId === p2}
+                    onSelect={() => setWinnerId(p2)}
+                    name={match.player2Name ?? '—'}
+                  />
+                ) : null}
+              </>
+            );
+          })()}
+        </div>
+      </div>
+      <div>
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          Score
+        </p>
+        <input
+          value={score}
+          onChange={(e) => setScore(e.target.value)}
+          placeholder="6-3 6-2"
+          maxLength={50}
+          className={inputCls}
+        />
+      </div>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => void handleSubmit()}
+          disabled={submitting}
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Save className="size-3.5" />
+          )}
+          Salvar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function WinnerOption({
+  checked,
+  onSelect,
+  name,
+}: {
+  checked: boolean;
+  onSelect: () => void;
+  name: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        'flex w-full items-center gap-2 rounded-lg border p-2.5 text-left text-[13px] transition-colors',
+        checked
+          ? 'border-primary bg-primary/10 text-foreground'
+          : 'border-border bg-background hover:bg-muted',
+      )}
+    >
+      <span
+        className={cn(
+          'inline-flex size-4 shrink-0 items-center justify-center rounded-full border',
+          checked ? 'border-primary bg-primary' : 'border-input bg-background',
+        )}
+      >
+        {checked ? <span className="size-1.5 rounded-full bg-primary-foreground" /> : null}
+      </span>
+      <span className="truncate font-medium">{name}</span>
+    </button>
   );
 }
 
