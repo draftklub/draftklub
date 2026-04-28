@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { Topbar } from '@/components/dashboard/topbar';
+import { WeatherWidget } from '@/components/weather/weather-widget';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { listKlubTournaments, type TournamentListItem } from '@/lib/api/tournaments';
 import { listKlubSports } from '@/lib/api/sports';
@@ -117,6 +118,7 @@ export default function DashboardPage() {
     <>
       <Topbar subtitle={todayHeader()} activeSport="Tennis" />
       <main className="flex-1 overflow-y-auto px-4 py-6 pb-24 md:px-8 md:pb-6">
+        <KlubWeatherRow />
         <OnboardingBanner />
         <ReservarCTA />
         {/* KPI row */}
@@ -169,6 +171,17 @@ export default function DashboardPage() {
 }
 
 // ─── Reservar CTA ────────────────────────────────────────────────────
+
+function KlubWeatherRow() {
+  const { klub } = useActiveKlub();
+  if (!klub) return null;
+  if (klub.latitude == null || klub.longitude == null) return null;
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-2">
+      <WeatherWidget latitude={klub.latitude} longitude={klub.longitude} />
+    </div>
+  );
+}
 
 function ReservarCTA() {
   const { klub } = useActiveKlub();
