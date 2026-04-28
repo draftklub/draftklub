@@ -19,6 +19,7 @@ import { SportsModule } from './modules/sports/sports.module';
 import { RankingModule } from './modules/ranking/ranking.module';
 import { CompetitionModule } from './modules/competition/competition.module';
 import { BookingModule } from './modules/booking/booking.module';
+import { FeaturesModule } from './modules/features/features.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { BookingModule } from './modules/booking/booking.module';
     RankingModule,
     CompetitionModule,
     BookingModule,
+    FeaturesModule,
   ],
 })
 export class AppModule {}

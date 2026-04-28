@@ -132,7 +132,7 @@ export default function PlatformAdminsPage() {
         </header>
 
         {message ? (
-          <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+          <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
             <CheckCircle2 className="mr-1 inline size-3.5" />
             {message}
           </p>

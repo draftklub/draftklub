@@ -639,7 +639,7 @@ function AccessBadge({ accessMode }: { accessMode: KlubAccessMode }) {
       className={cn(
         'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
         isPublic
-          ? 'bg-[hsl(142_71%_32%/0.12)] text-[hsl(142_71%_32%)]'
+          ? 'bg-success/12 text-success'
           : 'bg-muted text-muted-foreground',
       )}
     >

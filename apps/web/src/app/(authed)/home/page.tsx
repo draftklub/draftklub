@@ -169,7 +169,7 @@ export default function HomePage() {
             href="/quero-criar-klub"
             className="underline-offset-4 hover:text-foreground hover:underline"
           >
-            Sou dono de um clube e quero saber mais
+            Sou dono de um Klub e quero saber mais
           </Link>
         </p>
       </div>

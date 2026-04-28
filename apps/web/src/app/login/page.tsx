@@ -81,8 +81,8 @@ export default function LoginPage() {
               textWrap: 'pretty',
             }}
           >
-            Reservas, rankings, torneios e a vida do clube — tudo num lugar só. Feito pelos clubes,
-            para os clubes brasileiros.
+            Reservas, rankings, torneios e a vida do Klub — tudo num lugar só. Feito pelos Klubs,
+            para os Klubs brasileiros.
           </p>
         </div>
 

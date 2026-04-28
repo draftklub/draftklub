@@ -73,7 +73,7 @@ export default function NotificacoesPage() {
         </header>
 
         {actionMessage ? (
-          <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+          <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
             <CheckCircle2 className="mr-1 inline size-3.5" />
             {actionMessage}
           </p>
@@ -214,7 +214,7 @@ function PendingItemCard({
           type="button"
           onClick={() => void handleConfirm()}
           disabled={submitting}
-          className="inline-flex h-9 items-center gap-1 rounded-md border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] px-2.5 text-[12px] font-semibold text-[hsl(142_71%_32%)] hover:bg-[hsl(142_71%_32%/0.1)] disabled:opacity-60"
+          className="inline-flex h-9 items-center gap-1 rounded-md border border-success/30 bg-success/5 px-2.5 text-[12px] font-semibold text-success hover:bg-success/10 disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3 animate-spin" />

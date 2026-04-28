@@ -90,7 +90,7 @@ export default function SolicitacoesPage() {
         </div>
 
         {actionMessage ? (
-          <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[13px] text-[hsl(142_71%_32%)]">
+          <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[13px] text-success">
             <CheckCircle2 className="mr-1 inline size-3.5" />
             {actionMessage}
           </p>
@@ -252,7 +252,7 @@ function RequestCard({
             type="button"
             onClick={() => void handleApprove()}
             disabled={approving}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[hsl(142_71%_32%)] px-3.5 text-[13px] font-semibold text-white hover:bg-[hsl(142_71%_28%)] disabled:opacity-60"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-success px-3.5 text-[13px] font-semibold text-white hover:bg-[hsl(142_71%_28%)] disabled:opacity-60"
           >
             {approving ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -398,7 +398,7 @@ function RequestBadge({ status }: { status: MembershipRequestStatus }) {
     status === 'pending'
       ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
       : status === 'approved'
-        ? 'bg-[hsl(142_71%_32%/0.12)] text-[hsl(142_71%_32%)]'
+        ? 'bg-success/12 text-success'
         : status === 'rejected'
           ? 'bg-destructive/10 text-destructive'
           : 'bg-muted text-muted-foreground';

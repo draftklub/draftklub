@@ -74,7 +74,7 @@ export default function CriarContaPage() {
               textWrap: 'pretty',
             }}
           >
-            Entre num clube que já existe ou crie o seu. Reservas, torneios e a vida do clube, tudo
+            Entre num Klub que já existe ou crie o seu. Reservas, torneios e a vida do Klub, tudo
             num lugar só.
           </p>
         </div>
