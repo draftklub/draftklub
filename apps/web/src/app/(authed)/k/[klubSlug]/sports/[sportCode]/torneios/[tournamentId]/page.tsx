@@ -59,6 +59,7 @@ import {
   type UpdateTournamentInput,
 } from '@/lib/api/tournaments';
 import { isPlatformLevel } from '@/lib/auth/role-helpers';
+import { validateMatchScore } from '@/lib/sport-validation';
 import { cn } from '@/lib/utils';
 
 const SPORT_LABELS: Record<string, string> = {
@@ -1946,11 +1947,27 @@ function ReportForm({
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  const sportCodeForValidation = useSportCodeFromTournament(tournament);
+
   async function handleSubmit() {
     if (submitting) return;
     setError(null);
     if (!winnerId) {
       setError('Selecione o vencedor.');
+      return;
+    }
+    if (!match.player1Id || !match.player2Id) {
+      setError('Match não tem 2 players definidos.');
+      return;
+    }
+    const validation = validateMatchScore(sportCodeForValidation, {
+      winnerId,
+      player1Id: match.player1Id,
+      player2Id: match.player2Id,
+      score: score.trim() || undefined,
+    });
+    if (!validation.valid) {
+      setError(validation.errors[0] ?? 'Score inválido.');
       return;
     }
     setSubmitting(true);
@@ -2126,12 +2143,27 @@ function EditForm({
   const [score, setScore] = React.useState(match.score ?? '');
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const sportCodeForValidation = useSportCodeFromTournament(tournament);
 
   async function handleSubmit() {
     if (submitting) return;
     setError(null);
     if (!winnerId) {
       setError('Selecione o vencedor.');
+      return;
+    }
+    if (!match.player1Id || !match.player2Id) {
+      setError('Match não tem 2 players definidos.');
+      return;
+    }
+    const validation = validateMatchScore(sportCodeForValidation, {
+      winnerId,
+      player1Id: match.player1Id,
+      player2Id: match.player2Id,
+      score: score.trim() || undefined,
+    });
+    if (!validation.valid) {
+      setError(validation.errors[0] ?? 'Score inválido.');
       return;
     }
     setSubmitting(true);

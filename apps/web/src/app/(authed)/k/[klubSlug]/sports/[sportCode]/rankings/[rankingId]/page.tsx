@@ -20,6 +20,7 @@ import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { getMe } from '@/lib/api/me';
 import { enrollPlayerInRanking, getRanking, submitCasualMatch } from '@/lib/api/rankings';
+import { validateMatchScore } from '@/lib/sport-validation';
 import { cn } from '@/lib/utils';
 
 const SPORT_LABELS: Record<string, string> = {
@@ -256,6 +257,7 @@ function CasualMatchActions({
       {matchOpen ? (
         <SubmitMatchModal
           ranking={ranking}
+          sportCode={sportCode}
           meId={meId}
           onClose={() => setMatchOpen(false)}
           onSuccess={(msg) => {
@@ -271,12 +273,14 @@ function CasualMatchActions({
 
 function SubmitMatchModal({
   ranking,
+  sportCode,
   meId,
   onClose,
   onSuccess,
   onError,
 }: {
   ranking: RankingDetail;
+  sportCode: string;
   meId: string;
   onClose: () => void;
   onSuccess: (msg: string) => void;
@@ -313,6 +317,16 @@ function SubmitMatchModal({
     }
     if (!winnerId) {
       setLocalError('Escolha o vencedor.');
+      return;
+    }
+    const validation = validateMatchScore(sportCode, {
+      winnerId,
+      player1Id,
+      player2Id,
+      score: score.trim() || undefined,
+    });
+    if (!validation.valid) {
+      setLocalError(validation.errors[0] ?? 'Score inválido.');
       return;
     }
     setSubmitting(true);

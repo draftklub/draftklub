@@ -4,8 +4,9 @@ export type {
   RatingDelta,
   SportStrategy,
   TournamentFormat,
+  ValidationResult,
 } from './sport-strategy.interface.js';
-export { TennisStrategy } from './tennis.strategy.js';
+export { TennisStrategy, parseTennisScore } from './tennis.strategy.js';
 
 export type RatingEngineCode = 'elo' | 'points' | 'win_loss';
 
