@@ -174,3 +174,41 @@ export function updateReportingMode(
     json: { mode },
   });
 }
+
+// ─── Mutations (Sprint K PR-K3a — entries) ─────────────────────────────
+
+/** POST /tournaments/:id/entries — auto-register caller no torneio. */
+export function registerTournamentEntry(tournamentId: string): Promise<TournamentEntry> {
+  return apiFetch<TournamentEntry>(`/tournaments/${tournamentId}/entries`, {
+    method: 'POST',
+    json: {},
+  });
+}
+
+/** DELETE /tournaments/:id/entries/me — caller cancela própria inscrição. */
+export function withdrawMyTournamentEntry(tournamentId: string): Promise<unknown> {
+  return apiFetch(`/tournaments/${tournamentId}/entries/me`, { method: 'DELETE' });
+}
+
+/** POST /tournaments/:id/entries/:entryId/approve — committee aprova entry pendente. */
+export function approveTournamentEntry(
+  tournamentId: string,
+  entryId: string,
+): Promise<TournamentEntry> {
+  return apiFetch<TournamentEntry>(`/tournaments/${tournamentId}/entries/${entryId}/approve`, {
+    method: 'POST',
+    json: {},
+  });
+}
+
+/** PATCH /tournaments/:id/entries/:entryId/category — committee move player de categoria. */
+export function moveTournamentEntryCategory(
+  tournamentId: string,
+  entryId: string,
+  input: { targetCategoryId: string; asWildCard?: boolean },
+): Promise<TournamentEntry> {
+  return apiFetch<TournamentEntry>(`/tournaments/${tournamentId}/entries/${entryId}/category`, {
+    method: 'PATCH',
+    json: input,
+  });
+}
