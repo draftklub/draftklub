@@ -84,38 +84,27 @@ export default function SportDashboardPage() {
               </p>
             </div>
           </Link>
-          <PlaceholderCard
-            icon={Sparkles}
-            title="Comissão"
-            hint="Quem aprova enrollments e organiza torneios"
-          />
+          <Link
+            href={`/k/${klub.slug}/sports/${sportCode}/comissao`}
+            className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-muted/30"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+              <Sparkles className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-[14px] font-bold">Comissão</p>
+              <p className="mt-1 text-[12.5px] text-muted-foreground">
+                Quem organiza e opera essa modalidade
+              </p>
+            </div>
+          </Link>
         </section>
 
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-[13px] text-muted-foreground">
-          Em breve! Comissão. Torneios e Ranking já estão funcionando — clique nos cards acima.
+          Torneios, Ranking e Comissão funcionando — clique nos cards acima.
         </div>
       </div>
     </main>
   );
 }
 
-function PlaceholderCard({
-  icon: Icon,
-  title,
-  hint,
-}: {
-  icon: typeof Trophy;
-  title: string;
-  hint: string;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <Icon className="size-5 text-muted-foreground" />
-      <p className="mt-2 font-display text-[14px] font-bold">{title}</p>
-      <p className="mt-1 text-[12.5px] text-muted-foreground">{hint}</p>
-      <span className="mt-3 inline-flex h-5 items-center rounded-full bg-muted px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
-        em breve
-      </span>
-    </div>
-  );
-}

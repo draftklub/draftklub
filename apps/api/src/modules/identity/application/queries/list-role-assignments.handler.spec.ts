@@ -52,7 +52,7 @@ describe('ListRoleAssignmentsHandler', () => {
     expect(call.where.role).toEqual({ not: 'PLAYER' });
   });
 
-  it('PLAYER NÃO pode listar (Forbidden)', async () => {
+  it('PLAYER do scope PODE listar (PR-K5c — transparência de comissão/staff)', async () => {
     const prisma = makePrisma([]);
     const handler = makeHandler(prisma);
     const player: AuthenticatedUser = {
@@ -60,6 +60,18 @@ describe('ListRoleAssignmentsHandler', () => {
       firebaseUid: 'fb',
       email: 'p@test.com',
       roleAssignments: [{ role: 'PLAYER', scopeKlubId: KLUB_ID }],
+    };
+    await expect(handler.execute({ caller: player, scopeKlubId: KLUB_ID })).resolves.toEqual([]);
+  });
+
+  it('PLAYER de outro Klub NÃO pode listar (scope mismatch)', async () => {
+    const prisma = makePrisma([]);
+    const handler = makeHandler(prisma);
+    const player: AuthenticatedUser = {
+      userId: 'p',
+      firebaseUid: 'fb',
+      email: 'p@test.com',
+      roleAssignments: [{ role: 'PLAYER', scopeKlubId: 'outro-klub' }],
     };
     await expect(handler.execute({ caller: player, scopeKlubId: KLUB_ID })).rejects.toBeInstanceOf(
       ForbiddenException,
