@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Param, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { CurrentUser } from '../../../shared/auth/current-user.decorator';
 import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
@@ -6,6 +16,7 @@ import { PolicyGuard } from '../../../shared/auth/policy.guard';
 import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.interface';
 import { KlubFacade } from '../public/klub.facade';
 import { CreateKlubSchema } from './dtos/create-klub.dto';
+import { UpdateKlubSchema, DeactivateKlubSchema } from './dtos/update-klub.dto';
 import { AddMemberSchema } from './dtos/add-member.dto';
 import { AddMediaSchema } from './dtos/add-media.dto';
 import { AddSportInterestSchema } from './dtos/add-sport-interest.dto';
@@ -119,6 +130,47 @@ export class KlubController {
   @Get(':id')
   async getKlub(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.klubFacade.getKlubById(id, user.userId);
+  }
+
+  /**
+   * Edita Klub. KLUB_ADMIN edita campos user-facing (identidade, contato,
+   * endereço, amenities, visibilidade). SUPER_ADMIN adicionalmente pode
+   * mexer em campos sensíveis (legalName, plan, status, limites). Handler
+   * valida e rejeita campos super-admin se não for SUPER_ADMIN.
+   */
+  @Patch(':id')
+  @RequirePolicy('klub.update', (req) => ({
+    klubId: (req as { params: { id: string } }).params.id,
+  }))
+  async updateKlub(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = UpdateKlubSchema.parse(body);
+    const isSuperAdmin = user.roleAssignments.some((r) => r.role === 'SUPER_ADMIN');
+    return this.klubFacade.updateKlub({ klubId: id, patch: dto, isSuperAdmin });
+  }
+
+  /**
+   * Desativa Klub (soft delete + status='suspended'). SUPER_ADMIN-only —
+   * action `klub.deactivate` sem klubId no resource impede KLUB_ADMIN
+   * (scopeMatches falha pra assignments scopeados quando resource.klubId
+   * é undefined).
+   */
+  @Delete(':id')
+  @RequirePolicy('klub.deactivate')
+  async deactivateKlub(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const dto = DeactivateKlubSchema.parse(body ?? {});
+    return this.klubFacade.deactivateKlub({
+      klubId: id,
+      decidedById: user.userId,
+      reason: dto.reason,
+    });
   }
 
   @Post(':id/members')

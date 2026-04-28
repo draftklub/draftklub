@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   Plus,
   Search,
+  Settings,
   Mail,
   LogOut,
   Loader2,
@@ -224,6 +225,13 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
                 />
                 {isAdmin ? (
                   <>
+                    <NavLink
+                      href={`/k/${activeKlubSlug}/editar`}
+                      label="Editar Klub"
+                      icon={Settings}
+                      active={pathname === `/k/${activeKlubSlug}/editar`}
+                      onNavigate={onClose}
+                    />
                     <NavLink
                       href={`/k/${activeKlubSlug}/onboarding`}
                       label="Configurar Klub"
