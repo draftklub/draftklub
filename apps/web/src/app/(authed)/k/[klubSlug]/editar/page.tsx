@@ -145,7 +145,7 @@ export default function EditarKlubPage() {
 
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
-      <div className="mx-auto max-w-2xl space-y-5">
+      <div className="mx-auto max-w-2xl space-y-4">
         <Link
           href={`/k/${klub.slug}/dashboard`}
           className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
@@ -205,7 +205,7 @@ export default function EditarKlubPage() {
               </Field>
             </div>
             <div className="col-span-2">
-              <Field label="Comumente chamado de" help="Apelido popular pra busca informal.">
+              <Field label="Nome usual" help="Como o pessoal chama no dia a dia.">
                 <input
                   value={v.commonName ?? ''}
                   onChange={(e) => set('commonName', e.target.value || null)}
@@ -352,7 +352,7 @@ export default function EditarKlubPage() {
         </Section>
 
         {isSuperAdmin ? (
-          <section className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+          <section className="space-y-2.5 rounded-xl border border-amber-500/40 bg-amber-500/5 p-3.5">
             <h2 className="font-display text-[14px] font-bold">
               Identidade legal{' '}
               <span className="ml-2 inline-flex h-5 items-center rounded-full bg-amber-500/20 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
@@ -436,11 +436,11 @@ export default function EditarKlubPage() {
 }
 
 const inputCls =
-  'w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'w-full rounded-[10px] border border-input bg-background px-3 py-2.25 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+    <section className="space-y-2.5 rounded-xl border border-border bg-card p-3.5">
       <h2 className="font-display text-[14px] font-bold">{title}</h2>
       {children}
     </section>

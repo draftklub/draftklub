@@ -44,16 +44,16 @@ export default function PerfilPage() {
   }, [reloadToken]);
 
   return (
-    <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
+    <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-2xl">
-        <header className="mb-10">
+        <header className="mb-6">
           <h1
-            className="font-display text-[28px] font-bold md:text-[34px]"
+            className="font-display text-[24px] font-bold md:text-[30px]"
             style={{ letterSpacing: '-0.02em' }}
           >
             Perfil
           </h1>
-          <p className="mt-2 text-[15px] text-muted-foreground">
+          <p className="mt-1 text-[13.5px] text-muted-foreground">
             Suas informações de conta e métodos de login.
           </p>
         </header>
@@ -73,7 +73,7 @@ export default function PerfilPage() {
         ) : !me || !user ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : (
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-5">
             <EmailVerifyBanner />
             <IdentitySection initial={me} onUpdated={(next) => setMe(next)} />
             <PessoaFisicaSection initial={me} onUpdated={(next) => setMe(next)} />
@@ -1241,13 +1241,13 @@ function Section({
     <section>
       <h2
         className={cn(
-          'mb-4 font-display text-[14px] font-bold uppercase tracking-[0.06em]',
+          'mb-2 font-display text-[12px] font-bold uppercase tracking-[0.06em]',
           tone === 'danger' ? 'text-destructive' : 'text-muted-foreground',
         )}
       >
         {title}
       </h2>
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 md:p-6">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3.5 md:p-4">
         {children}
       </div>
     </section>
