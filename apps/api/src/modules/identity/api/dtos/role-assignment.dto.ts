@@ -21,3 +21,9 @@ export const GrantKlubRoleSchema = z.object({
   scopeSportId: z.string().uuid().optional(),
 });
 export type GrantKlubRoleDto = z.infer<typeof GrantKlubRoleSchema>;
+
+/** Sprint Polish PR-J3 — DTO da transferência de KLUB_ADMIN. */
+export const TransferKlubAdminSchema = z.object({
+  email: z.string().email().toLowerCase(),
+});
+export type TransferKlubAdminDto = z.infer<typeof TransferKlubAdminSchema>;
