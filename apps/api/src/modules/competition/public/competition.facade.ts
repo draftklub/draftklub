@@ -53,6 +53,10 @@ import {
   type UpdateReportingModeCommand,
 } from '../application/commands/update-reporting-mode.handler';
 import {
+  UpdateTournamentHandler,
+  type UpdateTournamentCommand,
+} from '../application/commands/update-tournament.handler';
+import {
   ScheduleTournamentHandler,
   type ScheduleTournamentCommand,
 } from '../application/commands/schedule-tournament.handler';
@@ -107,6 +111,7 @@ export class CompetitionFacade {
     private readonly cancelTournamentHandler: CancelTournamentHandler,
     private readonly previewMatchRevertHandler: PreviewMatchRevertHandler,
     private readonly revertMatchHandler: RevertMatchHandler,
+    private readonly updateTournamentHandler: UpdateTournamentHandler,
   ) {}
 
   async drawTournament(tournamentId: string) {
@@ -155,6 +160,10 @@ export class CompetitionFacade {
 
   async revertMatch(cmd: RevertMatchCommand) {
     return this.revertMatchHandler.execute(cmd);
+  }
+
+  async updateTournament(cmd: UpdateTournamentCommand) {
+    return this.updateTournamentHandler.execute(cmd);
   }
 
   async userIsCommitteeForTournament(userId: string, tournamentId: string): Promise<boolean> {

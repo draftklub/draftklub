@@ -6,6 +6,7 @@ import { ConfirmMatchHandler } from './application/commands/confirm-match.handle
 import { UpdateRankingHandler } from './application/commands/update-ranking.handler';
 import { ListRankingsHandler } from './application/queries/list-rankings.handler';
 import { GetRankingHandler } from './application/queries/get-ranking.handler';
+import { ListPendingMatchConfirmationsHandler } from './application/queries/list-pending-match-confirmations.handler';
 import { RatingCalculatorService } from './domain/rating-calculator.service';
 import { RankingRecomputeService } from './domain/services/ranking-recompute.service';
 import { RankingFacade } from './public/ranking.facade';
@@ -31,6 +32,7 @@ import { IdentityModule } from '../identity/identity.module';
     UpdateRankingHandler,
     ListRankingsHandler,
     GetRankingHandler,
+    ListPendingMatchConfirmationsHandler,
     RatingCalculatorService,
     RankingRecomputeService,
     RankingFacade,

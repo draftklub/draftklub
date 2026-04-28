@@ -32,6 +32,7 @@ import { EditTournamentMatchResultHandler } from './application/commands/edit-to
 import { ApplyWalkoverHandler } from './application/commands/apply-walkover.handler';
 import { ApplyDoubleWalkoverHandler } from './application/commands/apply-double-walkover.handler';
 import { UpdateReportingModeHandler } from './application/commands/update-reporting-mode.handler';
+import { UpdateTournamentHandler } from './application/commands/update-tournament.handler';
 import { ListPointsSchemasHandler } from './application/queries/list-points-schemas.handler';
 import { ListTournamentsHandler } from './application/queries/list-tournaments.handler';
 import { GetTournamentHandler } from './application/queries/get-tournament.handler';
@@ -81,6 +82,7 @@ import { TournamentMatchesController } from './api/tournament-matches.controller
     ApplyWalkoverHandler,
     ApplyDoubleWalkoverHandler,
     UpdateReportingModeHandler,
+    UpdateTournamentHandler,
     ScheduleTournamentHandler,
     CancelTournamentHandler,
     PreviewMatchRevertHandler,

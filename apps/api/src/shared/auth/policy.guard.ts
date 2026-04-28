@@ -67,7 +67,9 @@ export class PolicyGuard implements CanActivate {
 
   private async resolveKlubIdFromTournamentParam(request: FastifyRequest): Promise<string | null> {
     const params = (request.params ?? {}) as Record<string, string | undefined>;
-    const tournamentId = params.tournamentId;
+    // Aceita `tournamentId` (rotas /tournaments/:tournamentId/...) e fallback
+    // `id` (rotas /klubs/:klubId/.../tournaments/:id como GET/PATCH detail).
+    const tournamentId = params.tournamentId ?? params.id;
 
     // Defensive: skip lookup when param is missing, empty, or not a valid UUID.
     // Downstream handler will 404/400 as appropriate.
