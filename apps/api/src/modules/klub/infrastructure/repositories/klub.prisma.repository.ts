@@ -16,6 +16,8 @@ export interface CreateKlubData {
   documentIv?: string;
   documentHint?: string;
   legalName?: string;
+  commonName?: string;
+  abbreviation?: string;
   sportCodes: string[];
   parentKlubId?: string;
   isGroup: boolean;
@@ -60,6 +62,8 @@ export class KlubPrismaRepository {
           documentIv: data.documentIv,
           documentHint: data.documentHint,
           legalName: data.legalName,
+          commonName: data.commonName,
+          abbreviation: data.abbreviation,
           parentKlubId: data.parentKlubId,
           isGroup: data.isGroup,
           onboardingSource: data.onboardingSource,

@@ -37,12 +37,35 @@ import { cn } from '@/lib/utils';
 
 const KLUB_TYPES: { value: KlubType; label: string; hint: string }[] = [
   { value: 'sports_club', label: 'Clube esportivo', hint: 'tradicional, com sócios' },
+  { value: 'arena', label: 'Arena / Centro', hint: 'comercial: padel, beach tennis' },
+  { value: 'academy', label: 'Academia', hint: 'aulas + locação de quadra' },
   { value: 'condo', label: 'Condomínio', hint: 'quadras pra moradores' },
-  { value: 'school', label: 'Escola', hint: 'aulas e turmas' },
-  { value: 'public_space', label: 'Espaço público', hint: 'praça, parque' },
-  { value: 'academy', label: 'Academia', hint: 'centro de treinamento' },
-  { value: 'individual', label: 'Individual', hint: 'pequeno operador' },
+  { value: 'hotel_resort', label: 'Hotel / Resort', hint: 'quadras de hotel' },
+  { value: 'university', label: 'Universidade', hint: 'campus universitário' },
+  { value: 'school', label: 'Escola / Colégio', hint: 'K-12' },
+  { value: 'public_space', label: 'Espaço público', hint: 'praça, parque, quadra municipal' },
+  { value: 'individual', label: 'Pessoa física', hint: 'quadra particular' },
 ];
+
+/**
+ * Sprint Polish PR-G — sugere tipo do Klub baseado em CNAE/natureza
+ * jurídica retornados pela BrasilAPI. User pode override no select.
+ * Heurística simples; quando não bate, mantém o que user já escolheu.
+ */
+function inferKlubType(data: CnpjLookupResult): KlubType | null {
+  const raw = data.raw;
+  const cnae = typeof raw.cnae_fiscal === 'number' ? raw.cnae_fiscal : null;
+  const natureza =
+    typeof raw.natureza_juridica === 'string' ? raw.natureza_juridica.toLowerCase() : '';
+
+  if (natureza.includes('condom')) return 'condo';
+  if (cnae === 9312300) return 'sports_club'; // Clubes sociais, esportivos
+  if (cnae === 9311500) return 'arena'; // Gestão de instalações esportivas
+  if (cnae && cnae >= 8511200 && cnae <= 8512100) return 'university';
+  if (cnae && cnae >= 8513900 && cnae <= 8520100) return 'school';
+  if (cnae === 5510801 || cnae === 5590601) return 'hotel_resort';
+  return null;
+}
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -59,7 +82,11 @@ function CriarKlubFlow() {
   // Step 1 — Identidade
   const [entityType, setEntityType] = React.useState<'pj' | 'pf' | null>(null);
   const [name, setName] = React.useState('');
+  const [commonName, setCommonName] = React.useState('');
+  const [legalName, setLegalName] = React.useState('');
   const [type, setType] = React.useState<KlubType>('sports_club');
+  const [email, setEmail] = React.useState('');
+  const [phone, setPhone] = React.useState('');
 
   // PJ
   const [cnpj, setCnpj] = React.useState(''); // mascarado
@@ -152,6 +179,8 @@ function CriarKlubFlow() {
 
   function applyCnpjLookup(data: CnpjLookupResult) {
     setCnpjLookupData(data);
+
+    // Endereço — sempre override (BrasilAPI é fonte autoritativa).
     if (data.endereco.cep) setCep(onlyDigits(data.endereco.cep));
     if (data.endereco.logradouro) setAddressStreet(data.endereco.logradouro);
     if (data.endereco.numero) setAddressNumber(data.endereco.numero);
@@ -159,6 +188,25 @@ function CriarKlubFlow() {
     if (data.endereco.municipio) setCity(data.endereco.municipio);
     if (data.endereco.uf) setState(data.endereco.uf);
     setAddressSource('cnpj_lookup');
+
+    // Razão social — sempre vem da Receita.
+    if (data.razaoSocial) setLegalName(data.razaoSocial);
+
+    // Nome do Klub: se ainda vazio, sugere fantasia (ou razão social como fallback).
+    setName((prev) => (prev.trim() ? prev : (data.nomeFantasia ?? data.razaoSocial ?? '')));
+
+    // Nome popular = nome fantasia (se diferente da razão social e ainda vazio).
+    if (data.nomeFantasia && data.nomeFantasia !== data.razaoSocial) {
+      setCommonName((prev) => (prev.trim() ? prev : data.nomeFantasia ?? ''));
+    }
+
+    // Email/telefone só preenche se vazio (user pode ter intenção própria).
+    if (data.contato.email) setEmail((prev) => prev || (data.contato.email ?? ''));
+    if (data.contato.telefone) setPhone((prev) => prev || (data.contato.telefone ?? ''));
+
+    // Sugestão de tipo via CNAE/natureza — sempre override (user confirma no select).
+    const inferred = inferKlubType(data);
+    if (inferred) setType(inferred);
   }
 
   async function handleCnpjLookup() {
@@ -232,6 +280,10 @@ function CriarKlubFlow() {
     try {
       await createKlub({
         name: name.trim(),
+        commonName: commonName.trim() || undefined,
+        legalName: legalName.trim() || undefined,
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
         type,
         entityType,
         document: entityType === 'pj' ? cnpjDigits : undefined,
@@ -294,6 +346,13 @@ function CriarKlubFlow() {
               setEntityType={setEntityType}
               name={name}
               setName={setName}
+              commonName={commonName}
+              setCommonName={setCommonName}
+              legalName={legalName}
+              email={email}
+              setEmail={setEmail}
+              phone={phone}
+              setPhone={setPhone}
               type={type}
               setType={setType}
               cnpj={cnpj}
@@ -475,6 +534,13 @@ interface Step1Props {
   setEntityType: (v: 'pj' | 'pf') => void;
   name: string;
   setName: (v: string) => void;
+  commonName: string;
+  setCommonName: (v: string) => void;
+  legalName: string;
+  email: string;
+  setEmail: (v: string) => void;
+  phone: string;
+  setPhone: (v: string) => void;
   type: KlubType;
   setType: (v: KlubType) => void;
   cnpj: string;
@@ -553,8 +619,11 @@ function Step1Identidade(p: Step1Props) {
                   Fantasia: {p.cnpjLookupData.nomeFantasia}
                 </p>
               ) : null}
-              <p className="mt-0.5 text-muted-foreground">
-                Endereço preenchido automaticamente no próximo passo.
+              <p className="mt-1.5 text-muted-foreground">
+                Preenchemos pra você: razão social, nome popular, endereço
+                {p.cnpjLookupData.contato.email ? ', email' : ''}
+                {p.cnpjLookupData.contato.telefone ? ', telefone' : ''}
+                . Você pode editar no próximo passo.
               </p>
             </div>
           ) : p.cnpjLookupTried && !p.cnpjLookupLoading ? (
@@ -597,6 +666,51 @@ function Step1Identidade(p: Step1Props) {
               className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
             />
           </Field>
+
+          <Field
+            label="Comumente chamado de"
+            hint="Apelido popular pra busca informal. Ex: 'Paissandú' pra 'Paissandu Atletico Clube'."
+          >
+            <input
+              value={p.commonName}
+              onChange={(e) => p.setCommonName(e.target.value)}
+              placeholder="(opcional)"
+              maxLength={100}
+              className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            />
+          </Field>
+
+          {p.entityType === 'pj' && p.legalName ? (
+            <Field label="Razão social" hint="Vem da Receita; só admin altera depois.">
+              <input
+                value={p.legalName}
+                disabled
+                className="h-11 w-full rounded-[10px] border border-input bg-muted px-3.5 text-[15px] text-muted-foreground"
+              />
+            </Field>
+          ) : null}
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Email público" hint="Aparece no card do Klub.">
+              <input
+                type="email"
+                value={p.email}
+                onChange={(e) => p.setEmail(e.target.value)}
+                placeholder="contato@seuklub.com.br"
+                maxLength={150}
+                className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+              />
+            </Field>
+            <Field label="Telefone">
+              <input
+                value={p.phone}
+                onChange={(e) => p.setPhone(e.target.value)}
+                placeholder="(00) 00000-0000"
+                maxLength={30}
+                className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+              />
+            </Field>
+          </div>
 
           <Field label="Tipo">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">

@@ -1,12 +1,30 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { EncryptionService } from '../../../../shared/encryption/encryption.service';
+import { DocumentVO } from '../../domain/value-objects/document.vo';
 
 export interface UpdateKlubPatch {
   // Identidade
   name?: string;
+  abbreviation?: string | null;
+  commonName?: string | null;
   description?: string | null;
-  type?: 'sports_club' | 'condo' | 'school' | 'public_space' | 'academy' | 'individual';
+  type?:
+    | 'sports_club'
+    | 'arena'
+    | 'academy'
+    | 'condo'
+    | 'hotel_resort'
+    | 'university'
+    | 'school'
+    | 'public_space'
+    | 'individual';
   avatarUrl?: string | null;
   coverUrl?: string | null;
 
@@ -41,6 +59,10 @@ export interface UpdateKlubPatch {
   maxMembers?: number;
   maxSports?: number;
   maxCourts?: number;
+  /** Sprint Polish PR-G — slug muda URL/cookies. SUPER_ADMIN-only. */
+  slug?: string;
+  /** Sprint Polish PR-G — CNPJ. Re-encripta. SUPER_ADMIN-only. */
+  document?: string;
 }
 
 export interface UpdateKlubCommand {
@@ -56,22 +78,27 @@ const SUPER_ADMIN_ONLY_FIELDS: (keyof UpdateKlubPatch)[] = [
   'maxMembers',
   'maxSports',
   'maxCourts',
+  'slug',
+  'document',
 ];
 
 /**
- * Sprint Polish PR-F — KLUB_ADMIN edita campos user-facing do Klub
- * (identidade, contato, endereço, amenities, visibilidade). SUPER_ADMIN
- * adicionalmente pode mexer em campos sensíveis (legalName, plan, status,
- * limites operacionais).
+ * Sprint Polish PR-F/G — KLUB_ADMIN edita campos user-facing do Klub.
+ * SUPER_ADMIN adicionalmente edita campos sensíveis (legalName, plan,
+ * status, limites, slug, CNPJ).
  *
- * Campos imutáveis nessa rota: slug (rompe URLs), entityType, document
- * (KYC), reviewStatus, kycStatus, parentKlubId/isGroup/billingKlubId,
- * createdById, trialEndsAt. Mudança nesses precisa de fluxo separado
- * (admin de cadastros / billing).
+ * Slug: validação de unicidade com 409 quando taken.
+ * CNPJ: re-encripta via EncryptionService + atualiza hint.
+ *
+ * NOT changed automatically on CNPJ swap: reviewStatus, kycStatus —
+ * SUPER_ADMIN deve revalidar manualmente se necessário.
  */
 @Injectable()
 export class UpdateKlubHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly encryption: EncryptionService,
+  ) {}
 
   async execute(cmd: UpdateKlubCommand) {
     const klub = await this.prisma.klub.findUnique({ where: { id: cmd.klubId } });
@@ -88,6 +115,8 @@ export class UpdateKlubHandler {
     const data: Prisma.KlubUpdateInput = {};
     const p = cmd.patch;
     if (p.name !== undefined) data.name = p.name;
+    if (p.abbreviation !== undefined) data.abbreviation = p.abbreviation;
+    if (p.commonName !== undefined) data.commonName = p.commonName;
     if (p.description !== undefined) data.description = p.description;
     if (p.type !== undefined) data.type = p.type;
     if (p.avatarUrl !== undefined) data.avatarUrl = p.avatarUrl;
@@ -116,6 +145,33 @@ export class UpdateKlubHandler {
       if (p.maxMembers !== undefined) data.maxMembers = p.maxMembers;
       if (p.maxSports !== undefined) data.maxSports = p.maxSports;
       if (p.maxCourts !== undefined) data.maxCourts = p.maxCourts;
+
+      if (p.slug !== undefined && p.slug !== klub.slug) {
+        const conflict = await this.prisma.klub.findFirst({
+          where: { slug: p.slug, id: { not: klub.id }, deletedAt: null },
+          select: { id: true, name: true },
+        });
+        if (conflict) {
+          throw new ConflictException({
+            type: 'slug_taken',
+            conflictKlubId: conflict.id,
+            conflictKlubName: conflict.name,
+            message: `Slug '${p.slug}' já está em uso por '${conflict.name}'`,
+          });
+        }
+        data.slug = p.slug;
+      }
+
+      if (p.document !== undefined) {
+        const docVO = DocumentVO.tryCreate(p.document, 'cnpj');
+        if (!docVO) {
+          throw new BadRequestException('CNPJ inválido (dígito verificador)');
+        }
+        const { encrypted, iv } = this.encryption.encrypt(docVO.value);
+        data.documentEncrypted = encrypted;
+        data.documentIv = iv;
+        data.documentHint = docVO.hint();
+      }
     }
 
     if (Object.keys(data).length === 0) {

@@ -16,8 +16,22 @@ import { uuidString } from '../../../../shared/validation/uuid-string';
 export const CreateKlubSchema = z
   .object({
     name: z.string().min(2).max(100),
+    /** Sprint Polish PR-G: nome popular/colloquial. */
+    commonName: z.string().max(100).optional(),
+    /** Sprint Polish PR-G: abreviação curta pra UI compacta. */
+    abbreviation: z.string().max(10).optional(),
     type: z
-      .enum(['sports_club', 'condo', 'school', 'public_space', 'academy', 'individual'])
+      .enum([
+        'sports_club',
+        'arena',
+        'academy',
+        'condo',
+        'hotel_resort',
+        'university',
+        'school',
+        'public_space',
+        'individual',
+      ])
       .default('sports_club'),
     timezone: z.string().default('America/Sao_Paulo'),
     email: z.string().email().optional(),

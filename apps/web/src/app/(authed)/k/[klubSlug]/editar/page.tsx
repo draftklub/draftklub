@@ -49,6 +49,8 @@ export default function EditarKlubPage() {
         setIsSuperAdmin(me.roleAssignments.some((r) => r.role === 'SUPER_ADMIN'));
         setV({
           name: k.name,
+          commonName: k.commonName,
+          abbreviation: k.abbreviation,
           description: k.description ?? null,
           type: k.type,
           email: k.email,
@@ -63,6 +65,7 @@ export default function EditarKlubPage() {
           state: k.state,
           discoverable: k.discoverable,
           accessMode: k.accessMode,
+          slug: k.slug,
         });
       })
       .catch((err: unknown) => {
@@ -82,7 +85,17 @@ export default function EditarKlubPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const updated = await updateKlub(klub.id, v);
+      // Patch enxuto: omite slug se inalterado (evita uniqueness check
+      // desnecessário) e omite document se vazio (mantém o atual).
+      const payload: UpdateKlubInput = { ...v };
+      if (!payload.slug || payload.slug === klub.slug) delete payload.slug;
+      if (!payload.document) delete payload.document;
+      const updated = await updateKlub(klub.id, payload);
+      // Slug pode ter mudado — atualiza URL pra novo path.
+      if (updated.slug !== klub.slug) {
+        window.location.href = `/k/${updated.slug}/editar`;
+        return;
+      }
       setKlub(updated);
       setActionMessage('Klub atualizado.');
     } catch (err: unknown) {
@@ -179,6 +192,30 @@ export default function EditarKlubPage() {
               className={inputCls}
             />
           </Field>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-1">
+              <Field label="Abreviação" help="Curto pra UI compacta. Ex: PAC.">
+                <input
+                  value={v.abbreviation ?? ''}
+                  onChange={(e) => set('abbreviation', e.target.value || null)}
+                  maxLength={10}
+                  placeholder="PAC"
+                  className={inputCls}
+                />
+              </Field>
+            </div>
+            <div className="col-span-2">
+              <Field label="Comumente chamado de" help="Apelido popular pra busca informal.">
+                <input
+                  value={v.commonName ?? ''}
+                  onChange={(e) => set('commonName', e.target.value || null)}
+                  maxLength={100}
+                  placeholder="Paissandú"
+                  className={inputCls}
+                />
+              </Field>
+            </div>
+          </div>
           <Field label="Descrição">
             <textarea
               value={v.description ?? ''}
@@ -194,11 +231,14 @@ export default function EditarKlubPage() {
               onChange={(e) => set('type', e.target.value as UpdateKlubInput['type'])}
               className={inputCls}
             >
-              <option value="sports_club">Clube esportivo</option>
+              <option value="sports_club">Clube esportivo / social</option>
+              <option value="arena">Arena / Centro esportivo</option>
+              <option value="academy">Academia / Escola de esporte</option>
               <option value="condo">Condomínio</option>
-              <option value="school">Escola/Academia</option>
+              <option value="hotel_resort">Hotel / Resort</option>
+              <option value="university">Universidade / Faculdade</option>
+              <option value="school">Escola / Colégio</option>
               <option value="public_space">Espaço público</option>
-              <option value="academy">Academia</option>
               <option value="individual">Pessoa física</option>
             </select>
           </Field>
@@ -311,6 +351,56 @@ export default function EditarKlubPage() {
           </Field>
         </Section>
 
+        {isSuperAdmin ? (
+          <section className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+            <h2 className="font-display text-[14px] font-bold">
+              Identidade legal{' '}
+              <span className="ml-2 inline-flex h-5 items-center rounded-full bg-amber-500/20 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+                SUPER_ADMIN
+              </span>
+            </h2>
+            <p className="text-[12px] text-muted-foreground">
+              Mudanças aqui têm impacto operacional alto. Slug rompe URLs/bookmarks.
+              CNPJ não revalida KYC automaticamente.
+            </p>
+
+            <Field
+              label="Slug"
+              help="Aparece nas URLs (/k/seu-slug/...). Lowercase, dígitos e hífen."
+            >
+              <input
+                value={v.slug ?? ''}
+                onChange={(e) =>
+                  set(
+                    'slug',
+                    e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9-]/g, '')
+                      .slice(0, 80),
+                  )
+                }
+                placeholder={klub.slug}
+                className={inputCls}
+              />
+            </Field>
+
+            <Field
+              label="CNPJ"
+              help={`CNPJ atual: ${klub.documentHint ?? '(não cadastrado)'}. Deixar vazio mantém o atual.`}
+            >
+              <input
+                value={v.document ?? ''}
+                onChange={(e) =>
+                  set('document', e.target.value.replace(/\D/g, '').slice(0, 14))
+                }
+                placeholder="00000000000000 (só dígitos)"
+                inputMode="numeric"
+                className={inputCls}
+              />
+            </Field>
+          </section>
+        ) : null}
+
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
@@ -357,13 +447,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
         {label}
       </label>
       {children}
+      {help ? <p className="mt-1 text-[11px] text-muted-foreground">{help}</p> : null}
     </div>
   );
 }
