@@ -50,9 +50,21 @@ export class CnpjLookupService {
     if (digits.length !== 14) return null;
     try {
       const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`, {
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(8000),
+        headers: {
+          // Alguns rate-limiters de borda bloqueiam fetch sem UA. Identifica
+          // a integração explicitamente pra facilitar contato/whitelisting.
+          'User-Agent': 'DraftKlub/1.0 (+https://draftklub.com.br)',
+          Accept: 'application/json',
+        },
       });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        const body = await res.text().catch(() => '<unreadable>');
+        this.logger.warn(
+          `BrasilAPI CNPJ ${digits} HTTP ${res.status}: ${body.slice(0, 300)}`,
+        );
+        return null;
+      }
       const data = (await res.json()) as Record<string, unknown>;
       return this.normalize(data);
     } catch (err) {
