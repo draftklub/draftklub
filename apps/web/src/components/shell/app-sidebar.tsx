@@ -26,6 +26,7 @@ import { BrandLockup } from '@/components/brand/brand-lockup';
 import { useAuth } from '@/components/auth-provider';
 import { listMyEnrollments } from '@/lib/api/enrollments';
 import { getMe, getMyKlubs } from '@/lib/api/me';
+import { isPlatformLevel, isPlatformOwner } from '@/lib/auth/role-helpers';
 import { logout } from '@/lib/auth';
 import { forgetLastKlubSlug } from '@/lib/last-klub-cookie';
 import { cn } from '@/lib/utils';
@@ -68,7 +69,8 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
-  const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
+  const [isPlatformAdminOrOwner, setIsPlatformAdminOrOwner] = React.useState(false);
+  const [isOwner, setIsOwner] = React.useState(false);
   const [enrollments, setEnrollments] = React.useState<EnrollmentWithProfile[]>([]);
 
   React.useEffect(() => {
@@ -83,7 +85,8 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
     void getMe()
       .then((me) => {
         if (cancelled) return;
-        setIsSuperAdmin(me.roleAssignments.some((r) => r.role === 'PLATFORM_OWNER'));
+        setIsPlatformAdminOrOwner(me.roleAssignments.some((r) => isPlatformLevel(r.role)));
+        setIsOwner(me.roleAssignments.some((r) => isPlatformOwner(r.role)));
       })
       .catch(() => null);
     listMyEnrollments()
@@ -230,8 +233,8 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           )}
         </nav>
 
-        {/* Administrativa — só SUPER_ADMIN. Sprint Polish PR-I1. */}
-        {isSuperAdmin ? (
+        {/* Administrativa — Platform-level (Owner + Admin). PR-I1 / PR-J2b. */}
+        {isPlatformAdminOrOwner ? (
           <>
             <SectionLabel>Administrativa</SectionLabel>
             <nav className="flex flex-col gap-0.5 px-3">
@@ -242,6 +245,15 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
                 active={pathname.startsWith('/admin/aprovacoes') || pathname.startsWith('/admin/cadastros')}
                 onNavigate={onClose}
               />
+              {isOwner ? (
+                <NavLink
+                  href="/admin/platform-admins"
+                  label="Platform Admins"
+                  icon={Shield}
+                  active={pathname.startsWith('/admin/platform-admins')}
+                  onNavigate={onClose}
+                />
+              ) : null}
             </nav>
           </>
         ) : null}
