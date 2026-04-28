@@ -499,6 +499,8 @@ export interface UserKlubMembership {
   klubName: string;
   /** Sprint Polish PR-H1 — apelido popular pra UI compacta. */
   klubCommonName: string | null;
+  /** Sprint Polish PR-H3 — modalidades ativas do Klub (sport codes). */
+  sports: string[];
   klubPlan: KlubPlan;
   klubStatus: KlubStatus;
   membershipType: MembershipType;

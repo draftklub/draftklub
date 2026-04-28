@@ -121,3 +121,18 @@ export class EnrollmentsByUserController {
     return this.facade.listEnrollmentsByUser(userId);
   }
 }
+
+/**
+ * Sprint Polish PR-H3 — versão `/me` pra evitar 2 calls (getMe + list).
+ * Usado pela sidebar pra cruzar enrollments com modalidades de cada Klub.
+ */
+@Controller('me/enrollments')
+@UseGuards(FirebaseAuthGuard)
+export class MeEnrollmentsController {
+  constructor(private readonly facade: KlubFacade) {}
+
+  @Get()
+  async list(@CurrentUser() user: AuthenticatedUser) {
+    return this.facade.listEnrollmentsByUser(user.userId);
+  }
+}

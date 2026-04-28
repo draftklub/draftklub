@@ -46,6 +46,7 @@ import {
   EnrollmentScopeController,
   EnrollmentActionsController,
   EnrollmentsByUserController,
+  MeEnrollmentsController,
 } from './api/enrollment.controller';
 import { IdentityModule } from '../identity/identity.module';
 
@@ -59,6 +60,7 @@ import { IdentityModule } from '../identity/identity.module';
     EnrollmentScopeController,
     EnrollmentActionsController,
     EnrollmentsByUserController,
+    MeEnrollmentsController,
   ],
   providers: [
     KlubPrismaRepository,

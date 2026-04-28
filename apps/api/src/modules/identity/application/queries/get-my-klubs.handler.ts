@@ -36,6 +36,10 @@ export class GetMyKlubsHandler {
             deletedAt: true,
             reviewStatus: true,
             reviewRejectionReason: true,
+            sportProfiles: {
+              where: { status: 'active' },
+              select: { sportCode: true },
+            },
           },
         },
       },
@@ -70,6 +74,7 @@ export class GetMyKlubsHandler {
         klubSlug: m.klub.slug,
         klubName: m.klub.name,
         klubCommonName: m.klub.commonName,
+        sports: m.klub.sportProfiles.map((s) => s.sportCode),
         klubPlan: m.klub.plan as UserKlubMembership['klubPlan'],
         klubStatus: m.klub.status as UserKlubMembership['klubStatus'],
         membershipType: m.type as UserKlubMembership['membershipType'],
