@@ -7,6 +7,7 @@ import { GetMeHandler } from './application/queries/get-me.handler';
 import { UpdateMeHandler } from './application/commands/update-me.handler';
 import { GrantRoleHandler } from './application/commands/grant-role.handler';
 import { RevokeRoleHandler } from './application/commands/revoke-role.handler';
+import { TransferKlubAdminHandler } from './application/commands/transfer-klub-admin.handler';
 import { ListRoleAssignmentsHandler } from './application/queries/list-role-assignments.handler';
 import { IdentityFacade } from './public/identity.facade';
 import { IdentityController } from './api/identity.controller';
@@ -24,6 +25,7 @@ import { FirebaseAuthGuard } from '../../shared/auth/firebase-auth.guard';
     UpdateMeHandler,
     GrantRoleHandler,
     RevokeRoleHandler,
+    TransferKlubAdminHandler,
     ListRoleAssignmentsHandler,
     IdentityFacade,
     FirebaseAuthGuard,

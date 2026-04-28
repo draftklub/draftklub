@@ -43,3 +43,14 @@ export function revokeKlubRole(klubId: string, assignmentId: string): Promise<vo
     method: 'DELETE',
   });
 }
+
+/** Sprint Polish PR-J3 — transferência de KLUB_ADMIN. Old admin sai limpo. */
+export function transferKlubAdmin(
+  klubId: string,
+  email: string,
+): Promise<{ klubId: string; oldAdminUserId: string; newAdminUserId: string }> {
+  return apiFetch(`/klubs/${klubId}/role-assignments/transfer-admin`, {
+    method: 'POST',
+    json: { email },
+  });
+}

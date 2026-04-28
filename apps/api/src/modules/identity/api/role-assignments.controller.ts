@@ -6,10 +6,18 @@ import { uuidString } from '../../../shared/validation/uuid-string';
 import { GrantRoleHandler } from '../application/commands/grant-role.handler';
 import { RevokeRoleHandler } from '../application/commands/revoke-role.handler';
 import {
+  TransferKlubAdminHandler,
+  type TransferKlubAdminResult,
+} from '../application/commands/transfer-klub-admin.handler';
+import {
   ListRoleAssignmentsHandler,
   type RoleAssignmentListItem,
 } from '../application/queries/list-role-assignments.handler';
-import { GrantKlubRoleSchema, GrantPlatformRoleSchema } from './dtos/role-assignment.dto';
+import {
+  GrantKlubRoleSchema,
+  GrantPlatformRoleSchema,
+  TransferKlubAdminSchema,
+} from './dtos/role-assignment.dto';
 
 /**
  * Sprint Polish PR-J2 — endpoints REST pra gestão de role assignments.
@@ -26,6 +34,7 @@ export class RoleAssignmentsController {
     private readonly listHandler: ListRoleAssignmentsHandler,
     private readonly grantHandler: GrantRoleHandler,
     private readonly revokeHandler: RevokeRoleHandler,
+    private readonly transferHandler: TransferKlubAdminHandler,
   ) {}
 
   // ─── Platform-level (scopeKlubId IS NULL) ────────────────────────────
@@ -105,6 +114,25 @@ export class RoleAssignmentsController {
       caller: user,
       assignmentId,
       expectedScopeKlubId: scopeKlubId,
+    });
+  }
+
+  /**
+   * Sprint Polish PR-J3 — transferência de KLUB_ADMIN.
+   * Old admin sai limpo (zero role no Klub); novo admin é definido.
+   */
+  @Post('klubs/:klubId/role-assignments/transfer-admin')
+  async transferKlubAdmin(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('klubId') klubId: string,
+    @Body() body: unknown,
+  ): Promise<TransferKlubAdminResult> {
+    const scopeKlubId = uuidString().parse(klubId);
+    const dto = TransferKlubAdminSchema.parse(body);
+    return this.transferHandler.execute({
+      caller: user,
+      klubId: scopeKlubId,
+      targetEmail: dto.email,
     });
   }
 }

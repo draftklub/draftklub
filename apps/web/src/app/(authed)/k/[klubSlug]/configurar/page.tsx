@@ -34,7 +34,12 @@ import {
   type UpdateKlubInput,
 } from '@/lib/api/klubs';
 import { addSportToKlub, listKlubSports, listSports } from '@/lib/api/sports';
-import { grantKlubRole, listKlubRoleAssignments, revokeKlubRole } from '@/lib/api/role-assignments';
+import {
+  grantKlubRole,
+  listKlubRoleAssignments,
+  revokeKlubRole,
+  transferKlubAdmin,
+} from '@/lib/api/role-assignments';
 import {
   createSpace,
   deleteSpace,
@@ -94,6 +99,7 @@ export default function ConfigurarKlubPage() {
   const [klub, setKlub] = React.useState<Klub | null>(null);
   const [isPlatform, setIsPlatform] = React.useState(false);
   const [isKlubAdmin, setIsKlubAdmin] = React.useState(false);
+  const [canTransferAdmin, setCanTransferAdmin] = React.useState(false);
   const [bootError, setBootError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -105,10 +111,14 @@ export default function ConfigurarKlubPage() {
         setKlub(k);
         const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
         setIsPlatform(platform);
-        const klubAdmin = me.roleAssignments.some(
+        const klubAdminOrAssistant = me.roleAssignments.some(
           (r) => (r.role === 'KLUB_ADMIN' || r.role === 'KLUB_ASSISTANT') && r.scopeKlubId === k.id,
         );
-        setIsKlubAdmin(platform || klubAdmin);
+        const klubAdminOnly = me.roleAssignments.some(
+          (r) => r.role === 'KLUB_ADMIN' && r.scopeKlubId === k.id,
+        );
+        setIsKlubAdmin(platform || klubAdminOrAssistant);
+        setCanTransferAdmin(platform || klubAdminOnly);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -201,7 +211,9 @@ export default function ConfigurarKlubPage() {
           ) : null}
           {activeTab === 'modalidades' ? <ModalidadesTab klub={klub} /> : null}
           {activeTab === 'quadras' ? <QuadrasTab klub={klub} /> : null}
-          {activeTab === 'equipe' && isKlubAdmin ? <EquipeTab klub={klub} /> : null}
+          {activeTab === 'equipe' && isKlubAdmin ? (
+            <EquipeTab klub={klub} canTransferAdmin={canTransferAdmin} />
+          ) : null}
           {activeTab === 'legal' && isPlatform ? (
             <LegalTab klub={klub} onUpdated={handleKlubUpdated} />
           ) : null}
@@ -651,7 +663,7 @@ const KLUB_GRANTABLE_ROLES: {
   },
 ];
 
-function EquipeTab({ klub }: { klub: Klub }) {
+function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferAdmin: boolean }) {
   const [items, setItems] = React.useState<RoleAssignmentListItem[] | null>(null);
   const [sports, setSports] = React.useState<KlubSportProfile[]>([]);
   const [error, setError] = React.useState<string | null>(null);
@@ -680,8 +692,8 @@ function EquipeTab({ klub }: { klub: Klub }) {
       <header>
         <h2 className="font-display text-[14px] font-bold">Equipe</h2>
         <p className="mt-1 text-[12.5px] text-muted-foreground">
-          Conceda roles operacionais (Assistant, Sport Commission, Sport Staff). KLUB_ADMIN é
-          singleton — transferência entra em fluxo dedicado futuro.
+          Conceda roles operacionais (Assistant, Sport Commission, Sport Staff). Transfira
+          KLUB_ADMIN pra outro membro abaixo se for o caso.
         </p>
       </header>
 
@@ -739,7 +751,96 @@ function EquipeTab({ klub }: { klub: Klub }) {
           </ul>
         )}
       </section>
+
+      {canTransferAdmin ? (
+        <TransferAdminSection
+          klubId={klub.id}
+          klubName={klub.name}
+          klubSlug={klub.slug}
+          onTransferred={(msg) => {
+            setMessage(msg);
+            setReload((n) => n + 1);
+          }}
+          onError={setError}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function TransferAdminSection({
+  klubId,
+  klubName,
+  klubSlug,
+  onTransferred,
+  onError,
+}: {
+  klubId: string;
+  klubName: string;
+  klubSlug: string;
+  onTransferred: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const router = useRouter();
+  const [email, setEmail] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+
+  async function handleTransfer() {
+    if (submitting || !email.trim()) return;
+    const target = email.trim().toLowerCase();
+    const confirmMsg =
+      `Transferir KLUB_ADMIN de "${klubName}" para ${target}?\n\n` +
+      `Você sai LIMPO desse Klub: zero role administrativa. Continuará membro/sócio se já era. ` +
+      `Apenas o novo admin pode te readmitir como Assistant.`;
+    if (!window.confirm(confirmMsg)) return;
+    setSubmitting(true);
+    try {
+      await transferKlubAdmin(klubId, target);
+      onTransferred(`Klub Admin transferido pra ${target}.`);
+      // Caller pode ter perdido acesso de admin — após 1.5s redireciona pra
+      // home, deixando UI mostrar a mensagem antes.
+      setTimeout(() => router.replace(`/k/${klubSlug}/dashboard`), 1500);
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao transferir admin.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+      <div className="flex items-center gap-2">
+        <AlertCircle className="size-4 text-amber-700 dark:text-amber-400" />
+        <h3 className="font-display text-[14px] font-bold">Transferir Klub Admin</h3>
+      </div>
+      <p className="text-[12.5px] text-muted-foreground">
+        Passa o controle deste Klub pra outro membro. Você <strong>sai limpo</strong> da
+        administração — zero role. Membership/sócio permanece. Target precisa já ser membro ativo do
+        Klub.
+      </p>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="email-do-novo-admin@dominio.com"
+          disabled={submitting}
+          className={inputCls}
+        />
+        <button
+          type="button"
+          onClick={() => void handleTransfer()}
+          disabled={submitting || !email.trim()}
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-amber-500 bg-amber-500/10 px-4 text-[13px] font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-400 disabled:opacity-60"
+        >
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Power className="size-3.5" />
+          )}
+          Transferir
+        </button>
+      </div>
+    </section>
   );
 }
 
