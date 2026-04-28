@@ -21,6 +21,7 @@ import {
 } from '../application/commands/update-ranking.handler';
 import { ListRankingsHandler } from '../application/queries/list-rankings.handler';
 import { GetRankingHandler } from '../application/queries/get-ranking.handler';
+import { ListPendingMatchConfirmationsHandler } from '../application/queries/list-pending-match-confirmations.handler';
 import { RankingRecomputeService } from '../domain/services/ranking-recompute.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 
@@ -39,6 +40,7 @@ export class RankingFacade {
     private readonly listRankingsHandler: ListRankingsHandler,
     private readonly getRankingHandler: GetRankingHandler,
     private readonly updateRankingHandler: UpdateRankingHandler,
+    private readonly listPendingConfirmationsHandler: ListPendingMatchConfirmationsHandler,
     private readonly recomputeService: RankingRecomputeService,
     private readonly prisma: PrismaService,
   ) {}
@@ -76,6 +78,10 @@ export class RankingFacade {
 
   async updateRanking(cmd: UpdateRankingCommand) {
     return this.updateRankingHandler.execute(cmd);
+  }
+
+  async listPendingMatchConfirmations(userId: string) {
+    return this.listPendingConfirmationsHandler.execute(userId);
   }
 
   async recomputeAllTemporalRankings(): Promise<{ recomputed: number }> {

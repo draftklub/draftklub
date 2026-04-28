@@ -653,6 +653,31 @@ export interface RankingDetail {
   players: RankingPlayerEntry[];
 }
 
+/**
+ * Sprint K PR-K5a — payload de `GET /me/pending-match-confirmations`.
+ * Lista matches que o caller precisa confirmar (player que não foi
+ * submitter), tanto casuais quanto de torneio em modo player_with_confirm.
+ */
+export interface PendingMatchConfirmationItem {
+  matchId: string;
+  rankingId: string;
+  rankingName: string;
+  source: MatchResultSource;
+  player1Id: string;
+  player2Id: string;
+  player1Name: string;
+  player2Name: string;
+  winnerId: string | null;
+  score: string | null;
+  /** ISO 8601. */
+  playedAt: string;
+  submittedById: string;
+  submittedByName: string;
+  /** Tournament context se source != 'casual'. */
+  tournamentId: string | null;
+  tournamentName: string | null;
+}
+
 /** Result de match (casual ou de torneio). */
 export interface MatchResult {
   id: string;
@@ -705,7 +730,7 @@ export type TournamentMatchStatus =
   | 'walkover'
   | 'double_walkover';
 
-export type TournamentMatchKind = 'main' | 'group' | 'losers' | 'grand_final';
+export type TournamentMatchKind = 'main' | 'group' | 'losers' | 'grand_final' | 'prequalifier';
 
 /** Shape do RankingPointsSchema.points — chaves variam (champion, runnerUp, etc). */
 export type RankingPointsMap = Record<string, number>;
@@ -814,6 +839,9 @@ export interface TournamentMatchView {
   /** Label "TBD" pra slots que dependem de match prequalificatório. */
   tbdPlayer1Label: string | null;
   tbdPlayer2Label: string | null;
+  /** Sprint K PR-K5a — quadra alocada via schedule. */
+  spaceId: string | null;
+  spaceName: string | null;
 }
 
 /** Bracket completo organizado por categoria — GET /tournaments/:id/bracket. */
