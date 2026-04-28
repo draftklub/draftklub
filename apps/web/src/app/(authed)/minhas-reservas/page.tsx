@@ -9,33 +9,54 @@ import {
   Clock,
   Loader2,
   MapPin,
+  Plus,
+  Timer,
   X,
 } from 'lucide-react';
 import { ApiError } from '@/lib/api/client';
 import { useAuth } from '@/components/auth-provider';
+import { getMe } from '@/lib/api/me';
 import {
+  addPlayersToBooking,
   cancelBooking,
   listMyBookings,
+  requestExtension,
   type MyBookingItem,
 } from '@/lib/api/bookings';
 import { cn } from '@/lib/utils';
 
 /**
- * Sprint Polish PR-B — minhas reservas cross-klub. Mesma UX do
- * `/k/:slug/minhas-reservas` (tabs Próximas/Passadas/Canceladas) mas
- * mostra nome do Klub no card pra dar contexto. Acessível via sidebar
- * "Você → Minhas reservas" (sempre visível).
+ * Sprint Polish PR-H2 — minhas reservas cross-klub agora é a única
+ * página de reservas (substituiu /k/:slug/minhas-reservas). Cada card
+ * mostra Klub + Quadra + horário e tem ações:
+ * - Cancelar (qualquer participant)
+ * - Estender (qualquer participant em booking confirmed)
+ * - Adicionar player (só primary player)
  */
 
 type Tab = 'upcoming' | 'past' | 'cancelled';
 
-export default function MinhasReservasGlobalPage() {
+export default function MinhasReservasPage() {
   const { user } = useAuth();
+  const [meId, setMeId] = React.useState<string | null>(null);
   const [tab, setTab] = React.useState<Tab>('upcoming');
   const [bookings, setBookings] = React.useState<MyBookingItem[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [reload, setReload] = React.useState(0);
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void getMe()
+      .then((me) => {
+        if (!cancelled) setMeId(me.id);
+      })
+      .catch(() => null);
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   React.useEffect(() => {
     if (!user) return;
@@ -66,7 +87,7 @@ export default function MinhasReservasGlobalPage() {
 
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
-      <div className="mx-auto max-w-2xl space-y-5">
+      <div className="mx-auto max-w-2xl space-y-4">
         <header>
           <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
             Você
@@ -75,7 +96,7 @@ export default function MinhasReservasGlobalPage() {
             className="mt-1 font-display text-[24px] font-bold leading-tight md:text-[30px]"
             style={{ letterSpacing: '-0.02em' }}
           >
-            Minhas reservas
+            Reservas
           </h1>
           <p className="mt-1 text-[13px] text-muted-foreground">
             Reservas em todos os Klubs em que você participa.
@@ -122,7 +143,14 @@ export default function MinhasReservasGlobalPage() {
                 <li key={b.id}>
                   <BookingCard
                     booking={b}
+                    meId={meId}
                     canCancel={tab === 'upcoming' && b.status !== 'cancelled'}
+                    canAddPlayers={
+                      tab === 'upcoming' &&
+                      b.status === 'confirmed' &&
+                      b.primaryPlayerId === meId
+                    }
+                    canExtend={tab === 'upcoming' && b.status === 'confirmed'}
                     onActed={(msg) => {
                       setActionMessage(msg);
                       setReload((n) => n + 1);
@@ -164,14 +192,24 @@ function TabButton({
 
 function BookingCard({
   booking,
+  meId,
   canCancel,
+  canAddPlayers,
+  canExtend,
   onActed,
 }: {
   booking: MyBookingItem;
+  meId: string | null;
   canCancel: boolean;
+  canAddPlayers: boolean;
+  canExtend: boolean;
   onActed: (msg: string) => void;
 }) {
   const [cancelOpen, setCancelOpen] = React.useState(false);
+  const [addPlayersOpen, setAddPlayersOpen] = React.useState(false);
+  const [extendOpen, setExtendOpen] = React.useState(false);
+  void meId;
+
   const start = new Date(booking.startsAt);
   const end = booking.endsAt ? new Date(booking.endsAt) : null;
   const date = start.toLocaleDateString('pt-BR', {
@@ -185,52 +223,76 @@ function BookingCard({
     : '';
 
   const tone = statusTone(booking.status);
+  const klubLabel = booking.klub.name;
+  const hasActions = canCancel || canAddPlayers || canExtend;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/k/${booking.klub.slug}/dashboard`}
-              className="truncate text-[11px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))] hover:underline"
-            >
-              {booking.klub.name}
-            </Link>
-            <StatusBadge tone={tone} label={statusLabel(booking.status)} />
-          </div>
-          <h3 className="mt-1 truncate font-display text-[15px] font-bold">
-            {booking.space?.name ?? 'Quadra'}
-          </h3>
-          <p className="mt-1 inline-flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1 capitalize">
-              <CalendarDays className="size-3" />
-              {date}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Clock className="size-3" />
-              {startLabel}
-              {endLabel ? ` – ${endLabel}` : ''}
-            </span>
-          </p>
-          {booking.notes ? (
-            <p className="mt-2 rounded-md border-l-2 border-primary/30 bg-muted/40 px-2 py-1 text-[12px] text-muted-foreground">
-              {booking.notes}
-            </p>
-          ) : null}
-        </div>
-
-        {canCancel ? (
-          <button
-            type="button"
-            onClick={() => setCancelOpen(true)}
-            className="inline-flex h-9 shrink-0 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+    <div className="rounded-xl border border-border bg-card p-3.5">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/k/${booking.klub.slug}/dashboard`}
+            className="truncate text-[11px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))] hover:underline"
           >
-            <X className="size-3" />
-            Cancelar
-          </button>
+            {klubLabel}
+          </Link>
+          <StatusBadge tone={tone} label={statusLabel(booking.status)} />
+        </div>
+        <h3 className="mt-1 truncate font-display text-[15px] font-bold">
+          {booking.space?.name ?? 'Quadra'}
+        </h3>
+        <p className="mt-1 inline-flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 capitalize">
+            <CalendarDays className="size-3" />
+            {date}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Clock className="size-3" />
+            {startLabel}
+            {endLabel ? ` – ${endLabel}` : ''}
+          </span>
+        </p>
+        {booking.notes ? (
+          <p className="mt-2 rounded-md border-l-2 border-primary/30 bg-muted/40 px-2 py-1 text-[12px] text-muted-foreground">
+            {booking.notes}
+          </p>
         ) : null}
       </div>
+
+      {hasActions ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          {canAddPlayers ? (
+            <button
+              type="button"
+              onClick={() => setAddPlayersOpen(true)}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[12px] font-semibold hover:bg-muted"
+            >
+              <Plus className="size-3" />
+              Adicionar player
+            </button>
+          ) : null}
+          {canExtend ? (
+            <button
+              type="button"
+              onClick={() => setExtendOpen(true)}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[12px] font-semibold hover:bg-muted"
+            >
+              <Timer className="size-3" />
+              Estender
+            </button>
+          ) : null}
+          {canCancel ? (
+            <button
+              type="button"
+              onClick={() => setCancelOpen(true)}
+              className="ml-auto inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+            >
+              <X className="size-3" />
+              Cancelar
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {cancelOpen ? (
         <CancelModal
@@ -239,6 +301,30 @@ function BookingCard({
           onCancelled={() => {
             setCancelOpen(false);
             onActed('Reserva cancelada.');
+          }}
+        />
+      ) : null}
+      {addPlayersOpen ? (
+        <AddPlayersModal
+          bookingId={booking.id}
+          onClose={() => setAddPlayersOpen(false)}
+          onAdded={(count) => {
+            setAddPlayersOpen(false);
+            onActed(count === 1 ? 'Player adicionado.' : `${count} players adicionados.`);
+          }}
+        />
+      ) : null}
+      {extendOpen ? (
+        <ExtendModal
+          bookingId={booking.id}
+          onClose={() => setExtendOpen(false)}
+          onRequested={(autoApproved) => {
+            setExtendOpen(false);
+            onActed(
+              autoApproved
+                ? 'Extensão aprovada. Horário atualizado.'
+                : 'Extensão solicitada — staff vai revisar.',
+            );
           }}
         />
       ) : null}
@@ -279,47 +365,260 @@ function CancelModal({
   }
 
   return (
+    <Modal title="Cancelar reserva" onClose={onClose}>
+      <p className="text-[13px] text-muted-foreground">
+        Conta o motivo (mín 10 chars). O Klub vai receber pra ajustar agenda se preciso.
+      </p>
+      <textarea
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="Ex: Imprevisto familiar, não vou conseguir."
+        rows={3}
+        maxLength={500}
+        className="mt-3 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+      />
+      <p className="mt-1 text-right text-[11px] text-muted-foreground">
+        {reason.trim().length}/500 (mín 10)
+      </p>
+      {error ? (
+        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+          {error}
+        </p>
+      ) : null}
+      <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={submitting}
+          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+        >
+          Voltar
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleCancel()}
+          disabled={reason.trim().length < 10 || submitting}
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
+        >
+          {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
+          Cancelar reserva
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+function AddPlayersModal({
+  bookingId,
+  onClose,
+  onAdded,
+}: {
+  bookingId: string;
+  onClose: () => void;
+  onAdded: (count: number) => void;
+}) {
+  const [firstName, setFirstName] = React.useState('');
+  const [lastName, setLastName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleAdd() {
+    if (submitting) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      await addPlayersToBooking(bookingId, [
+        { guest: { firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim() } },
+      ]);
+      onAdded(1);
+    } catch (err: unknown) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Erro ao adicionar.',
+      );
+      setSubmitting(false);
+    }
+  }
+
+  const valid = firstName.trim() && lastName.trim() && /.+@.+\..+/.test(email);
+
+  return (
+    <Modal title="Adicionar player" onClose={onClose}>
+      <p className="text-[13px] text-muted-foreground">
+        Se o player não tem conta no DraftKlub, criamos um cadastro guest.
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <input
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          placeholder="Nome"
+          maxLength={100}
+          className="rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        />
+        <input
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          placeholder="Sobrenome"
+          maxLength={100}
+          className="rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        />
+      </div>
+      <input
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="email@example.com"
+        type="email"
+        className="mt-2 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+      />
+      {error ? (
+        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+          {error}
+        </p>
+      ) : null}
+      <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={submitting}
+          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+        >
+          Voltar
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleAdd()}
+          disabled={!valid || submitting}
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+          Adicionar
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+function ExtendModal({
+  bookingId,
+  onClose,
+  onRequested,
+}: {
+  bookingId: string;
+  onClose: () => void;
+  onRequested: (autoApproved: boolean) => void;
+}) {
+  const [minutes, setMinutes] = React.useState(30);
+  const [notes, setNotes] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleRequest() {
+    if (submitting) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const result = await requestExtension(bookingId, minutes, notes.trim() || undefined);
+      const autoApproved = result.extension?.status === 'approved';
+      onRequested(autoApproved);
+    } catch (err: unknown) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Erro ao solicitar.',
+      );
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal title="Estender reserva" onClose={onClose}>
+      <p className="text-[13px] text-muted-foreground">
+        Dependendo da config do Klub a extensão pode ser automática ou aguardar
+        aprovação do staff.
+      </p>
+      <div className="mt-3 flex gap-2">
+        {[30, 60, 90].map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMinutes(m)}
+            className={cn(
+              'flex-1 rounded-[10px] border p-3 text-[13px] font-semibold transition-colors',
+              minutes === m
+                ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+                : 'border-input bg-background hover:bg-muted',
+            )}
+          >
+            +{m}min
+          </button>
+        ))}
+      </div>
+      <textarea
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="Motivo (opcional)"
+        rows={2}
+        maxLength={500}
+        className="mt-3 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+      />
+      {error ? (
+        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+          {error}
+        </p>
+      ) : null}
+      <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={submitting}
+          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+        >
+          Voltar
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleRequest()}
+          disabled={submitting}
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Timer className="size-3.5" />}
+          Solicitar
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+function Modal({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
       <div className="w-full max-w-md rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
-        <h2 className="font-display text-lg font-bold">Cancelar reserva</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          Conta o motivo (mín 10 chars). O Klub vai receber pra ajustar agenda se preciso.
-        </p>
-        <textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Ex: Imprevisto familiar, não vou conseguir."
-          rows={3}
-          maxLength={500}
-          className="mt-3 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
-        />
-        <p className="mt-1 text-right text-[11px] text-muted-foreground">
-          {reason.trim().length}/500 (mín 10)
-        </p>
-        {error ? (
-          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-            {error}
-          </p>
-        ) : null}
-        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            disabled={submitting}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            aria-label="Fechar"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
           >
-            Voltar
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleCancel()}
-            disabled={reason.trim().length < 10 || submitting}
-            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
-          >
-            {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
-            Cancelar reserva
+            ✕
           </button>
         </div>
+        {children}
       </div>
     </div>
   );
