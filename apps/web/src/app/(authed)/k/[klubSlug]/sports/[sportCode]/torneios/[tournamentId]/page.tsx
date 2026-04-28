@@ -12,6 +12,7 @@ import {
   Crown,
   Dices,
   Loader2,
+  Pencil,
   Plus,
   Save,
   Settings2,
@@ -52,8 +53,10 @@ import {
   revertTournamentMatch,
   scheduleTournament,
   updateReportingMode,
+  updateTournament,
   withdrawMyTournamentEntry,
   type ScheduleConfigInput,
+  type UpdateTournamentInput,
 } from '@/lib/api/tournaments';
 import { isPlatformLevel } from '@/lib/auth/role-helpers';
 import { cn } from '@/lib/utils';
@@ -469,6 +472,18 @@ function OperacoesView({
         onError={(msg) => setError(msg)}
       />
 
+      <EditTournamentSection
+        tournament={tournament}
+        klubId={klubId}
+        isFinished={isFinished}
+        onSuccess={(msg) => {
+          setMessage(msg);
+          setError(null);
+          onChanged();
+        }}
+        onError={(msg) => setError(msg)}
+      />
+
       <CancelTournamentSection
         tournament={tournament}
         isFinished={isFinished}
@@ -481,6 +496,323 @@ function OperacoesView({
       />
     </div>
   );
+}
+
+function EditTournamentSection({
+  tournament,
+  klubId,
+  isFinished,
+  onSuccess,
+  onError,
+}: {
+  tournament: TournamentDetail;
+  klubId: string;
+  isFinished: boolean;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const isCancelled = tournament.status === 'cancelled';
+  const disabled = isFinished || isCancelled;
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2">
+        <Settings2 className="size-4 text-muted-foreground" />
+        <h3 className="font-display text-[14px] font-bold">Editar dados do torneio</h3>
+      </div>
+      <p className="text-[12.5px] text-muted-foreground">
+        Edita nome, descrição, datas, modo de aprovação. Format, ranking e categorias não são
+        editáveis pós-create — exigiriam recriar bracket. Bloqueado se torneio finalizado/cancelado.
+      </p>
+      <div>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          disabled={disabled}
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-4 text-[13px] font-semibold hover:bg-muted disabled:opacity-60"
+        >
+          <Pencil className="size-3.5" />
+          Editar…
+        </button>
+      </div>
+      {open ? (
+        <EditTournamentModal
+          tournament={tournament}
+          klubId={klubId}
+          onClose={() => setOpen(false)}
+          onSuccess={(msg) => {
+            setOpen(false);
+            onSuccess(msg);
+          }}
+          onError={onError}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+function EditTournamentModal({
+  tournament,
+  klubId,
+  onClose,
+  onSuccess,
+  onError,
+}: {
+  tournament: TournamentDetail;
+  klubId: string;
+  onClose: () => void;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const sportCode = useSportCodeFromTournament(tournament);
+  const [name, setName] = React.useState(tournament.name);
+  const [description, setDescription] = React.useState(tournament.description ?? '');
+  const [registrationApproval, setRegistrationApproval] = React.useState(
+    tournament.registrationApproval,
+  );
+  const [registrationOpensAt, setRegistrationOpensAt] = React.useState(
+    isoToLocal(tournament.registrationOpensAt),
+  );
+  const [registrationClosesAt, setRegistrationClosesAt] = React.useState(
+    isoToLocal(tournament.registrationClosesAt),
+  );
+  const [drawDate, setDrawDate] = React.useState(isoToLocal(tournament.drawDate));
+  const [prequalifierStartDate, setPrequalifierStartDate] = React.useState(
+    tournament.prequalifierStartDate ? isoToLocal(tournament.prequalifierStartDate) : '',
+  );
+  const [prequalifierEndDate, setPrequalifierEndDate] = React.useState(
+    tournament.prequalifierEndDate ? isoToLocal(tournament.prequalifierEndDate) : '',
+  );
+  const [mainStartDate, setMainStartDate] = React.useState(isoToLocal(tournament.mainStartDate));
+  const [mainEndDate, setMainEndDate] = React.useState(
+    tournament.mainEndDate ? isoToLocal(tournament.mainEndDate) : '',
+  );
+  const [submitting, setSubmitting] = React.useState(false);
+  const [localError, setLocalError] = React.useState<string | null>(null);
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setLocalError(null);
+    if (name.trim().length < 2) {
+      setLocalError('Nome precisa ter pelo menos 2 caracteres.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const patch: UpdateTournamentInput = {};
+      // Inclui só campos que mudaram pra reduzir surface da PATCH.
+      if (name.trim() !== tournament.name) patch.name = name.trim();
+      if ((description.trim() || null) !== (tournament.description ?? null)) {
+        patch.description = description.trim() || null;
+      }
+      if (registrationApproval !== tournament.registrationApproval) {
+        patch.registrationApproval = registrationApproval;
+      }
+      if (localToIso(registrationOpensAt) !== tournament.registrationOpensAt) {
+        patch.registrationOpensAt = localToIso(registrationOpensAt);
+      }
+      if (localToIso(registrationClosesAt) !== tournament.registrationClosesAt) {
+        patch.registrationClosesAt = localToIso(registrationClosesAt);
+      }
+      if (localToIso(drawDate) !== tournament.drawDate) {
+        patch.drawDate = localToIso(drawDate);
+      }
+      if (tournament.hasPrequalifiers) {
+        const oldPreqStart = tournament.prequalifierStartDate ?? null;
+        const newPreqStart = prequalifierStartDate ? localToIso(prequalifierStartDate) : null;
+        if (newPreqStart !== oldPreqStart) patch.prequalifierStartDate = newPreqStart;
+        const oldPreqEnd = tournament.prequalifierEndDate ?? null;
+        const newPreqEnd = prequalifierEndDate ? localToIso(prequalifierEndDate) : null;
+        if (newPreqEnd !== oldPreqEnd) patch.prequalifierEndDate = newPreqEnd;
+      }
+      if (localToIso(mainStartDate) !== tournament.mainStartDate) {
+        patch.mainStartDate = localToIso(mainStartDate);
+      }
+      const oldMainEnd = tournament.mainEndDate ?? null;
+      const newMainEnd = mainEndDate ? localToIso(mainEndDate) : null;
+      if (newMainEnd !== oldMainEnd) patch.mainEndDate = newMainEnd;
+
+      if (Object.keys(patch).length === 0) {
+        setLocalError('Nenhum campo alterado.');
+        setSubmitting(false);
+        return;
+      }
+
+      await updateTournament(klubId, sportCode, tournament.id, patch);
+      onSuccess('Torneio atualizado.');
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao atualizar.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="max-h-[90vh] w-full max-w-md space-y-3 overflow-y-auto rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold">Editar torneio</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+          >
+            ✕
+          </button>
+        </div>
+
+        {localError ? (
+          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+            <AlertCircle className="mr-1 inline size-3.5" />
+            {localError}
+          </p>
+        ) : null}
+
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Nome
+          </p>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={100}
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Descrição
+          </p>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            maxLength={1000}
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Aprovação de inscrição
+          </p>
+          <select
+            value={registrationApproval}
+            onChange={(e) => setRegistrationApproval(e.target.value as 'auto' | 'committee')}
+            className={inputCls}
+          >
+            <option value="auto">Automática</option>
+            <option value="committee">Comissão aprova</option>
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <DateField
+            label="Inscrições abrem"
+            value={registrationOpensAt}
+            onChange={setRegistrationOpensAt}
+          />
+          <DateField
+            label="Inscrições fecham"
+            value={registrationClosesAt}
+            onChange={setRegistrationClosesAt}
+          />
+          <DateField label="Sorteio" value={drawDate} onChange={setDrawDate} />
+          <DateField
+            label="Início fase principal"
+            value={mainStartDate}
+            onChange={setMainStartDate}
+          />
+          <DateField
+            label="Fim fase principal (opcional)"
+            value={mainEndDate}
+            onChange={setMainEndDate}
+          />
+        </div>
+
+        {tournament.hasPrequalifiers ? (
+          <div className="grid grid-cols-1 gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 sm:grid-cols-2">
+            <DateField
+              label="Pré-qualificatória — início"
+              value={prequalifierStartDate}
+              onChange={setPrequalifierStartDate}
+            />
+            <DateField
+              label="Pré-qualificatória — fim"
+              value={prequalifierEndDate}
+              onChange={setPrequalifierEndDate}
+            />
+          </div>
+        ) : null}
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleSubmit()}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {submitting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Save className="size-3.5" />
+            )}
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DateField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        {label}
+      </p>
+      <input
+        type="datetime-local"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={inputCls}
+      />
+    </div>
+  );
+}
+
+/** Converte ISO 8601 UTC pra "YYYY-MM-DDTHH:mm" local pra <input type="datetime-local">. */
+function isoToLocal(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function localToIso(local: string): string {
+  return new Date(local).toISOString();
+}
+
+function useSportCodeFromTournament(_tournament: TournamentDetail): string {
+  // sportCode vive na URL; lemos via useParams. Wrapper hook pra evitar
+  // ter que passar sportCode por props pelas seções inteiras.
+  const params = useParams<{ sportCode: string }>();
+  return params.sportCode;
 }
 
 function CancelTournamentSection({
