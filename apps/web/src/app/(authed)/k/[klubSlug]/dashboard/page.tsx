@@ -337,9 +337,11 @@ function OnboardingBanner() {
 
 // ─── Real-data sections ─────────────────────────────────────────────
 
+type TournamentWithSport = TournamentListItem & { sportCode: string };
+
 function RealTournaments() {
   const { klub } = useActiveKlub();
-  const [tournaments, setTournaments] = React.useState<TournamentListItem[] | null>(null);
+  const [tournaments, setTournaments] = React.useState<TournamentWithSport[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -350,9 +352,12 @@ function RealTournaments() {
       .then(async (profiles) => {
         const active = profiles.filter((p) => p.status === 'active');
         const lists = await Promise.all(
-          active.map((p) =>
-            listKlubTournaments(klub.id, p.sportCode).catch(() => [] as TournamentListItem[]),
-          ),
+          active.map(async (p) => {
+            const list = await listKlubTournaments(klub.id, p.sportCode).catch(
+              () => [] as TournamentListItem[],
+            );
+            return list.map((t): TournamentWithSport => ({ ...t, sportCode: p.sportCode }));
+          }),
         );
         if (cancelled) return;
         const all = lists.flat();
@@ -416,12 +421,15 @@ function RealTournaments() {
               i < tournaments.length - 1 && 'border-b border-border',
             )}
           >
-            <div className="min-w-0">
+            <Link
+              href={`/k/${klub?.slug}/sports/${t.sportCode}/torneios/${t.id}`}
+              className="min-w-0 transition-colors hover:text-foreground"
+            >
               <p className="mb-0.5 truncate text-[13.5px] font-semibold leading-tight">{t.name}</p>
               <p className="font-mono text-[11px] text-muted-foreground">
                 Início {dateLabel} · {t.entryCount} inscritos
               </p>
-            </div>
+            </Link>
             <span
               className="inline-flex h-5 items-center whitespace-nowrap rounded-full px-2 text-[9.5px] font-bold uppercase tracking-[0.08em]"
               style={{
