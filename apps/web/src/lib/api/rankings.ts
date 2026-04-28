@@ -1,4 +1,9 @@
-import type { MatchResult, RankingDetail, RankingListItem } from '@draftklub/shared-types';
+import type {
+  MatchResult,
+  PendingMatchConfirmationItem,
+  RankingDetail,
+  RankingListItem,
+} from '@draftklub/shared-types';
 import { apiFetch } from './client';
 
 /**
@@ -64,4 +69,12 @@ export function submitCasualMatch(input: SubmitCasualMatchInput): Promise<MatchR
 /** POST /matches/:id/confirm — outro player confirma match casual. */
 export function confirmCasualMatch(matchId: string): Promise<MatchResult> {
   return apiFetch<MatchResult>(`/matches/${matchId}/confirm`, { method: 'POST', json: {} });
+}
+
+/**
+ * Sprint K PR-K5a/K5b — GET /me/pending-match-confirmations.
+ * Lista matches que o caller precisa confirmar (casual + tournament).
+ */
+export function listPendingMatchConfirmations(): Promise<PendingMatchConfirmationItem[]> {
+  return apiFetch<PendingMatchConfirmationItem[]>('/me/pending-match-confirmations');
 }

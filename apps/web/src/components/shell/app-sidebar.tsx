@@ -197,7 +197,13 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
             }
             onNavigate={onClose}
           />
-          <NavLink href="#" label="Notificações" icon={Bell} disabled badge="em breve" />
+          <NavLink
+            href="/notificacoes"
+            label="Notificações"
+            icon={Bell}
+            active={pathname.startsWith('/notificacoes')}
+            onNavigate={onClose}
+          />
           <NavLink href="#" label="Torneios" icon={Trophy} disabled badge="em breve" />
           <NavLink href="#" label="Rankings" icon={ListOrdered} disabled badge="em breve" />
         </nav>

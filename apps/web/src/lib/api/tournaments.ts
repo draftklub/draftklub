@@ -129,6 +129,35 @@ export function createTournament(
   });
 }
 
+/** Sprint K PR-K5a — patch parcial de tournament pós-create. */
+export interface UpdateTournamentInput {
+  name?: string;
+  description?: string | null;
+  coverUrl?: string | null;
+  registrationApproval?: TournamentRegistrationApproval;
+  registrationFee?: number | null;
+  /** ISO 8601. */
+  registrationOpensAt?: string;
+  registrationClosesAt?: string;
+  drawDate?: string;
+  prequalifierStartDate?: string | null;
+  prequalifierEndDate?: string | null;
+  mainStartDate?: string;
+  mainEndDate?: string | null;
+}
+
+export function updateTournament(
+  klubId: string,
+  sportCode: string,
+  tournamentId: string,
+  input: UpdateTournamentInput,
+): Promise<{ id: string }> {
+  return apiFetch<{ id: string }>(
+    `/klubs/${klubId}/sports/${sportCode}/tournaments/${tournamentId}`,
+    { method: 'PATCH', json: input },
+  );
+}
+
 // ─── Mutations (Sprint K PR-K2b — draw + schedule + reporting mode) ────
 
 /** POST /tournaments/:id/draw — gera matches do bracket. */
