@@ -1579,24 +1579,42 @@ function BracketByPhases({
   const hasGroups = byPhase.groups.length > 0;
 
   const sectionProps = { tournament, meId, canManage, onChanged };
+  // Grid layout só pra formats com bracket-geometry. Round-robin não tem
+  // hierarquia de slots; mantém flex empilhado.
+  const useGrid =
+    tournament.format === 'knockout' ||
+    tournament.format === 'double_elimination' ||
+    tournament.format === 'groups_knockout';
 
   return (
     <div className="space-y-5">
       {hasGroups ? (
-        <BracketSection title="Fase de grupos" phases={byPhase.groups} {...sectionProps} />
+        <BracketSection
+          title="Fase de grupos"
+          phases={byPhase.groups}
+          layout="flex"
+          {...sectionProps}
+        />
       ) : null}
       <BracketSection
         title={hasLosers ? 'Chave principal (winners)' : null}
         phases={byPhase.winners}
+        layout={useGrid ? 'grid' : 'flex'}
         {...sectionProps}
       />
       {hasLosers ? (
-        <BracketSection title="Repescagem (losers)" phases={byPhase.losers} {...sectionProps} />
+        <BracketSection
+          title="Repescagem (losers)"
+          phases={byPhase.losers}
+          layout="grid"
+          {...sectionProps}
+        />
       ) : null}
       {byPhase.grandFinal.length > 0 ? (
         <BracketSection
           title="Final"
           phases={[{ phase: 'grand_final', matches: byPhase.grandFinal }]}
+          layout="flex"
           {...sectionProps}
         />
       ) : null}
@@ -1611,6 +1629,7 @@ function BracketSection({
   meId,
   canManage,
   onChanged,
+  layout = 'flex',
 }: {
   title: string | null;
   phases: { phase: string; matches: TournamentMatchView[] }[];
@@ -1618,6 +1637,13 @@ function BracketSection({
   meId: string | null;
   canManage: boolean;
   onChanged: () => void;
+  /**
+   * `'flex'` empilha matches verticalmente por phase (round-robin/groups).
+   * `'grid'` usa CSS Grid posicionando matches por slotTop/slotBottom (knockout/
+   * losers): matches em rounds posteriores ficam visualmente entre seus
+   * predecessores, replicando layout de bracket clássico.
+   */
+  layout?: 'flex' | 'grid';
 }) {
   if (phases.length === 0) return null;
   return (
@@ -1628,27 +1654,115 @@ function BracketSection({
         </h3>
       ) : null}
       <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
-        <div className="flex min-w-max gap-3">
-          {phases.map((p) => (
-            <div key={p.phase} className="w-[240px] shrink-0 space-y-2">
-              <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
-                {labelPhase(p.phase)}
-              </p>
-              {p.matches.map((m) => (
+        {layout === 'grid' ? (
+          <BracketGrid
+            phases={phases}
+            tournament={tournament}
+            meId={meId}
+            canManage={canManage}
+            onChanged={onChanged}
+          />
+        ) : (
+          <div className="flex min-w-max gap-3">
+            {phases.map((p) => (
+              <div key={p.phase} className="w-60 shrink-0 space-y-2">
+                <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+                  {labelPhase(p.phase)}
+                </p>
+                {p.matches.map((m) => (
+                  <MatchCard
+                    key={m.id}
+                    match={m}
+                    tournament={tournament}
+                    meId={meId}
+                    canManage={canManage}
+                    onChanged={onChanged}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function BracketGrid({
+  phases,
+  tournament,
+  meId,
+  canManage,
+  onChanged,
+}: {
+  phases: { phase: string; matches: TournamentMatchView[] }[];
+  tournament: TournamentDetail;
+  meId: string | null;
+  canManage: boolean;
+  onChanged: () => void;
+}) {
+  // Total de "slots" — usa o maior slotBottom em todas as phases pra
+  // dimensionar o grid. Min 1 pra evitar grid degenerado.
+  const maxSlot = Math.max(1, ...phases.flatMap((p) => p.matches.map((m) => m.slotBottom)));
+  // Ordena phases por round (estimativa: se phase é numérica, usa; senão
+  // usa ordem do array que já vem ordenada).
+  const phaseToCol = new Map(phases.map((p, i) => [p.phase, i + 1]));
+
+  return (
+    <div className="space-y-2">
+      {/* Headers */}
+      <div
+        className="grid min-w-max gap-x-3"
+        style={{ gridTemplateColumns: `repeat(${phases.length}, minmax(220px, 1fr))` }}
+      >
+        {phases.map((p) => (
+          <p
+            key={p.phase}
+            className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground"
+          >
+            {labelPhase(p.phase)}
+          </p>
+        ))}
+      </div>
+
+      {/* Grid bracket. Cada match span de slotTop a slotBottom (1-indexed
+       * inclusive). Cards centralizados verticalmente no span pra dar
+       * efeito de bracket onde rounds posteriores ficam entre os children. */}
+      <div
+        className="grid min-w-max gap-x-3 gap-y-1"
+        style={{
+          gridTemplateColumns: `repeat(${phases.length}, minmax(220px, 1fr))`,
+          gridTemplateRows: `repeat(${maxSlot + 1}, minmax(40px, auto))`,
+        }}
+      >
+        {phases.flatMap((p) =>
+          p.matches.map((m) => {
+            const col = phaseToCol.get(p.phase) ?? 1;
+            // slotBottom é inclusive; grid-row end é exclusive, então +2
+            const rowStart = m.slotTop + 1;
+            const rowEnd = m.slotBottom + 2;
+            return (
+              <div
+                key={m.id}
+                className="flex flex-col justify-center"
+                style={{
+                  gridColumn: col,
+                  gridRow: `${rowStart} / ${rowEnd}`,
+                }}
+              >
                 <MatchCard
-                  key={m.id}
                   match={m}
                   tournament={tournament}
                   meId={meId}
                   canManage={canManage}
                   onChanged={onChanged}
                 />
-              ))}
-            </div>
-          ))}
-        </div>
+              </div>
+            );
+          }),
+        )}
       </div>
-    </section>
+    </div>
   );
 }
 
