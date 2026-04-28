@@ -19,8 +19,9 @@ import { listKlubTournaments, type TournamentListItem } from '@/lib/api/tourname
 import { listKlubSports } from '@/lib/api/sports';
 import { listKlubSpaces } from '@/lib/api/spaces';
 import { listKlubBookings, type BookingListItem } from '@/lib/api/bookings';
+import { getMyKlubs } from '@/lib/api/me';
 import Link from 'next/link';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, LayoutGrid, Settings, Sparkles, Timer, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const HOURS: { h: string; pct: number; prime: boolean }[] = [
@@ -121,6 +122,7 @@ export default function DashboardPage() {
         <KlubWeatherRow />
         <OnboardingBanner />
         <ReservarCTA />
+        <KlubAdminActions />
         {/* KPI row */}
         <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {KPIS.map((kpi) => (
@@ -180,6 +182,92 @@ function KlubWeatherRow() {
     <div className="mb-4 flex flex-wrap items-center gap-2">
       <WeatherWidget latitude={klub.latitude} longitude={klub.longitude} />
     </div>
+  );
+}
+
+/**
+ * Sprint Polish PR-I1 — actions admin do Klub que antes ficavam na
+ * sidebar. Visível só pra KLUB_ADMIN/STAFF (e futuramente KLUB_ASSISTANT).
+ */
+function KlubAdminActions() {
+  const { klub } = useActiveKlub();
+  const [isAdmin, setIsAdmin] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!klub) return;
+    let cancelled = false;
+    void getMyKlubs()
+      .then((memberships) => {
+        if (cancelled) return;
+        const m = memberships.find((x) => x.klubId === klub.id);
+        const role = m?.role;
+        setIsAdmin(role === 'KLUB_ADMIN' || role === 'STAFF');
+      })
+      .catch(() => null);
+    return () => {
+      cancelled = true;
+    };
+  }, [klub]);
+
+  if (!klub || !isAdmin) return null;
+
+  const cards = [
+    {
+      label: 'Editar Klub',
+      hint: 'Identidade, contato, endereço, visibilidade',
+      icon: Settings,
+      href: `/k/${klub.slug}/editar`,
+    },
+    {
+      label: 'Quadras',
+      hint: 'Gerenciar espaços e modalidades',
+      icon: LayoutGrid,
+      href: `/k/${klub.slug}/quadras`,
+    },
+    {
+      label: 'Configurar Klub',
+      hint: 'Hours bands, regras, modalidades',
+      icon: Sparkles,
+      href: `/k/${klub.slug}/onboarding`,
+    },
+    {
+      label: 'Solicitações',
+      hint: 'Aprovar/rejeitar entradas no Klub',
+      icon: UserCheck,
+      href: `/k/${klub.slug}/solicitacoes`,
+    },
+    {
+      label: 'Extensões pendentes',
+      hint: 'Aprovar/rejeitar pedidos de extensão',
+      icon: Timer,
+      href: `/k/${klub.slug}/extensions-pending`,
+    },
+  ];
+
+  return (
+    <section className="mb-6">
+      <h2 className="mb-2 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        Gerenciar Klub
+      </h2>
+      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((c) => (
+          <li key={c.label}>
+            <Link
+              href={c.href}
+              className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/40 hover:bg-muted/30"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+                <c.icon className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-semibold">{c.label}</p>
+                <p className="truncate text-[11.5px] text-muted-foreground">{c.hint}</p>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

@@ -135,7 +135,7 @@ export default function CadastroDetailPage() {
           <p className="mt-1 text-[12.5px] text-muted-foreground">{error}</p>
           <button
             type="button"
-            onClick={() => router.push('/admin/cadastros')}
+            onClick={() => router.push('/admin/aprovacoes')}
             className="mt-4 inline-flex h-9 items-center rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground"
           >
             Voltar
@@ -160,7 +160,7 @@ export default function CadastroDetailPage() {
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
       <div className="mx-auto max-w-3xl space-y-6">
         <Link
-          href="/admin/cadastros"
+          href="/admin/aprovacoes"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" />

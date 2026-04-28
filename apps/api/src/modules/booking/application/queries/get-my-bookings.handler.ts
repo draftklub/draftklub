@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
+export interface MyBookingExtension {
+  id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  extendedTo: string;
+  requestedById: string;
+}
+
 export interface MyBookingItem {
   id: string;
   startsAt: Date;
@@ -12,6 +19,8 @@ export interface MyBookingItem {
   primaryPlayerId: string | null;
   klub: { id: string; slug: string; name: string };
   space: { id: string; name: string; type: string };
+  /** Sprint Polish PR-I1 — extensões do booking. UI usa pra badge "extensão pendente". */
+  extensions: MyBookingExtension[];
 }
 
 /**
@@ -57,6 +66,20 @@ export class GetMyBookingsHandler {
       .map((b) => {
         const klub = byId.get(b.klubId);
         if (!klub) return null;
+        const exts = (b.extensions as { id?: string; status?: string; extendedTo?: string; requestedById?: string }[] | null) ?? [];
+        const extensions: MyBookingExtension[] = exts
+          .filter((e): e is MyBookingExtension =>
+            typeof e.id === 'string' &&
+            (e.status === 'pending' || e.status === 'approved' || e.status === 'rejected') &&
+            typeof e.extendedTo === 'string' &&
+            typeof e.requestedById === 'string',
+          )
+          .map((e) => ({
+            id: e.id,
+            status: e.status,
+            extendedTo: e.extendedTo,
+            requestedById: e.requestedById,
+          }));
         return {
           id: b.id,
           startsAt: b.startsAt,
@@ -68,6 +91,7 @@ export class GetMyBookingsHandler {
           primaryPlayerId: b.primaryPlayerId,
           klub,
           space: b.space,
+          extensions,
         };
       })
       .filter((x): x is MyBookingItem => x !== null);

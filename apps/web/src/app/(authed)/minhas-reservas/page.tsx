@@ -13,9 +13,10 @@ import {
   Timer,
   X,
 } from 'lucide-react';
+import type { UserKlubMembership } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useAuth } from '@/components/auth-provider';
-import { getMe } from '@/lib/api/me';
+import { getMe, getMyKlubs } from '@/lib/api/me';
 import {
   addPlayersToBooking,
   cancelBooking,
@@ -39,11 +40,13 @@ type Tab = 'upcoming' | 'past' | 'cancelled';
 export default function MinhasReservasPage() {
   const { user } = useAuth();
   const [meId, setMeId] = React.useState<string | null>(null);
+  const [klubs, setKlubs] = React.useState<UserKlubMembership[]>([]);
   const [tab, setTab] = React.useState<Tab>('upcoming');
   const [bookings, setBookings] = React.useState<MyBookingItem[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [reload, setReload] = React.useState(0);
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
+  const [klubPickerOpen, setKlubPickerOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!user) return;
@@ -51,6 +54,11 @@ export default function MinhasReservasPage() {
     void getMe()
       .then((me) => {
         if (!cancelled) setMeId(me.id);
+      })
+      .catch(() => null);
+    void getMyKlubs()
+      .then((data) => {
+        if (!cancelled) setKlubs(data);
       })
       .catch(() => null);
     return () => {
@@ -88,20 +96,30 @@ export default function MinhasReservasPage() {
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-2xl space-y-4">
-        <header>
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
-            Você
-          </p>
-          <h1
-            className="mt-1 font-display text-[24px] font-bold leading-tight md:text-[30px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Reservas
-          </h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Reservas em todos os Klubs em que você participa.
-          </p>
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
+              Você
+            </p>
+            <h1
+              className="mt-1 font-display text-[24px] font-bold leading-tight md:text-[30px]"
+              style={{ letterSpacing: '-0.02em' }}
+            >
+              Reservas
+            </h1>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Reservas em todos os Klubs em que você participa.
+            </p>
+          </div>
+          <ReservarCTA klubs={klubs} onPickerOpen={() => setKlubPickerOpen(true)} />
         </header>
+
+        {klubPickerOpen ? (
+          <ReservarKlubPicker
+            klubs={klubs}
+            onClose={() => setKlubPickerOpen(false)}
+          />
+        ) : null}
 
         <div className="flex gap-1 border-b border-border">
           <TabButton active={tab === 'upcoming'} onClick={() => setTab('upcoming')} label="Próximas" />
@@ -165,6 +183,71 @@ export default function MinhasReservasPage() {
   );
 }
 
+function ReservarCTA({
+  klubs,
+  onPickerOpen,
+}: {
+  klubs: UserKlubMembership[];
+  onPickerOpen: () => void;
+}) {
+  if (klubs.length === 0) return null;
+  if (klubs.length === 1) {
+    const slug = klubs[0]?.klubSlug;
+    if (!slug) return null;
+    return (
+      <Link
+        href={`/k/${slug}/reservar`}
+        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+      >
+        <Plus className="size-3.5" />
+        Reservar quadra
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onPickerOpen}
+      className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+    >
+      <Plus className="size-3.5" />
+      Reservar quadra
+    </button>
+  );
+}
+
+function ReservarKlubPicker({
+  klubs,
+  onClose,
+}: {
+  klubs: UserKlubMembership[];
+  onClose: () => void;
+}) {
+  return (
+    <Modal title="Em qual Klub?" onClose={onClose}>
+      <p className="text-[13px] text-muted-foreground">
+        Você participa de mais de um Klub. Escolha onde reservar.
+      </p>
+      <ul className="mt-3 flex flex-col gap-1.5">
+        {klubs.map((k) => {
+          const label = k.klubCommonName ?? k.klubName;
+          return (
+            <li key={k.klubId}>
+              <Link
+                href={`/k/${k.klubSlug}/reservar`}
+                className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-[13.5px] font-medium hover:bg-muted"
+              >
+                <span className="truncate">{label}</span>
+                <span className="text-[11.5px] text-muted-foreground">{k.klubSlug}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </Modal>
+  );
+}
+
 function TabButton({
   active,
   onClick,
@@ -225,6 +308,7 @@ function BookingCard({
   const tone = statusTone(booking.status);
   const klubLabel = booking.klub.name;
   const hasActions = canCancel || canAddPlayers || canExtend;
+  const pendingExtension = booking.extensions.find((e) => e.status === 'pending');
 
   return (
     <div className="rounded-xl border border-border bg-card p-3.5">
@@ -237,6 +321,12 @@ function BookingCard({
             {klubLabel}
           </Link>
           <StatusBadge tone={tone} label={statusLabel(booking.status)} />
+          {pendingExtension ? (
+            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-amber-500/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+              <Timer className="size-3" />
+              Extensão pendente
+            </span>
+          ) : null}
         </div>
         <h3 className="mt-1 truncate font-display text-[15px] font-bold">
           {booking.space?.name ?? 'Quadra'}
