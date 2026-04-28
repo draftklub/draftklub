@@ -104,6 +104,8 @@ export class GetBracketHandler {
           tbdPlayer2Label: m.tbdPlayer2Label,
           spaceId: m.spaceId,
           spaceName: m.spaceId ? (spaceById.get(m.spaceId)?.name ?? null) : null,
+          nextMatchId: m.nextMatchId,
+          nextMatchSlot: m.nextMatchSlot as 'top' | 'bottom' | null,
         })),
       })),
     };

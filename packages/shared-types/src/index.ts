@@ -842,6 +842,9 @@ export interface TournamentMatchView {
   /** Sprint K PR-K5a — quadra alocada via schedule. */
   spaceId: string | null;
   spaceName: string | null;
+  /** Sprint K PR-K5e — refs pra renderização de bracket visual + tracking de cascata. */
+  nextMatchId: string | null;
+  nextMatchSlot: 'top' | 'bottom' | null;
 }
 
 /** Bracket completo organizado por categoria — GET /tournaments/:id/bracket. */
