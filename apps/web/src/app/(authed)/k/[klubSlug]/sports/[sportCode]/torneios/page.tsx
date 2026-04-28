@@ -3,11 +3,22 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { AlertCircle, ArrowLeft, ArrowRight, Calendar, Loader2, Trophy, Users } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  Loader2,
+  Plus,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import type { TournamentStatus } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
+import { getMe } from '@/lib/api/me';
 import { listKlubTournaments, type TournamentListItem } from '@/lib/api/tournaments';
+import { isPlatformLevel } from '@/lib/auth/role-helpers';
 import { cn } from '@/lib/utils';
 
 const SPORT_LABELS: Record<string, string> = {
@@ -39,12 +50,27 @@ export default function SportTournamentsPage() {
   const sportLabel = SPORT_LABELS[sportCode] ?? sportCode;
 
   const [tournaments, setTournaments] = React.useState<TournamentListItem[] | null>(null);
+  const [canCreate, setCanCreate] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!klub) return;
     let cancelled = false;
     setError(null);
+    void getMe()
+      .then((me) => {
+        if (cancelled) return;
+        const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
+        const local = me.roleAssignments.some(
+          (r) =>
+            (r.role === 'KLUB_ADMIN' ||
+              r.role === 'KLUB_ASSISTANT' ||
+              r.role === 'SPORT_COMMISSION') &&
+            r.scopeKlubId === klub.id,
+        );
+        setCanCreate(platform || local);
+      })
+      .catch(() => null);
     listKlubTournaments(klub.id, sportCode)
       .then((rows) => {
         if (!cancelled) setTournaments(rows);
@@ -93,16 +119,27 @@ export default function SportTournamentsPage() {
           {sportLabel}
         </Link>
 
-        <header>
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
-            {klub.commonName ?? klub.name} · {sportLabel}
-          </p>
-          <h1
-            className="mt-1 font-display text-[26px] font-bold leading-tight md:text-[32px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Torneios
-          </h1>
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
+              {klub.commonName ?? klub.name} · {sportLabel}
+            </p>
+            <h1
+              className="mt-1 font-display text-[26px] font-bold leading-tight md:text-[32px]"
+              style={{ letterSpacing: '-0.02em' }}
+            >
+              Torneios
+            </h1>
+          </div>
+          {canCreate ? (
+            <Link
+              href={`/k/${klub.slug}/sports/${sportCode}/torneios/novo`}
+              className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <Plus className="size-3.5" />
+              Criar
+            </Link>
+          ) : null}
         </header>
 
         {error ? (
@@ -121,7 +158,9 @@ export default function SportTournamentsPage() {
             </div>
             <p className="mt-3 font-display text-[14px] font-bold">Nenhum torneio ainda</p>
             <p className="mt-1 text-[12.5px] text-muted-foreground">
-              A comissão pode criar torneios via UI (em breve em PR-K2).
+              {canCreate
+                ? 'Clique em "Criar" no topo pra abrir o primeiro.'
+                : 'A comissão dessa modalidade ainda não criou nenhum.'}
             </p>
           </div>
         ) : (
