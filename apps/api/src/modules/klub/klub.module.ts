@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { KlubPrismaRepository } from './infrastructure/repositories/klub.prisma.repository';
 import { CreateKlubHandler } from './application/commands/create-klub.handler';
+import { UpdateKlubHandler } from './application/commands/update-klub.handler';
+import { DeactivateKlubHandler } from './application/commands/deactivate-klub.handler';
 import { GetKlubByIdHandler } from './application/queries/get-klub-by-id.handler';
 import { GetKlubBySlugHandler } from './application/queries/get-klub-by-slug.handler';
 import { ListKlubsHandler } from './application/queries/list-klubs.handler';
@@ -61,6 +63,8 @@ import { IdentityModule } from '../identity/identity.module';
   providers: [
     KlubPrismaRepository,
     CreateKlubHandler,
+    UpdateKlubHandler,
+    DeactivateKlubHandler,
     GetKlubByIdHandler,
     GetKlubBySlugHandler,
     ListKlubsHandler,

@@ -66,6 +66,50 @@ export function createKlub(input: CreateKlubInput): Promise<Klub> {
   return apiFetch<Klub>('/klubs', { method: 'POST', json: input });
 }
 
+export interface UpdateKlubInput {
+  // KLUB_ADMIN
+  name?: string;
+  description?: string | null;
+  type?: 'sports_club' | 'condo' | 'school' | 'public_space' | 'academy' | 'individual';
+  avatarUrl?: string | null;
+  coverUrl?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  cep?: string | null;
+  addressStreet?: string | null;
+  addressNumber?: string | null;
+  addressComplement?: string | null;
+  addressNeighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  discoverable?: boolean;
+  accessMode?: 'public' | 'private';
+  amenities?: Record<string, unknown>;
+  // SUPER_ADMIN-only
+  legalName?: string | null;
+  plan?: 'trial' | 'starter' | 'pro' | 'elite' | 'enterprise';
+  status?: 'trial' | 'active' | 'suspended' | 'churned' | 'pending_payment';
+  maxMembers?: number;
+  maxSports?: number;
+  maxCourts?: number;
+}
+
+/** PATCH /klubs/:id — KLUB_ADMIN ou SUPER_ADMIN. */
+export function updateKlub(id: string, input: UpdateKlubInput): Promise<Klub> {
+  return apiFetch<Klub>(`/klubs/${id}`, { method: 'PATCH', json: input });
+}
+
+/** DELETE /klubs/:id — SUPER_ADMIN-only. Soft-delete + status='suspended'. */
+export function deactivateKlub(id: string, reason?: string): Promise<Klub> {
+  return apiFetch<Klub>(`/klubs/${id}`, {
+    method: 'DELETE',
+    json: { reason },
+  });
+}
+
 /**
  * POST /klubs/slug/:slug/join — aceita convite por link. Adiciona o
  * user logado ao Klub como PLAYER (membership + role atomicamente).

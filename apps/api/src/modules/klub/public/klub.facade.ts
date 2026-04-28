@@ -3,6 +3,14 @@ import {
   CreateKlubHandler,
   type CreateKlubCommand,
 } from '../application/commands/create-klub.handler';
+import {
+  UpdateKlubHandler,
+  type UpdateKlubCommand,
+} from '../application/commands/update-klub.handler';
+import {
+  DeactivateKlubHandler,
+  type DeactivateKlubCommand,
+} from '../application/commands/deactivate-klub.handler';
 import { GetKlubByIdHandler } from '../application/queries/get-klub-by-id.handler';
 import { GetKlubBySlugHandler } from '../application/queries/get-klub-by-slug.handler';
 import { ListKlubsHandler } from '../application/queries/list-klubs.handler';
@@ -82,6 +90,8 @@ import type { AddMediaDto } from '../api/dtos/add-media.dto';
 export class KlubFacade {
   constructor(
     private readonly createKlubHandler: CreateKlubHandler,
+    private readonly updateKlubHandler: UpdateKlubHandler,
+    private readonly deactivateKlubHandler: DeactivateKlubHandler,
     private readonly getKlubByIdHandler: GetKlubByIdHandler,
     private readonly getKlubBySlugHandler: GetKlubBySlugHandler,
     private readonly listKlubsHandler: ListKlubsHandler,
@@ -118,6 +128,14 @@ export class KlubFacade {
 
   async createKlub(cmd: CreateKlubCommand) {
     return this.createKlubHandler.execute(cmd);
+  }
+
+  async updateKlub(cmd: UpdateKlubCommand) {
+    return this.updateKlubHandler.execute(cmd);
+  }
+
+  async deactivateKlub(cmd: DeactivateKlubCommand) {
+    return this.deactivateKlubHandler.execute(cmd);
   }
 
   async getKlubById(id: string, viewerId?: string) {
