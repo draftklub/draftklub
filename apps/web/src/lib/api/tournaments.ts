@@ -212,3 +212,47 @@ export function moveTournamentEntryCategory(
     json: input,
   });
 }
+
+// ─── Mutations (Sprint K PR-K3b — match reporting) ─────────────────────
+
+export interface ReportMatchInput {
+  winnerId: string;
+  score?: string;
+  notes?: string;
+}
+
+/**
+ * POST /tournaments/:id/matches/:matchId/result — reporta resultado.
+ * Backend distingue committee_only vs player_with_confirm baseado em
+ * `resultReportingMode` do torneio + se quem reporta é committee.
+ */
+export function reportTournamentMatch(
+  tournamentId: string,
+  matchId: string,
+  input: ReportMatchInput,
+): Promise<unknown> {
+  return apiFetch(`/tournaments/${tournamentId}/matches/${matchId}/result`, {
+    method: 'POST',
+    json: input,
+  });
+}
+
+/** POST /tournaments/:id/matches/:matchId/confirm — confirma resultado pendente. */
+export function confirmTournamentMatch(tournamentId: string, matchId: string): Promise<unknown> {
+  return apiFetch(`/tournaments/${tournamentId}/matches/${matchId}/confirm`, {
+    method: 'POST',
+    json: {},
+  });
+}
+
+/** PATCH /tournaments/:id/matches/:matchId/result — committee edita resultado. */
+export function editTournamentMatch(
+  tournamentId: string,
+  matchId: string,
+  input: ReportMatchInput,
+): Promise<unknown> {
+  return apiFetch(`/tournaments/${tournamentId}/matches/${matchId}/result`, {
+    method: 'PATCH',
+    json: input,
+  });
+}
