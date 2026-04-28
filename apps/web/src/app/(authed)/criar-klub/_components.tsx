@@ -187,8 +187,8 @@ export function Step1Identidade(p: Step1Props) {
             </div>
           </Field>
           {p.cnpjLookupData ? (
-            <div className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px]">
-              <p className="font-semibold text-[hsl(142_71%_32%)]">
+            <div className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px]">
+              <p className="font-semibold text-success">
                 <CheckCircle2 className="mr-1 inline size-3.5" />
                 {p.cnpjLookupData.razaoSocial ?? '(sem razão social)'}
               </p>
@@ -814,7 +814,7 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: 'green' | 
       className={cn(
         'inline-flex h-5 items-center rounded-full px-2 text-[10.5px] font-bold uppercase tracking-[0.06em]',
         tone === 'green'
-          ? 'bg-[hsl(142_71%_32%/0.12)] text-[hsl(142_71%_32%)]'
+          ? 'bg-success/12 text-success'
           : 'bg-muted text-muted-foreground',
       )}
     >

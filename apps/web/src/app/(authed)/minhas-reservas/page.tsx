@@ -133,7 +133,7 @@ export default function MinhasReservasPage() {
         </div>
 
         {actionMessage ? (
-          <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+          <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
             <CheckCircle2 className="mr-1 inline size-3.5" />
             {actionMessage}
           </p>
@@ -729,7 +729,7 @@ function StatusBadge({
 }) {
   const cls =
     tone === 'green'
-      ? 'bg-[hsl(142_71%_32%/0.12)] text-[hsl(142_71%_32%)]'
+      ? 'bg-success/12 text-success'
       : tone === 'amber'
         ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
         : tone === 'red'

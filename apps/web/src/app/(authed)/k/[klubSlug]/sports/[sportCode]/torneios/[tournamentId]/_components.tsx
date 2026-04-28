@@ -82,7 +82,7 @@ export function OperacoesView({
   return (
     <div className="space-y-4">
       {message ? (
-        <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+        <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
           <CheckCircle2 className="mr-1 inline size-3.5" />
           {message}
         </p>
@@ -598,7 +598,7 @@ function DrawSection({
         <Dices className="size-4 text-muted-foreground" />
         <h3 className="font-display text-[14px] font-bold">Sortear chave</h3>
         {isDrawn ? (
-          <span className="inline-flex h-5 items-center rounded-full bg-[hsl(142_71%_32%/0.12)] px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-[hsl(142_71%_32%)]">
+          <span className="inline-flex h-5 items-center rounded-full bg-success/12 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-success">
             Já sorteada
           </span>
         ) : null}
@@ -2424,7 +2424,7 @@ export function EntriesView({
   return (
     <div className="space-y-3">
       {actionMessage ? (
-        <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+        <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
           <CheckCircle2 className="mr-1 inline size-3.5" />
           {actionMessage}
         </p>
@@ -2544,9 +2544,9 @@ function RegistrationCTA({
   if (myEntry) {
     const canWithdraw = !isFinished && !isDrawn;
     return (
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3.5">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-success/30 bg-success/5 p-3.5">
         <div className="flex items-center gap-2 text-[12.5px]">
-          <CheckCircle2 className="size-4 text-[hsl(142_71%_32%)]" />
+          <CheckCircle2 className="size-4 text-success" />
           <span>
             <strong>Você está inscrito.</strong>{' '}
             {myEntry.status === 'pending_approval'
@@ -2681,7 +2681,7 @@ function EntryRow({
             type="button"
             onClick={() => void handleApprove()}
             disabled={submitting}
-            className="inline-flex h-8 items-center gap-1 rounded-md border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] px-2 text-[11px] font-semibold text-[hsl(142_71%_32%)] hover:bg-[hsl(142_71%_32%/0.1)] disabled:opacity-60"
+            className="inline-flex h-8 items-center gap-1 rounded-md border border-success/30 bg-success/5 px-2 text-[11px] font-semibold text-success hover:bg-success/10 disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3 animate-spin" />
@@ -2839,7 +2839,7 @@ function MoveCategoryModal({
 function EntryStatusBadge({ status }: { status: TournamentEntry['status'] }) {
   if (status === 'seeded') {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[hsl(142_71%_32%)]">
+      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-success">
         <CheckCircle2 className="size-3" />
         Confirmado
       </span>

@@ -183,7 +183,7 @@ export default function CadastroDetailPage() {
         </header>
 
         {actionSuccess ? (
-          <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[13px] text-[hsl(142_71%_32%)]">
+          <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[13px] text-success">
             <CheckCircle2 className="mr-1 inline size-3.5" />
             {actionSuccess}
           </p>
@@ -381,7 +381,7 @@ export default function CadastroDetailPage() {
               onClick={() => void handleApprove()}
               disabled={slugConflict || approving}
               title={slugConflict ? 'Resolva o conflito de slug primeiro' : undefined}
-              className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[hsl(142_71%_32%)] px-4 text-[13.5px] font-semibold text-white transition-colors hover:bg-[hsl(142_71%_28%)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-success px-4 text-[13.5px] font-semibold text-white transition-colors hover:bg-[hsl(142_71%_28%)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {approving ? (
                 <Loader2 className="size-3.5 animate-spin" />
@@ -478,7 +478,7 @@ function ReviewBadge({ status }: { status: 'pending' | 'approved' | 'rejected' }
     status === 'pending'
       ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
       : status === 'approved'
-        ? 'bg-[hsl(142_71%_32%/0.12)] text-[hsl(142_71%_32%)]'
+        ? 'bg-success/12 text-success'
         : 'bg-destructive/10 text-destructive';
   const label =
     status === 'pending' ? 'Pendente' : status === 'approved' ? 'Aprovado' : 'Rejeitado';

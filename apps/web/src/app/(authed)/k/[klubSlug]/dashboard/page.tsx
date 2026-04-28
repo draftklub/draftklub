@@ -43,7 +43,7 @@ const HOURS: { h: string; pct: number; prime: boolean }[] = [
 interface KpiData {
   label: string;
   icon: typeof CalendarDays;
-  value: string;
+  value: string | null;
   unit?: string;
   delta: string;
   deltaTone: 'up' | 'down';
@@ -87,13 +87,13 @@ const KPIS: KpiData[] = [
   {
     label: 'Receita do mês',
     icon: DollarSign,
-    value: 'R$ 64,8',
+    value: null,
     unit: 'k',
-    delta: '−2,1%',
-    deltaTone: 'down',
-    deltaContext: 'vs mês passado',
-    spark: '0,8 8,6 16,10 24,8 32,12 40,10 48,14 56,12',
-    sparkColor: 'destructive',
+    delta: '—',
+    deltaTone: 'up',
+    deltaContext: 'em breve',
+    spark: '',
+    sparkColor: 'primary',
   },
 ];
 
@@ -545,8 +545,8 @@ function KpiCard({ kpi }: { kpi: KpiData }) {
         className="mt-2 font-display text-[30px] font-bold leading-none tabular-nums"
         style={{ letterSpacing: '-0.02em' }}
       >
-        {kpi.value}
-        {kpi.unit ? (
+        {kpi.value ?? '—'}
+        {kpi.unit && kpi.value ? (
           <span
             className="ml-0.5 font-medium text-muted-foreground"
             style={{ fontSize: kpi.value.startsWith('R$') ? '16px' : '18px' }}
@@ -558,7 +558,7 @@ function KpiCard({ kpi }: { kpi: KpiData }) {
       <div
         className={cn(
           'mt-1.5 inline-flex items-center gap-1 font-mono text-[11.5px] font-semibold',
-          kpi.deltaTone === 'up' ? 'text-[hsl(142_71%_32%)]' : 'text-destructive',
+          kpi.deltaTone === 'up' ? 'text-success' : 'text-destructive',
         )}
       >
         {kpi.deltaTone === 'up' ? (

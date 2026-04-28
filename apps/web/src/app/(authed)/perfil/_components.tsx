@@ -1239,7 +1239,7 @@ function FormFooter({
         ) : null}
         {success ? (
           <p
-            className="flex items-start gap-1.5 text-[12.5px] text-[hsl(142_71%_32%)]"
+            className="flex items-start gap-1.5 text-[12.5px] text-success"
             role="status"
           >
             <Check className="mt-px size-3.5 shrink-0" />

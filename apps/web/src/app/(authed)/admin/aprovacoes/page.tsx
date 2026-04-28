@@ -237,7 +237,7 @@ function ReviewBadge({ status }: { status: KlubReviewStatus }) {
     status === 'pending'
       ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
       : status === 'approved'
-        ? 'bg-[hsl(142_71%_32%/0.12)] text-[hsl(142_71%_32%)]'
+        ? 'bg-success/12 text-success'
         : 'bg-destructive/10 text-destructive';
   const label =
     status === 'pending' ? 'Pendente' : status === 'approved' ? 'Aprovado' : 'Rejeitado';
@@ -256,7 +256,7 @@ function ReviewBadge({ status }: { status: KlubReviewStatus }) {
 function CnpjBadge({ status }: { status: string }) {
   const tone =
     status === 'ativa'
-      ? 'bg-[hsl(142_71%_32%/0.12)] text-[hsl(142_71%_32%)]'
+      ? 'bg-success/12 text-success'
       : 'bg-amber-500/15 text-amber-700 dark:text-amber-400';
   return (
     <span

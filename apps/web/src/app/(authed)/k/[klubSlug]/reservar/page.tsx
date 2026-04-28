@@ -630,7 +630,7 @@ function SuccessView({
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-10">
       <div className="mx-auto max-w-md text-center">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-[hsl(142_71%_32%)]">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-success">
           <CheckCircle2 className="size-7" strokeWidth={1.8} />
         </div>
         <h1

@@ -25,7 +25,7 @@ function Inner() {
   return (
     <main className="flex flex-1 items-center justify-center px-6 py-10 md:px-10 md:py-14">
       <div className="mx-auto w-full max-w-md text-center">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-[hsl(142_71%_32%)]">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-success">
           <CheckCircle2 className="size-7" strokeWidth={1.8} />
         </div>
 

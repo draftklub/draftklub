@@ -82,7 +82,7 @@ export default function EnrollRequestPage() {
         </header>
 
         {success ? (
-          <div className="rounded-xl border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-4 text-[13px] text-[hsl(142_71%_32%)]">
+          <div className="rounded-xl border border-success/30 bg-success/5 p-4 text-[13px] text-success">
             <CheckCircle2 className="mr-1 inline size-4" />
             <span className="font-semibold">Solicitação enviada!</span> Você vai receber um aviso
             quando for aprovada. Voltando pro Klub…

@@ -399,7 +399,7 @@ export function PerigosaTab({ klub, onDeactivated }: { klub: Klub; onDeactivated
         acesso. Reversível via SQL.
       </p>
       {message ? (
-        <p className="mt-3 rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+        <p className="mt-3 rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
           <CheckCircle2 className="mr-1 inline size-3.5" />
           {message}
         </p>
@@ -486,7 +486,7 @@ export function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferA
       </header>
 
       {message ? (
-        <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+        <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
           <CheckCircle2 className="mr-1 inline size-3.5" />
           {message}
         </p>
@@ -883,7 +883,7 @@ export function ModalidadesTab({ klub }: { klub: Klub }) {
       </div>
 
       {message ? (
-        <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+        <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
           <CheckCircle2 className="mr-1 inline size-3.5" />
           {message}
         </p>
@@ -913,7 +913,7 @@ export function ModalidadesTab({ klub }: { klub: Klub }) {
                 className={cn(
                   'flex items-center justify-between gap-3 rounded-lg border p-3.5 text-left transition-colors',
                   isEnabled
-                    ? 'border-[hsl(142_71%_32%)] bg-[hsl(142_71%_32%/0.05)]'
+                    ? 'border-success/30 bg-success/5'
                     : 'border-border bg-background hover:bg-muted',
                 )}
               >
@@ -924,7 +924,7 @@ export function ModalidadesTab({ klub }: { klub: Klub }) {
                 {loading ? (
                   <Loader2 className="size-4 animate-spin text-muted-foreground" />
                 ) : isEnabled ? (
-                  <CheckCircle2 className="size-4 text-[hsl(142_71%_32%)]" />
+                  <CheckCircle2 className="size-4 text-success" />
                 ) : (
                   <Plus className="size-4 text-muted-foreground" />
                 )}
@@ -983,7 +983,7 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
       </div>
 
       {message ? (
-        <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+        <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
           <CheckCircle2 className="mr-1 inline size-3.5" />
           {message}
         </p>
@@ -1309,7 +1309,7 @@ function Modal({
 function StatusBadge({ status }: { status: string }) {
   const tone =
     status === 'active'
-      ? 'bg-[hsl(142_71%_32%/0.12)] text-[hsl(142_71%_32%)]'
+      ? 'bg-success/12 text-success'
       : status === 'maintenance'
         ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
         : 'bg-muted text-muted-foreground';
@@ -1401,7 +1401,7 @@ function SaveStatus({ status }: { status: SaveStatusValue }) {
   if (status.kind === 'idle' || status.kind === 'saving') return null;
   if (status.kind === 'ok') {
     return (
-      <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-2.5 text-[12px] text-[hsl(142_71%_32%)]">
+      <p className="rounded-lg border border-success/30 bg-success/5 p-2.5 text-[12px] text-success">
         <CheckCircle2 className="mr-1 inline size-3.5" />
         {status.message}
       </p>
