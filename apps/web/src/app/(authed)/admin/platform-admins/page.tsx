@@ -124,7 +124,10 @@ export default function PlatformAdminsPage() {
           <p className="mt-1 text-[13px] text-muted-foreground">
             Owner concede acesso administrativo da plataforma. Quota máxima de{' '}
             <strong>{PLATFORM_ADMIN_QUOTA}</strong> Admins ativos —{' '}
-            <strong>{adminCount}/{PLATFORM_ADMIN_QUOTA}</strong> em uso.
+            <strong>
+              {adminCount}/{PLATFORM_ADMIN_QUOTA}
+            </strong>{' '}
+            em uso.
           </p>
         </header>
 
@@ -271,11 +274,7 @@ function AssignmentRow({
 
   async function handleRevoke() {
     if (submitting) return;
-    if (
-      !window.confirm(
-        `Revogar PLATFORM_ADMIN de ${item.userFullName} (${item.userEmail})?`,
-      )
-    ) {
+    if (!window.confirm(`Revogar PLATFORM_ADMIN de ${item.userFullName} (${item.userEmail})?`)) {
       return;
     }
     setSubmitting(true);
@@ -307,11 +306,7 @@ function AssignmentRow({
           disabled={submitting}
           className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
         >
-          {submitting ? (
-            <Loader2 className="size-3 animate-spin" />
-          ) : (
-            <Trash2 className="size-3" />
-          )}
+          {submitting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
           Revogar
         </button>
       ) : null}

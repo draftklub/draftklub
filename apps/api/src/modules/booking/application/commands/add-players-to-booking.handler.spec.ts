@@ -30,14 +30,19 @@ function makeBooking(overrides: {
   };
 }
 
-function buildPrisma(booking: ReturnType<typeof makeBooking>, users: Record<string, { id: string; fullName: string }>) {
+function buildPrisma(
+  booking: ReturnType<typeof makeBooking>,
+  users: Record<string, { id: string; fullName: string }>,
+) {
   return {
     booking: {
       findUnique: vi.fn().mockResolvedValue(booking),
       findMany: vi.fn().mockResolvedValue([]),
-      update: vi.fn().mockImplementation((args: { data: { otherPlayers: unknown } }) =>
-        Promise.resolve({ ...booking, otherPlayers: args.data.otherPlayers }),
-      ),
+      update: vi
+        .fn()
+        .mockImplementation((args: { data: { otherPlayers: unknown } }) =>
+          Promise.resolve({ ...booking, otherPlayers: args.data.otherPlayers }),
+        ),
     },
     klub: {
       findUnique: vi.fn().mockResolvedValue({
@@ -46,9 +51,11 @@ function buildPrisma(booking: ReturnType<typeof makeBooking>, users: Record<stri
       }),
     },
     user: {
-      findUnique: vi.fn().mockImplementation((args: { where: { id: string } }) =>
-        Promise.resolve(users[args.where.id] ?? null),
-      ),
+      findUnique: vi
+        .fn()
+        .mockImplementation((args: { where: { id: string } }) =>
+          Promise.resolve(users[args.where.id] ?? null),
+        ),
     },
   };
 }
@@ -82,9 +89,7 @@ describe('AddPlayersToBookingHandler', () => {
     const updateArg = prisma.booking.update.mock.calls[0]?.[0] as {
       data: { otherPlayers: { userId: string; name: string }[] };
     };
-    expect(updateArg.data.otherPlayers).toEqual([
-      { userId: NEW_USER_ID, name: 'New Player' },
-    ]);
+    expect(updateArg.data.otherPlayers).toEqual([{ userId: NEW_USER_ID, name: 'New Player' }]);
     expect(result.otherPlayers).toHaveLength(1);
   });
 

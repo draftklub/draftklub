@@ -117,7 +117,12 @@ export function SpaceForm({
           <select
             value={v.sportCode ?? ''}
             onChange={(e) =>
-              set('sportCode', e.target.value === '' ? undefined : (e.target.value as SpaceFormValues['sportCode']))
+              set(
+                'sportCode',
+                e.target.value === ''
+                  ? undefined
+                  : (e.target.value as SpaceFormValues['sportCode']),
+              )
             }
             className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
           >
@@ -135,7 +140,10 @@ export function SpaceForm({
           <select
             value={v.surface ?? ''}
             onChange={(e) =>
-              set('surface', e.target.value === '' ? undefined : (e.target.value as SpaceFormValues['surface']))
+              set(
+                'surface',
+                e.target.value === '' ? undefined : (e.target.value as SpaceFormValues['surface']),
+              )
             }
             className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
           >

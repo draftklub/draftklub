@@ -60,9 +60,7 @@ export class CnpjLookupService {
       });
       if (!res.ok) {
         const body = await res.text().catch(() => '<unreadable>');
-        this.logger.warn(
-          `BrasilAPI CNPJ ${digits} HTTP ${res.status}: ${body.slice(0, 300)}`,
-        );
+        this.logger.warn(`BrasilAPI CNPJ ${digits} HTTP ${res.status}: ${body.slice(0, 300)}`);
         return null;
       }
       const data = (await res.json()) as Record<string, unknown>;

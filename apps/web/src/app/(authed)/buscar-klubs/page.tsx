@@ -147,17 +147,7 @@ export default function BuscarKlubsPage() {
     return () => {
       cancelled = true;
     };
-  }, [
-    debouncedQ,
-    state,
-    sport,
-    hasAnyFilter,
-    reloadToken,
-    useGeo,
-    geoCoords,
-    radiusKm,
-    period,
-  ]);
+  }, [debouncedQ, state, sport, hasAnyFilter, reloadToken, useGeo, geoCoords, radiusKm, period]);
 
   return (
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
@@ -297,7 +287,9 @@ export default function BuscarKlubsPage() {
                   )}
                 >
                   <span>{p.label}</span>
-                  <span className={cn('text-[11px]', active ? 'opacity-90' : 'text-muted-foreground')}>
+                  <span
+                    className={cn('text-[11px]', active ? 'opacity-90' : 'text-muted-foreground')}
+                  >
                     {p.hint}
                   </span>
                 </button>
@@ -306,8 +298,8 @@ export default function BuscarKlubsPage() {
           </div>
           {period ? (
             <p className="mt-2 text-[11.5px] text-muted-foreground">
-              Mostra Klubs com quadras operando nesse período. Pode estar lotado — confira ao
-              clicar em &quot;Reservar&quot;.
+              Mostra Klubs com quadras operando nesse período. Pode estar lotado — confira ao clicar
+              em &quot;Reservar&quot;.
             </p>
           ) : null}
         </div>

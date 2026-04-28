@@ -110,10 +110,7 @@ export function getBooking(bookingId: string): Promise<BookingListItem> {
  * DELETE /bookings/:bookingId — cancela reserva. Backend exige body
  * com `reason` (10-500 chars).
  */
-export function cancelBooking(
-  bookingId: string,
-  reason: string,
-): Promise<{ id: string }> {
+export function cancelBooking(bookingId: string, reason: string): Promise<{ id: string }> {
   return apiFetch<{ id: string }>(`/bookings/${bookingId}`, {
     method: 'DELETE',
     json: { reason },

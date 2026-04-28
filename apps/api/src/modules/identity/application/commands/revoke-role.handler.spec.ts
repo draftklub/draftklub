@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { RevokeRoleHandler } from './revoke-role.handler';
 import { PolicyEngine } from '../../../../shared/auth/policy.engine';
 import type { AuthenticatedUser } from '../../../../shared/auth/authenticated-user.interface';
@@ -22,13 +18,15 @@ function ownerCaller(): AuthenticatedUser {
   };
 }
 
-function assignmentRow(overrides: Partial<{
-  id: string;
-  userId: string;
-  role: string;
-  scopeKlubId: string | null;
-  scopeSportId: string | null;
-}> = {}) {
+function assignmentRow(
+  overrides: Partial<{
+    id: string;
+    userId: string;
+    role: string;
+    scopeKlubId: string | null;
+    scopeSportId: string | null;
+  }> = {},
+) {
   return {
     id: ASSIGN_ID,
     userId: ADMIN_USER_ID,
@@ -148,9 +146,7 @@ describe('RevokeRoleHandler', () => {
   });
 
   it('KLUB_ADMIN revoga KLUB_ASSISTANT do seu Klub OK', async () => {
-    prisma = makePrisma(
-      assignmentRow({ role: 'KLUB_ASSISTANT', scopeKlubId: KLUB_ID }),
-    );
+    prisma = makePrisma(assignmentRow({ role: 'KLUB_ASSISTANT', scopeKlubId: KLUB_ID }));
     const klubAdminCaller: AuthenticatedUser = {
       userId: 'admin-of-klub',
       firebaseUid: 'fb',

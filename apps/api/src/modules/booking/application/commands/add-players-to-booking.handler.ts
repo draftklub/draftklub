@@ -63,9 +63,7 @@ export class AddPlayersToBookingHandler {
     if (!booking || booking.deletedAt) throw new NotFoundException('Booking not found');
 
     if (booking.status !== 'confirmed' && booking.status !== 'pending') {
-      throw new BadRequestException(
-        `Cannot add players to a ${booking.status} booking`,
-      );
+      throw new BadRequestException(`Cannot add players to a ${booking.status} booking`);
     }
     if (booking.startsAt < new Date()) {
       throw new BadRequestException('Cannot add players to a booking that already started');
@@ -76,9 +74,7 @@ export class AddPlayersToBookingHandler {
 
     const isPrimary = booking.primaryPlayerId === cmd.requestedById;
     if (!isPrimary && !cmd.isStaff) {
-      throw new ForbiddenException(
-        'Only the primary player or staff can add players to a booking',
-      );
+      throw new ForbiddenException('Only the primary player or staff can add players to a booking');
     }
 
     const klub = await this.prisma.klub.findUnique({

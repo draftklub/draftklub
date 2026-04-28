@@ -40,8 +40,8 @@ function buildPrisma(booking: ReturnType<typeof makeBooking>, klub: ReturnType<t
     outboxEvent: { create: vi.fn().mockResolvedValue({ id: 'evt-1' }) },
     $transaction: vi.fn(),
   };
-  prisma.$transaction.mockImplementation(
-    async (fn: (tx: typeof prisma) => Promise<unknown>) => fn(prisma),
+  prisma.$transaction.mockImplementation(async (fn: (tx: typeof prisma) => Promise<unknown>) =>
+    fn(prisma),
   );
   return prisma;
 }

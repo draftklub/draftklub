@@ -17,9 +17,11 @@ function makePrisma(futureBookingsCount: number) {
   return {
     booking: { count: vi.fn().mockResolvedValue(futureBookingsCount) },
     space: {
-      update: vi.fn().mockImplementation((args: { data: Record<string, unknown> }) =>
-        Promise.resolve({ id: SPACE_ID, ...args.data }),
-      ),
+      update: vi
+        .fn()
+        .mockImplementation((args: { data: Record<string, unknown> }) =>
+          Promise.resolve({ id: SPACE_ID, ...args.data }),
+        ),
     },
   };
 }
@@ -52,9 +54,9 @@ describe('DeleteSpaceHandler', () => {
     (handler as unknown as { prisma: unknown; spaceRepo: unknown }).prisma = prisma;
     (handler as unknown as { spaceRepo: unknown }).spaceRepo = repo;
 
-    await expect(
-      handler.execute({ klubId: KLUB_ID, spaceId: SPACE_ID }),
-    ).rejects.toThrow(/3 future booking/);
+    await expect(handler.execute({ klubId: KLUB_ID, spaceId: SPACE_ID })).rejects.toThrow(
+      /3 future booking/,
+    );
     expect(prisma.space.update).not.toHaveBeenCalled();
   });
 
@@ -64,9 +66,9 @@ describe('DeleteSpaceHandler', () => {
     (handler as unknown as { prisma: unknown; spaceRepo: unknown }).prisma = prisma;
     (handler as unknown as { spaceRepo: unknown }).spaceRepo = repo;
 
-    await expect(
-      handler.execute({ klubId: KLUB_ID, spaceId: SPACE_ID }),
-    ).rejects.toThrow(/não pertence/);
+    await expect(handler.execute({ klubId: KLUB_ID, spaceId: SPACE_ID })).rejects.toThrow(
+      /não pertence/,
+    );
   });
 
   it('404 quando space não existe ou já deletado', async () => {
@@ -74,8 +76,8 @@ describe('DeleteSpaceHandler', () => {
     (handler as unknown as { prisma: unknown; spaceRepo: unknown }).prisma = makePrisma(0);
     (handler as unknown as { spaceRepo: unknown }).spaceRepo = repo;
 
-    await expect(
-      handler.execute({ klubId: KLUB_ID, spaceId: SPACE_ID }),
-    ).rejects.toThrow(/não encontrado/);
+    await expect(handler.execute({ klubId: KLUB_ID, spaceId: SPACE_ID })).rejects.toThrow(
+      /não encontrado/,
+    );
   });
 });

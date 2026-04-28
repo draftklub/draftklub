@@ -17,11 +17,7 @@ import {
   Trophy,
   X,
 } from 'lucide-react';
-import type {
-  PlayerSportEnrollment,
-  UserKlubMembership,
-  Role,
-} from '@draftklub/shared-types';
+import type { PlayerSportEnrollment, UserKlubMembership, Role } from '@draftklub/shared-types';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { useAuth } from '@/components/auth-provider';
 import { listMyEnrollments } from '@/lib/api/enrollments';
@@ -196,7 +192,9 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
             href="/klubs"
             label="Klubs"
             icon={Castle}
-            active={pathname === '/klubs' || pathname === '/criar-klub' || pathname === '/buscar-klubs'}
+            active={
+              pathname === '/klubs' || pathname === '/criar-klub' || pathname === '/buscar-klubs'
+            }
             onNavigate={onClose}
           />
           <NavLink href="#" label="Notificações" icon={Bell} disabled badge="em breve" />
@@ -242,7 +240,10 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
                 href="/admin/aprovacoes"
                 label="Aprovações"
                 icon={Shield}
-                active={pathname.startsWith('/admin/aprovacoes') || pathname.startsWith('/admin/cadastros')}
+                active={
+                  pathname.startsWith('/admin/aprovacoes') ||
+                  pathname.startsWith('/admin/cadastros')
+                }
                 onNavigate={onClose}
               />
               {isOwner ? (

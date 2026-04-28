@@ -197,7 +197,7 @@ function CriarKlubFlow() {
 
     // Nome popular = nome fantasia (se diferente da razão social e ainda vazio).
     if (data.nomeFantasia && data.nomeFantasia !== data.razaoSocial) {
-      setCommonName((prev) => (prev.trim() ? prev : data.nomeFantasia ?? ''));
+      setCommonName((prev) => (prev.trim() ? prev : (data.nomeFantasia ?? '')));
     }
 
     // Email/telefone só preenche se vazio (user pode ter intenção própria).
@@ -622,8 +622,8 @@ function Step1Identidade(p: Step1Props) {
               <p className="mt-1.5 text-muted-foreground">
                 Preenchemos pra você: razão social, nome popular, endereço
                 {p.cnpjLookupData.contato.email ? ', email' : ''}
-                {p.cnpjLookupData.contato.telefone ? ', telefone' : ''}
-                . Você pode editar no próximo passo.
+                {p.cnpjLookupData.contato.telefone ? ', telefone' : ''}. Você pode editar no próximo
+                passo.
               </p>
             </div>
           ) : p.cnpjLookupTried && !p.cnpjLookupLoading ? (

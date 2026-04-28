@@ -34,11 +34,7 @@ import {
   type UpdateKlubInput,
 } from '@/lib/api/klubs';
 import { addSportToKlub, listKlubSports, listSports } from '@/lib/api/sports';
-import {
-  grantKlubRole,
-  listKlubRoleAssignments,
-  revokeKlubRole,
-} from '@/lib/api/role-assignments';
+import { grantKlubRole, listKlubRoleAssignments, revokeKlubRole } from '@/lib/api/role-assignments';
 import {
   createSpace,
   deleteSpace,
@@ -110,9 +106,7 @@ export default function ConfigurarKlubPage() {
         const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
         setIsPlatform(platform);
         const klubAdmin = me.roleAssignments.some(
-          (r) =>
-            (r.role === 'KLUB_ADMIN' || r.role === 'KLUB_ASSISTANT') &&
-            r.scopeKlubId === k.id,
+          (r) => (r.role === 'KLUB_ADMIN' || r.role === 'KLUB_ASSISTANT') && r.scopeKlubId === k.id,
         );
         setIsKlubAdmin(platform || klubAdmin);
       })
@@ -243,9 +237,7 @@ function TabBar({
                 onClick={() => onSelect(t.id)}
                 className={cn(
                   'relative inline-flex h-10 items-center px-3 text-[13px] font-medium transition-colors',
-                  isActive
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
+                  isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 {t.label}
@@ -584,9 +576,7 @@ function PerigosaTab({ klub, onDeactivated }: { klub: Klub; onDeactivated: () =>
   async function handleDeactivate() {
     const reason = window.prompt('Motivo da desativação (opcional)');
     if (reason === null) return;
-    if (
-      !window.confirm(`Desativar o Klub "${klub.name}"? Members perdem acesso até reativação.`)
-    ) {
+    if (!window.confirm(`Desativar o Klub "${klub.name}"? Members perdem acesso até reativação.`)) {
       return;
     }
     setError(null);
@@ -626,7 +616,11 @@ function PerigosaTab({ klub, onDeactivated }: { klub: Klub; onDeactivated: () =>
         disabled={submitting}
         className="mt-3 inline-flex h-10 items-center gap-1.5 rounded-lg border border-destructive bg-destructive/10 px-3 text-[12.5px] font-semibold text-destructive hover:bg-destructive/20 disabled:opacity-60"
       >
-        {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Power className="size-3.5" />}
+        {submitting ? (
+          <Loader2 className="size-3.5 animate-spin" />
+        ) : (
+          <Power className="size-3.5" />
+        )}
         Desativar Klub
       </button>
     </div>
@@ -635,10 +629,26 @@ function PerigosaTab({ klub, onDeactivated }: { klub: Klub; onDeactivated: () =>
 
 // ─── Equipe tab (PR-J2b) ─────────────────────────────────────────────────
 
-const KLUB_GRANTABLE_ROLES: { value: 'KLUB_ASSISTANT' | 'SPORT_COMMISSION' | 'SPORT_STAFF'; label: string; hint: string }[] = [
-  { value: 'KLUB_ASSISTANT', label: 'Klub Assistant', hint: 'Mesma capacidade do Admin, exceto mexer em roles do Admin.' },
-  { value: 'SPORT_COMMISSION', label: 'Sport Commission', hint: 'Organiza torneios, ranking e match da modalidade.' },
-  { value: 'SPORT_STAFF', label: 'Sport Staff', hint: 'Operação dia-a-dia: cria/aprova/cancela bookings.' },
+const KLUB_GRANTABLE_ROLES: {
+  value: 'KLUB_ASSISTANT' | 'SPORT_COMMISSION' | 'SPORT_STAFF';
+  label: string;
+  hint: string;
+}[] = [
+  {
+    value: 'KLUB_ASSISTANT',
+    label: 'Klub Assistant',
+    hint: 'Mesma capacidade do Admin, exceto mexer em roles do Admin.',
+  },
+  {
+    value: 'SPORT_COMMISSION',
+    label: 'Sport Commission',
+    hint: 'Organiza torneios, ranking e match da modalidade.',
+  },
+  {
+    value: 'SPORT_STAFF',
+    label: 'Sport Staff',
+    hint: 'Operação dia-a-dia: cria/aprova/cancela bookings.',
+  },
 ];
 
 function EquipeTab({ klub }: { klub: Klub }) {
@@ -841,7 +851,11 @@ function EquipeGrantForm({
           disabled={submitting || !email.trim()}
           className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
         >
-          {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Plus className="size-3.5" />
+          )}
           Conceder
         </button>
       </div>
@@ -974,8 +988,8 @@ function ModalidadesTab({ klub }: { klub: Klub }) {
       <div>
         <h2 className="font-display text-[14px] font-bold">Modalidades</h2>
         <p className="mt-1 text-[12.5px] text-muted-foreground">
-          Cada modalidade habilita catálogo próprio (ranking, torneios, regras de partida). Habilita só
-          o que tu realmente atende.
+          Cada modalidade habilita catálogo próprio (ranking, torneios, regras de partida). Habilita
+          só o que tu realmente atende.
         </p>
       </div>
 
@@ -1361,7 +1375,11 @@ function DeleteConfirmModal({
             disabled={submitting}
             className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
           >
-            {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+            {submitting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="size-3.5" />
+            )}
             Excluir quadra
           </button>
         </div>
@@ -1406,8 +1424,7 @@ function StatusBadge({ status }: { status: string }) {
       : status === 'maintenance'
         ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
         : 'bg-muted text-muted-foreground';
-  const label =
-    status === 'active' ? 'Ativa' : status === 'maintenance' ? 'Manutenção' : 'Inativa';
+  const label = status === 'active' ? 'Ativa' : status === 'maintenance' ? 'Manutenção' : 'Inativa';
   return (
     <span
       className={cn(

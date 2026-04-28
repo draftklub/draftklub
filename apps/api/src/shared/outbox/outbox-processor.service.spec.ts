@@ -155,10 +155,7 @@ interface MockBookingCandidate {
   reminderSentAt?: Date | null;
 }
 
-function buildReminderProcessor(opts: {
-  candidates?: MockBookingCandidate[];
-  raceLost?: boolean;
-}) {
+function buildReminderProcessor(opts: { candidates?: MockBookingCandidate[]; raceLost?: boolean }) {
   const candidates = opts.candidates ?? [];
   const findMany = vi.fn((_args: unknown) => Promise.resolve(candidates));
   const updateMany = vi.fn(

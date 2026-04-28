@@ -115,14 +115,15 @@ export default function MinhasReservasPage() {
         </header>
 
         {klubPickerOpen ? (
-          <ReservarKlubPicker
-            klubs={klubs}
-            onClose={() => setKlubPickerOpen(false)}
-          />
+          <ReservarKlubPicker klubs={klubs} onClose={() => setKlubPickerOpen(false)} />
         ) : null}
 
         <div className="flex gap-1 border-b border-border">
-          <TabButton active={tab === 'upcoming'} onClick={() => setTab('upcoming')} label="Próximas" />
+          <TabButton
+            active={tab === 'upcoming'}
+            onClick={() => setTab('upcoming')}
+            label="Próximas"
+          />
           <TabButton active={tab === 'past'} onClick={() => setTab('past')} label="Passadas" />
           <TabButton
             active={tab === 'cancelled'}
@@ -164,9 +165,7 @@ export default function MinhasReservasPage() {
                     meId={meId}
                     canCancel={tab === 'upcoming' && b.status !== 'cancelled'}
                     canAddPlayers={
-                      tab === 'upcoming' &&
-                      b.status === 'confirmed' &&
-                      b.primaryPlayerId === meId
+                      tab === 'upcoming' && b.status === 'confirmed' && b.primaryPlayerId === meId
                     }
                     canExtend={tab === 'upcoming' && b.status === 'confirmed'}
                     onActed={(msg) => {
@@ -584,7 +583,11 @@ function AddPlayersModal({
           disabled={!valid || submitting}
           className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
         >
-          {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Plus className="size-3.5" />
+          )}
           Adicionar
         </button>
       </div>
@@ -629,8 +632,7 @@ function ExtendModal({
   return (
     <Modal title="Estender reserva" onClose={onClose}>
       <p className="text-[13px] text-muted-foreground">
-        Dependendo da config do Klub a extensão pode ser automática ou aguardar
-        aprovação do staff.
+        Dependendo da config do Klub a extensão pode ser automática ou aguardar aprovação do staff.
       </p>
       <div className="mt-3 flex gap-2">
         {[30, 60, 90].map((m) => (
@@ -677,7 +679,11 @@ function ExtendModal({
           disabled={submitting}
           className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
         >
-          {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Timer className="size-3.5" />}
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Timer className="size-3.5" />
+          )}
           Solicitar
         </button>
       </div>

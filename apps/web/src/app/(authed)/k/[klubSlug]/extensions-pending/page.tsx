@@ -220,7 +220,11 @@ function ExtensionCard({
           disabled={busy !== null}
           className="inline-flex h-9 items-center gap-1 rounded-md bg-primary px-3 text-[12px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
         >
-          {busy === 'approve' ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
+          {busy === 'approve' ? (
+            <Loader2 className="size-3 animate-spin" />
+          ) : (
+            <Check className="size-3" />
+          )}
           Aprovar
         </button>
         <button
@@ -229,7 +233,11 @@ function ExtensionCard({
           disabled={busy !== null}
           className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-3 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
         >
-          {busy === 'reject' ? <Loader2 className="size-3 animate-spin" /> : <X className="size-3" />}
+          {busy === 'reject' ? (
+            <Loader2 className="size-3 animate-spin" />
+          ) : (
+            <X className="size-3" />
+          )}
           Rejeitar
         </button>
       </div>
