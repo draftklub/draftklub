@@ -312,6 +312,35 @@ export interface RoleAssignment {
 }
 
 /**
+ * Sprint Polish PR-J2 — payload de listagem de role assignments para a UI
+ * de gestão de equipe (platform admins + klub team).
+ */
+export interface RoleAssignmentListItem {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userFullName: string;
+  role: Role;
+  scopeKlubId: string | null;
+  scopeSportId: string | null;
+  /** ISO timestamp. */
+  grantedAt: string;
+  grantedBy: string | null;
+}
+
+/** POST /platform/role-assignments — Owner concede PLATFORM_ADMIN. */
+export interface GrantPlatformRoleInput {
+  email: string;
+}
+
+/** POST /klubs/:klubId/role-assignments — KLUB_ADMIN concede roles scopadas. */
+export interface GrantKlubRoleInput {
+  email: string;
+  role: 'KLUB_ASSISTANT' | 'SPORT_COMMISSION' | 'SPORT_STAFF';
+  scopeSportId?: string;
+}
+
+/**
  * Resposta de `GET /me`. Identidade mínima do user logado + roles.
  *
  * Não inclui memberships — pra isso usar `GET /me/klubs` (Onda 1 PR3).

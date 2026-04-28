@@ -5,12 +5,16 @@ import { GetUserByFirebaseUidHandler } from './application/queries/get-user-by-f
 import { GetMyKlubsHandler } from './application/queries/get-my-klubs.handler';
 import { GetMeHandler } from './application/queries/get-me.handler';
 import { UpdateMeHandler } from './application/commands/update-me.handler';
+import { GrantRoleHandler } from './application/commands/grant-role.handler';
+import { RevokeRoleHandler } from './application/commands/revoke-role.handler';
+import { ListRoleAssignmentsHandler } from './application/queries/list-role-assignments.handler';
 import { IdentityFacade } from './public/identity.facade';
 import { IdentityController } from './api/identity.controller';
+import { RoleAssignmentsController } from './api/role-assignments.controller';
 import { FirebaseAuthGuard } from '../../shared/auth/firebase-auth.guard';
 
 @Module({
-  controllers: [IdentityController],
+  controllers: [IdentityController, RoleAssignmentsController],
   providers: [
     UserPrismaRepository,
     SyncUserHandler,
@@ -18,6 +22,9 @@ import { FirebaseAuthGuard } from '../../shared/auth/firebase-auth.guard';
     GetMyKlubsHandler,
     GetMeHandler,
     UpdateMeHandler,
+    GrantRoleHandler,
+    RevokeRoleHandler,
+    ListRoleAssignmentsHandler,
     IdentityFacade,
     FirebaseAuthGuard,
   ],
