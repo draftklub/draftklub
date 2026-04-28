@@ -187,7 +187,7 @@ function KlubWeatherRow() {
 
 /**
  * Sprint Polish PR-I1 — actions admin do Klub que antes ficavam na
- * sidebar. Visível só pra KLUB_ADMIN/STAFF (e futuramente KLUB_ASSISTANT).
+ * sidebar. Visível pra KLUB_ADMIN, KLUB_ASSISTANT e SPORT_STAFF.
  */
 function KlubAdminActions() {
   const { klub } = useActiveKlub();
@@ -201,7 +201,9 @@ function KlubAdminActions() {
         if (cancelled) return;
         const m = memberships.find((x) => x.klubId === klub.id);
         const role = m?.role;
-        setIsAdmin(role === 'KLUB_ADMIN' || role === 'SPORT_STAFF');
+        setIsAdmin(
+          role === 'KLUB_ADMIN' || role === 'KLUB_ASSISTANT' || role === 'SPORT_STAFF',
+        );
       })
       .catch(() => null);
     return () => {
@@ -213,22 +215,16 @@ function KlubAdminActions() {
 
   const cards = [
     {
-      label: 'Editar Klub',
-      hint: 'Identidade, contato, endereço, visibilidade',
+      label: 'Configurar Klub',
+      hint: 'Identidade, contato, endereço, modalidades, quadras',
       icon: Settings,
-      href: `/k/${klub.slug}/editar`,
+      href: `/k/${klub.slug}/configurar`,
     },
     {
       label: 'Quadras',
-      hint: 'Gerenciar espaços e modalidades',
+      hint: 'Adicionar/editar espaços e horários',
       icon: LayoutGrid,
-      href: `/k/${klub.slug}/quadras`,
-    },
-    {
-      label: 'Configurar Klub',
-      hint: 'Hours bands, regras, modalidades',
-      icon: Sparkles,
-      href: `/k/${klub.slug}/onboarding`,
+      href: `/k/${klub.slug}/configurar?tab=quadras`,
     },
     {
       label: 'Solicitações',
@@ -320,7 +316,7 @@ function OnboardingBanner() {
 
   return (
     <Link
-      href={`/k/${klub.slug}/onboarding`}
+      href={`/k/${klub.slug}/configurar?tab=modalidades`}
       className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
     >
       <div className="flex items-start gap-3">

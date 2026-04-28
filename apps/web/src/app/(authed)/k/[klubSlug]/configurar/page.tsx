@@ -1,0 +1,1278 @@
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Loader2,
+  MapPin,
+  Pencil,
+  Plus,
+  Power,
+  Save,
+  Trash2,
+} from 'lucide-react';
+import type {
+  Klub,
+  KlubSportProfile,
+  Space,
+  SportCatalog,
+} from '@draftklub/shared-types';
+import { ApiError } from '@/lib/api/client';
+import { useActiveKlub } from '@/components/active-klub-provider';
+import { getMe } from '@/lib/api/me';
+import {
+  deactivateKlub as apiDeactivateKlub,
+  getKlubById,
+  updateKlub,
+  type UpdateKlubInput,
+} from '@/lib/api/klubs';
+import { addSportToKlub, listKlubSports, listSports } from '@/lib/api/sports';
+import {
+  createSpace,
+  deleteSpace,
+  listKlubSpaces,
+  updateSpace,
+  type CreateSpaceInput,
+  type UpdateSpaceInput,
+} from '@/lib/api/spaces';
+import { isPlatformLevel } from '@/lib/auth/role-helpers';
+import { SpaceForm } from '@/components/spaces/space-form';
+import { cn } from '@/lib/utils';
+
+/**
+ * Sprint Polish PR-I2 — página unificada de configuração do Klub.
+ * Substitui /editar + /onboarding + /quadras com tab routing por search param.
+ * Cada tab faz save isolado do seu subset; perigosa+legal só pra Platform-level.
+ */
+
+type TabId =
+  | 'identidade'
+  | 'localizacao'
+  | 'contato'
+  | 'visibilidade'
+  | 'modalidades'
+  | 'quadras'
+  | 'legal'
+  | 'perigosa';
+
+const DEFAULT_TAB: TabId = 'identidade';
+
+interface TabDef {
+  id: TabId;
+  label: string;
+  platformOnly?: boolean;
+}
+
+const TABS: TabDef[] = [
+  { id: 'identidade', label: 'Identidade' },
+  { id: 'localizacao', label: 'Localização' },
+  { id: 'contato', label: 'Contato' },
+  { id: 'visibilidade', label: 'Visibilidade' },
+  { id: 'modalidades', label: 'Modalidades' },
+  { id: 'quadras', label: 'Quadras' },
+  { id: 'legal', label: 'Legal', platformOnly: true },
+  { id: 'perigosa', label: 'Zona perigosa', platformOnly: true },
+];
+
+export default function ConfigurarKlubPage() {
+  const { klub: ctxKlub } = useActiveKlub();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get('tab') as TabId | null;
+
+  const [klub, setKlub] = React.useState<Klub | null>(null);
+  const [isPlatform, setIsPlatform] = React.useState(false);
+  const [bootError, setBootError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!ctxKlub) return;
+    let cancelled = false;
+    void Promise.all([getKlubById(ctxKlub.id), getMe()])
+      .then(([k, me]) => {
+        if (cancelled) return;
+        setKlub(k);
+        setIsPlatform(me.roleAssignments.some((r) => isPlatformLevel(r.role)));
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setBootError(err instanceof Error ? err.message : 'Erro ao carregar Klub.');
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ctxKlub]);
+
+  const visibleTabs = TABS.filter((t) => !t.platformOnly || isPlatform);
+  const matchedTab = requestedTab ? visibleTabs.find((t) => t.id === requestedTab) : undefined;
+  const activeTab: TabId = matchedTab ? matchedTab.id : DEFAULT_TAB;
+
+  function setActiveTab(id: TabId) {
+    if (!klub) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', id);
+    router.replace(`/k/${klub.slug}/configurar?${params.toString()}`);
+  }
+
+  function handleKlubUpdated(updated: Klub) {
+    if (updated.slug !== klub?.slug) {
+      window.location.href = `/k/${updated.slug}/configurar?tab=${activeTab}`;
+      return;
+    }
+    setKlub(updated);
+  }
+
+  if (!ctxKlub) return null;
+
+  if (bootError) {
+    return (
+      <main className="flex flex-1 items-center justify-center px-4">
+        <p className="text-[13px] text-destructive">{bootError}</p>
+      </main>
+    );
+  }
+
+  if (!klub) {
+    return (
+      <main className="flex flex-1 items-center justify-center">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      </main>
+    );
+  }
+
+  return (
+    <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
+      <div className="mx-auto max-w-3xl space-y-4">
+        <Link
+          href={`/k/${klub.slug}/dashboard`}
+          className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-3.5" />
+          Voltar pro Klub
+        </Link>
+
+        <header>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
+            Admin · {klub.name}
+          </p>
+          <h1
+            className="mt-1 font-display text-[24px] font-bold leading-tight md:text-[30px]"
+            style={{ letterSpacing: '-0.02em' }}
+          >
+            Configurar Klub
+          </h1>
+        </header>
+
+        <TabBar tabs={visibleTabs} active={activeTab} onSelect={setActiveTab} />
+
+        <div className="pt-2">
+          {activeTab === 'identidade' ? (
+            <IdentidadeTab klub={klub} onUpdated={handleKlubUpdated} />
+          ) : null}
+          {activeTab === 'localizacao' ? (
+            <LocalizacaoTab klub={klub} onUpdated={handleKlubUpdated} />
+          ) : null}
+          {activeTab === 'contato' ? (
+            <ContatoTab klub={klub} onUpdated={handleKlubUpdated} />
+          ) : null}
+          {activeTab === 'visibilidade' ? (
+            <VisibilidadeTab klub={klub} onUpdated={handleKlubUpdated} />
+          ) : null}
+          {activeTab === 'modalidades' ? <ModalidadesTab klub={klub} /> : null}
+          {activeTab === 'quadras' ? <QuadrasTab klub={klub} /> : null}
+          {activeTab === 'legal' && isPlatform ? (
+            <LegalTab klub={klub} onUpdated={handleKlubUpdated} />
+          ) : null}
+          {activeTab === 'perigosa' && isPlatform ? (
+            <PerigosaTab klub={klub} onDeactivated={() => router.replace('/home')} />
+          ) : null}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ─── Tab bar ────────────────────────────────────────────────────────────
+
+function TabBar({
+  tabs,
+  active,
+  onSelect,
+}: {
+  tabs: TabDef[];
+  active: TabId;
+  onSelect: (id: TabId) => void;
+}) {
+  return (
+    <nav className="-mx-4 overflow-x-auto border-b border-border md:mx-0">
+      <ul className="flex min-w-max gap-1 px-4 md:px-0">
+        {tabs.map((t) => {
+          const isActive = t.id === active;
+          return (
+            <li key={t.id}>
+              <button
+                type="button"
+                onClick={() => onSelect(t.id)}
+                className={cn(
+                  'relative inline-flex h-10 items-center px-3 text-[13px] font-medium transition-colors',
+                  isActive
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {t.label}
+                {isActive ? (
+                  <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-t-full bg-primary" />
+                ) : null}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+// ─── Form tabs (each manages own subset) ────────────────────────────────
+
+interface FormTabProps {
+  klub: Klub;
+  onUpdated: (updated: Klub) => void;
+}
+
+function IdentidadeTab({ klub, onUpdated }: FormTabProps) {
+  const [v, setV] = React.useState({
+    name: klub.name,
+    commonName: klub.commonName ?? '',
+    abbreviation: klub.abbreviation ?? '',
+    description: klub.description ?? '',
+    type: klub.type,
+  });
+
+  const save = useTabSave(klub.id, () => ({
+    name: v.name,
+    commonName: v.commonName.trim() || null,
+    abbreviation: v.abbreviation.trim() || null,
+    description: v.description.trim() || null,
+    type: v.type,
+  }));
+
+  return (
+    <Section title="Identidade" status={save.status} onSave={() => void save.run(onUpdated)}>
+      <Field label="Nome">
+        <input
+          value={v.name}
+          onChange={(e) => setV((p) => ({ ...p, name: e.target.value }))}
+          maxLength={100}
+          className={inputCls}
+        />
+      </Field>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="col-span-1">
+          <Field label="Abreviação" help="Ex: PAC.">
+            <input
+              value={v.abbreviation}
+              onChange={(e) => setV((p) => ({ ...p, abbreviation: e.target.value }))}
+              maxLength={10}
+              placeholder="PAC"
+              className={inputCls}
+            />
+          </Field>
+        </div>
+        <div className="col-span-2">
+          <Field label="Nome usual" help="Como o pessoal chama no dia a dia.">
+            <input
+              value={v.commonName}
+              onChange={(e) => setV((p) => ({ ...p, commonName: e.target.value }))}
+              maxLength={100}
+              placeholder="Paissandú"
+              className={inputCls}
+            />
+          </Field>
+        </div>
+      </div>
+      <Field label="Descrição">
+        <textarea
+          value={v.description}
+          onChange={(e) => setV((p) => ({ ...p, description: e.target.value }))}
+          rows={3}
+          maxLength={2000}
+          className={inputCls}
+        />
+      </Field>
+      <Field label="Tipo">
+        <select
+          value={v.type}
+          onChange={(e) => setV((p) => ({ ...p, type: e.target.value as Klub['type'] }))}
+          className={inputCls}
+        >
+          <option value="sports_club">Clube esportivo / social</option>
+          <option value="arena">Arena / Centro esportivo</option>
+          <option value="academy">Academia / Escola de esporte</option>
+          <option value="condo">Condomínio</option>
+          <option value="hotel_resort">Hotel / Resort</option>
+          <option value="university">Universidade / Faculdade</option>
+          <option value="school">Escola / Colégio</option>
+          <option value="public_space">Espaço público</option>
+          <option value="individual">Pessoa física</option>
+        </select>
+      </Field>
+    </Section>
+  );
+}
+
+function LocalizacaoTab({ klub, onUpdated }: FormTabProps) {
+  const [v, setV] = React.useState({
+    cep: klub.cep ?? '',
+    addressStreet: klub.addressStreet ?? '',
+    addressNumber: klub.addressNumber ?? '',
+    addressComplement: klub.addressComplement ?? '',
+    addressNeighborhood: klub.addressNeighborhood ?? '',
+    city: klub.city ?? '',
+    state: klub.state ?? '',
+  });
+
+  const save = useTabSave(klub.id, () => ({
+    cep: v.cep.trim() || null,
+    addressStreet: v.addressStreet.trim() || null,
+    addressNumber: v.addressNumber.trim() || null,
+    addressComplement: v.addressComplement.trim() || null,
+    addressNeighborhood: v.addressNeighborhood.trim() || null,
+    city: v.city.trim() || null,
+    state: v.state.trim().toUpperCase().slice(0, 2) || null,
+  }));
+
+  return (
+    <Section title="Endereço" status={save.status} onSave={() => void save.run(onUpdated)}>
+      <div className="grid grid-cols-3 gap-2">
+        <Field label="CEP">
+          <input
+            value={v.cep}
+            onChange={(e) =>
+              setV((p) => ({ ...p, cep: e.target.value.replace(/\D/g, '').slice(0, 8) }))
+            }
+            placeholder="00000000"
+            className={inputCls}
+          />
+        </Field>
+        <Field label="Cidade">
+          <input
+            value={v.city}
+            onChange={(e) => setV((p) => ({ ...p, city: e.target.value }))}
+            className={inputCls}
+          />
+        </Field>
+        <Field label="UF">
+          <input
+            value={v.state}
+            onChange={(e) =>
+              setV((p) => ({ ...p, state: e.target.value.toUpperCase().slice(0, 2) }))
+            }
+            maxLength={2}
+            className={inputCls}
+          />
+        </Field>
+      </div>
+      <Field label="Bairro">
+        <input
+          value={v.addressNeighborhood}
+          onChange={(e) => setV((p) => ({ ...p, addressNeighborhood: e.target.value }))}
+          className={inputCls}
+        />
+      </Field>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="col-span-2">
+          <Field label="Logradouro">
+            <input
+              value={v.addressStreet}
+              onChange={(e) => setV((p) => ({ ...p, addressStreet: e.target.value }))}
+              className={inputCls}
+            />
+          </Field>
+        </div>
+        <Field label="Número">
+          <input
+            value={v.addressNumber}
+            onChange={(e) => setV((p) => ({ ...p, addressNumber: e.target.value }))}
+            className={inputCls}
+          />
+        </Field>
+      </div>
+      <Field label="Complemento">
+        <input
+          value={v.addressComplement}
+          onChange={(e) => setV((p) => ({ ...p, addressComplement: e.target.value }))}
+          className={inputCls}
+        />
+      </Field>
+    </Section>
+  );
+}
+
+function ContatoTab({ klub, onUpdated }: FormTabProps) {
+  const [v, setV] = React.useState({
+    email: klub.email ?? '',
+    phone: klub.phone ?? '',
+    website: klub.website ?? '',
+  });
+
+  const save = useTabSave(klub.id, () => ({
+    email: v.email.trim() || null,
+    phone: v.phone.trim() || null,
+    website: v.website.trim() || null,
+  }));
+
+  return (
+    <Section title="Contato" status={save.status} onSave={() => void save.run(onUpdated)}>
+      <Field label="Email público">
+        <input
+          type="email"
+          value={v.email}
+          onChange={(e) => setV((p) => ({ ...p, email: e.target.value }))}
+          className={inputCls}
+        />
+      </Field>
+      <Field label="Telefone">
+        <input
+          value={v.phone}
+          onChange={(e) => setV((p) => ({ ...p, phone: e.target.value }))}
+          maxLength={30}
+          className={inputCls}
+        />
+      </Field>
+      <Field label="Website">
+        <input
+          type="url"
+          value={v.website}
+          onChange={(e) => setV((p) => ({ ...p, website: e.target.value }))}
+          placeholder="https://"
+          className={inputCls}
+        />
+      </Field>
+    </Section>
+  );
+}
+
+function VisibilidadeTab({ klub, onUpdated }: FormTabProps) {
+  const [discoverable, setDiscoverable] = React.useState(klub.discoverable);
+  const [accessMode, setAccessMode] = React.useState<'public' | 'private'>(klub.accessMode);
+
+  const save = useTabSave(klub.id, () => ({ discoverable, accessMode }));
+
+  return (
+    <Section title="Visibilidade" status={save.status} onSave={() => void save.run(onUpdated)}>
+      <Toggle
+        label="Aparecer em Buscar Klubs"
+        help="Klubs públicos com toggle on aparecem em /buscar-klubs."
+        value={discoverable}
+        onChange={setDiscoverable}
+      />
+      <Field label="Modo de acesso">
+        <select
+          value={accessMode}
+          onChange={(e) => setAccessMode(e.target.value as 'public' | 'private')}
+          className={inputCls}
+        >
+          <option value="public">Público — qualquer um entra direto</option>
+          <option value="private">Privado — precisa aprovação</option>
+        </select>
+      </Field>
+    </Section>
+  );
+}
+
+function LegalTab({ klub, onUpdated }: FormTabProps) {
+  const [v, setV] = React.useState({ slug: klub.slug, document: '' });
+
+  const save = useTabSave(klub.id, () => {
+    const payload: UpdateKlubInput = {};
+    if (v.slug && v.slug !== klub.slug) payload.slug = v.slug;
+    if (v.document) payload.document = v.document;
+    return payload;
+  });
+
+  return (
+    <section className="space-y-2.5 rounded-xl border border-amber-500/40 bg-amber-500/5 p-3.5">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h2 className="font-display text-[14px] font-bold">
+            Identidade legal{' '}
+            <span className="ml-2 inline-flex h-5 items-center rounded-full bg-amber-500/20 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+              Platform-level
+            </span>
+          </h2>
+          <p className="text-[12px] text-muted-foreground">
+            Mudanças aqui têm impacto operacional alto. Slug rompe URLs/bookmarks. CNPJ não revalida
+            KYC automaticamente.
+          </p>
+        </div>
+      </div>
+      <SaveStatus status={save.status} />
+      <Field label="Slug" help="Aparece nas URLs (/k/seu-slug/...). Lowercase, dígitos e hífen.">
+        <input
+          value={v.slug}
+          onChange={(e) =>
+            setV((p) => ({
+              ...p,
+              slug: e.target.value
+                .toLowerCase()
+                .replace(/[^a-z0-9-]/g, '')
+                .slice(0, 80),
+            }))
+          }
+          placeholder={klub.slug}
+          className={inputCls}
+        />
+      </Field>
+      <Field
+        label="CNPJ"
+        help={`CNPJ atual: ${klub.documentHint ?? '(não cadastrado)'}. Deixar vazio mantém o atual.`}
+      >
+        <input
+          value={v.document}
+          onChange={(e) =>
+            setV((p) => ({ ...p, document: e.target.value.replace(/\D/g, '').slice(0, 14) }))
+          }
+          placeholder="00000000000000 (só dígitos)"
+          inputMode="numeric"
+          className={inputCls}
+        />
+      </Field>
+      <div className="flex justify-end">
+        <SaveButton
+          submitting={save.status.kind === 'saving'}
+          onClick={() => void save.run(onUpdated)}
+        />
+      </div>
+    </section>
+  );
+}
+
+function PerigosaTab({ klub, onDeactivated }: { klub: Klub; onDeactivated: () => void }) {
+  const [error, setError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [message, setMessage] = React.useState<string | null>(null);
+
+  async function handleDeactivate() {
+    const reason = window.prompt('Motivo da desativação (opcional)');
+    if (reason === null) return;
+    if (
+      !window.confirm(`Desativar o Klub "${klub.name}"? Members perdem acesso até reativação.`)
+    ) {
+      return;
+    }
+    setError(null);
+    setSubmitting(true);
+    try {
+      await apiDeactivateKlub(klub.id, reason || undefined);
+      setMessage('Klub desativado. Redirecionando…');
+      setTimeout(onDeactivated, 1500);
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, 'Erro ao desativar.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
+      <h2 className="font-display text-[15px] font-bold text-destructive">Zona perigosa</h2>
+      <p className="mt-1 text-[12.5px] text-muted-foreground">
+        Desativar o Klub é soft delete — `deletedAt` populado, `status='suspended'`. Members perdem
+        acesso. Reversível via SQL.
+      </p>
+      {message ? (
+        <p className="mt-3 rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+          <CheckCircle2 className="mr-1 inline size-3.5" />
+          {message}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="mt-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
+          <AlertCircle className="mr-1 inline size-3.5" />
+          {error}
+        </p>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => void handleDeactivate()}
+        disabled={submitting}
+        className="mt-3 inline-flex h-10 items-center gap-1.5 rounded-lg border border-destructive bg-destructive/10 px-3 text-[12.5px] font-semibold text-destructive hover:bg-destructive/20 disabled:opacity-60"
+      >
+        {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Power className="size-3.5" />}
+        Desativar Klub
+      </button>
+    </div>
+  );
+}
+
+// ─── Modalidades tab ────────────────────────────────────────────────────
+
+function ModalidadesTab({ klub }: { klub: Klub }) {
+  const [sports, setSports] = React.useState<SportCatalog[] | null>(null);
+  const [enabled, setEnabled] = React.useState<KlubSportProfile[]>([]);
+  const [enabling, setEnabling] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [message, setMessage] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    void Promise.all([listSports(), listKlubSports(klub.id)])
+      .then(([all, profiles]) => {
+        if (cancelled) return;
+        setSports(all);
+        setEnabled(profiles);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(toErrorMessage(err, 'Erro ao carregar modalidades.'));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [klub.id]);
+
+  async function handleEnable(code: string) {
+    if (enabling) return;
+    setEnabling(code);
+    setError(null);
+    try {
+      const profile = await addSportToKlub(klub.id, code);
+      setEnabled((prev) => [...prev, profile]);
+      setMessage(`Modalidade ${profile.sportCode} habilitada.`);
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, 'Erro ao habilitar modalidade.'));
+    } finally {
+      setEnabling(null);
+    }
+  }
+
+  const enabledCodes = new Set(enabled.map((p) => p.sportCode));
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-3.5">
+      <div>
+        <h2 className="font-display text-[14px] font-bold">Modalidades</h2>
+        <p className="mt-1 text-[12.5px] text-muted-foreground">
+          Cada modalidade habilita catálogo próprio (ranking, torneios, regras de partida). Habilita só
+          o que tu realmente atende.
+        </p>
+      </div>
+
+      {message ? (
+        <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+          <CheckCircle2 className="mr-1 inline size-3.5" />
+          {message}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
+          <AlertCircle className="mr-1 inline size-3.5" />
+          {error}
+        </p>
+      ) : null}
+
+      {sports === null ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {sports.map((s) => {
+            const isEnabled = enabledCodes.has(s.code);
+            const loading = enabling === s.code;
+            return (
+              <button
+                key={s.code}
+                type="button"
+                onClick={() => (isEnabled ? null : void handleEnable(s.code))}
+                disabled={isEnabled || loading}
+                className={cn(
+                  'flex items-center justify-between gap-3 rounded-lg border p-3.5 text-left transition-colors',
+                  isEnabled
+                    ? 'border-[hsl(142_71%_32%)] bg-[hsl(142_71%_32%/0.05)]'
+                    : 'border-border bg-background hover:bg-muted',
+                )}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-[14px] font-bold">{s.name}</p>
+                  <p className="truncate text-[11.5px] text-muted-foreground">{s.code}</p>
+                </div>
+                {loading ? (
+                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                ) : isEnabled ? (
+                  <CheckCircle2 className="size-4 text-[hsl(142_71%_32%)]" />
+                ) : (
+                  <Plus className="size-4 text-muted-foreground" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── Quadras tab (porta /quadras) ───────────────────────────────────────
+
+function QuadrasTab({ klub }: { klub: Klub }) {
+  const [spaces, setSpaces] = React.useState<Space[] | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [reload, setReload] = React.useState(0);
+  const [message, setMessage] = React.useState<string | null>(null);
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [editing, setEditing] = React.useState<Space | null>(null);
+  const [deleting, setDeleting] = React.useState<Space | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setError(null);
+    listKlubSpaces(klub.id)
+      .then((data) => {
+        if (!cancelled) setSpaces(data);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(toErrorMessage(err, 'Erro ao carregar quadras.'));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [klub.id, reload]);
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-[14px] font-bold">Quadras</h2>
+          <p className="mt-1 text-[12.5px] text-muted-foreground">
+            Gerencie quadras/espaços disponíveis pra reserva.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCreateOpen(true)}
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <Plus className="size-3.5" />
+          Adicionar
+        </button>
+      </div>
+
+      {message ? (
+        <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+          <CheckCircle2 className="mr-1 inline size-3.5" />
+          {message}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
+          <AlertCircle className="mr-1 inline size-3.5" />
+          {error}
+        </p>
+      ) : null}
+
+      {spaces === null ? (
+        <div className="flex items-center justify-center py-10">
+          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : spaces.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border p-8 text-center">
+          <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+            <MapPin className="size-4" />
+          </div>
+          <p className="mt-3 font-display text-[14px] font-bold">Nenhuma quadra cadastrada</p>
+          <p className="mt-1 text-[12.5px] text-muted-foreground">
+            Adicione a primeira quadra pra players começarem a reservar.
+          </p>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {spaces.map((s) => (
+            <li key={s.id}>
+              <SpaceCard space={s} onEdit={() => setEditing(s)} onDelete={() => setDeleting(s)} />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {createOpen ? (
+        <Modal title="Adicionar quadra" onClose={() => setCreateOpen(false)}>
+          <CreateSpaceContent
+            klubId={klub.id}
+            onClose={() => setCreateOpen(false)}
+            onCreated={() => {
+              setCreateOpen(false);
+              setMessage('Quadra criada.');
+              setReload((n) => n + 1);
+            }}
+          />
+        </Modal>
+      ) : null}
+
+      {editing ? (
+        <Modal title={`Editar ${editing.name}`} onClose={() => setEditing(null)}>
+          <EditSpaceContent
+            klubId={klub.id}
+            space={editing}
+            onClose={() => setEditing(null)}
+            onUpdated={() => {
+              setEditing(null);
+              setMessage('Quadra atualizada.');
+              setReload((n) => n + 1);
+            }}
+          />
+        </Modal>
+      ) : null}
+
+      {deleting ? (
+        <DeleteConfirmModal
+          klubId={klub.id}
+          space={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={() => {
+            setDeleting(null);
+            setMessage('Quadra excluída.');
+            setReload((n) => n + 1);
+          }}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+function SpaceCard({
+  space,
+  onEdit,
+  onDelete,
+}: {
+  space: Space;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const sport = space.sportCode ? sportLabel(space.sportCode) : null;
+  const surface = space.surface ? surfaceLabel(space.surface) : null;
+  const isInactive = space.status === 'inactive';
+
+  return (
+    <div className={cn('rounded-xl border border-border bg-card p-4', isInactive && 'opacity-60')}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="truncate font-display text-[16px] font-bold">{space.name}</h3>
+            <StatusBadge status={space.status} />
+          </div>
+          <p className="mt-1 inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12.5px] text-muted-foreground">
+            {sport ? <span>{sport}</span> : null}
+            {surface ? <span>· {surface}</span> : null}
+            <span>· {space.indoor ? 'Indoor' : 'Outdoor'}</span>
+            {space.hasLighting ? <span>· iluminação</span> : null}
+            <span>· até {space.maxPlayers} players</span>
+          </p>
+          {space.description ? (
+            <p className="mt-2 text-[12.5px] text-muted-foreground">{space.description}</p>
+          ) : null}
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+        <button
+          type="button"
+          onClick={onEdit}
+          className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[12px] font-semibold hover:bg-muted"
+        >
+          <Pencil className="size-3" />
+          Editar
+        </button>
+        <button
+          type="button"
+          onClick={onDelete}
+          className="ml-auto inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="size-3" />
+          Excluir
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CreateSpaceContent({
+  klubId,
+  onClose,
+  onCreated,
+}: {
+  klubId: string;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [error, setError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
+
+  async function handleSubmit(values: CreateSpaceInput) {
+    if (submitting) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      await createSpace(klubId, values);
+      onCreated();
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, 'Erro ao criar.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <SpaceForm
+      onSubmit={(v) => handleSubmit(v as CreateSpaceInput)}
+      onCancel={onClose}
+      submitLabel={submitting ? 'Criando…' : 'Criar quadra'}
+      submitting={submitting}
+      error={error}
+    />
+  );
+}
+
+function EditSpaceContent({
+  klubId,
+  space,
+  onClose,
+  onUpdated,
+}: {
+  klubId: string;
+  space: Space;
+  onClose: () => void;
+  onUpdated: () => void;
+}) {
+  const [error, setError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
+
+  async function handleSubmit(values: UpdateSpaceInput) {
+    if (submitting) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      await updateSpace(klubId, space.id, values);
+      onUpdated();
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, 'Erro ao salvar.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <SpaceForm
+      initial={{
+        name: space.name,
+        type: space.type,
+        sportCode: (space.sportCode ?? undefined) as
+          | 'tennis'
+          | 'padel'
+          | 'squash'
+          | 'beach_tennis'
+          | undefined,
+        surface: space.surface ?? undefined,
+        indoor: space.indoor,
+        hasLighting: space.hasLighting,
+        maxPlayers: space.maxPlayers,
+        description: space.description ?? undefined,
+        allowedMatchTypes: space.allowedMatchTypes,
+      }}
+      onSubmit={handleSubmit}
+      onCancel={onClose}
+      submitLabel={submitting ? 'Salvando…' : 'Salvar'}
+      submitting={submitting}
+      error={error}
+    />
+  );
+}
+
+function DeleteConfirmModal({
+  klubId,
+  space,
+  onClose,
+  onDeleted,
+}: {
+  klubId: string;
+  space: Space;
+  onClose: () => void;
+  onDeleted: () => void;
+}) {
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleDelete() {
+    if (submitting) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      await deleteSpace(klubId, space.id);
+      onDeleted();
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, 'Erro ao excluir.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-md rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <h2 className="font-display text-lg font-bold">Excluir {space.name}?</h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          A quadra será removida da listagem. Reservas futuras precisam ser canceladas antes — caso
+          contrário a exclusão é bloqueada.
+        </p>
+        {error ? (
+          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+            {error}
+          </p>
+        ) : null}
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            Voltar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleDelete()}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
+          >
+            {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+            Excluir quadra
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Modal({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-lg rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+          >
+            ✕
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const tone =
+    status === 'active'
+      ? 'bg-[hsl(142_71%_32%/0.12)] text-[hsl(142_71%_32%)]'
+      : status === 'maintenance'
+        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+        : 'bg-muted text-muted-foreground';
+  const label =
+    status === 'active' ? 'Ativa' : status === 'maintenance' ? 'Manutenção' : 'Inativa';
+  return (
+    <span
+      className={cn(
+        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        tone,
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+function sportLabel(s: string): string {
+  const map: Record<string, string> = {
+    tennis: 'Tênis',
+    padel: 'Padel',
+    squash: 'Squash',
+    beach_tennis: 'Beach tennis',
+  };
+  return map[s] ?? s;
+}
+
+function surfaceLabel(s: string): string {
+  const map: Record<string, string> = {
+    clay: 'Saibro',
+    hard: 'Hard',
+    grass: 'Grama',
+    synthetic: 'Sintético',
+    carpet: 'Carpete',
+  };
+  return map[s] ?? s;
+}
+
+// ─── Form helpers ───────────────────────────────────────────────────────
+
+type SaveStatusValue =
+  | { kind: 'idle' }
+  | { kind: 'saving' }
+  | { kind: 'ok'; message: string }
+  | { kind: 'error'; message: string };
+
+function useTabSave(klubId: string, buildPayload: () => UpdateKlubInput) {
+  const [status, setStatus] = React.useState<SaveStatusValue>({ kind: 'idle' });
+
+  async function run(onUpdated: (k: Klub) => void) {
+    if (status.kind === 'saving') return;
+    setStatus({ kind: 'saving' });
+    try {
+      const payload = buildPayload();
+      const updated = await updateKlub(klubId, payload);
+      setStatus({ kind: 'ok', message: 'Salvo.' });
+      onUpdated(updated);
+    } catch (err: unknown) {
+      setStatus({ kind: 'error', message: toErrorMessage(err, 'Erro ao salvar.') });
+    }
+  }
+
+  return { status, run };
+}
+
+function Section({
+  title,
+  status,
+  onSave,
+  children,
+}: {
+  title: string;
+  status: SaveStatusValue;
+  onSave: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-2.5 rounded-xl border border-border bg-card p-3.5">
+      <h2 className="font-display text-[14px] font-bold">{title}</h2>
+      {children}
+      <SaveStatus status={status} />
+      <div className="flex justify-end">
+        <SaveButton submitting={status.kind === 'saving'} onClick={onSave} />
+      </div>
+    </section>
+  );
+}
+
+function SaveStatus({ status }: { status: SaveStatusValue }) {
+  if (status.kind === 'idle' || status.kind === 'saving') return null;
+  if (status.kind === 'ok') {
+    return (
+      <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-2.5 text-[12px] text-[hsl(142_71%_32%)]">
+        <CheckCircle2 className="mr-1 inline size-3.5" />
+        {status.message}
+      </p>
+    );
+  }
+  return (
+    <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+      <AlertCircle className="mr-1 inline size-3.5" />
+      {status.message}
+    </p>
+  );
+}
+
+function SaveButton({ submitting, onClick }: { submitting: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={submitting}
+      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+    >
+      {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
+      Salvar
+    </button>
+  );
+}
+
+const inputCls =
+  'w-full rounded-[10px] border border-input bg-background px-3 py-2.25 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+
+function Field({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        {label}
+      </label>
+      {children}
+      {help ? <p className="mt-1 text-[11px] text-muted-foreground">{help}</p> : null}
+    </div>
+  );
+}
+
+function Toggle({
+  label,
+  help,
+  value,
+  onChange,
+}: {
+  label: string;
+  help?: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => onChange(!value)}
+        className={cn(
+          'flex w-full items-center justify-between rounded-[10px] border p-3 text-[13px] font-medium transition-colors',
+          value
+            ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+            : 'border-input bg-background hover:bg-muted',
+        )}
+      >
+        <span>{label}</span>
+        <span
+          className={cn(
+            'inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors',
+            value ? 'border-primary bg-primary' : 'border-input bg-muted',
+          )}
+        >
+          <span
+            className={cn(
+              'size-4 rounded-full bg-background transition-transform',
+              value ? 'translate-x-4' : 'translate-x-0.5',
+            )}
+          />
+        </span>
+      </button>
+      {help ? <p className="mt-1 text-[11px] text-muted-foreground">{help}</p> : null}
+    </div>
+  );
+}
+
+function toErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) return err.message;
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
