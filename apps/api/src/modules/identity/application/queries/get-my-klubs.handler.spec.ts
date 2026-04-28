@@ -16,9 +16,13 @@ interface MembershipRow {
     id: string;
     slug: string;
     name: string;
+    commonName?: string | null;
     plan: string;
     status: string;
     deletedAt: Date | null;
+    reviewStatus?: string;
+    reviewRejectionReason?: string | null;
+    sportProfiles?: { sportCode: string }[];
   };
 }
 
@@ -56,9 +60,13 @@ function membership(klubId: string, overrides: Partial<MembershipRow> = {}): Mem
       id: klubId,
       slug: `klub-${klubId.slice(-3)}`,
       name: `Klub ${klubId.slice(-3)}`,
+      commonName: null,
       plan: 'trial',
       status: 'active',
       deletedAt: null,
+      reviewStatus: 'approved',
+      reviewRejectionReason: null,
+      sportProfiles: [],
     },
     ...overrides,
   };
@@ -101,9 +109,13 @@ describe('GetMyKlubsHandler', () => {
             id: KLUB_B,
             slug: 'klub-deleted',
             name: 'Klub Deleted',
+            commonName: null,
             plan: 'trial',
             status: 'active',
             deletedAt: new Date('2026-02-01T00:00:00Z'),
+            reviewStatus: 'approved',
+            reviewRejectionReason: null,
+            sportProfiles: [],
           },
         }),
       ],

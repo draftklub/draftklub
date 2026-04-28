@@ -42,6 +42,11 @@ export function listEnrollmentsByUser(userId: string): Promise<PlayerSportEnroll
   return apiFetch<PlayerSportEnrollment[]>(`/users/${userId}/enrollments`);
 }
 
+/** GET /me/enrollments — lista do user logado. Sprint Polish PR-H3. */
+export function listMyEnrollments(): Promise<PlayerSportEnrollment[]> {
+  return apiFetch<PlayerSportEnrollment[]>(`/me/enrollments`);
+}
+
 export function approveEnrollment(id: string): Promise<PlayerSportEnrollment> {
   return apiFetch<PlayerSportEnrollment>(`/enrollments/${id}/approve`, {
     method: 'PATCH',
