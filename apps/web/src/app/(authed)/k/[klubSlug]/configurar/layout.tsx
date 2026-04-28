@@ -82,8 +82,7 @@ export default function ConfigurarLayout({ children }: { children: React.ReactNo
   }
 
   const baseHref = `/k/${klub.slug}/configurar`;
-  const seg =
-    pathname.replace(baseHref, '').replace(/^\//, '').split('/')[0] ?? 'identidade';
+  const seg = pathname.replace(baseHref, '').replace(/^\//, '').split('/')[0] ?? 'identidade';
   const activeSeg = seg.length > 0 ? seg : 'identidade';
 
   const tabs: Tab[] = [
