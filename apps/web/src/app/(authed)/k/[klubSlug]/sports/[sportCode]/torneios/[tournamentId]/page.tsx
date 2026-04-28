@@ -21,6 +21,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import type {
+  PreviewMatchRevertResult,
   Space,
   TournamentBracket,
   TournamentDetail,
@@ -34,7 +35,10 @@ import { useActiveKlub } from '@/components/active-klub-provider';
 import { getMe } from '@/lib/api/me';
 import { listKlubSpaces } from '@/lib/api/spaces';
 import {
+  applyDoubleWalkover,
+  applyWalkover,
   approveTournamentEntry,
+  cancelTournament,
   confirmTournamentMatch,
   drawTournament,
   editTournamentMatch,
@@ -42,8 +46,10 @@ import {
   getTournamentBracket,
   listTournamentEntries,
   moveTournamentEntryCategory,
+  previewMatchRevert,
   registerTournamentEntry,
   reportTournamentMatch,
+  revertTournamentMatch,
   scheduleTournament,
   updateReportingMode,
   withdrawMyTournamentEntry,
@@ -462,7 +468,102 @@ function OperacoesView({
         }}
         onError={(msg) => setError(msg)}
       />
+
+      <CancelTournamentSection
+        tournament={tournament}
+        isFinished={isFinished}
+        onSuccess={(msg) => {
+          setMessage(msg);
+          setError(null);
+          onChanged();
+        }}
+        onError={(msg) => setError(msg)}
+      />
     </div>
+  );
+}
+
+function CancelTournamentSection({
+  tournament,
+  isFinished,
+  onSuccess,
+  onError,
+}: {
+  tournament: TournamentDetail;
+  isFinished: boolean;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [reason, setReason] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const isCancelled = tournament.status === 'cancelled';
+  const disabled = isFinished || isCancelled || submitting;
+
+  async function handleCancel() {
+    if (disabled) return;
+    if (
+      !window.confirm(
+        `Cancelar "${tournament.name}"?\n\nMatches que ainda não rolaram são marcados como cancelled. Inscritos perdem acesso. Operação reversível só por SQL/admin direto no banco.`,
+      )
+    ) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await cancelTournament(tournament.id, { reason: reason.trim() || undefined });
+      onSuccess('Torneio cancelado.');
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao cancelar.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
+      <div className="flex items-center gap-2">
+        <XCircle className="size-4 text-destructive" />
+        <h3 className="font-display text-[14px] font-bold text-destructive">Cancelar torneio</h3>
+        {isCancelled ? (
+          <span className="inline-flex h-5 items-center rounded-full bg-destructive/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-destructive">
+            Já cancelado
+          </span>
+        ) : null}
+      </div>
+      <p className="text-[12.5px] text-muted-foreground">
+        Cancela o torneio inteiro. Status vira 'cancelled', matches futuros não rolam, players
+        recebem notificação. Use só pra abortar evento que não vai acontecer mais.
+      </p>
+      <div>
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          Motivo (opcional)
+        </p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={2}
+          maxLength={500}
+          placeholder="Ex: chuva persistente; mudança de calendário; etc."
+          className={inputCls}
+          disabled={disabled}
+        />
+      </div>
+      <div>
+        <button
+          type="button"
+          onClick={() => void handleCancel()}
+          disabled={disabled}
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-destructive bg-destructive/10 px-4 text-[13px] font-semibold text-destructive hover:bg-destructive/20 disabled:opacity-60"
+        >
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <XCircle className="size-3.5" />
+          )}
+          Cancelar torneio
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -1441,6 +1542,12 @@ function MatchActionModal({
           </p>
         )}
 
+        {/* Sprint K PR-K4: walkover (pending) e revert (completed) — committee/admin only */}
+        {canManage && isPending && match.player1Id && match.player2Id ? (
+          <WalkoverActions match={match} tournament={tournament} onChanged={onChanged} />
+        ) : null}
+        {canManage && isCompleted ? <RevertSection match={match} onChanged={onChanged} /> : null}
+
         <div className="flex justify-end">
           <button
             type="button"
@@ -1811,6 +1918,341 @@ function WinnerOption({
       </span>
       <span className="truncate font-medium">{name}</span>
     </button>
+  );
+}
+
+// ─── Walkover + Revert (PR-K4) ──────────────────────────────────────────
+
+function WalkoverActions({
+  match,
+  tournament,
+  onChanged,
+}: {
+  match: TournamentMatchView;
+  tournament: TournamentDetail;
+  onChanged: () => void;
+}) {
+  const [confirming, setConfirming] = React.useState<'p1' | 'p2' | 'double' | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [notes, setNotes] = React.useState('');
+
+  async function handleApply(kind: 'p1' | 'p2' | 'double') {
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      if (kind === 'double') {
+        await applyDoubleWalkover(tournament.id, match.id, {
+          notes: notes.trim() || undefined,
+        });
+      } else {
+        const winnerId = kind === 'p1' ? match.player1Id : match.player2Id;
+        if (!winnerId) {
+          setError('Player não definido pra aplicar walkover.');
+          setSubmitting(false);
+          return;
+        }
+        await applyWalkover(tournament.id, match.id, {
+          winnerId,
+          notes: notes.trim() || undefined,
+        });
+      }
+      onChanged();
+    } catch (err: unknown) {
+      setError(toErrorMessage(err, 'Erro ao aplicar walkover.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+      <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+        Walkover (admin)
+      </p>
+      <p className="text-[12px] text-muted-foreground">
+        Use quando jogador desistir/não comparecer. Walkover simples avança o outro; double walkover
+        finaliza sem vencedor.
+      </p>
+      {error ? (
+        <p className="rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+          {error}
+        </p>
+      ) : null}
+      {confirming ? (
+        <div className="space-y-2">
+          <p className="text-[12.5px]">
+            <strong>Confirmar:</strong>{' '}
+            {confirming === 'double'
+              ? `Walkover duplo (ambos players desistem).`
+              : `WO — ${confirming === 'p1' ? match.player1Name : match.player2Name} avança.`}
+          </p>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={2}
+            maxLength={500}
+            placeholder="Notas (opcional, ex: motivo)"
+            className={inputCls}
+          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void handleApply(confirming)}
+              disabled={submitting}
+              className="inline-flex h-9 items-center gap-1 rounded-md bg-amber-600 px-3 text-[12px] font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
+            >
+              {submitting ? <Loader2 className="size-3 animate-spin" /> : null}
+              Aplicar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setConfirming(null);
+                setNotes('');
+              }}
+              disabled={submitting}
+              className="inline-flex h-9 items-center rounded-md border border-border bg-background px-3 text-[12px] font-medium hover:bg-muted"
+            >
+              Voltar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setConfirming('p1')}
+            className="inline-flex h-8 items-center rounded-md border border-amber-500/30 bg-background px-2.5 text-[11.5px] font-semibold hover:bg-amber-500/10"
+          >
+            WO: {match.player1Name} avança
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirming('p2')}
+            className="inline-flex h-8 items-center rounded-md border border-amber-500/30 bg-background px-2.5 text-[11.5px] font-semibold hover:bg-amber-500/10"
+          >
+            WO: {match.player2Name} avança
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirming('double')}
+            className="inline-flex h-8 items-center rounded-md border border-destructive/30 bg-background px-2.5 text-[11.5px] font-semibold text-destructive hover:bg-destructive/10"
+          >
+            WO duplo
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RevertSection({
+  match,
+  onChanged,
+}: {
+  match: TournamentMatchView;
+  onChanged: () => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+      <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-destructive">
+        Reverter resultado (admin)
+      </p>
+      <p className="mt-1 text-[12px] text-muted-foreground">
+        Desfaz o resultado: rating dos players é revertido, próximo match volta pra "scheduled" ou
+        "TBD slot". Use só em correção de erro.
+      </p>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-2 inline-flex h-9 items-center gap-1 rounded-md border border-destructive bg-background px-3 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+      >
+        Reverter…
+      </button>
+      {open ? (
+        <RevertModal
+          matchId={match.id}
+          onClose={() => setOpen(false)}
+          onSuccess={() => {
+            setOpen(false);
+            onChanged();
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function RevertModal({
+  matchId,
+  onClose,
+  onSuccess,
+}: {
+  matchId: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [preview, setPreview] = React.useState<PreviewMatchRevertResult | null>(null);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [reason, setReason] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setLoadError(null);
+    previewMatchRevert(matchId)
+      .then((row) => {
+        if (!cancelled) setPreview(row);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setLoadError(toErrorMessage(err, 'Erro ao carregar preview.'));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [matchId]);
+
+  async function handleConfirm() {
+    if (submitting) return;
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      await revertTournamentMatch(matchId, { reason: reason.trim() || undefined });
+      onSuccess();
+    } catch (err: unknown) {
+      setSubmitError(toErrorMessage(err, 'Erro ao reverter.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-md space-y-3 rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold">Reverter resultado</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+          >
+            ✕
+          </button>
+        </div>
+
+        {loadError ? (
+          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+            {loadError}
+          </p>
+        ) : !preview ? (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <>
+            <RevertPreview preview={preview} />
+            <div>
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+                Motivo (opcional, fica em audit trail)
+              </p>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={2}
+                maxLength={500}
+                placeholder="Ex: score reportado errado por um dos players"
+                className={inputCls}
+              />
+            </div>
+            {submitError ? (
+              <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+                <AlertCircle className="mr-1 inline size-3.5" />
+                {submitError}
+              </p>
+            ) : null}
+          </>
+        )}
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleConfirm()}
+            disabled={submitting || !preview}
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-4 text-[13px] font-semibold text-white disabled:opacity-60"
+          >
+            {submitting ? <Loader2 className="size-3.5 animate-spin" /> : null}
+            Reverter
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const REVERT_WARNING_LABELS: Record<string, string> = {
+  prequalifier_dual_path_warning:
+    'Match de prequalifier — revert pode reabrir caminhos de classificação.',
+  cascade_depth_exceeded_1_level:
+    'Cascata > 1 nível: matches subsequentes já completed também são afetados.',
+};
+
+function RevertPreview({ preview }: { preview: PreviewMatchRevertResult }) {
+  const { affectedMatches, ratingDeltas, warnings } = preview.cascade;
+  return (
+    <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-[12.5px]">
+      <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-destructive">
+        Preview do impacto
+      </p>
+      <div>
+        <p className="font-semibold">Matches afetados ({affectedMatches.length})</p>
+        <ul className="mt-1 space-y-0.5 text-[11.5px] text-muted-foreground">
+          {affectedMatches.map((m) => (
+            <li key={m.id}>
+              · {m.phase} #{m.bracketPosition}: {m.status} → {m.willRevertTo}
+            </li>
+          ))}
+        </ul>
+      </div>
+      {ratingDeltas.length > 0 ? (
+        <div>
+          <p className="font-semibold">Ratings revertidos</p>
+          <ul className="mt-1 space-y-0.5 text-[11.5px] text-muted-foreground">
+            {ratingDeltas.map((d) => (
+              <li key={d.userId}>
+                · player {d.userId.slice(0, 8)}…: {d.ratingAfter} →{' '}
+                <strong className="text-foreground">{d.ratingBefore}</strong> (
+                {d.toRevert > 0 ? '+' : ''}
+                {d.toRevert})
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {warnings.length > 0 ? (
+        <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2">
+          <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+            Avisos
+          </p>
+          <ul className="mt-1 space-y-0.5 text-[11.5px] text-muted-foreground">
+            {warnings.map((w) => (
+              <li key={w}>· {REVERT_WARNING_LABELS[w] ?? w}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
