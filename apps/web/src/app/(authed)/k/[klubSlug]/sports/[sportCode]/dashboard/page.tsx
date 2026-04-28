@@ -61,11 +61,7 @@ export default function SportDashboardPage() {
             title="Torneios"
             hint="Torneios ativos, próximos e finalizados nessa modalidade"
           />
-          <PlaceholderCard
-            icon={ListOrdered}
-            title="Ranking"
-            hint="Sua posição + top players"
-          />
+          <PlaceholderCard icon={ListOrdered} title="Ranking" hint="Sua posição + top players" />
           <PlaceholderCard
             icon={Sparkles}
             title="Comissão"
@@ -74,8 +70,8 @@ export default function SportDashboardPage() {
         </section>
 
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-[13px] text-muted-foreground">
-          Em breve! Aqui vai aparecer o dashboard cheio dessa modalidade — incluindo seus
-          jogos, ranking, torneios em curso, comissão, e mais.
+          Em breve! Aqui vai aparecer o dashboard cheio dessa modalidade — incluindo seus jogos,
+          ranking, torneios em curso, comissão, e mais.
         </div>
       </div>
     </main>

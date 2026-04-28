@@ -92,8 +92,8 @@ export default function EnrollRequestPage() {
             <UserCheck className="size-5 text-muted-foreground" />
             <p className="mt-2 text-[13px]">
               Confirme que quer entrar em <strong>{sportLabel}</strong> no{' '}
-              <strong>{klubLabel}</strong>. Após aprovação você poderá participar de torneios e
-              ver o ranking dessa modalidade.
+              <strong>{klubLabel}</strong>. Após aprovação você poderá participar de torneios e ver
+              o ranking dessa modalidade.
             </p>
 
             {error ? (

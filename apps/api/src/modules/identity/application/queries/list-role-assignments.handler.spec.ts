@@ -61,9 +61,9 @@ describe('ListRoleAssignmentsHandler', () => {
       email: 'p@test.com',
       roleAssignments: [{ role: 'PLAYER', scopeKlubId: KLUB_ID }],
     };
-    await expect(
-      handler.execute({ caller: player, scopeKlubId: KLUB_ID }),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(handler.execute({ caller: player, scopeKlubId: KLUB_ID })).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
   });
 
   it('KLUB_ADMIN lista assignments do próprio Klub', async () => {
@@ -75,9 +75,7 @@ describe('ListRoleAssignmentsHandler', () => {
       email: 'a@k.com',
       roleAssignments: [{ role: 'KLUB_ADMIN', scopeKlubId: KLUB_ID }],
     };
-    await expect(
-      handler.execute({ caller: klubAdmin, scopeKlubId: KLUB_ID }),
-    ).resolves.toEqual([]);
+    await expect(handler.execute({ caller: klubAdmin, scopeKlubId: KLUB_ID })).resolves.toEqual([]);
   });
 
   it('KLUB_ADMIN NÃO pode listar platform-level (Forbidden)', async () => {
@@ -89,8 +87,8 @@ describe('ListRoleAssignmentsHandler', () => {
       email: 'a@k.com',
       roleAssignments: [{ role: 'KLUB_ADMIN', scopeKlubId: KLUB_ID }],
     };
-    await expect(
-      handler.execute({ caller: klubAdmin, scopeKlubId: null }),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(handler.execute({ caller: klubAdmin, scopeKlubId: null })).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
   });
 });

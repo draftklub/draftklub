@@ -178,10 +178,7 @@ describe('DiscoverKlubsHandler', () => {
   });
 
   it('period=morning: filtra Klubs com Spaces operando manhã (6h-12h)', async () => {
-    const rows: MockKlub[] = [
-      k('a', 'Klub Manhã'),
-      k('b', 'Klub Só Noite'),
-    ];
+    const rows: MockKlub[] = [k('a', 'Klub Manhã'), k('b', 'Klub Só Noite')];
     const spaces: MockSpace[] = [
       { klubId: 'a', hourBands: [{ startHour: 8, endHour: 18 }] },
       { klubId: 'b', hourBands: [{ startHour: 18, endHour: 22 }] },

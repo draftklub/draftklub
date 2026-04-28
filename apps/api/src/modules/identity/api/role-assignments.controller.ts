@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { CurrentUser } from '../../../shared/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.interface';
@@ -18,10 +9,7 @@ import {
   ListRoleAssignmentsHandler,
   type RoleAssignmentListItem,
 } from '../application/queries/list-role-assignments.handler';
-import {
-  GrantKlubRoleSchema,
-  GrantPlatformRoleSchema,
-} from './dtos/role-assignment.dto';
+import { GrantKlubRoleSchema, GrantPlatformRoleSchema } from './dtos/role-assignment.dto';
 
 /**
  * Sprint Polish PR-J2 — endpoints REST pra gestão de role assignments.
@@ -43,9 +31,7 @@ export class RoleAssignmentsController {
   // ─── Platform-level (scopeKlubId IS NULL) ────────────────────────────
 
   @Get('platform/role-assignments')
-  async listPlatform(
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<RoleAssignmentListItem[]> {
+  async listPlatform(@CurrentUser() user: AuthenticatedUser): Promise<RoleAssignmentListItem[]> {
     return this.listHandler.execute({ caller: user, scopeKlubId: null });
   }
 

@@ -107,7 +107,8 @@ export class DiscoverKlubsHandler {
       });
       const matchingKlubIds = new Set<string>();
       for (const space of spaces) {
-        const bands = (space.hourBands as unknown as { startHour: number; endHour: number }[]) ?? [];
+        const bands =
+          (space.hourBands as unknown as { startHour: number; endHour: number }[]) ?? [];
         const operatesInPeriod = bands.some(
           (b) =>
             typeof b.startHour === 'number' &&

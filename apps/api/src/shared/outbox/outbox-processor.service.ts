@@ -179,9 +179,7 @@ export class OutboxProcessorService {
         });
         if (result) scheduled++;
       } catch (err) {
-        this.logger.warn(
-          `scanReminders: booking ${b.id} skipped — ${(err as Error).message}`,
-        );
+        this.logger.warn(`scanReminders: booking ${b.id} skipped — ${(err as Error).message}`);
       }
     }
 

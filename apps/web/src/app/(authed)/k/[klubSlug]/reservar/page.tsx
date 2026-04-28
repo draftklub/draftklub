@@ -43,7 +43,10 @@ import { cn } from '@/lib/utils';
 
 type Step = 1 | 2 | 3;
 
-const PERIOD_RANGES: Record<'morning' | 'afternoon' | 'evening', [number, number, string, typeof Sun]> = {
+const PERIOD_RANGES: Record<
+  'morning' | 'afternoon' | 'evening',
+  [number, number, string, typeof Sun]
+> = {
   morning: [6, 12, 'Manhã', Sun],
   afternoon: [12, 18, 'Tarde', Sunset],
   evening: [18, 23, 'Noite', Moon],
@@ -207,11 +210,7 @@ export default function ReservarPage() {
           ) : null}
 
           {step === 3 ? (
-            <Step3Confirmar
-              space={selectedSpace}
-              slot={selectedSlot}
-              matchType={matchType}
-            />
+            <Step3Confirmar space={selectedSpace} slot={selectedSlot} matchType={matchType} />
           ) : null}
 
           {stepError ? (
@@ -281,7 +280,11 @@ export default function ReservarPage() {
               disabled={submitting}
               className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[14px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-70 sm:flex-none sm:px-6"
             >
-              {submitting ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+              {submitting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Check className="size-4" />
+              )}
               Confirmar reserva
             </button>
           ) : null}
@@ -518,9 +521,7 @@ function Step2DataHorario({
                         key={slot.startTime}
                         slot={slot}
                         active={selectedSlot?.startTime === slot.startTime}
-                        onClick={() =>
-                          slot.status === 'available' ? setSelectedSlot(slot) : null
-                        }
+                        onClick={() => (slot.status === 'available' ? setSelectedSlot(slot) : null)}
                       />
                     ))}
                   </div>
@@ -547,9 +548,7 @@ function Step3Confirmar({
 }) {
   if (!space || !slot) {
     return (
-      <p className="text-[13px] text-muted-foreground">
-        Volta um passo e completa as escolhas.
-      </p>
+      <p className="text-[13px] text-muted-foreground">Volta um passo e completa as escolhas.</p>
     );
   }
   const start = new Date(slot.startTime);
@@ -590,8 +589,8 @@ function Step3Confirmar({
       </div>
 
       <p className="text-[11.5px] text-muted-foreground">
-        Você é o jogador principal. Outros participantes podem ser adicionados depois pela tela
-        do booking.
+        Você é o jogador principal. Outros participantes podem ser adicionados depois pela tela do
+        booking.
       </p>
     </div>
   );
@@ -661,7 +660,11 @@ function SuccessView({
           </button>
         </div>
         <p className="mt-4 text-[11px] text-muted-foreground">
-          Você verá essa reserva em <Link href={`/k/${klubSlug}/dashboard`} className="underline">{klubSlug}</Link>.
+          Você verá essa reserva em{' '}
+          <Link href={`/k/${klubSlug}/dashboard`} className="underline">
+            {klubSlug}
+          </Link>
+          .
         </p>
       </div>
     </main>
@@ -723,9 +726,7 @@ function MatchTypePill({
       onClick={onClick}
       className={cn(
         'flex h-11 flex-1 flex-col items-start justify-center rounded-lg border px-3 transition-colors',
-        active
-          ? 'border-primary bg-primary/5'
-          : 'border-border bg-background hover:bg-muted',
+        active ? 'border-primary bg-primary/5' : 'border-border bg-background hover:bg-muted',
       )}
     >
       <span className={cn('text-[13px] font-semibold', active ? 'text-foreground' : '')}>
@@ -820,7 +821,11 @@ function groupSlotsByPeriod(slots: SpaceAvailabilitySlot[]): {
   afternoon: SpaceAvailabilitySlot[];
   evening: SpaceAvailabilitySlot[];
 } {
-  const out = { morning: [] as SpaceAvailabilitySlot[], afternoon: [] as SpaceAvailabilitySlot[], evening: [] as SpaceAvailabilitySlot[] };
+  const out = {
+    morning: [] as SpaceAvailabilitySlot[],
+    afternoon: [] as SpaceAvailabilitySlot[],
+    evening: [] as SpaceAvailabilitySlot[],
+  };
   for (const slot of slots) {
     const h = new Date(slot.startTime).getHours();
     if (h < 12) out.morning.push(slot);

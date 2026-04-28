@@ -32,11 +32,13 @@ function adminCaller(): AuthenticatedUser {
   };
 }
 
-function makePrisma(opts: {
-  user?: { id: string } | null;
-  platformAdminCount?: number;
-  existing?: { id: string } | null;
-} = {}) {
+function makePrisma(
+  opts: {
+    user?: { id: string } | null;
+    platformAdminCount?: number;
+    existing?: { id: string } | null;
+  } = {},
+) {
   const userValue = 'user' in opts ? opts.user : { id: TARGET_ID };
   return {
     user: {

@@ -31,9 +31,7 @@ export class BookingVisibilityService {
       return 'full';
     }
 
-    if (
-      ctx.viewerRoles.some((r) => r.role === 'PLATFORM_OWNER' || r.role === 'PLATFORM_ADMIN')
-    ) {
+    if (ctx.viewerRoles.some((r) => r.role === 'PLATFORM_OWNER' || r.role === 'PLATFORM_ADMIN')) {
       return 'full';
     }
 

@@ -21,7 +21,11 @@ export default function NotificacoesPage() {
           antes, solicitação de entrada) por <strong>email</strong>.
         </p>
         <p className="mt-3 text-[12px] text-muted-foreground">
-          Ajusta as preferências em <a href="/perfil" className="text-primary hover:underline">perfil</a>.
+          Ajusta as preferências em{' '}
+          <a href="/perfil" className="text-primary hover:underline">
+            perfil
+          </a>
+          .
         </p>
       </div>
     </main>

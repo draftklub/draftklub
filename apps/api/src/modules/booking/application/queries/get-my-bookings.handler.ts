@@ -42,10 +42,7 @@ export class GetMyBookingsHandler {
   async execute(userId: string): Promise<MyBookingItem[]> {
     const rows = await this.prisma.booking.findMany({
       where: {
-        OR: [
-          { primaryPlayerId: userId },
-          { otherPlayers: { array_contains: [{ userId }] } },
-        ],
+        OR: [{ primaryPlayerId: userId }, { otherPlayers: { array_contains: [{ userId }] } }],
         deletedAt: null,
       },
       include: {
@@ -66,13 +63,17 @@ export class GetMyBookingsHandler {
       .map((b) => {
         const klub = byId.get(b.klubId);
         if (!klub) return null;
-        const exts = (b.extensions as { id?: string; status?: string; extendedTo?: string; requestedById?: string }[] | null) ?? [];
+        const exts =
+          (b.extensions as
+            | { id?: string; status?: string; extendedTo?: string; requestedById?: string }[]
+            | null) ?? [];
         const extensions: MyBookingExtension[] = exts
-          .filter((e): e is MyBookingExtension =>
-            typeof e.id === 'string' &&
-            (e.status === 'pending' || e.status === 'approved' || e.status === 'rejected') &&
-            typeof e.extendedTo === 'string' &&
-            typeof e.requestedById === 'string',
+          .filter(
+            (e): e is MyBookingExtension =>
+              typeof e.id === 'string' &&
+              (e.status === 'pending' || e.status === 'approved' || e.status === 'rejected') &&
+              typeof e.extendedTo === 'string' &&
+              typeof e.requestedById === 'string',
           )
           .map((e) => ({
             id: e.id,

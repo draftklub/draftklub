@@ -13,14 +13,19 @@ function makeKlub(overrides: { deletedAt?: Date | null; slug?: string } = {}) {
   };
 }
 
-function makePrisma(klub: ReturnType<typeof makeKlub> | null, slugConflict?: { id: string; name: string }) {
+function makePrisma(
+  klub: ReturnType<typeof makeKlub> | null,
+  slugConflict?: { id: string; name: string },
+) {
   return {
     klub: {
       findUnique: vi.fn().mockResolvedValue(klub),
       findFirst: vi.fn().mockResolvedValue(slugConflict ?? null),
-      update: vi.fn().mockImplementation((args: { data: Record<string, unknown> }) =>
-        Promise.resolve({ id: KLUB_ID, ...args.data }),
-      ),
+      update: vi
+        .fn()
+        .mockImplementation((args: { data: Record<string, unknown> }) =>
+          Promise.resolve({ id: KLUB_ID, ...args.data }),
+        ),
     },
   };
 }

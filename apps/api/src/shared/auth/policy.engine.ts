@@ -70,8 +70,7 @@ export class PolicyEngine {
         // Demote/promote/transfer dessas roles é privilégio do OWNER.
         if (
           domain === 'role' &&
-          (resource.targetRole === 'PLATFORM_OWNER' ||
-            resource.targetRole === 'PLATFORM_ADMIN')
+          (resource.targetRole === 'PLATFORM_OWNER' || resource.targetRole === 'PLATFORM_ADMIN')
         ) {
           return false;
         }
