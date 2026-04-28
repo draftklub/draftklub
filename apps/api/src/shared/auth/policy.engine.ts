@@ -5,37 +5,25 @@ import type { ResourceContext } from './resource-context.interface';
 /**
  * Ações liberadas pra qualquer user autenticado (sem roleAssignments).
  * Use com parcimônia — cada entrada aqui amplia o ataque surface.
- *
- * `klub.create`: self-service de Klub novo (Onda 1, fluxo /criar-klub).
- * Logo após criar, o user vira KLUB_ADMIN automaticamente — daí em
- * diante respeita o scope normal.
- *
- * `klub.join_via_link`: aceitar convite por link compartilhado (Onda 1,
- * fluxo /convite/:slug). Cria Membership + RoleAssignment PLAYER pra
- * user atual no Klub identificado pelo slug. Idempotente — re-aceitar
- * o mesmo link no-op. Trade-off: qualquer pessoa com o link pode
- * entrar como PLAYER. Onda 2 vai trocar por sistema de Invitation
- * tokens revogáveis.
- *
- * `klub.discover`: lista Klubs públicos (`discoverable=true`) na
- * search /klubs/discover (Onda 2 Sprint B). Endpoint só retorna
- * Klubs que opt-in pra busca; sem dados sensíveis.
  */
 const PUBLIC_AUTHENTICATED_ACTIONS: ReadonlySet<string> = new Set([
+  // Self-service de Klub novo. Logo após criar, o user vira KLUB_ADMIN.
   'klub.create',
+  // Aceitar convite por link compartilhado.
   'klub.join_via_link',
+  // Discovery — lista Klubs públicos.
   'klub.discover',
-  // Sprint D PR1: preview de slug pro /criar-klub. Só leitura, não vaza
-  // dados sensíveis (só nome de Klubs públicos em conflito).
+  // Preview de slug pro /criar-klub. Só leitura.
   'klub.check-slug',
-  // Sprint D PR1: preview de CNPJ lookup (BrasilAPI) pro /criar-klub.
+  // Preview de CNPJ lookup (BrasilAPI) pro /criar-klub.
   'klub.cnpj-lookup',
 ]);
 
 @Injectable()
 export class PolicyEngine {
   can(user: AuthenticatedUser, action: string, resource: ResourceContext = {}): boolean {
-    if (user.roleAssignments.some((r) => r.role === 'SUPER_ADMIN')) {
+    // Sprint Polish PR-J1 — PLATFORM_OWNER continua bypass total.
+    if (user.roleAssignments.some((r) => r.role === 'PLATFORM_OWNER')) {
       return true;
     }
 
@@ -77,18 +65,40 @@ export class PolicyEngine {
     user: AuthenticatedUser,
   ): boolean {
     switch (role) {
-      case 'KLUB_ADMIN':
+      case 'PLATFORM_ADMIN':
+        // Tudo, EXCETO mexer em PLATFORM_OWNER ou outros PLATFORM_ADMINs.
+        // Demote/promote/transfer dessas roles é privilégio do OWNER.
+        if (
+          domain === 'role' &&
+          (resource.targetRole === 'PLATFORM_OWNER' ||
+            resource.targetRole === 'PLATFORM_ADMIN')
+        ) {
+          return false;
+        }
         return true;
 
-      case 'SPORTS_COMMITTEE':
+      case 'KLUB_ADMIN':
+        // Tudo no scope do Klub (já garantido por scopeMatches).
+        return true;
+
+      case 'KLUB_ASSISTANT':
+        // Mesma coisa do Klub Admin EXCETO operações sobre o role do
+        // KLUB_ADMIN (demote/transfer). Bloqueia mexida no Admin.
+        if (domain === 'role' && resource.targetRole === 'KLUB_ADMIN') {
+          return false;
+        }
+        return true;
+
+      case 'SPORT_COMMISSION':
+        // Organização da modalidade: torneios, matches, ranking, ratings.
+        // Booking incluído porque torneios geram bookings das quadras.
+        // `klub.*` e `sport.*` liberados pra navegação.
         return ['tournament', 'match', 'ranking', 'rating', 'klub', 'sport', 'booking'].includes(
           domain,
         );
 
-      case 'TEACHER':
-        return domain === 'academy' || domain === 'class';
-
-      case 'STAFF':
+      case 'SPORT_STAFF':
+        // Operação dia-a-dia: criar/aprovar/cancelar bookings.
         return domain === 'booking' && ['create', 'approve', 'cancel_others'].includes(operation);
 
       case 'PLAYER':

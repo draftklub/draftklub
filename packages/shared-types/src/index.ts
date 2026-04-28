@@ -15,12 +15,25 @@
 
 // ─── Enums (string unions) ──────────────────────────────────────────────
 
+/**
+ * Roles do sistema. Sprint Polish PR-J1 reestruturou:
+ * - Plataforma: PLATFORM_OWNER (singleton) + PLATFORM_ADMIN (max 3).
+ *   Substituem o antigo SUPER_ADMIN.
+ * - Klub: KLUB_ADMIN (singleton por Klub) + KLUB_ASSISTANT (multi).
+ *   Assistant tem todas perms do Admin EXCETO mexer no role do Admin.
+ * - Modalidade: SPORT_COMMISSION (organização — torneios, ranking,
+ *   regras) + SPORT_STAFF (operação — recepção, manutenção, in-loco).
+ *   Antigos STAFF e SPORTS_COMMITTEE renomeados.
+ * - PLAYER: default.
+ * - TEACHER removido (será reestruturado no futuro).
+ */
 export type Role =
-  | 'SUPER_ADMIN'
+  | 'PLATFORM_OWNER'
+  | 'PLATFORM_ADMIN'
   | 'KLUB_ADMIN'
-  | 'SPORTS_COMMITTEE'
-  | 'STAFF'
-  | 'TEACHER'
+  | 'KLUB_ASSISTANT'
+  | 'SPORT_COMMISSION'
+  | 'SPORT_STAFF'
   | 'PLAYER';
 
 export type UserKind = 'regular' | 'guest';

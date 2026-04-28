@@ -107,9 +107,9 @@ function KlubCard({ klub }: { klub: UserKlubMembership }) {
   const roleLabel =
     role === 'KLUB_ADMIN'
       ? 'Admin'
-      : role === 'STAFF'
+      : role === 'SPORT_STAFF'
         ? 'Staff'
-        : role === 'SPORTS_COMMITTEE'
+        : role === 'SPORT_COMMISSION'
           ? 'Comissão'
           : role === 'PLAYER'
             ? 'Player'

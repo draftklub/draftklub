@@ -83,7 +83,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
     void getMe()
       .then((me) => {
         if (cancelled) return;
-        setIsSuperAdmin(me.roleAssignments.some((r) => r.role === 'SUPER_ADMIN'));
+        setIsSuperAdmin(me.roleAssignments.some((r) => r.role === 'PLATFORM_OWNER'));
       })
       .catch(() => null);
     listMyEnrollments()
@@ -531,7 +531,7 @@ function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
 }
 
 function RoleDot({ role }: { role: Role }) {
-  const isAdmin = role === 'KLUB_ADMIN' || role === 'SUPER_ADMIN';
+  const isAdmin = role === 'KLUB_ADMIN' || role === 'PLATFORM_OWNER';
   if (!isAdmin) return null;
   return <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-label="Admin" />;
 }

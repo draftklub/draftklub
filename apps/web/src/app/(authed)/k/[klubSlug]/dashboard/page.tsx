@@ -201,7 +201,7 @@ function KlubAdminActions() {
         if (cancelled) return;
         const m = memberships.find((x) => x.klubId === klub.id);
         const role = m?.role;
-        setIsAdmin(role === 'KLUB_ADMIN' || role === 'STAFF');
+        setIsAdmin(role === 'KLUB_ADMIN' || role === 'SPORT_STAFF');
       })
       .catch(() => null);
     return () => {

@@ -173,10 +173,10 @@ export class CompetitionFacade {
       where: {
         userId,
         OR: [
-          { role: 'SUPER_ADMIN' },
+          { role: 'PLATFORM_OWNER' },
           {
             scopeKlubId: tournament.klubSport.klubId,
-            role: { in: ['KLUB_ADMIN', 'SPORTS_COMMITTEE'] },
+            role: { in: ['KLUB_ADMIN', 'SPORT_COMMISSION'] },
           },
         ],
       },

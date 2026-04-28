@@ -14,8 +14,8 @@ const SEED_PASSWORD = 'DraftKlub@Seed2026!';
 
 const USERS = [
   { email: 'admin@tennis-carioca.com', name: 'Admin Tennis Carioca', role: 'KLUB_ADMIN' },
-  { email: 'comissao@tennis-carioca.com', name: 'Comissão Tênis', role: 'SPORTS_COMMITTEE' },
-  { email: 'prof.carlos@tennis-carioca.com', name: 'Prof. Carlos', role: 'TEACHER' },
+  { email: 'comissao@tennis-carioca.com', name: 'Comissão Tênis', role: 'SPORT_COMMISSION' },
+  { email: 'staff@tennis-carioca.com', name: 'Staff Quadra', role: 'SPORT_STAFF' },
   { email: 'joao@player.com', name: 'João Silva', role: 'PLAYER' },
   { email: 'maria@player.com', name: 'Maria Santos', role: 'PLAYER' },
   { email: 'pedro@player.com', name: 'Pedro Costa', role: 'PLAYER' },

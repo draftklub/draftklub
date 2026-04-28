@@ -133,9 +133,9 @@ describe('GetMyKlubsHandler', () => {
       memberships: [membership(KLUB_A)],
       roles: [
         { role: 'PLAYER', scopeKlubId: KLUB_A },
-        { role: 'STAFF', scopeKlubId: KLUB_A },
+        { role: 'SPORT_STAFF', scopeKlubId: KLUB_A },
+        { role: 'SPORT_COMMISSION', scopeKlubId: KLUB_A },
         { role: 'KLUB_ADMIN', scopeKlubId: KLUB_A },
-        { role: 'TEACHER', scopeKlubId: KLUB_A },
       ],
     });
 
@@ -179,7 +179,7 @@ describe('GetMyKlubsHandler', () => {
     const { handler } = buildHandler({
       memberships: [membership(KLUB_A)],
       roles: [
-        { role: 'SUPER_ADMIN', scopeKlubId: null },
+        { role: 'PLATFORM_OWNER', scopeKlubId: null },
         { role: 'PLAYER', scopeKlubId: KLUB_A },
       ],
     });

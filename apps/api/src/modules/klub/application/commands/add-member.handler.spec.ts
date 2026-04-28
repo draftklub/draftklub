@@ -138,9 +138,9 @@ describe('AddMemberHandler', () => {
   });
 
   it('aceita role custom (ex: STAFF) e cria RoleAssignment correspondente', async () => {
-    await handler.execute({ klubId: KLUB_ID, userId: USER_ID, type: 'staff', role: 'STAFF' });
+    await handler.execute({ klubId: KLUB_ID, userId: USER_ID, type: 'staff', role: 'SPORT_STAFF' });
 
-    expect(fake.state.roleAssignments[0]?.role).toBe('STAFF');
+    expect(fake.state.roleAssignments[0]?.role).toBe('SPORT_STAFF');
   });
 
   it('idempotente: re-executar nao duplica RoleAssignment', async () => {

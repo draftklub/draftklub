@@ -2,14 +2,18 @@ import { Injectable } from '@nestjs/common';
 import type { UserKlubMembership } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
-/** Precedência de role pra computar a "role mais alta" do user num Klub. */
+/**
+ * Precedência de role pra computar a "role mais alta" do user num Klub.
+ * Sprint Polish PR-J1 — atualizado pra novo set de roles.
+ */
 const ROLE_PRIORITY: Record<string, number> = {
+  PLATFORM_OWNER: 250,
+  PLATFORM_ADMIN: 220,
   KLUB_ADMIN: 100,
-  SPORTS_COMMITTEE: 80,
-  STAFF: 60,
-  TEACHER: 50,
+  KLUB_ASSISTANT: 90,
+  SPORT_COMMISSION: 80,
+  SPORT_STAFF: 60,
   PLAYER: 10,
-  SUPER_ADMIN: 200, // global, mas se aparecer escopado também ranqueia alto
 };
 
 @Injectable()

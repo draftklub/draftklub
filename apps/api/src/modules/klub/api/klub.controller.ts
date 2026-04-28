@@ -148,7 +148,7 @@ export class KlubController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const dto = UpdateKlubSchema.parse(body);
-    const isSuperAdmin = user.roleAssignments.some((r) => r.role === 'SUPER_ADMIN');
+    const isSuperAdmin = user.roleAssignments.some((r) => r.role === 'PLATFORM_OWNER');
     return this.klubFacade.updateKlub({ klubId: id, patch: dto, isSuperAdmin });
   }
 
