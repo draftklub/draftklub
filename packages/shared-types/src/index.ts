@@ -581,6 +581,251 @@ export interface PlayerSportEnrollment {
   cancelledById: string | null;
 }
 
+// ─── Rankings + Matches (Sprint K — competition + ranking) ──────────────
+
+/** Engine de cálculo de rating. Configurado por ranking. */
+export type RatingEngine = 'elo' | 'win_loss' | 'points';
+
+/** Tipo de ranking — define elegibilidade. */
+export type RankingType = 'singles' | 'doubles' | 'mixed';
+
+/** Como ordenar entries no ranking. */
+export type RankingOrderBy = 'rating' | 'tournament_points' | 'combined';
+
+/** Janela temporal pra cômputo do rating. */
+export type RankingWindowType = 'all_time' | 'rolling_window' | 'season';
+
+/** Estado de um MatchResult. */
+export type MatchResultStatus = 'pending_confirmation' | 'confirmed' | 'disputed' | 'invalidated';
+
+/** Origem de um MatchResult. */
+export type MatchResultSource = 'casual' | 'tournament' | 'tournament_prequalifier';
+
+/** Item leve do GET /klubs/:klubId/sports/:sportCode/rankings. */
+export interface RankingListItem {
+  id: string;
+  name: string;
+  type: RankingType;
+  gender: string | null;
+  ageMin: number | null;
+  ageMax: number | null;
+  ratingEngine: RatingEngine;
+  initialRating: number;
+  active: boolean;
+  playerCount: number;
+  createdAt: string;
+}
+
+/** Linha de player na listagem de ranking detail. */
+export interface RankingPlayerEntry {
+  position: number;
+  userId: string;
+  fullName: string;
+  avatarUrl: string | null;
+  rating: number;
+  tournamentPoints: number;
+  ratingSource: string;
+  wins: number;
+  losses: number;
+  gamesPlayed: number;
+  /** Delta da última atualização de rating; positivo se ganhou. */
+  lastRatingChange: number;
+  lastPlayedAt: string | null;
+}
+
+/** Detail completa do ranking — GET /klubs/.../rankings/:rankingId. */
+export interface RankingDetail {
+  id: string;
+  name: string;
+  type: RankingType;
+  gender: string | null;
+  ageMin: number | null;
+  ageMax: number | null;
+  ratingEngine: RatingEngine;
+  initialRating: number;
+  active: boolean;
+  orderBy: RankingOrderBy;
+  windowType: RankingWindowType;
+  windowSize: number | null;
+  includesCasualMatches: boolean;
+  includesTournamentMatches: boolean;
+  includesTournamentPoints: boolean;
+  players: RankingPlayerEntry[];
+}
+
+/** Result de match (casual ou de torneio). */
+export interface MatchResult {
+  id: string;
+  rankingId: string;
+  player1Id: string;
+  player2Id: string;
+  winnerId: string | null;
+  score: string | null;
+  status: MatchResultStatus;
+  source: MatchResultSource;
+  submittedById: string;
+  confirmedById: string | null;
+  confirmedAt: string | null;
+  player1RatingBefore: number | null;
+  player2RatingBefore: number | null;
+  player1RatingAfter: number | null;
+  player2RatingAfter: number | null;
+  ratingDelta1: number | null;
+  ratingDelta2: number | null;
+  playedAt: string;
+  spaceId: string | null;
+  notes: string | null;
+  /** Se vier de torneio, refs preenchidas. */
+  tournamentId: string | null;
+  tournamentMatchId: string | null;
+  isWalkover: boolean;
+}
+
+// ─── Tournaments (Sprint K) ─────────────────────────────────────────────
+
+export type TournamentFormat =
+  | 'knockout'
+  | 'round_robin'
+  | 'double_elimination'
+  | 'groups_knockout';
+
+export type TournamentStatus = 'draft' | 'prequalifying' | 'in_progress' | 'finished' | 'cancelled';
+
+export type TournamentRegistrationApproval = 'auto' | 'committee';
+
+export type TournamentResultReportingMode = 'committee_only' | 'player_with_confirm';
+
+export type TournamentEntryStatus = 'pending_approval' | 'pending_seeding' | 'seeded' | 'withdrawn';
+
+export type TournamentMatchStatus =
+  | 'pending'
+  | 'awaiting_confirmation'
+  | 'completed'
+  | 'bye'
+  | 'walkover'
+  | 'double_walkover';
+
+export type TournamentMatchKind = 'main' | 'group' | 'losers' | 'grand_final';
+
+/** Shape do RankingPointsSchema.points — chaves variam (champion, runnerUp, etc). */
+export type RankingPointsMap = Record<string, number>;
+
+export interface RankingPointsSchema {
+  id: string;
+  klubSportId: string;
+  name: string;
+  description: string | null;
+  points: RankingPointsMap;
+  active: boolean;
+  createdById: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TournamentCategory {
+  id: string;
+  tournamentId: string;
+  name: string;
+  order: number;
+  maxPlayers: number | null;
+  minRatingExpected: number | null;
+  maxRatingExpected: number | null;
+  pointsSchemaId: string;
+}
+
+/** Tournament detail — usado em GET /klubs/.../tournaments/:id. */
+export interface TournamentDetail {
+  id: string;
+  klubSportId: string;
+  rankingId: string;
+  name: string;
+  description: string | null;
+  coverUrl: string | null;
+  format: TournamentFormat;
+  hasPrequalifiers: boolean;
+  prequalifierBordersPerFrontier: number | null;
+  registrationApproval: TournamentRegistrationApproval;
+  registrationFee: string | null;
+  registrationOpensAt: string;
+  registrationClosesAt: string;
+  drawDate: string;
+  prequalifierStartDate: string | null;
+  prequalifierEndDate: string | null;
+  mainStartDate: string;
+  mainEndDate: string | null;
+  status: TournamentStatus;
+  currentPhase: string | null;
+  resultReportingMode: TournamentResultReportingMode;
+  pointsApplied: boolean;
+  pointsAppliedAt: string | null;
+  cancelledAt: string | null;
+  cancellationReason: string | null;
+  /** Categorias inline pra evitar fetch separado. */
+  categories: TournamentCategory[];
+  /** Stats agregadas pro detail header. */
+  entryCount: number;
+  matchCount: number;
+  createdAt: string;
+}
+
+/** Inscrição no torneio. */
+export interface TournamentEntry {
+  id: string;
+  tournamentId: string;
+  userId: string;
+  /** Joined com User pra UI poder mostrar nome direto. */
+  userFullName: string;
+  userAvatarUrl: string | null;
+  categoryId: string | null;
+  status: TournamentEntryStatus;
+  finalPosition: string | null;
+  ratingAtEntry: number | null;
+  categorySource: 'auto' | 'manual';
+  isWildCard: boolean;
+  registeredAt: string;
+  approvedAt: string | null;
+  withdrawnAt: string | null;
+}
+
+/** Match individual no bracket. Refs de TBD (To Be Determined) ficam pra prequalifier. */
+export interface TournamentMatchView {
+  id: string;
+  tournamentId: string;
+  categoryId: string;
+  phase: string;
+  round: number;
+  bracketPosition: string;
+  slotTop: number;
+  slotBottom: number;
+  player1Id: string | null;
+  player2Id: string | null;
+  player1Name: string | null;
+  player2Name: string | null;
+  seed1: number | null;
+  seed2: number | null;
+  isBye: boolean;
+  status: TournamentMatchStatus;
+  winnerId: string | null;
+  matchKind: TournamentMatchKind;
+  scheduledFor: string | null;
+  completedAt: string | null;
+  /** Score final se completed (vem do MatchResult). */
+  score: string | null;
+  /** Label "TBD" pra slots que dependem de match prequalificatório. */
+  tbdPlayer1Label: string | null;
+  tbdPlayer2Label: string | null;
+}
+
+/** Bracket completo organizado por categoria — GET /tournaments/:id/bracket. */
+export interface TournamentBracket {
+  tournamentId: string;
+  categories: {
+    id: string;
+    name: string;
+    matches: TournamentMatchView[];
+  }[];
+}
+
 // ─── API error envelope ─────────────────────────────────────────────────
 
 /** Shape do erro de validação Zod retornado pelo `ZodExceptionFilter`. */
