@@ -46,7 +46,7 @@ export default function EditarKlubPage() {
       .then(([k, me]) => {
         if (cancelled) return;
         setKlub(k);
-        setIsSuperAdmin(me.roleAssignments.some((r) => r.role === 'SUPER_ADMIN'));
+        setIsSuperAdmin(me.roleAssignments.some((r) => r.role === 'PLATFORM_OWNER'));
         setV({
           name: k.name,
           commonName: k.commonName,

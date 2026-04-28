@@ -24,7 +24,7 @@ import {
 } from '@/lib/api/enrollments';
 import { cn } from '@/lib/utils';
 
-const ADMIN_ROLES: Role[] = ['SUPER_ADMIN', 'KLUB_ADMIN', 'SPORTS_COMMITTEE'];
+const ADMIN_ROLES: Role[] = ['PLATFORM_OWNER', 'KLUB_ADMIN', 'SPORT_COMMISSION'];
 
 export default function ModalidadesPage() {
   return (

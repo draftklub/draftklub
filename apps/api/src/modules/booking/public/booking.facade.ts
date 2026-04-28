@@ -184,10 +184,10 @@ export class BookingFacade {
       where: {
         userId,
         OR: [
-          { role: 'SUPER_ADMIN' },
+          { role: { in: ['PLATFORM_OWNER', 'PLATFORM_ADMIN'] } },
           {
             scopeKlubId: klubId,
-            role: { in: ['KLUB_ADMIN', 'STAFF'] },
+            role: { in: ['KLUB_ADMIN', 'KLUB_ASSISTANT', 'SPORT_STAFF'] },
           },
         ],
       },

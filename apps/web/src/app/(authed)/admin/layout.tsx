@@ -19,7 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     void getMe()
       .then((me) => {
         if (cancelled) return;
-        const isSuperAdmin = me.roleAssignments.some((r) => r.role === 'SUPER_ADMIN');
+        const isSuperAdmin = me.roleAssignments.some((r) => r.role === 'PLATFORM_OWNER');
         if (!isSuperAdmin) {
           router.replace('/home');
           return;

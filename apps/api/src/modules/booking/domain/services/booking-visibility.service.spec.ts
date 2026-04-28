@@ -58,7 +58,7 @@ describe('BookingVisibilityService', () => {
   it('SUPER_ADMIN -> full', async () => {
     const r = await svc.resolve({
       ...baseCtx,
-      viewerRoles: [{ role: 'SUPER_ADMIN' }],
+      viewerRoles: [{ role: 'PLATFORM_OWNER' }],
     });
     expect(r).toBe('full');
   });
@@ -82,7 +82,7 @@ describe('BookingVisibilityService', () => {
   it('STAFF do mesmo Klub -> full', async () => {
     const r = await svc.resolve({
       ...baseCtx,
-      viewerRoles: [{ role: 'STAFF', scopeKlubId: KLUB_ID }],
+      viewerRoles: [{ role: 'SPORT_STAFF', scopeKlubId: KLUB_ID }],
     });
     expect(r).toBe('full');
   });
@@ -90,7 +90,7 @@ describe('BookingVisibilityService', () => {
   it('SPORTS_COMMITTEE da mesma modalidade -> full', async () => {
     const r = await svc.resolve({
       ...baseCtx,
-      viewerRoles: [{ role: 'SPORTS_COMMITTEE', scopeKlubId: KLUB_ID, scopeSportId: 'tennis' }],
+      viewerRoles: [{ role: 'SPORT_COMMISSION', scopeKlubId: KLUB_ID, scopeSportId: 'tennis' }],
     });
     expect(r).toBe('full');
   });
@@ -98,7 +98,7 @@ describe('BookingVisibilityService', () => {
   it('SPORTS_COMMITTEE de outra modalidade -> limited (sem enrollment)', async () => {
     const r = await svc.resolve({
       ...baseCtx,
-      viewerRoles: [{ role: 'SPORTS_COMMITTEE', scopeKlubId: KLUB_ID, scopeSportId: 'squash' }],
+      viewerRoles: [{ role: 'SPORT_COMMISSION', scopeKlubId: KLUB_ID, scopeSportId: 'squash' }],
     });
     expect(r).toBe('limited');
   });

@@ -134,6 +134,14 @@ model MembershipRequest {
 model RoleAssignment {
   id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId       String    @map("user_id") @db.Uuid
+  /// Role do user. Sprint Polish PR-J1 reestruturou:
+  ///   PLATFORM_OWNER   — singleton (max 1 row, partial unique index)
+  ///   PLATFORM_ADMIN   — quota max 3 (app-level)
+  ///   KLUB_ADMIN       — singleton por Klub (partial unique on scope_klub_id)
+  ///   KLUB_ASSISTANT   — vários por Klub
+  ///   SPORT_COMMISSION — torneios/ranking/match (scoped por Klub + sport)
+  ///   SPORT_STAFF      — operação dia-a-dia (scoped por Klub + sport)
+  ///   PLAYER           — default
   role         String
   scopeKlubId  String?   @map("scope_klub_id") @db.Uuid
   scopeSportId String?   @map("scope_sport_id") @db.Uuid

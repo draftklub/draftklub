@@ -1,9 +1,11 @@
+// Sprint Polish PR-J1 — alinhar com Role union em @draftklub/shared-types.
 export type Role =
-  | 'SUPER_ADMIN'
+  | 'PLATFORM_OWNER'
+  | 'PLATFORM_ADMIN'
   | 'KLUB_ADMIN'
-  | 'SPORTS_COMMITTEE'
-  | 'TEACHER'
-  | 'STAFF'
+  | 'KLUB_ASSISTANT'
+  | 'SPORT_COMMISSION'
+  | 'SPORT_STAFF'
   | 'PLAYER';
 
 export interface RoleAssignmentProps {
