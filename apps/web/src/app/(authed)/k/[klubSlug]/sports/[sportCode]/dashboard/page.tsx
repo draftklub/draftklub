@@ -56,11 +56,20 @@ export default function SportDashboardPage() {
         </header>
 
         <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <PlaceholderCard
-            icon={Trophy}
-            title="Torneios"
-            hint="Torneios ativos, próximos e finalizados nessa modalidade"
-          />
+          <Link
+            href={`/k/${klub.slug}/sports/${sportCode}/torneios`}
+            className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-muted/30"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+              <Trophy className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-[14px] font-bold">Torneios</p>
+              <p className="mt-1 text-[12.5px] text-muted-foreground">
+                Em andamento, próximos e finalizados
+              </p>
+            </div>
+          </Link>
           <Link
             href={`/k/${klub.slug}/sports/${sportCode}/rankings`}
             className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-muted/30"
@@ -83,7 +92,7 @@ export default function SportDashboardPage() {
         </section>
 
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-[13px] text-muted-foreground">
-          Em breve! Torneios e Comissão. Por enquanto, Ranking já tá funcionando — clique no card.
+          Em breve! Comissão. Torneios e Ranking já estão funcionando — clique nos cards acima.
         </div>
       </div>
     </main>
