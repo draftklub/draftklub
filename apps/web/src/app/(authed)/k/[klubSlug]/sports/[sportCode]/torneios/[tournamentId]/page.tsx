@@ -7,23 +7,42 @@ import {
   AlertCircle,
   ArrowLeft,
   Calendar,
+  CalendarRange,
   CheckCircle2,
   Crown,
+  Dices,
   Loader2,
+  Plus,
+  Save,
+  Settings2,
+  Trash2,
   Trophy,
   Users,
   XCircle,
 } from 'lucide-react';
 import type {
+  Space,
   TournamentBracket,
   TournamentDetail,
   TournamentEntry,
   TournamentMatchView,
+  TournamentResultReportingMode,
   TournamentStatus,
 } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
-import { getTournament, getTournamentBracket, listTournamentEntries } from '@/lib/api/tournaments';
+import { getMe } from '@/lib/api/me';
+import { listKlubSpaces } from '@/lib/api/spaces';
+import {
+  drawTournament,
+  getTournament,
+  getTournamentBracket,
+  listTournamentEntries,
+  scheduleTournament,
+  updateReportingMode,
+  type ScheduleConfigInput,
+} from '@/lib/api/tournaments';
+import { isPlatformLevel } from '@/lib/auth/role-helpers';
 import { cn } from '@/lib/utils';
 
 const SPORT_LABELS: Record<string, string> = {
@@ -48,7 +67,7 @@ const FORMAT_LABELS: Record<string, string> = {
   groups_knockout: 'Grupos + eliminatória',
 };
 
-type TabId = 'overview' | 'bracket' | 'entries';
+type TabId = 'overview' | 'bracket' | 'entries' | 'operacoes';
 
 export default function TournamentDetailPage() {
   const params = useParams<{ klubSlug: string; sportCode: string; tournamentId: string }>();
@@ -60,12 +79,28 @@ export default function TournamentDetailPage() {
   const [tournament, setTournament] = React.useState<TournamentDetail | null>(null);
   const [bracket, setBracket] = React.useState<TournamentBracket | null>(null);
   const [entries, setEntries] = React.useState<TournamentEntry[] | null>(null);
+  const [canManage, setCanManage] = React.useState(false);
+  const [reload, setReload] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!klub) return;
     let cancelled = false;
     setError(null);
+    void getMe()
+      .then((me) => {
+        if (cancelled) return;
+        const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
+        const local = me.roleAssignments.some(
+          (r) =>
+            (r.role === 'KLUB_ADMIN' ||
+              r.role === 'KLUB_ASSISTANT' ||
+              r.role === 'SPORT_COMMISSION') &&
+            r.scopeKlubId === klub.id,
+        );
+        setCanManage(platform || local);
+      })
+      .catch(() => null);
     void Promise.all([
       getTournament(klub.id, sportCode, tournamentId),
       getTournamentBracket(tournamentId).catch(() => null),
@@ -91,7 +126,7 @@ export default function TournamentDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [klub, sportCode, tournamentId]);
+  }, [klub, sportCode, tournamentId, reload]);
 
   if (!klub) return null;
   const sportLabel = SPORT_LABELS[sportCode] ?? sportCode;
@@ -123,11 +158,18 @@ export default function TournamentDetailPage() {
               klubName={klub.commonName ?? klub.name}
               sportLabel={sportLabel}
             />
-            <TabBar active={tab} onSelect={setTab} />
+            <TabBar active={tab} onSelect={setTab} canManage={canManage} />
             <div className="pt-2">
               {tab === 'overview' ? <Overview tournament={tournament} /> : null}
               {tab === 'bracket' ? <BracketView bracket={bracket} /> : null}
               {tab === 'entries' ? <EntriesView entries={entries} tournament={tournament} /> : null}
+              {tab === 'operacoes' && canManage ? (
+                <OperacoesView
+                  tournament={tournament}
+                  klubId={klub.id}
+                  onChanged={() => setReload((n) => n + 1)}
+                />
+              ) : null}
             </div>
           </>
         )}
@@ -178,11 +220,20 @@ function Header({
 
 // ─── Tab bar ────────────────────────────────────────────────────────────
 
-function TabBar({ active, onSelect }: { active: TabId; onSelect: (id: TabId) => void }) {
+function TabBar({
+  active,
+  onSelect,
+  canManage,
+}: {
+  active: TabId;
+  onSelect: (id: TabId) => void;
+  canManage: boolean;
+}) {
   const tabs: { id: TabId; label: string }[] = [
     { id: 'overview', label: 'Visão geral' },
     { id: 'bracket', label: 'Chave' },
     { id: 'entries', label: 'Inscritos' },
+    ...(canManage ? [{ id: 'operacoes' as TabId, label: 'Operações' }] : []),
   ];
   return (
     <nav className="-mx-4 overflow-x-auto border-b border-border md:mx-0">
@@ -317,6 +368,593 @@ function DateCard({
       ) : null}
     </div>
   );
+}
+
+// ─── Operações tab (PR-K2b) ─────────────────────────────────────────────
+
+function OperacoesView({
+  tournament,
+  klubId,
+  onChanged,
+}: {
+  tournament: TournamentDetail;
+  klubId: string;
+  onChanged: () => void;
+}) {
+  const [error, setError] = React.useState<string | null>(null);
+  const [message, setMessage] = React.useState<string | null>(null);
+
+  const isDrawn = tournament.status !== 'draft';
+  const isFinished = tournament.status === 'finished' || tournament.status === 'cancelled';
+
+  return (
+    <div className="space-y-4">
+      {message ? (
+        <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+          <CheckCircle2 className="mr-1 inline size-3.5" />
+          {message}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
+          <AlertCircle className="mr-1 inline size-3.5" />
+          {error}
+        </p>
+      ) : null}
+
+      <DrawSection
+        tournament={tournament}
+        isDrawn={isDrawn}
+        isFinished={isFinished}
+        onSuccess={(msg) => {
+          setMessage(msg);
+          setError(null);
+          onChanged();
+        }}
+        onError={(msg) => setError(msg)}
+      />
+
+      <ScheduleSection
+        tournamentId={tournament.id}
+        klubId={klubId}
+        isDrawn={isDrawn}
+        isFinished={isFinished}
+        onSuccess={(msg) => {
+          setMessage(msg);
+          setError(null);
+          onChanged();
+        }}
+        onError={(msg) => setError(msg)}
+      />
+
+      <ReportingModeSection
+        tournament={tournament}
+        isFinished={isFinished}
+        onSuccess={(msg) => {
+          setMessage(msg);
+          setError(null);
+          onChanged();
+        }}
+        onError={(msg) => setError(msg)}
+      />
+    </div>
+  );
+}
+
+function DrawSection({
+  tournament,
+  isDrawn,
+  isFinished,
+  onSuccess,
+  onError,
+}: {
+  tournament: TournamentDetail;
+  isDrawn: boolean;
+  isFinished: boolean;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [submitting, setSubmitting] = React.useState(false);
+  const disabled = isFinished || submitting;
+
+  async function handleDraw() {
+    if (disabled) return;
+    if (
+      !window.confirm(
+        `Sortear chave de "${tournament.name}"?\n\nMatches serão gerados a partir das ${tournament.entryCount} inscrições aprovadas. Após sortear, mover players entre categorias deixa de ser trivial.`,
+      )
+    ) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await drawTournament(tournament.id);
+      onSuccess('Chave sorteada — veja a aba "Chave".');
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao sortear.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2">
+        <Dices className="size-4 text-muted-foreground" />
+        <h3 className="font-display text-[14px] font-bold">Sortear chave</h3>
+        {isDrawn ? (
+          <span className="inline-flex h-5 items-center rounded-full bg-[hsl(142_71%_32%/0.12)] px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-[hsl(142_71%_32%)]">
+            Já sorteada
+          </span>
+        ) : null}
+      </div>
+      <p className="text-[12.5px] text-muted-foreground">
+        Gera matches do bracket aplicando seeding por rating. Pra knockout/double-elim, players são
+        distribuídos com bye automático se número não for potência de 2. Pra round-robin, todos
+        contra todos.
+      </p>
+      <div>
+        <button
+          type="button"
+          onClick={() => void handleDraw()}
+          disabled={disabled}
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Dices className="size-3.5" />
+          )}
+          {isDrawn ? 'Re-sortear' : 'Sortear'}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function ScheduleSection({
+  tournamentId,
+  klubId,
+  isDrawn,
+  isFinished,
+  onSuccess,
+  onError,
+}: {
+  tournamentId: string;
+  klubId: string;
+  isDrawn: boolean;
+  isFinished: boolean;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const disabled = isFinished || !isDrawn;
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2">
+        <CalendarRange className="size-4 text-muted-foreground" />
+        <h3 className="font-display text-[14px] font-bold">Distribuir agenda</h3>
+      </div>
+      <p className="text-[12.5px] text-muted-foreground">
+        Aloca matches em quadras+horários respeitando duração da partida, intervalo entre matches e
+        descanso mínimo de cada player. Pré-requisito: chave já sorteada.
+      </p>
+      <div>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          disabled={disabled}
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-4 text-[13px] font-semibold hover:bg-muted disabled:opacity-60"
+        >
+          <Settings2 className="size-3.5" />
+          Configurar agenda
+        </button>
+      </div>
+      {open ? (
+        <ScheduleModal
+          tournamentId={tournamentId}
+          klubId={klubId}
+          onClose={() => setOpen(false)}
+          onSuccess={(msg) => {
+            setOpen(false);
+            onSuccess(msg);
+          }}
+          onError={onError}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+function ReportingModeSection({
+  tournament,
+  isFinished,
+  onSuccess,
+  onError,
+}: {
+  tournament: TournamentDetail;
+  isFinished: boolean;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [mode, setMode] = React.useState<TournamentResultReportingMode>(
+    tournament.resultReportingMode,
+  );
+  const [submitting, setSubmitting] = React.useState(false);
+
+  React.useEffect(() => {
+    setMode(tournament.resultReportingMode);
+  }, [tournament.resultReportingMode]);
+
+  const dirty = mode !== tournament.resultReportingMode;
+  const disabled = isFinished || submitting || !dirty;
+
+  async function handleSave() {
+    if (disabled) return;
+    setSubmitting(true);
+    try {
+      await updateReportingMode(tournament.id, mode);
+      onSuccess(
+        mode === 'committee_only'
+          ? 'Modo atualizado: comissão reporta resultados.'
+          : 'Modo atualizado: player reporta + outro confirma.',
+      );
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao atualizar modo.'));
+      setSubmitting(false);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2">
+        <Settings2 className="size-4 text-muted-foreground" />
+        <h3 className="font-display text-[14px] font-bold">Modo de reportagem</h3>
+      </div>
+      <p className="text-[12.5px] text-muted-foreground">
+        Define quem pode reportar resultado de match. <strong>Comissão reporta</strong> é mais
+        controlado. <strong>Player + confirma</strong> reduz fricção mas exige confirmação do rival.
+      </p>
+      <select
+        value={mode}
+        onChange={(e) => setMode(e.target.value as TournamentResultReportingMode)}
+        disabled={isFinished || submitting}
+        className={inputCls}
+      >
+        <option value="committee_only">Comissão reporta</option>
+        <option value="player_with_confirm">Player reporta + outro confirma</option>
+      </select>
+      <div>
+        <button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={disabled}
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Save className="size-3.5" />
+          )}
+          Salvar
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// ─── Schedule modal ─────────────────────────────────────────────────────
+
+function ScheduleModal({
+  tournamentId,
+  klubId,
+  onClose,
+  onSuccess,
+  onError,
+}: {
+  tournamentId: string;
+  klubId: string;
+  onClose: () => void;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [spaces, setSpaces] = React.useState<Space[] | null>(null);
+  const [dates, setDates] = React.useState<string[]>([formatToday()]);
+  const [startHour, setStartHour] = React.useState(8);
+  const [endHour, setEndHour] = React.useState(22);
+  const [matchDurationMinutes, setMatchDurationMinutes] = React.useState(60);
+  const [breakBetweenMatchesMinutes, setBreakBetweenMatchesMinutes] = React.useState(15);
+  const [restRuleMinutes, setRestRuleMinutes] = React.useState(60);
+  const [spaceIds, setSpaceIds] = React.useState<string[]>([]);
+  const [bootError, setBootError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [localError, setLocalError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    listKlubSpaces(klubId)
+      .then((rows) => {
+        if (cancelled) return;
+        const active = rows.filter((s) => s.status === 'active');
+        setSpaces(active);
+        // Pre-select all active spaces by default
+        setSpaceIds(active.map((s) => s.id));
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setBootError(toErrorMessage(err, 'Erro ao carregar quadras.'));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [klubId]);
+
+  function addDate() {
+    setDates((prev) => [...prev, formatToday()]);
+  }
+  function updateDate(idx: number, value: string) {
+    setDates((prev) => prev.map((d, i) => (i === idx ? value : d)));
+  }
+  function removeDate(idx: number) {
+    setDates((prev) => prev.filter((_, i) => i !== idx));
+  }
+  function toggleSpace(id: string) {
+    setSpaceIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setLocalError(null);
+    if (dates.length === 0) {
+      setLocalError('Adicione pelo menos uma data.');
+      return;
+    }
+    if (endHour <= startHour) {
+      setLocalError('Hora final deve ser maior que inicial.');
+      return;
+    }
+    if (spaceIds.length === 0) {
+      setLocalError('Escolha pelo menos uma quadra.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const config: ScheduleConfigInput = {
+        availableDates: dates,
+        startHour,
+        endHour,
+        matchDurationMinutes,
+        breakBetweenMatchesMinutes,
+        restRuleMinutes,
+        spaceIds,
+      };
+      await scheduleTournament(tournamentId, config);
+      onSuccess('Agenda distribuída — matches alocados em quadras+horários.');
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao agendar.'));
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-md space-y-3 rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold">Distribuir agenda</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+          >
+            ✕
+          </button>
+        </div>
+
+        {bootError ? (
+          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+            {bootError}
+          </p>
+        ) : null}
+        {localError ? (
+          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+            {localError}
+          </p>
+        ) : null}
+
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Datas disponíveis
+          </p>
+          <ul className="space-y-2">
+            {dates.map((d, i) => (
+              <li key={i} className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={d}
+                  onChange={(e) => updateDate(i, e.target.value)}
+                  className={cn(inputCls, 'flex-1')}
+                />
+                {dates.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => removeDate(i)}
+                    aria-label="Remover data"
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={addDate}
+            className="mt-2 inline-flex h-8 items-center gap-1 rounded-md border border-dashed border-border bg-background px-2.5 text-[12px] font-medium hover:bg-muted"
+          >
+            <Plus className="size-3" />
+            Adicionar data
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Início (h)
+            </p>
+            <input
+              type="number"
+              min={0}
+              max={23}
+              value={startHour}
+              onChange={(e) => setStartHour(Number(e.target.value))}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Fim (h)
+            </p>
+            <input
+              type="number"
+              min={1}
+              max={24}
+              value={endHour}
+              onChange={(e) => setEndHour(Number(e.target.value))}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Duração match (min)
+            </p>
+            <input
+              type="number"
+              min={30}
+              max={360}
+              step={5}
+              value={matchDurationMinutes}
+              onChange={(e) => setMatchDurationMinutes(Number(e.target.value))}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Break entre matches
+            </p>
+            <input
+              type="number"
+              min={0}
+              max={120}
+              step={5}
+              value={breakBetweenMatchesMinutes}
+              onChange={(e) => setBreakBetweenMatchesMinutes(Number(e.target.value))}
+              className={inputCls}
+            />
+          </div>
+          <div className="col-span-2">
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Descanso mínimo do player (min)
+            </p>
+            <input
+              type="number"
+              min={0}
+              max={360}
+              step={15}
+              value={restRuleMinutes}
+              onChange={(e) => setRestRuleMinutes(Number(e.target.value))}
+              className={inputCls}
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Tempo mínimo entre 2 matches do mesmo player.
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Quadras
+          </p>
+          {!spaces ? (
+            <div className="flex items-center justify-center py-3">
+              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : spaces.length === 0 ? (
+            <p className="text-[12px] text-muted-foreground">
+              Nenhuma quadra ativa no Klub. Adicione em Configurar Klub → Quadras.
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {spaces.map((s) => {
+                const checked = spaceIds.includes(s.id);
+                return (
+                  <li key={s.id}>
+                    <label
+                      className={cn(
+                        'flex cursor-pointer items-center gap-2 rounded-md border p-2 text-[12.5px] transition-colors',
+                        checked ? 'border-primary bg-primary/5' : 'border-border bg-background',
+                      )}
+                    >
+                      <input type="checkbox" checked={checked} onChange={() => toggleSpace(s.id)} />
+                      <span className="flex-1">{s.name}</span>
+                      {s.indoor ? (
+                        <span className="text-[10.5px] uppercase text-muted-foreground">
+                          indoor
+                        </span>
+                      ) : null}
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleSubmit()}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {submitting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <CalendarRange className="size-3.5" />
+            )}
+            Distribuir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatToday(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+const inputCls =
+  'w-full rounded-[10px] border border-input bg-background px-3 py-2.25 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+
+function toErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) return err.message;
+  if (err instanceof Error) return err.message;
+  return fallback;
 }
 
 // ─── Bracket view ───────────────────────────────────────────────────────
