@@ -159,10 +159,15 @@ model Klub {
   description String?
   avatarUrl   String?   @map("avatar_url")
   coverUrl    String?   @map("cover_url")
+  /// Abreviação curta pra UI compacta (ex: "PAC" pra Paissandu).
+  abbreviation String?  @db.VarChar(10)
+  /// Nome popular/comumente chamado (ex: "Paissandú").
+  commonName  String?   @map("common_name") @db.VarChar(100)
 
   // ─── Tipo ─────────────────────────────────────────────────
   type        String    @default("sports_club")
-  // sports_club | condo | school | public_space | academy | individual
+  // sports_club | arena | academy | condo | hotel_resort | university |
+  // school | public_space | individual
 
   // ─── Dados legais ─────────────────────────────────────────
   entityType          String?   @map("entity_type")   // pj | pf

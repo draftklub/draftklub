@@ -18,6 +18,10 @@ import { apiFetch } from './client';
  */
 export interface CreateKlubInput {
   name: string;
+  /** Sprint Polish PR-G — apelido popular (ex: "Paissandú"). */
+  commonName?: string;
+  /** Sprint Polish PR-G — abreviação curta (ex: "PAC"). */
+  abbreviation?: string;
   type?: KlubType;
   city?: string;
   state?: string;
@@ -69,8 +73,12 @@ export function createKlub(input: CreateKlubInput): Promise<Klub> {
 export interface UpdateKlubInput {
   // KLUB_ADMIN
   name?: string;
+  /** Sprint Polish PR-G — apelido popular. */
+  commonName?: string | null;
+  /** Sprint Polish PR-G — abreviação curta. */
+  abbreviation?: string | null;
   description?: string | null;
-  type?: 'sports_club' | 'condo' | 'school' | 'public_space' | 'academy' | 'individual';
+  type?: KlubType;
   avatarUrl?: string | null;
   coverUrl?: string | null;
   email?: string | null;
@@ -95,6 +103,10 @@ export interface UpdateKlubInput {
   maxMembers?: number;
   maxSports?: number;
   maxCourts?: number;
+  /** Sprint Polish PR-G — slug. SUPER_ADMIN-only no backend. */
+  slug?: string;
+  /** Sprint Polish PR-G — CNPJ (14 dígitos). SUPER_ADMIN-only no backend. */
+  document?: string;
 }
 
 /** PATCH /klubs/:id — KLUB_ADMIN ou SUPER_ADMIN. */

@@ -22,6 +22,10 @@ export interface CreateKlubCommand {
   /** CPF (11 dígitos) — obrigatório se PF e User.documentNumber=null. */
   creatorCpf?: string;
   legalName?: string;
+  /** Sprint Polish PR-G — apelido popular (BrasilAPI nomeFantasia). */
+  commonName?: string;
+  /** Sprint Polish PR-G — abreviação curta (manual). */
+  abbreviation?: string;
   sportCodes?: string[];
   parentKlubId?: string;
   isGroup?: boolean;
@@ -173,6 +177,8 @@ export class CreateKlubHandler {
       documentIv,
       documentHint,
       legalName: resolvedLegalName,
+      commonName: cmd.commonName,
+      abbreviation: cmd.abbreviation,
       sportCodes: cmd.sportCodes ?? [],
       parentKlubId: cmd.parentKlubId,
       isGroup: cmd.isGroup ?? false,

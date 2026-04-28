@@ -25,6 +25,8 @@ export class GetKlubByIdHandler {
       id: klub.id,
       name: klub.name,
       slug: klub.slug,
+      abbreviation: klub.abbreviation,
+      commonName: klub.commonName,
       description: klub.description,
       type: klub.type,
       plan: klub.plan,

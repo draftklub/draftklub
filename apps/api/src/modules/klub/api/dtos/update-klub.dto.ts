@@ -2,10 +2,13 @@ import { z } from 'zod';
 
 const KlubTypeEnum = z.enum([
   'sports_club',
+  'arena',
+  'academy',
   'condo',
+  'hotel_resort',
+  'university',
   'school',
   'public_space',
-  'academy',
   'individual',
 ]);
 
@@ -16,6 +19,10 @@ export const UpdateKlubSchema = z
   .object({
     // KLUB_ADMIN ou SUPER_ADMIN podem editar:
     name: z.string().min(2).max(100).optional(),
+    /** Sprint Polish PR-G — nome popular/colloquial. */
+    commonName: z.string().max(100).nullable().optional(),
+    /** Sprint Polish PR-G — abreviação curta pra UI compacta. */
+    abbreviation: z.string().max(10).nullable().optional(),
     description: z.string().max(2000).nullable().optional(),
     type: KlubTypeEnum.optional(),
     avatarUrl: z.string().url().nullable().optional(),
@@ -53,6 +60,19 @@ export const UpdateKlubSchema = z
     maxMembers: z.number().int().min(1).max(10000).optional(),
     maxSports: z.number().int().min(1).max(20).optional(),
     maxCourts: z.number().int().min(1).max(100).optional(),
+
+    /** Sprint Polish PR-G — slug é SUPER_ADMIN-only por romper URLs/cookies. */
+    slug: z
+      .string()
+      .min(3)
+      .max(80)
+      .regex(/^[a-z0-9-]+$/, 'slug só aceita lowercase, dígitos e hífen')
+      .optional(),
+    /** Sprint Polish PR-G — CNPJ é SUPER_ADMIN-only por mexer em KYC. */
+    document: z
+      .string()
+      .regex(/^\d{14}$/, 'CNPJ deve ter 14 dígitos')
+      .optional(),
   })
   .refine((d) => Object.keys(d).length > 0, { message: 'Patch vazio' });
 

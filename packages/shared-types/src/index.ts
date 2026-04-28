@@ -54,12 +54,20 @@ export type MembershipType = 'member' | 'guest' | 'staff';
 
 export type MembershipStatus = 'active' | 'inactive' | 'suspended';
 
+/**
+ * Tipo de Klub. Sprint Polish PR-G: lista expandida pra cobrir
+ * realidade do mercado (arenas comerciais de padel/beach tennis,
+ * hotéis, universidades). Tipos antigos mantidos pra back-compat.
+ */
 export type KlubType =
   | 'sports_club'
+  | 'arena'
+  | 'academy'
   | 'condo'
+  | 'hotel_resort'
+  | 'university'
   | 'school'
   | 'public_space'
-  | 'academy'
   | 'individual';
 
 export type KlubPlan = 'trial' | 'starter' | 'pro' | 'elite' | 'enterprise';
@@ -330,6 +338,10 @@ export interface Klub {
   id: string;
   name: string;
   slug: string;
+  /** Abreviação curta pra UI compacta (Sprint Polish PR-G). Ex: "PAC". */
+  abbreviation: string | null;
+  /** Nome popular/colloquial (Sprint Polish PR-G). Ex: "Paissandú". */
+  commonName: string | null;
   /** Bio livre do Klub (Sprint Polish PR-F). */
   description: string | null;
   type: KlubType;
