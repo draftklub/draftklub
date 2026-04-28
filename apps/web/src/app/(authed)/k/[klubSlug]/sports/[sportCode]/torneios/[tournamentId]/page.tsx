@@ -59,6 +59,7 @@ import {
   type UpdateTournamentInput,
 } from '@/lib/api/tournaments';
 import { isPlatformLevel } from '@/lib/auth/role-helpers';
+import { formatDateInTz, isBrowserInKlubTz, klubTzLabel } from '@/lib/format-datetime';
 import { validateMatchScore } from '@/lib/sport-validation';
 import { cn } from '@/lib/utils';
 
@@ -179,7 +180,9 @@ export default function TournamentDetailPage() {
             />
             <TabBar active={tab} onSelect={setTab} canManage={canManage} />
             <div className="pt-2">
-              {tab === 'overview' ? <Overview tournament={tournament} /> : null}
+              {tab === 'overview' ? (
+                <Overview tournament={tournament} timezone={klub.timezone ?? undefined} />
+              ) : null}
               {tab === 'bracket' ? (
                 <BracketView
                   bracket={bracket}
@@ -300,27 +303,37 @@ function TabBar({
 
 // ─── Overview tab ───────────────────────────────────────────────────────
 
-function Overview({ tournament }: { tournament: TournamentDetail }) {
+function Overview({ tournament, timezone }: { tournament: TournamentDetail; timezone?: string }) {
+  const tzMismatch = !isBrowserInKlubTz(timezone);
   return (
     <div className="space-y-4">
+      {tzMismatch ? (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 text-[11.5px] text-amber-700 dark:text-amber-400">
+          Datas exibidas no fuso do Klub: <strong>{klubTzLabel(timezone)}</strong>. Seu navegador
+          está em outro fuso.
+        </p>
+      ) : null}
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <DateCard
           label="Inscrições"
           start={tournament.registrationOpensAt}
           end={tournament.registrationClosesAt}
+          timezone={timezone}
         />
-        <DateCard label="Sorteio" start={tournament.drawDate} />
+        <DateCard label="Sorteio" start={tournament.drawDate} timezone={timezone} />
         {tournament.hasPrequalifiers ? (
           <DateCard
             label="Pré-qualificatória"
             start={tournament.prequalifierStartDate}
             end={tournament.prequalifierEndDate}
+            timezone={timezone}
           />
         ) : null}
         <DateCard
           label="Fase principal"
           start={tournament.mainStartDate}
           end={tournament.mainEndDate}
+          timezone={timezone}
         />
       </section>
 
@@ -356,7 +369,7 @@ function Overview({ tournament }: { tournament: TournamentDetail }) {
         <section className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
           <p className="font-display text-[13px] font-bold text-destructive">Torneio cancelado</p>
           <p className="mt-1 text-[12.5px] text-muted-foreground">
-            Em {new Date(tournament.cancelledAt).toLocaleDateString('pt-BR')}
+            Em {formatDateInTz(tournament.cancelledAt, timezone)}
             {tournament.cancellationReason ? ` — ${tournament.cancellationReason}` : ''}.
           </p>
         </section>
@@ -369,10 +382,13 @@ function DateCard({
   label,
   start,
   end,
+  timezone,
 }: {
   label: string;
   start: string | null;
   end?: string | null;
+  /** TZ do Klub pra exibir datas. Default America/Sao_Paulo. */
+  timezone?: string;
 }) {
   if (!start) return null;
   const startDate = new Date(start);
@@ -385,20 +401,11 @@ function DateCard({
       </p>
       <p className="mt-1 inline-flex items-center gap-1.5 font-display text-[14px] font-bold">
         <Calendar className="size-3.5 text-muted-foreground" />
-        {startDate.toLocaleDateString('pt-BR', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })}
+        {formatDateInTz(start, timezone)}
       </p>
       {endDate && !sameDay ? (
         <p className="mt-0.5 text-[12px] text-muted-foreground">
-          até{' '}
-          {endDate.toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          })}
+          até {formatDateInTz(end, timezone)}
         </p>
       ) : null}
     </div>
