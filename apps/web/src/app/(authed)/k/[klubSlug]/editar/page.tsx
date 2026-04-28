@@ -53,7 +53,7 @@ export default function EditarKlubPage() {
           type: k.type,
           email: k.email,
           phone: k.phone,
-          website: (k as unknown as { website?: string | null }).website ?? null,
+          website: k.website,
           cep: k.cep,
           addressStreet: k.addressStreet,
           addressNumber: k.addressNumber,

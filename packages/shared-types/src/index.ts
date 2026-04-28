@@ -330,6 +330,8 @@ export interface Klub {
   id: string;
   name: string;
   slug: string;
+  /** Bio livre do Klub (Sprint Polish PR-F). */
+  description: string | null;
   type: KlubType;
   plan: KlubPlan;
   status: KlubStatus;
@@ -338,6 +340,12 @@ export interface Klub {
   timezone: string;
   email: string | null;
   phone: string | null;
+  /** Link público (Sprint Polish PR-F). */
+  website: string | null;
+  /** URL do avatar/logo (Sprint Polish PR-F). */
+  avatarUrl: string | null;
+  /** URL da imagem de capa (Sprint Polish PR-F). */
+  coverUrl: string | null;
   documentHint: string | null;
   legalName: string | null;
   parentKlubId: string | null;
