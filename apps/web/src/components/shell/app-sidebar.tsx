@@ -4,22 +4,22 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Bell,
   CalendarCheck,
   CalendarDays,
+  Castle,
   Home,
   LayoutGrid,
-  Plus,
-  Search,
-  Settings,
-  Mail,
+  ListOrdered,
   LogOut,
   Loader2,
   Moon,
+  Settings,
   Shield,
   Sparkles,
   Sun,
   Timer,
-  User,
+  Trophy,
   UserCheck,
   X,
 } from 'lucide-react';
@@ -41,16 +41,16 @@ interface AppSidebarProps {
 
 /**
  * Sidebar persistente do shell autenticado. Sempre visível em md+,
- * vira drawer em mobile. Estrutura:
+ * vira drawer em mobile.
  *
- * - Brand
- * - Você: Home
- * - Seus Klubs: lista de memberships + Criar/Buscar/Convites
- * - Footer: avatar + email + logout
+ * Sprint Polish PR-H1 — reorganização:
+ * - Você: Home, Reservas, Klubs, Torneios (em breve), Rankings (em breve)
+ * - Seus Klubs: só nomes (Nome usual quando preenchido)
+ * - Footer: avatar (clicável → perfil), notif, theme, logout
  *
- * Highlight do item ativo via pathname matching. Lista de Klubs
- * busca via `getMyKlubs` no mount; cache em estado local (Onda 2
- * pode promover pra Context se ficar pesado).
+ * `Criar Klub` e `Buscar Klubs` saem da sidebar e moram dentro de /klubs
+ * (PR-H2). Convites removido (defer). Perfil duplicado removido — só
+ * via avatar do footer.
  */
 export function AppSidebar({ open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
@@ -112,7 +112,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
         )}
       >
         {/* Brand row */}
-        <div className="flex items-center justify-between gap-2.5 border-b border-border px-5 pb-4 pt-5">
+        <div className="flex items-center justify-between gap-2.5 border-b border-border px-5 pb-3 pt-4">
           <Link href="/home" className="flex items-center gap-2.5" onClick={onClose}>
             <BrandLockup size="sm" />
           </Link>
@@ -128,7 +128,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
 
         {/* Você */}
         <SectionLabel>Você</SectionLabel>
-        <nav className="flex flex-col gap-0.5 px-3 pb-2">
+        <nav className="flex flex-col gap-0.5 px-3 pb-1.5">
           <NavLink
             href="/home"
             label="Home"
@@ -138,55 +138,20 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           />
           <NavLink
             href="/minhas-reservas"
-            label="Minhas reservas"
+            label="Reservas"
             icon={CalendarCheck}
             active={pathname === '/minhas-reservas'}
             onNavigate={onClose}
           />
           <NavLink
-            href="/perfil"
-            label="Perfil"
-            icon={User}
-            active={pathname === '/perfil'}
+            href="/klubs"
+            label="Klubs"
+            icon={Castle}
+            active={pathname === '/klubs' || pathname === '/criar-klub' || pathname === '/buscar-klubs'}
             onNavigate={onClose}
           />
-        </nav>
-
-        {/* Seus Klubs */}
-        <SectionLabel>Seus Klubs</SectionLabel>
-        <nav className="flex flex-col gap-0.5 px-3">
-          {klubs === null ? (
-            <div className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" />
-              Carregando…
-            </div>
-          ) : klubs.length === 0 ? (
-            <p className="px-2.5 py-2 text-[12px] text-muted-foreground">Nenhum Klub ainda.</p>
-          ) : (
-            klubs.map((k) => (
-              <KlubLink
-                key={k.klubId}
-                klub={k}
-                active={activeKlubSlug === k.klubSlug}
-                onNavigate={onClose}
-              />
-            ))
-          )}
-          <NavLink
-            href="/criar-klub"
-            label="Criar Klub"
-            icon={Plus}
-            active={pathname === '/criar-klub'}
-            onNavigate={onClose}
-          />
-          <NavLink
-            href="/buscar-klubs"
-            label="Buscar Klubs"
-            icon={Search}
-            active={pathname === '/buscar-klubs'}
-            onNavigate={onClose}
-          />
-          <NavLink href="#" label="Convites" icon={Mail} disabled badge="em breve" />
+          <NavLink href="#" label="Torneios" icon={Trophy} disabled badge="em breve" />
+          <NavLink href="#" label="Rankings" icon={ListOrdered} disabled badge="em breve" />
           {isSuperAdmin ? (
             <NavLink
               href="/admin/cadastros"
@@ -198,29 +163,49 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           ) : null}
         </nav>
 
-        {/* Klub atual — atalhos do Klub ativo. Reservar é pra qualquer
-            member; Admin do Klub vê config + solicitações. */}
+        {/* Seus Klubs — só nomes, sem botões de criar/buscar (movidos pra /klubs). */}
+        <SectionLabel>Seus Klubs</SectionLabel>
+        <nav className="flex flex-col gap-0.5 px-3">
+          {klubs === null ? (
+            <div className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              Carregando…
+            </div>
+          ) : klubs.length === 0 ? (
+            <p className="px-2.5 py-2 text-[12px] text-muted-foreground">
+              Nenhum Klub ainda.{' '}
+              <Link href="/klubs" className="font-semibold text-primary hover:underline">
+                Buscar
+              </Link>
+            </p>
+          ) : (
+            klubs.map((k) => (
+              <KlubLink
+                key={k.klubId}
+                klub={k}
+                active={activeKlubSlug === k.klubSlug}
+                onNavigate={onClose}
+              />
+            ))
+          )}
+        </nav>
+
+        {/* Klub atual — atalhos do Klub ativo. */}
         {(() => {
           if (!activeKlubSlug) return null;
           const activeKlub = klubs?.find((k) => k.klubSlug === activeKlubSlug);
           if (!activeKlub) return null;
           const isAdmin = activeKlub.role === 'KLUB_ADMIN';
+          const klubLabel = activeKlub.klubCommonName ?? activeKlub.klubName;
           return (
             <>
-              <SectionLabel>{activeKlub.klubName}</SectionLabel>
+              <SectionLabel>{klubLabel}</SectionLabel>
               <nav className="flex flex-col gap-0.5 px-3">
                 <NavLink
                   href={`/k/${activeKlubSlug}/reservar`}
                   label="Reservar quadra"
                   icon={CalendarDays}
                   active={pathname === `/k/${activeKlubSlug}/reservar`}
-                  onNavigate={onClose}
-                />
-                <NavLink
-                  href={`/k/${activeKlubSlug}/minhas-reservas`}
-                  label="Minhas reservas"
-                  icon={CalendarCheck}
-                  active={pathname === `/k/${activeKlubSlug}/minhas-reservas`}
                   onNavigate={onClose}
                 />
                 {isAdmin ? (
@@ -272,7 +257,10 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           <Link
             href="/perfil"
             onClick={onClose}
-            className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-muted"
+            className={cn(
+              'flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-muted',
+              pathname === '/perfil' && 'bg-primary/10',
+            )}
           >
             <Avatar
               name={user?.displayName ?? user?.email ?? '?'}
@@ -288,6 +276,17 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
             </div>
           </Link>
           <div className="mt-1 flex items-center gap-1">
+            <Link
+              href="/notificacoes"
+              onClick={onClose}
+              aria-label="Notificações"
+              className={cn(
+                'inline-flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-muted hover:text-foreground',
+                pathname === '/notificacoes' ? 'bg-primary/10 text-primary' : 'text-muted-foreground',
+              )}
+            >
+              <Bell className="size-4" />
+            </Link>
             <button
               type="button"
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
@@ -301,9 +300,9 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
             <button
               type="button"
               onClick={() => void handleLogout()}
-              className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex flex-1 items-center justify-end gap-1.5 rounded-lg px-2 py-2 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              <LogOut className="size-4" />
+              <LogOut className="size-3.5" />
               Sair
             </button>
           </div>
@@ -315,7 +314,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mt-3 px-5 py-2 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+    <p className="mt-2 px-5 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
       {children}
     </p>
   );
@@ -333,7 +332,7 @@ interface NavLinkProps {
 
 function NavLink({ href, label, icon: Icon, active, disabled, badge, onNavigate }: NavLinkProps) {
   const cls = cn(
-    'flex items-center gap-2.75 rounded-lg px-2.5 py-2 text-[13.5px] transition-colors',
+    'flex items-center gap-2.75 rounded-lg px-2.5 py-1.75 text-[13.5px] transition-colors',
     active
       ? 'bg-primary/10 font-semibold text-[hsl(var(--brand-primary-600))]'
       : 'font-medium text-foreground hover:bg-muted',
@@ -379,19 +378,21 @@ function KlubLink({
   active: boolean;
   onNavigate?: () => void;
 }) {
+  // Sprint PR-H1 — Nome usual prevalece quando preenchido.
+  const label = klub.klubCommonName ?? klub.klubName;
   return (
     <Link
       href={`/k/${klub.klubSlug}/dashboard`}
       onClick={onNavigate}
       className={cn(
-        'flex items-center gap-2.75 rounded-lg px-2.5 py-2 text-[13.5px] transition-colors',
+        'flex items-center gap-2.75 rounded-lg px-2.5 py-1.75 text-[13.5px] transition-colors',
         active
           ? 'bg-primary/10 font-semibold text-[hsl(var(--brand-primary-600))]'
           : 'font-medium text-foreground hover:bg-muted',
       )}
     >
-      <KlubAvatar name={klub.klubName} size="sm" />
-      <span className="min-w-0 flex-1 truncate">{klub.klubName}</span>
+      <KlubAvatar name={label} size="sm" />
+      <span className="min-w-0 flex-1 truncate">{label}</span>
       {klub.role ? <RoleDot role={klub.role} /> : null}
     </Link>
   );

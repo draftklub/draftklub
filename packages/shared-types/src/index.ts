@@ -497,6 +497,8 @@ export interface UserKlubMembership {
   klubId: string;
   klubSlug: string;
   klubName: string;
+  /** Sprint Polish PR-H1 — apelido popular pra UI compacta. */
+  klubCommonName: string | null;
   klubPlan: KlubPlan;
   klubStatus: KlubStatus;
   membershipType: MembershipType;

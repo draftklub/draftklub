@@ -668,8 +668,8 @@ function Step1Identidade(p: Step1Props) {
           </Field>
 
           <Field
-            label="Comumente chamado de"
-            hint="Apelido popular pra busca informal. Ex: 'Paissandú' pra 'Paissandu Atletico Clube'."
+            label="Nome usual"
+            hint="Como o pessoal chama no dia a dia. Ex: 'Paissandú' pra 'Paissandu Atletico Clube'."
           >
             <input
               value={p.commonName}
