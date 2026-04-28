@@ -1,4 +1,5 @@
 import type {
+  PreviewMatchRevertResult,
   RankingPointsMap,
   RankingPointsSchema,
   TournamentBracket,
@@ -253,6 +254,65 @@ export function editTournamentMatch(
 ): Promise<unknown> {
   return apiFetch(`/tournaments/${tournamentId}/matches/${matchId}/result`, {
     method: 'PATCH',
+    json: input,
+  });
+}
+
+// ─── Mutations (Sprint K PR-K4 — admin ops: walkover, revert, cancel) ──
+
+export interface ApplyWalkoverInput {
+  /** UUID do player que avança. */
+  winnerId: string;
+  notes?: string;
+}
+
+/** POST /tournaments/:id/matches/:matchId/walkover — committee aplica WO simples. */
+export function applyWalkover(
+  tournamentId: string,
+  matchId: string,
+  input: ApplyWalkoverInput,
+): Promise<unknown> {
+  return apiFetch(`/tournaments/${tournamentId}/matches/${matchId}/walkover`, {
+    method: 'POST',
+    json: input,
+  });
+}
+
+/** POST /tournaments/:id/matches/:matchId/double-walkover — ambos players desistem. */
+export function applyDoubleWalkover(
+  tournamentId: string,
+  matchId: string,
+  input: { notes?: string } = {},
+): Promise<unknown> {
+  return apiFetch(`/tournaments/${tournamentId}/matches/${matchId}/double-walkover`, {
+    method: 'POST',
+    json: input,
+  });
+}
+
+/** GET /tournament-matches/:matchId/revert/preview — committee vê o que será revertido. */
+export function previewMatchRevert(matchId: string): Promise<PreviewMatchRevertResult> {
+  return apiFetch<PreviewMatchRevertResult>(`/tournament-matches/${matchId}/revert/preview`);
+}
+
+/** POST /tournament-matches/:matchId/revert — committee desfaz resultado. */
+export function revertTournamentMatch(
+  matchId: string,
+  input: { reason?: string } = {},
+): Promise<unknown> {
+  return apiFetch(`/tournament-matches/${matchId}/revert`, {
+    method: 'POST',
+    json: input,
+  });
+}
+
+/** POST /tournaments/:id/cancel — committee cancela torneio (soft, com motivo). */
+export function cancelTournament(
+  tournamentId: string,
+  input: { reason?: string } = {},
+): Promise<unknown> {
+  return apiFetch(`/tournaments/${tournamentId}/cancel`, {
+    method: 'POST',
     json: input,
   });
 }

@@ -826,6 +826,36 @@ export interface TournamentBracket {
   }[];
 }
 
+/** Sprint K PR-K4 — preview de revert de match. */
+export interface RatingDeltaPreview {
+  userId: string;
+  ratingBefore: number;
+  ratingAfter: number;
+  /** Delta original aplicado quando match foi confirmed (positivo se ganhou). */
+  delta: number;
+  /** Quanto será revertido (oposto do delta). */
+  toRevert: number;
+}
+
+export interface AffectedMatchPreview {
+  id: string;
+  bracketPosition: string;
+  phase: string;
+  status: string;
+  /** Pra que estado o match cai após revert. */
+  willRevertTo: 'scheduled' | 'TBD slot';
+}
+
+export interface PreviewMatchRevertResult {
+  matchId: string;
+  cascade: {
+    affectedMatches: AffectedMatchPreview[];
+    ratingDeltas: RatingDeltaPreview[];
+    /** Warnings i18n keys: 'prequalifier_dual_path_warning', 'cascade_depth_exceeded_1_level', etc. */
+    warnings: string[];
+  };
+}
+
 // ─── API error envelope ─────────────────────────────────────────────────
 
 /** Shape do erro de validação Zod retornado pelo `ZodExceptionFilter`. */
