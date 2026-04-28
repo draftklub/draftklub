@@ -14,10 +14,13 @@ import {
   Power,
   Save,
   Trash2,
+  UserPlus,
 } from 'lucide-react';
 import type {
   Klub,
   KlubSportProfile,
+  Role,
+  RoleAssignmentListItem,
   Space,
   SportCatalog,
 } from '@draftklub/shared-types';
@@ -31,6 +34,11 @@ import {
   type UpdateKlubInput,
 } from '@/lib/api/klubs';
 import { addSportToKlub, listKlubSports, listSports } from '@/lib/api/sports';
+import {
+  grantKlubRole,
+  listKlubRoleAssignments,
+  revokeKlubRole,
+} from '@/lib/api/role-assignments';
 import {
   createSpace,
   deleteSpace,
@@ -56,6 +64,7 @@ type TabId =
   | 'visibilidade'
   | 'modalidades'
   | 'quadras'
+  | 'equipe'
   | 'legal'
   | 'perigosa';
 
@@ -65,6 +74,7 @@ interface TabDef {
   id: TabId;
   label: string;
   platformOnly?: boolean;
+  klubAdminOnly?: boolean;
 }
 
 const TABS: TabDef[] = [
@@ -74,6 +84,7 @@ const TABS: TabDef[] = [
   { id: 'visibilidade', label: 'Visibilidade' },
   { id: 'modalidades', label: 'Modalidades' },
   { id: 'quadras', label: 'Quadras' },
+  { id: 'equipe', label: 'Equipe', klubAdminOnly: true },
   { id: 'legal', label: 'Legal', platformOnly: true },
   { id: 'perigosa', label: 'Zona perigosa', platformOnly: true },
 ];
@@ -86,6 +97,7 @@ export default function ConfigurarKlubPage() {
 
   const [klub, setKlub] = React.useState<Klub | null>(null);
   const [isPlatform, setIsPlatform] = React.useState(false);
+  const [isKlubAdmin, setIsKlubAdmin] = React.useState(false);
   const [bootError, setBootError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -95,7 +107,14 @@ export default function ConfigurarKlubPage() {
       .then(([k, me]) => {
         if (cancelled) return;
         setKlub(k);
-        setIsPlatform(me.roleAssignments.some((r) => isPlatformLevel(r.role)));
+        const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
+        setIsPlatform(platform);
+        const klubAdmin = me.roleAssignments.some(
+          (r) =>
+            (r.role === 'KLUB_ADMIN' || r.role === 'KLUB_ASSISTANT') &&
+            r.scopeKlubId === k.id,
+        );
+        setIsKlubAdmin(platform || klubAdmin);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -107,7 +126,11 @@ export default function ConfigurarKlubPage() {
     };
   }, [ctxKlub]);
 
-  const visibleTabs = TABS.filter((t) => !t.platformOnly || isPlatform);
+  const visibleTabs = TABS.filter((t) => {
+    if (t.platformOnly && !isPlatform) return false;
+    if (t.klubAdminOnly && !isKlubAdmin) return false;
+    return true;
+  });
   const matchedTab = requestedTab ? visibleTabs.find((t) => t.id === requestedTab) : undefined;
   const activeTab: TabId = matchedTab ? matchedTab.id : DEFAULT_TAB;
 
@@ -184,6 +207,7 @@ export default function ConfigurarKlubPage() {
           ) : null}
           {activeTab === 'modalidades' ? <ModalidadesTab klub={klub} /> : null}
           {activeTab === 'quadras' ? <QuadrasTab klub={klub} /> : null}
+          {activeTab === 'equipe' && isKlubAdmin ? <EquipeTab klub={klub} /> : null}
           {activeTab === 'legal' && isPlatform ? (
             <LegalTab klub={klub} onUpdated={handleKlubUpdated} />
           ) : null}
@@ -606,6 +630,300 @@ function PerigosaTab({ klub, onDeactivated }: { klub: Klub; onDeactivated: () =>
         Desativar Klub
       </button>
     </div>
+  );
+}
+
+// ─── Equipe tab (PR-J2b) ─────────────────────────────────────────────────
+
+const KLUB_GRANTABLE_ROLES: { value: 'KLUB_ASSISTANT' | 'SPORT_COMMISSION' | 'SPORT_STAFF'; label: string; hint: string }[] = [
+  { value: 'KLUB_ASSISTANT', label: 'Klub Assistant', hint: 'Mesma capacidade do Admin, exceto mexer em roles do Admin.' },
+  { value: 'SPORT_COMMISSION', label: 'Sport Commission', hint: 'Organiza torneios, ranking e match da modalidade.' },
+  { value: 'SPORT_STAFF', label: 'Sport Staff', hint: 'Operação dia-a-dia: cria/aprova/cancela bookings.' },
+];
+
+function EquipeTab({ klub }: { klub: Klub }) {
+  const [items, setItems] = React.useState<RoleAssignmentListItem[] | null>(null);
+  const [sports, setSports] = React.useState<KlubSportProfile[]>([]);
+  const [error, setError] = React.useState<string | null>(null);
+  const [message, setMessage] = React.useState<string | null>(null);
+  const [reload, setReload] = React.useState(0);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setError(null);
+    void Promise.all([listKlubRoleAssignments(klub.id), listKlubSports(klub.id)])
+      .then(([rows, sportsList]) => {
+        if (cancelled) return;
+        setItems(rows);
+        setSports(sportsList);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(toErrorMessage(err, 'Erro ao carregar equipe.'));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [klub.id, reload]);
+
+  return (
+    <div className="space-y-4">
+      <header>
+        <h2 className="font-display text-[14px] font-bold">Equipe</h2>
+        <p className="mt-1 text-[12.5px] text-muted-foreground">
+          Conceda roles operacionais (Assistant, Sport Commission, Sport Staff). KLUB_ADMIN é
+          singleton — transferência entra em fluxo dedicado futuro.
+        </p>
+      </header>
+
+      {message ? (
+        <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+          <CheckCircle2 className="mr-1 inline size-3.5" />
+          {message}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
+          <AlertCircle className="mr-1 inline size-3.5" />
+          {error}
+        </p>
+      ) : null}
+
+      <EquipeGrantForm
+        klubId={klub.id}
+        sports={sports}
+        onGranted={(msg) => {
+          setMessage(msg);
+          setReload((n) => n + 1);
+        }}
+        onError={setError}
+      />
+
+      <section className="space-y-2">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          Equipe atual
+        </h3>
+        {items === null ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : items.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
+            Sem roles operacionais ainda — você ainda é o único admin desse Klub.
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {items.map((item) => (
+              <li key={item.id}>
+                <EquipeRow
+                  klubId={klub.id}
+                  item={item}
+                  sports={sports}
+                  onRevoked={(msg) => {
+                    setMessage(msg);
+                    setReload((n) => n + 1);
+                  }}
+                  onError={setError}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function EquipeGrantForm({
+  klubId,
+  sports,
+  onGranted,
+  onError,
+}: {
+  klubId: string;
+  sports: KlubSportProfile[];
+  onGranted: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [email, setEmail] = React.useState('');
+  const [role, setRole] = React.useState<'KLUB_ASSISTANT' | 'SPORT_COMMISSION' | 'SPORT_STAFF'>(
+    'KLUB_ASSISTANT',
+  );
+  const [scopeSportId, setScopeSportId] = React.useState<string>('');
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const isSportRole = role === 'SPORT_COMMISSION' || role === 'SPORT_STAFF';
+  const roleHint = KLUB_GRANTABLE_ROLES.find((r) => r.value === role)?.hint;
+
+  async function handleSubmit() {
+    if (submitting || !email.trim()) return;
+    setSubmitting(true);
+    try {
+      await grantKlubRole(klubId, {
+        email: email.trim().toLowerCase(),
+        role,
+        ...(isSportRole && scopeSportId ? { scopeSportId } : {}),
+      });
+      onGranted(`Role ${role} concedida a ${email.trim().toLowerCase()}.`);
+      setEmail('');
+      setScopeSportId('');
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao conceder role.'));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2">
+        <UserPlus className="size-4 text-muted-foreground" />
+        <h3 className="font-display text-[14px] font-bold">Adicionar membro</h3>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Email
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="email@dominio.com"
+            disabled={submitting}
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Role
+          </label>
+          <select
+            value={role}
+            onChange={(e) =>
+              setRole(e.target.value as 'KLUB_ASSISTANT' | 'SPORT_COMMISSION' | 'SPORT_STAFF')
+            }
+            disabled={submitting}
+            className={inputCls}
+          >
+            {KLUB_GRANTABLE_ROLES.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {isSportRole && sports.length > 0 ? (
+        <div>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Modalidade (opcional)
+          </label>
+          <select
+            value={scopeSportId}
+            onChange={(e) => setScopeSportId(e.target.value)}
+            disabled={submitting}
+            className={inputCls}
+          >
+            <option value="">Todas as modalidades do Klub</option>
+            {sports.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name ?? s.sportCode}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+      {roleHint ? <p className="text-[11.5px] text-muted-foreground">{roleHint}</p> : null}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => void handleSubmit()}
+          disabled={submitting || !email.trim()}
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+          Conceder
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function EquipeRow({
+  klubId,
+  item,
+  sports,
+  onRevoked,
+  onError,
+}: {
+  klubId: string;
+  item: RoleAssignmentListItem;
+  sports: KlubSportProfile[];
+  onRevoked: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [submitting, setSubmitting] = React.useState(false);
+  const sportName = item.scopeSportId
+    ? (sports.find((s) => s.id === item.scopeSportId)?.name ?? null)
+    : null;
+
+  async function handleRevoke() {
+    if (submitting) return;
+    if (!window.confirm(`Revogar ${item.role} de ${item.userFullName} (${item.userEmail})?`)) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await revokeKlubRole(klubId, item.id);
+      onRevoked(`Acesso revogado de ${item.userEmail}.`);
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao revogar.'));
+      setSubmitting(false);
+    }
+  }
+
+  const canRevoke = item.role !== 'KLUB_ADMIN';
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="truncate font-display text-[14px] font-bold">{item.userFullName}</p>
+          <KlubRoleBadge role={item.role} />
+          {sportName ? (
+            <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-[10px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">
+              {sportName}
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-0.5 truncate text-[12px] text-muted-foreground">{item.userEmail}</p>
+      </div>
+      {canRevoke ? (
+        <button
+          type="button"
+          onClick={() => void handleRevoke()}
+          disabled={submitting}
+          className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+        >
+          {submitting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+          Revogar
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function KlubRoleBadge({ role }: { role: Role }) {
+  const map: Record<string, string> = {
+    KLUB_ADMIN: 'Klub Admin',
+    KLUB_ASSISTANT: 'Klub Assistant',
+    SPORT_COMMISSION: 'Sport Commission',
+    SPORT_STAFF: 'Sport Staff',
+  };
+  return (
+    <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-primary-600))]">
+      {map[role] ?? role}
+    </span>
   );
 }
 
