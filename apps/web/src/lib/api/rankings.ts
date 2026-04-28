@@ -27,6 +27,31 @@ export function getRanking(
   return apiFetch<RankingDetail>(`/klubs/${klubId}/sports/${sportCode}/rankings/${rankingId}`);
 }
 
+// ─── Mutations (Sprint K PR-K5c — create ranking) ──────────────────────
+
+export interface CreateRankingInput {
+  name: string;
+  type?: 'singles' | 'doubles' | 'mixed';
+  gender?: 'M' | 'F' | null;
+  ageMin?: number;
+  ageMax?: number;
+  ratingEngine?: 'elo' | 'points' | 'win_loss';
+  ratingConfig?: Record<string, unknown>;
+  initialRating?: number;
+}
+
+/** POST /klubs/:klubId/sports/:sportCode/rankings — committee/admin cria ranking. */
+export function createRanking(
+  klubId: string,
+  sportCode: string,
+  input: CreateRankingInput,
+): Promise<RankingDetail> {
+  return apiFetch<RankingDetail>(`/klubs/${klubId}/sports/${sportCode}/rankings`, {
+    method: 'POST',
+    json: { ratingConfig: {}, ...input },
+  });
+}
+
 // ─── Mutations (Sprint K PR-K3c — enroll + casual match flow) ──────────
 
 export interface EnrollPlayerInput {

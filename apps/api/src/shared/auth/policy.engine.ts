@@ -102,6 +102,10 @@ export class PolicyEngine {
 
       case 'PLAYER':
         if (operation === 'read') return true;
+        // Sprint K PR-K5c — PLAYER do scope pode listar role assignments do
+        // próprio Klub (transparência: ver quem é commission/staff). scope
+        // match via scopeMatches já garante que só vê roles do próprio Klub.
+        if (domain === 'role' && operation === 'list') return true;
         if (domain === 'match' && ['create', 'confirm'].includes(operation)) return true;
         if (domain === 'booking' && operation === 'create') return true;
         if (resource.ownerId != null && resource.ownerId === user.userId) return true;

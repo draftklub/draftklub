@@ -3,11 +3,23 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { AlertCircle, ArrowLeft, ArrowRight, ListOrdered, Loader2, Users } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  ListOrdered,
+  Loader2,
+  Plus,
+  Users,
+} from 'lucide-react';
 import type { RankingListItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
-import { listKlubRankings } from '@/lib/api/rankings';
+import { getMe } from '@/lib/api/me';
+import { createRanking, listKlubRankings, type CreateRankingInput } from '@/lib/api/rankings';
+import { isPlatformLevel } from '@/lib/auth/role-helpers';
+import { cn } from '@/lib/utils';
 
 const SPORT_LABELS: Record<string, string> = {
   tennis: 'Tênis',
@@ -35,12 +47,30 @@ export default function SportRankingsPage() {
   const sportLabel = SPORT_LABELS[sportCode] ?? sportCode;
 
   const [rankings, setRankings] = React.useState<RankingListItem[] | null>(null);
+  const [canCreate, setCanCreate] = React.useState(false);
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [reload, setReload] = React.useState(0);
+  const [actionMessage, setActionMessage] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!klub) return;
     let cancelled = false;
     setError(null);
+    void getMe()
+      .then((me) => {
+        if (cancelled) return;
+        const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
+        const local = me.roleAssignments.some(
+          (r) =>
+            (r.role === 'KLUB_ADMIN' ||
+              r.role === 'KLUB_ASSISTANT' ||
+              r.role === 'SPORT_COMMISSION') &&
+            r.scopeKlubId === klub.id,
+        );
+        setCanCreate(platform || local);
+      })
+      .catch(() => null);
     listKlubRankings(klub.id, sportCode)
       .then((rows) => {
         if (!cancelled) setRankings(rows);
@@ -59,7 +89,7 @@ export default function SportRankingsPage() {
     return () => {
       cancelled = true;
     };
-  }, [klub, sportCode]);
+  }, [klub, sportCode, reload]);
 
   if (!klub) return null;
 
@@ -74,21 +104,40 @@ export default function SportRankingsPage() {
           {sportLabel}
         </Link>
 
-        <header>
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
-            {klub.commonName ?? klub.name} · {sportLabel}
-          </p>
-          <h1
-            className="mt-1 font-display text-[26px] font-bold leading-tight md:text-[32px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Rankings
-          </h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Rankings ativos dessa modalidade. Cada um pode ter elegibilidade própria (gênero, faixa
-            etária) e engine de rating distinta.
-          </p>
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
+              {klub.commonName ?? klub.name} · {sportLabel}
+            </p>
+            <h1
+              className="mt-1 font-display text-[26px] font-bold leading-tight md:text-[32px]"
+              style={{ letterSpacing: '-0.02em' }}
+            >
+              Rankings
+            </h1>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Rankings ativos dessa modalidade. Cada um pode ter elegibilidade própria (gênero,
+              faixa etária) e engine de rating distinta.
+            </p>
+          </div>
+          {canCreate ? (
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus className="size-3.5" />
+              Criar
+            </button>
+          ) : null}
         </header>
+
+        {actionMessage ? (
+          <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+            <CheckCircle2 className="mr-1 inline size-3.5" />
+            {actionMessage}
+          </p>
+        ) : null}
 
         {error ? (
           <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
@@ -148,6 +197,232 @@ export default function SportRankingsPage() {
           </ul>
         )}
       </div>
+
+      {createOpen ? (
+        <CreateRankingModal
+          klubId={klub.id}
+          sportCode={sportCode}
+          onClose={() => setCreateOpen(false)}
+          onCreated={(name) => {
+            setCreateOpen(false);
+            setActionMessage(`Ranking "${name}" criado.`);
+            setReload((n) => n + 1);
+          }}
+        />
+      ) : null}
     </main>
   );
 }
+
+function CreateRankingModal({
+  klubId,
+  sportCode,
+  onClose,
+  onCreated,
+}: {
+  klubId: string;
+  sportCode: string;
+  onClose: () => void;
+  onCreated: (name: string) => void;
+}) {
+  const [name, setName] = React.useState('');
+  const [type, setType] = React.useState<'singles' | 'doubles' | 'mixed'>('singles');
+  const [gender, setGender] = React.useState<'' | 'M' | 'F'>('');
+  const [ageMin, setAgeMin] = React.useState('');
+  const [ageMax, setAgeMax] = React.useState('');
+  const [ratingEngine, setRatingEngine] = React.useState<'elo' | 'points' | 'win_loss'>('elo');
+  const [initialRating, setInitialRating] = React.useState('1000');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setError(null);
+    if (name.trim().length < 2) {
+      setError('Nome precisa ter pelo menos 2 caracteres.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const input: CreateRankingInput = {
+        name: name.trim(),
+        type,
+        gender: gender || null,
+        ratingEngine,
+      };
+      if (ageMin) input.ageMin = Number(ageMin);
+      if (ageMax) input.ageMax = Number(ageMax);
+      if (initialRating) input.initialRating = Number(initialRating);
+      await createRanking(klubId, sportCode, input);
+      onCreated(name.trim());
+    } catch (err: unknown) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Erro ao criar ranking.',
+      );
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="max-h-[90vh] w-full max-w-md space-y-3 overflow-y-auto rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold">Criar ranking</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+          >
+            ✕
+          </button>
+        </div>
+
+        {error ? (
+          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+            <AlertCircle className="mr-1 inline size-3.5" />
+            {error}
+          </p>
+        ) : null}
+
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Nome
+          </p>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={100}
+            placeholder="Ex: Aberto Masculino A"
+            className={inputCls}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Tipo
+            </p>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as 'singles' | 'doubles' | 'mixed')}
+              className={inputCls}
+            >
+              <option value="singles">Singles</option>
+              <option value="doubles">Doubles</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Gênero
+            </p>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value as '' | 'M' | 'F')}
+              className={inputCls}
+            >
+              <option value="">Aberto</option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+            </select>
+          </div>
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Idade mín
+            </p>
+            <input
+              type="number"
+              value={ageMin}
+              onChange={(e) => setAgeMin(e.target.value)}
+              placeholder="—"
+              min={0}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Idade máx
+            </p>
+            <input
+              type="number"
+              value={ageMax}
+              onChange={(e) => setAgeMax(e.target.value)}
+              placeholder="—"
+              min={0}
+              className={inputCls}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Rating engine
+            </p>
+            <select
+              value={ratingEngine}
+              onChange={(e) => setRatingEngine(e.target.value as 'elo' | 'points' | 'win_loss')}
+              className={inputCls}
+            >
+              <option value="elo">Elo</option>
+              <option value="win_loss">Win/Loss</option>
+              <option value="points">Pontos</option>
+            </select>
+          </div>
+          <div>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              Rating inicial
+            </p>
+            <input
+              type="number"
+              value={initialRating}
+              onChange={(e) => setInitialRating(e.target.value)}
+              min={0}
+              max={9999}
+              className={inputCls}
+            />
+          </div>
+        </div>
+
+        <p className="text-[11px] text-muted-foreground">
+          Após criar, players podem se enrolar via /rankings/:id e reportar partidas casuais. Edição
+          de config (orderBy, window) ainda fica em SQL/admin (PR futuro).
+        </p>
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleSubmit()}
+            disabled={submitting}
+            className={cn(
+              'inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60',
+            )}
+          >
+            {submitting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Plus className="size-3.5" />
+            )}
+            Criar ranking
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const inputCls =
+  'w-full rounded-[10px] border border-input bg-background px-3 py-2.25 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
