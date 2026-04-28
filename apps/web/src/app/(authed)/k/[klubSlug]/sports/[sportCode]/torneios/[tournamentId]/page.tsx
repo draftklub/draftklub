@@ -34,12 +34,16 @@ import { useActiveKlub } from '@/components/active-klub-provider';
 import { getMe } from '@/lib/api/me';
 import { listKlubSpaces } from '@/lib/api/spaces';
 import {
+  approveTournamentEntry,
   drawTournament,
   getTournament,
   getTournamentBracket,
   listTournamentEntries,
+  moveTournamentEntryCategory,
+  registerTournamentEntry,
   scheduleTournament,
   updateReportingMode,
+  withdrawMyTournamentEntry,
   type ScheduleConfigInput,
 } from '@/lib/api/tournaments';
 import { isPlatformLevel } from '@/lib/auth/role-helpers';
@@ -80,6 +84,7 @@ export default function TournamentDetailPage() {
   const [bracket, setBracket] = React.useState<TournamentBracket | null>(null);
   const [entries, setEntries] = React.useState<TournamentEntry[] | null>(null);
   const [canManage, setCanManage] = React.useState(false);
+  const [meId, setMeId] = React.useState<string | null>(null);
   const [reload, setReload] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -90,6 +95,7 @@ export default function TournamentDetailPage() {
     void getMe()
       .then((me) => {
         if (cancelled) return;
+        setMeId(me.id);
         const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
         const local = me.roleAssignments.some(
           (r) =>
@@ -162,7 +168,15 @@ export default function TournamentDetailPage() {
             <div className="pt-2">
               {tab === 'overview' ? <Overview tournament={tournament} /> : null}
               {tab === 'bracket' ? <BracketView bracket={bracket} /> : null}
-              {tab === 'entries' ? <EntriesView entries={entries} tournament={tournament} /> : null}
+              {tab === 'entries' ? (
+                <EntriesView
+                  entries={entries}
+                  tournament={tournament}
+                  meId={meId}
+                  canManage={canManage}
+                  onChanged={() => setReload((n) => n + 1)}
+                />
+              ) : null}
               {tab === 'operacoes' && canManage ? (
                 <OperacoesView
                   tournament={tournament}
@@ -1243,10 +1257,19 @@ function PlayerSlot({
 function EntriesView({
   entries,
   tournament,
+  meId,
+  canManage,
+  onChanged,
 }: {
   entries: TournamentEntry[] | null;
   tournament: TournamentDetail;
+  meId: string | null;
+  canManage: boolean;
+  onChanged: () => void;
 }) {
+  const [actionError, setActionError] = React.useState<string | null>(null);
+  const [actionMessage, setActionMessage] = React.useState<string | null>(null);
+
   if (!entries) {
     return (
       <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
@@ -1254,41 +1277,423 @@ function EntriesView({
       </p>
     );
   }
-  if (entries.length === 0) {
+
+  const categoriesById = new Map(tournament.categories.map((c) => [c.id, c.name]));
+  const myEntry =
+    meId != null ? entries.find((e) => e.userId === meId && e.status !== 'withdrawn') : undefined;
+
+  return (
+    <div className="space-y-3">
+      {actionMessage ? (
+        <p className="rounded-lg border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3 text-[12.5px] text-[hsl(142_71%_32%)]">
+          <CheckCircle2 className="mr-1 inline size-3.5" />
+          {actionMessage}
+        </p>
+      ) : null}
+      {actionError ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
+          <AlertCircle className="mr-1 inline size-3.5" />
+          {actionError}
+        </p>
+      ) : null}
+
+      <RegistrationCTA
+        tournament={tournament}
+        myEntry={myEntry}
+        meId={meId}
+        onSuccess={(msg) => {
+          setActionMessage(msg);
+          setActionError(null);
+          onChanged();
+        }}
+        onError={(msg) => {
+          setActionError(msg);
+          setActionMessage(null);
+        }}
+      />
+
+      {entries.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
+          Sem inscritos ainda.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {entries.map((e) => (
+            <li key={e.id}>
+              <EntryRow
+                entry={e}
+                tournament={tournament}
+                categoriesById={categoriesById}
+                canManage={canManage}
+                onSuccess={(msg) => {
+                  setActionMessage(msg);
+                  setActionError(null);
+                  onChanged();
+                }}
+                onError={(msg) => {
+                  setActionError(msg);
+                  setActionMessage(null);
+                }}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function RegistrationCTA({
+  tournament,
+  myEntry,
+  meId,
+  onSuccess,
+  onError,
+}: {
+  tournament: TournamentDetail;
+  myEntry: TournamentEntry | undefined;
+  meId: string | null;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [submitting, setSubmitting] = React.useState(false);
+
+  if (!meId) return null;
+
+  const now = Date.now();
+  const opens = Date.parse(tournament.registrationOpensAt);
+  const closes = Date.parse(tournament.registrationClosesAt);
+  const windowOpen = now >= opens && now <= closes;
+  const isFinished = tournament.status === 'finished' || tournament.status === 'cancelled';
+  const isDrawn = tournament.status !== 'draft';
+
+  async function handleRegister() {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await registerTournamentEntry(tournament.id);
+      onSuccess(
+        tournament.registrationApproval === 'committee'
+          ? 'Inscrição enviada — aguarda aprovação da comissão.'
+          : 'Inscrição confirmada.',
+      );
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao se inscrever.'));
+      setSubmitting(false);
+    }
+  }
+
+  async function handleWithdraw() {
+    if (submitting) return;
+    if (
+      !window.confirm(
+        `Cancelar sua inscrição em "${tournament.name}"?\n\nApós cancelar, só dá pra se reinscrever se a janela ainda estiver aberta e a chave não foi sorteada.`,
+      )
+    ) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await withdrawMyTournamentEntry(tournament.id);
+      onSuccess('Inscrição cancelada.');
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao cancelar.'));
+      setSubmitting(false);
+    }
+  }
+
+  if (myEntry) {
+    const canWithdraw = !isFinished && !isDrawn;
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
-        Sem inscritos ainda.
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] p-3.5">
+        <div className="flex items-center gap-2 text-[12.5px]">
+          <CheckCircle2 className="size-4 text-[hsl(142_71%_32%)]" />
+          <span>
+            <strong>Você está inscrito.</strong>{' '}
+            {myEntry.status === 'pending_approval'
+              ? 'Aguardando aprovação da comissão.'
+              : myEntry.status === 'pending_seeding'
+                ? 'Aguardando sorteio.'
+                : 'Já está na chave.'}
+          </span>
+        </div>
+        {canWithdraw ? (
+          <button
+            type="button"
+            onClick={() => void handleWithdraw()}
+            disabled={submitting}
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+          >
+            {submitting ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <XCircle className="size-3" />
+            )}
+            Cancelar inscrição
+          </button>
+        ) : null}
+      </section>
+    );
+  }
+
+  if (isFinished) return null;
+  if (isDrawn) {
+    return (
+      <p className="rounded-lg border border-dashed border-border p-3 text-[12.5px] text-muted-foreground">
+        Chave já sorteada. Inscrições novas só na próxima edição.
+      </p>
+    );
+  }
+  if (!windowOpen) {
+    const tooEarly = now < opens;
+    return (
+      <p className="rounded-lg border border-dashed border-border p-3 text-[12.5px] text-muted-foreground">
+        {tooEarly
+          ? `Inscrições abrem em ${new Date(opens).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}.`
+          : 'Janela de inscrições fechada.'}
       </p>
     );
   }
 
-  const categoriesById = new Map(tournament.categories.map((c) => [c.id, c.name]));
+  return (
+    <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3.5">
+      <div className="text-[12.5px]">
+        <p className="font-display text-[13.5px] font-bold text-foreground">Inscrições abertas</p>
+        <p className="mt-0.5 text-muted-foreground">
+          {tournament.registrationApproval === 'committee'
+            ? 'Comissão revisa cada inscrição antes de aceitar.'
+            : 'Inscrição automática — entra direto na chave após sorteio.'}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={() => void handleRegister()}
+        disabled={submitting}
+        className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+      >
+        {submitting ? (
+          <Loader2 className="size-3.5 animate-spin" />
+        ) : (
+          <Trophy className="size-3.5" />
+        )}
+        Inscrever-me
+      </button>
+    </section>
+  );
+}
+
+function EntryRow({
+  entry,
+  tournament,
+  categoriesById,
+  canManage,
+  onSuccess,
+  onError,
+}: {
+  entry: TournamentEntry;
+  tournament: TournamentDetail;
+  categoriesById: Map<string, string>;
+  canManage: boolean;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [submitting, setSubmitting] = React.useState(false);
+  const [moveOpen, setMoveOpen] = React.useState(false);
+
+  const isDrawn = tournament.status !== 'draft';
+  const showApprove = canManage && entry.status === 'pending_approval' && !isDrawn;
+  const showMoveCategory =
+    canManage &&
+    (entry.status === 'pending_seeding' || entry.status === 'pending_approval') &&
+    !isDrawn;
+
+  async function handleApprove() {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await approveTournamentEntry(tournament.id, entry.id);
+      onSuccess(`Inscrição de ${entry.userFullName} aprovada.`);
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao aprovar.'));
+      setSubmitting(false);
+    }
+  }
 
   return (
-    <ul className="space-y-2">
-      {entries.map((e) => (
-        <li
-          key={e.id}
-          className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3"
-        >
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="truncate font-display text-[14px] font-bold">{e.userFullName}</p>
-              {e.isWildCard ? (
-                <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
-                  Wild card
-                </span>
-              ) : null}
-            </div>
-            <p className="mt-0.5 inline-flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
-              {e.categoryId ? <span>{categoriesById.get(e.categoryId) ?? '—'}</span> : null}
-              {e.ratingAtEntry != null ? <span>· rating {e.ratingAtEntry}</span> : null}
-            </p>
-          </div>
-          <EntryStatusBadge status={e.status} />
-        </li>
-      ))}
-    </ul>
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="truncate font-display text-[14px] font-bold">{entry.userFullName}</p>
+          {entry.isWildCard ? (
+            <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+              Wild card
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-0.5 inline-flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
+          {entry.categoryId ? <span>{categoriesById.get(entry.categoryId) ?? '—'}</span> : null}
+          {entry.ratingAtEntry != null ? <span>· rating {entry.ratingAtEntry}</span> : null}
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+        <EntryStatusBadge status={entry.status} />
+        {showApprove ? (
+          <button
+            type="button"
+            onClick={() => void handleApprove()}
+            disabled={submitting}
+            className="inline-flex h-8 items-center gap-1 rounded-md border border-[hsl(142_71%_32%/0.3)] bg-[hsl(142_71%_32%/0.05)] px-2 text-[11px] font-semibold text-[hsl(142_71%_32%)] hover:bg-[hsl(142_71%_32%/0.1)] disabled:opacity-60"
+          >
+            {submitting ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <CheckCircle2 className="size-3" />
+            )}
+            Aprovar
+          </button>
+        ) : null}
+        {showMoveCategory ? (
+          <button
+            type="button"
+            onClick={() => setMoveOpen(true)}
+            className="inline-flex h-8 items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold hover:bg-muted"
+          >
+            Mover
+          </button>
+        ) : null}
+      </div>
+      {moveOpen ? (
+        <MoveCategoryModal
+          entry={entry}
+          tournament={tournament}
+          onClose={() => setMoveOpen(false)}
+          onSuccess={(msg) => {
+            setMoveOpen(false);
+            onSuccess(msg);
+          }}
+          onError={onError}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function MoveCategoryModal({
+  entry,
+  tournament,
+  onClose,
+  onSuccess,
+  onError,
+}: {
+  entry: TournamentEntry;
+  tournament: TournamentDetail;
+  onClose: () => void;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [targetCategoryId, setTargetCategoryId] = React.useState(entry.categoryId ?? '');
+  const [asWildCard, setAsWildCard] = React.useState(entry.isWildCard);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [localError, setLocalError] = React.useState<string | null>(null);
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setLocalError(null);
+    if (!targetCategoryId) {
+      setLocalError('Escolha uma categoria.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await moveTournamentEntryCategory(tournament.id, entry.id, {
+        targetCategoryId,
+        asWildCard,
+      });
+      onSuccess(`${entry.userFullName} movido${asWildCard ? ' como wild card' : ''}.`);
+    } catch (err: unknown) {
+      onError(toErrorMessage(err, 'Erro ao mover categoria.'));
+      setSubmitting(false);
+    }
+  }
+
+  const sortedCategories = tournament.categories.slice().sort((a, b) => a.order - b.order);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-md space-y-3 rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold">Mover categoria</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+          >
+            ✕
+          </button>
+        </div>
+        <p className="text-[12.5px] text-muted-foreground">
+          Mover <strong>{entry.userFullName}</strong> de categoria. Wild card permite alocar em
+          categoria fora do range esperado de rating.
+        </p>
+        {localError ? (
+          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
+            {localError}
+          </p>
+        ) : null}
+        <div>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            Categoria
+          </p>
+          <select
+            value={targetCategoryId}
+            onChange={(e) => setTargetCategoryId(e.target.value)}
+            className={inputCls}
+          >
+            <option value="">— escolha —</option>
+            {sortedCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+                {c.minRatingExpected || c.maxRatingExpected
+                  ? ` (rating ${c.minRatingExpected ?? '–'} a ${c.maxRatingExpected ?? '∞'})`
+                  : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        <label className="flex items-center gap-2 text-[12.5px]">
+          <input
+            type="checkbox"
+            checked={asWildCard}
+            onChange={(e) => setAsWildCard(e.target.checked)}
+          />
+          Wild card (ignora restrição de rating)
+        </label>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleSubmit()}
+            disabled={submitting}
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {submitting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <CheckCircle2 className="size-3.5" />
+            )}
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
