@@ -627,6 +627,89 @@ async function main(): Promise<void> {
     console.log('Sample maintenance block created');
   }
 
+  // ─── Feature gates ─────────────────────────────────────────────────────
+  console.log('Seeding feature gates...');
+
+  const FEATURES = [
+    // ── Core (always-free, always on) ──────────────────────────────────
+    {
+      id: 'basic_reservations',
+      displayName: 'Reservas',
+      description: 'Criação e gestão de reservas de quadra',
+      tier: 'free',
+      enabled: true,
+    },
+    {
+      id: 'tournament_view',
+      displayName: 'Visualização de torneios',
+      description: 'Ver torneios inscritos, schedules e resultados',
+      tier: 'free',
+      enabled: true,
+    },
+    {
+      id: 'rankings_view',
+      displayName: 'Rankings',
+      description: 'Consultar rankings e pontuações de modalidades',
+      tier: 'free',
+      enabled: true,
+    },
+    {
+      id: 'membership_request',
+      displayName: 'Solicitação de entrada em Klub',
+      description: 'Solicitar entrada em Klubs privados',
+      tier: 'free',
+      enabled: true,
+    },
+    // ── Premium features ────────────────────────────────────────────────
+    {
+      id: 'advanced_stats',
+      displayName: 'Estatísticas avançadas',
+      description: 'Métricas detalhadas de desempenho por jogador',
+      tier: 'premium',
+      enabled: true,
+    },
+    {
+      id: 'ai_match_suggestions',
+      displayName: 'Sugestões de partida por IA',
+      description: 'Recomendações automáticas baseadas em histórico',
+      tier: 'premium',
+      enabled: true,
+    },
+    {
+      id: 'booking_extensions',
+      displayName: 'Extensão de reserva',
+      description: 'Solicitar extensão de tempo de quadra pelo jogador',
+      tier: 'premium',
+      enabled: true,
+    },
+    {
+      id: 'tournament_creation',
+      displayName: 'Criação de torneios',
+      description: 'Criar e gerenciar torneios pelo Klub Admin',
+      tier: 'premium',
+      enabled: true,
+    },
+  ] as const;
+
+  for (const f of FEATURES) {
+    await prisma.feature.upsert({
+      where: { id: f.id },
+      create: {
+        id: f.id,
+        displayName: f.displayName,
+        description: f.description,
+        tier: f.tier,
+        enabled: f.enabled,
+        rolloutPct: 100,
+      },
+      update: {
+        displayName: f.displayName,
+        description: f.description,
+      },
+    });
+  }
+  console.log(`Feature gates seeded (${FEATURES.length} features)`);
+
   console.log('Seed completed!');
   console.log('');
   console.log('Credentials (password: DraftKlub@Seed2026!):');

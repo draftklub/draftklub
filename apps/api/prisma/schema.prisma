@@ -154,6 +154,44 @@ model RoleAssignment {
   @@schema("identity")
 }
 
+// ─── Feature gates ────────────────────────────────────────────
+// tier: 'free' | 'premium' | 'disabled'
+// 'free'     → todos os usuários autenticados
+// 'premium'  → usuários de Klubs com plano pago (non-trial)
+// 'disabled' → ninguém (hard-off independente de enabled)
+
+model Feature {
+  id          String   @id
+  displayName String   @map("display_name")
+  description String?
+  tier        String   @default("free")
+  enabled     Boolean  @default(true)
+  rolloutPct  Int      @default(100) @map("rollout_pct")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  audits FeatureAudit[]
+
+  @@map("features")
+  @@schema("identity")
+}
+
+model FeatureAudit {
+  id        BigInt   @id @default(autoincrement())
+  featureId String   @map("feature_id")
+  changedBy String   @map("changed_by")
+  field     String
+  oldValue  String?  @map("old_value")
+  newValue  String?  @map("new_value")
+  changedAt DateTime @default(now()) @map("changed_at") @db.Timestamptz
+
+  feature Feature @relation(fields: [featureId], references: [id])
+
+  @@index([featureId], map: "idx_features_audit_feature_id")
+  @@map("features_audit")
+  @@schema("audit")
+}
+
 // ═══════════════════════════════════════════════════════════════
 // KLUB
 // ═══════════════════════════════════════════════════════════════
