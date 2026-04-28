@@ -24,6 +24,10 @@ html {
   --color-accent-foreground: hsl(var(--accent-foreground));
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
@@ -90,6 +94,14 @@ html {
   --destructive:          0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
+  /* Sprint L PR-L1 — cores semânticas pra Banner/Toast.
+   * Substitui hard-coded `[hsl(142_71%_32%)]` (verde sucesso) e
+   * `amber-500` (warning) espalhados pelo código. */
+  --success:              142 71% 32%;
+  --success-foreground:   0 0% 100%;
+  --warning:              38 92% 50%;
+  --warning-foreground:   20 14% 10%;
+
   --border:               20 6% 90%;
   --input:                20 6% 90%;
   --ring:                 168 80% 27%;
@@ -132,6 +144,10 @@ html {
   --accent-foreground:    0 0% 100%;
   --destructive:          0 62% 45%;
   --destructive-foreground: 0 0% 100%;
+  --success:              142 60% 42%;
+  --success-foreground:   0 0% 100%;
+  --warning:              38 92% 55%;
+  --warning-foreground:   20 14% 10%;
   --border:               24 6% 22%;
   --input:                24 6% 18%;
   --ring:                 158 64% 52%;
