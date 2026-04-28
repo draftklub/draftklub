@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@draftklub/shared-types": "workspace:*",
+    "@draftklub/sport-strategies": "workspace:*",
     "@radix-ui/react-slot": "^1.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
