@@ -122,6 +122,13 @@ export function cancelBooking(
 
 // ─── Sprint Polish PR-B ─────────────────────────────────────────────
 
+export interface MyBookingExtensionSummary {
+  id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  extendedTo: string;
+  requestedById: string;
+}
+
 export interface MyBookingItem {
   id: string;
   startsAt: string;
@@ -133,6 +140,7 @@ export interface MyBookingItem {
   primaryPlayerId: string | null;
   klub: { id: string; slug: string; name: string };
   space: { id: string; name: string; type: string };
+  extensions: MyBookingExtensionSummary[];
 }
 
 /** GET /me/bookings — lista cross-klub das reservas do user logado. */

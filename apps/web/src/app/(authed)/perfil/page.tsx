@@ -756,7 +756,7 @@ function PreferenciasSection() {
 
   return (
     <Section title="Preferências">
-      <Field label="Tema" hint="Aplica-se em todo o app. O ícone na sidebar alterna rápido.">
+      <Field label="Tema" hint="Aplica-se em todo o app.">
         <div className="grid grid-cols-3 gap-2">
           {options.map((opt) => {
             const isOn = theme === opt.value;

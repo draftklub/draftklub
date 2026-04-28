@@ -6,23 +6,15 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Bell,
   CalendarCheck,
-  CalendarDays,
   Castle,
   ChevronDown,
   ChevronRight,
   Home,
-  LayoutGrid,
   ListOrdered,
   LogOut,
   Loader2,
-  Moon,
-  Settings,
   Shield,
-  Sparkles,
-  Sun,
-  Timer,
   Trophy,
-  UserCheck,
   X,
 } from 'lucide-react';
 import type {
@@ -32,7 +24,6 @@ import type {
 } from '@draftklub/shared-types';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { useAuth } from '@/components/auth-provider';
-import { useTheme } from '@/components/theme-provider';
 import { listMyEnrollments } from '@/lib/api/enrollments';
 import { getMe, getMyKlubs } from '@/lib/api/me';
 import { logout } from '@/lib/auth';
@@ -76,7 +67,6 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
-  const { resolvedTheme, setTheme } = useTheme();
   const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
   const [enrollments, setEnrollments] = React.useState<EnrollmentWithProfile[]>([]);
@@ -206,17 +196,9 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
             active={pathname === '/klubs' || pathname === '/criar-klub' || pathname === '/buscar-klubs'}
             onNavigate={onClose}
           />
+          <NavLink href="#" label="Notificações" icon={Bell} disabled badge="em breve" />
           <NavLink href="#" label="Torneios" icon={Trophy} disabled badge="em breve" />
           <NavLink href="#" label="Rankings" icon={ListOrdered} disabled badge="em breve" />
-          {isSuperAdmin ? (
-            <NavLink
-              href="/admin/cadastros"
-              label="Cadastros"
-              icon={Shield}
-              active={pathname.startsWith('/admin/cadastros')}
-              onNavigate={onClose}
-            />
-          ) : null}
         </nav>
 
         {/* Seus Klubs — só nomes, sem botões de criar/buscar (movidos pra /klubs). */}
@@ -248,67 +230,21 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           )}
         </nav>
 
-        {/* Klub atual — atalhos do Klub ativo. */}
-        {(() => {
-          if (!activeKlubSlug) return null;
-          const activeKlub = klubs?.find((k) => k.klubSlug === activeKlubSlug);
-          if (!activeKlub) return null;
-          const isAdmin = activeKlub.role === 'KLUB_ADMIN';
-          const klubLabel = activeKlub.klubCommonName ?? activeKlub.klubName;
-          return (
-            <>
-              <SectionLabel>{klubLabel}</SectionLabel>
-              <nav className="flex flex-col gap-0.5 px-3">
-                <NavLink
-                  href={`/k/${activeKlubSlug}/reservar`}
-                  label="Reservar quadra"
-                  icon={CalendarDays}
-                  active={pathname === `/k/${activeKlubSlug}/reservar`}
-                  onNavigate={onClose}
-                />
-                {isAdmin ? (
-                  <>
-                    <NavLink
-                      href={`/k/${activeKlubSlug}/editar`}
-                      label="Editar Klub"
-                      icon={Settings}
-                      active={pathname === `/k/${activeKlubSlug}/editar`}
-                      onNavigate={onClose}
-                    />
-                    <NavLink
-                      href={`/k/${activeKlubSlug}/onboarding`}
-                      label="Configurar Klub"
-                      icon={Sparkles}
-                      active={pathname === `/k/${activeKlubSlug}/onboarding`}
-                      onNavigate={onClose}
-                    />
-                    <NavLink
-                      href={`/k/${activeKlubSlug}/quadras`}
-                      label="Quadras"
-                      icon={LayoutGrid}
-                      active={pathname === `/k/${activeKlubSlug}/quadras`}
-                      onNavigate={onClose}
-                    />
-                    <NavLink
-                      href={`/k/${activeKlubSlug}/solicitacoes`}
-                      label="Solicitações"
-                      icon={UserCheck}
-                      active={pathname === `/k/${activeKlubSlug}/solicitacoes`}
-                      onNavigate={onClose}
-                    />
-                    <NavLink
-                      href={`/k/${activeKlubSlug}/extensions-pending`}
-                      label="Extensões"
-                      icon={Timer}
-                      active={pathname === `/k/${activeKlubSlug}/extensions-pending`}
-                      onNavigate={onClose}
-                    />
-                  </>
-                ) : null}
-              </nav>
-            </>
-          );
-        })()}
+        {/* Administrativa — só SUPER_ADMIN. Sprint Polish PR-I1. */}
+        {isSuperAdmin ? (
+          <>
+            <SectionLabel>Administrativa</SectionLabel>
+            <nav className="flex flex-col gap-0.5 px-3">
+              <NavLink
+                href="/admin/aprovacoes"
+                label="Aprovações"
+                icon={Shield}
+                active={pathname.startsWith('/admin/aprovacoes') || pathname.startsWith('/admin/cadastros')}
+                onNavigate={onClose}
+              />
+            </nav>
+          </>
+        ) : null}
 
         {/* Footer */}
         <div className="mt-auto border-t border-border p-3">
@@ -333,37 +269,14 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
               ) : null}
             </div>
           </Link>
-          <div className="mt-1 flex items-center gap-1">
-            <Link
-              href="/notificacoes"
-              onClick={onClose}
-              aria-label="Notificações"
-              className={cn(
-                'inline-flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-muted hover:text-foreground',
-                pathname === '/notificacoes' ? 'bg-primary/10 text-primary' : 'text-muted-foreground',
-              )}
-            >
-              <Bell className="size-4" />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-              aria-label={
-                resolvedTheme === 'dark' ? 'Mudar pra tema claro' : 'Mudar pra tema escuro'
-              }
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              {resolvedTheme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleLogout()}
-              className="flex flex-1 items-center justify-end gap-1.5 rounded-lg px-2 py-2 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <LogOut className="size-3.5" />
-              Sair
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            className="mt-1 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <LogOut className="size-3.5" />
+            Sair
+          </button>
         </div>
       </aside>
     </>
