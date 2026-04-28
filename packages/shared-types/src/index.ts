@@ -376,6 +376,9 @@ export interface Klub {
   addressNumber: string | null;
   addressComplement: string | null;
   addressNeighborhood: string | null;
+  /** Coordenadas do Klub (Sprint Polish PR-H4). Source: geocoding via CEP. */
+  latitude: number | null;
+  longitude: number | null;
   /** Status de aprovação na plataforma (Sprint D PR1). */
   reviewStatus: KlubReviewStatus;
   reviewRejectionReason: string | null;

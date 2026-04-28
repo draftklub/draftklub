@@ -49,6 +49,8 @@ export class GetKlubBySlugHandler {
       addressNumber: klub.addressNumber,
       addressComplement: klub.addressComplement,
       addressNeighborhood: klub.addressNeighborhood,
+      latitude: klub.latitude ? Number(klub.latitude) : null,
+      longitude: klub.longitude ? Number(klub.longitude) : null,
       reviewStatus: klub.reviewStatus as KlubReviewStatus,
       reviewRejectionReason: klub.reviewRejectionReason,
       createdAt: klub.createdAt,
