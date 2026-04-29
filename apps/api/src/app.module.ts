@@ -1,7 +1,7 @@
 import * as crypto from 'node:crypto';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -13,6 +13,8 @@ import { HealthModule } from './shared/health/health.module';
 import { AuthModule } from './shared/auth/auth.module';
 import { AuditModule } from './shared/audit/audit.module';
 import { EncryptionModule } from './shared/encryption/encryption.module';
+import { IdempotencyModule } from './shared/idempotency/idempotency.module';
+import { IdempotencyInterceptor } from './shared/idempotency/idempotency.interceptor';
 import { GeocodingModule } from './shared/geocoding/geocoding.module';
 import { LookupModule } from './shared/lookup/lookup.module';
 import { EmailModule } from './shared/email/email.module';
@@ -84,6 +86,7 @@ import { FeaturesModule } from './modules/features/features.module';
     FirebaseModule,
     AuthModule,
     AuditModule,
+    IdempotencyModule,
     EncryptionModule,
     GeocodingModule,
     LookupModule,
@@ -107,6 +110,10 @@ import { FeaturesModule } from './modules/features/features.module';
     // ZodExceptionFilter (que é registrado em main.ts via
     // useGlobalFilters); APP_FILTER é avaliado primeiro e não consome.
     { provide: APP_FILTER, useClass: SentryGlobalFilter },
+    // Sprint N batch 3 — Idempotency-Key cache (padrão Stripe). No-op
+    // sem header. Aplicado globalmente porque qualquer mutation pode
+    // chegar com Idempotency-Key vindo de mobile retry.
+    { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },
   ],
 })
 export class AppModule {}

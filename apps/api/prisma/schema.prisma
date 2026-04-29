@@ -192,6 +192,27 @@ model FeatureAudit {
   @@schema("audit")
 }
 
+/// Sprint N batch 3 — cache de Idempotency-Key (padrão Stripe).
+/// Mutations (POST/PATCH/DELETE) com `Idempotency-Key` header têm
+/// (status, body) cacheados por 24h scoped por user. Retry com mesma
+/// key+payload retorna cached; payload diferente retorna 422.
+model IdempotencyKey {
+  key          String
+  userId       String   @map("user_id") @db.Uuid
+  method       String
+  path         String
+  requestHash  String   @map("request_hash")
+  statusCode   Int      @map("status_code")
+  responseBody Json     @map("response_body")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz
+
+  @@id([userId, key])
+  @@index([expiresAt], map: "idempotency_keys_expires_at_idx")
+  @@map("idempotency_keys")
+  @@schema("audit")
+}
+
 /// Sprint M batch 7 — audit log estruturado pra eventos de segurança.
 /// Registra role grants/revokes, klub admin transfers, aprovações
 /// admin, cancelamentos, deleções. Cobre LGPD Art. 37 + forensics.
