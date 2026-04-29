@@ -16,7 +16,6 @@
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import {
-  AlertCircle,
   CalendarRange,
   CheckCircle2,
   Crown,
@@ -62,6 +61,7 @@ import {
   type UpdateTournamentInput,
 } from '@/lib/api/tournaments';
 import { validateMatchScore } from '@/lib/sport-validation';
+import { Banner } from '@/components/ui/banner';
 import { cn } from '@/lib/utils';
 
 export function OperacoesView({
@@ -82,16 +82,10 @@ export function OperacoesView({
   return (
     <div className="space-y-4">
       {message ? (
-        <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-          <CheckCircle2 className="mr-1 inline size-3.5" />
-          {message}
-        </p>
+        <Banner tone="success">{message}</Banner>
       ) : null}
       {error ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-          <AlertCircle className="mr-1 inline size-3.5" />
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
 
       <DrawSection
@@ -177,9 +171,9 @@ function EditTournamentSection({
     <section className="space-y-3 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2">
         <Settings2 className="size-4 text-muted-foreground" />
-        <h3 className="font-display text-[14px] font-bold">Editar dados do torneio</h3>
+        <h3 className="font-display text-sm font-bold">Editar dados do torneio</h3>
       </div>
-      <p className="text-[12.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Edita nome, descrição, datas, modo de aprovação. Format, ranking e categorias não são
         editáveis pós-create — exigiriam recriar bracket. Bloqueado se torneio finalizado/cancelado.
       </p>
@@ -188,7 +182,7 @@ function EditTournamentSection({
           type="button"
           onClick={() => setOpen(true)}
           disabled={disabled}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-4 text-[13px] font-semibold hover:bg-muted disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-4 text-sm font-semibold hover:bg-muted disabled:opacity-60"
         >
           <Pencil className="size-3.5" />
           Editar…
@@ -321,14 +315,11 @@ function EditTournamentModal({
         </div>
 
         {localError ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {localError}
-          </p>
+          <Banner tone="error">{localError}</Banner>
         ) : null}
 
         <div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Nome
           </p>
           <input
@@ -339,7 +330,7 @@ function EditTournamentModal({
           />
         </div>
         <div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Descrição
           </p>
           <textarea
@@ -351,7 +342,7 @@ function EditTournamentModal({
           />
         </div>
         <div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Aprovação de inscrição
           </p>
           <select
@@ -408,7 +399,7 @@ function EditTournamentModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
           >
             Cancelar
           </button>
@@ -416,7 +407,7 @@ function EditTournamentModal({
             type="button"
             onClick={() => void handleSubmit()}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -442,7 +433,7 @@ function DateField({
 }) {
   return (
     <div>
-      <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+      <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
         {label}
       </p>
       <input
@@ -513,19 +504,19 @@ function CancelTournamentSection({
     <section className="space-y-3 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
       <div className="flex items-center gap-2">
         <XCircle className="size-4 text-destructive" />
-        <h3 className="font-display text-[14px] font-bold text-destructive">Cancelar torneio</h3>
+        <h3 className="font-display text-sm font-bold text-destructive">Cancelar torneio</h3>
         {isCancelled ? (
-          <span className="inline-flex h-5 items-center rounded-full bg-destructive/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-destructive">
+          <span className="inline-flex h-5 items-center rounded-full bg-destructive/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-destructive">
             Já cancelado
           </span>
         ) : null}
       </div>
-      <p className="text-[12.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Cancela o torneio inteiro. Status vira 'cancelled', matches futuros não rolam, players
         recebem notificação. Use só pra abortar evento que não vai acontecer mais.
       </p>
       <div>
-        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Motivo (opcional)
         </p>
         <textarea
@@ -543,7 +534,7 @@ function CancelTournamentSection({
           type="button"
           onClick={() => void handleCancel()}
           disabled={disabled}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-destructive bg-destructive/10 px-4 text-[13px] font-semibold text-destructive hover:bg-destructive/20 disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-destructive bg-destructive/10 px-4 text-sm font-semibold text-destructive hover:bg-destructive/20 disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -596,14 +587,14 @@ function DrawSection({
     <section className="space-y-3 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2">
         <Dices className="size-4 text-muted-foreground" />
-        <h3 className="font-display text-[14px] font-bold">Sortear chave</h3>
+        <h3 className="font-display text-sm font-bold">Sortear chave</h3>
         {isDrawn ? (
-          <span className="inline-flex h-5 items-center rounded-full bg-success/12 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-success">
+          <span className="inline-flex h-5 items-center rounded-full bg-success/12 px-2 text-xs font-bold uppercase tracking-[0.06em] text-success">
             Já sorteada
           </span>
         ) : null}
       </div>
-      <p className="text-[12.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Gera matches do bracket aplicando seeding por rating. Pra knockout/double-elim, players são
         distribuídos com bye automático se número não for potência de 2. Pra round-robin, todos
         contra todos.
@@ -613,7 +604,7 @@ function DrawSection({
           type="button"
           onClick={() => void handleDraw()}
           disabled={disabled}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -649,9 +640,9 @@ function ScheduleSection({
     <section className="space-y-3 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2">
         <CalendarRange className="size-4 text-muted-foreground" />
-        <h3 className="font-display text-[14px] font-bold">Distribuir agenda</h3>
+        <h3 className="font-display text-sm font-bold">Distribuir agenda</h3>
       </div>
-      <p className="text-[12.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Aloca matches em quadras+horários respeitando duração da partida, intervalo entre matches e
         descanso mínimo de cada player. Pré-requisito: chave já sorteada.
       </p>
@@ -660,7 +651,7 @@ function ScheduleSection({
           type="button"
           onClick={() => setOpen(true)}
           disabled={disabled}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-4 text-[13px] font-semibold hover:bg-muted disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-4 text-sm font-semibold hover:bg-muted disabled:opacity-60"
         >
           <Settings2 className="size-3.5" />
           Configurar agenda
@@ -727,9 +718,9 @@ function ReportingModeSection({
     <section className="space-y-3 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2">
         <Settings2 className="size-4 text-muted-foreground" />
-        <h3 className="font-display text-[14px] font-bold">Modo de reportagem</h3>
+        <h3 className="font-display text-sm font-bold">Modo de reportagem</h3>
       </div>
-      <p className="text-[12.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Define quem pode reportar resultado de match. <strong>Comissão reporta</strong> é mais
         controlado. <strong>Player + confirma</strong> reduz fricção mas exige confirmação do rival.
       </p>
@@ -747,7 +738,7 @@ function ReportingModeSection({
           type="button"
           onClick={() => void handleSave()}
           disabled={disabled}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -869,18 +860,14 @@ function ScheduleModal({
         </div>
 
         {bootError ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-            {bootError}
-          </p>
+          <Banner tone="error">{bootError}</Banner>
         ) : null}
         {localError ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-            {localError}
-          </p>
+          <Banner tone="error">{localError}</Banner>
         ) : null}
 
         <div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Datas disponíveis
           </p>
           <ul className="space-y-2">
@@ -908,7 +895,7 @@ function ScheduleModal({
           <button
             type="button"
             onClick={addDate}
-            className="mt-2 inline-flex h-8 items-center gap-1 rounded-md border border-dashed border-border bg-background px-2.5 text-[12px] font-medium hover:bg-muted"
+            className="mt-2 inline-flex h-8 items-center gap-1 rounded-md border border-dashed border-border bg-background px-2.5 text-xs font-medium hover:bg-muted"
           >
             <Plus className="size-3" />
             Adicionar data
@@ -917,7 +904,7 @@ function ScheduleModal({
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
               Início (h)
             </p>
             <input
@@ -930,7 +917,7 @@ function ScheduleModal({
             />
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
               Fim (h)
             </p>
             <input
@@ -943,7 +930,7 @@ function ScheduleModal({
             />
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
               Duração match (min)
             </p>
             <input
@@ -957,7 +944,7 @@ function ScheduleModal({
             />
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
               Break entre matches
             </p>
             <input
@@ -971,7 +958,7 @@ function ScheduleModal({
             />
           </div>
           <div className="col-span-2">
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
               Descanso mínimo do player (min)
             </p>
             <input
@@ -983,14 +970,14 @@ function ScheduleModal({
               onChange={(e) => setRestRuleMinutes(Number(e.target.value))}
               className={inputCls}
             />
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               Tempo mínimo entre 2 matches do mesmo player.
             </p>
           </div>
         </div>
 
         <div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Quadras
           </p>
           {!spaces ? (
@@ -998,7 +985,7 @@ function ScheduleModal({
               <Loader2 className="size-4 animate-spin text-muted-foreground" />
             </div>
           ) : spaces.length === 0 ? (
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Nenhuma quadra ativa no Klub. Adicione em Configurar Klub → Quadras.
             </p>
           ) : (
@@ -1009,14 +996,14 @@ function ScheduleModal({
                   <li key={s.id}>
                     <label
                       className={cn(
-                        'flex cursor-pointer items-center gap-2 rounded-md border p-2 text-[12.5px] transition-colors',
+                        'flex cursor-pointer items-center gap-2 rounded-md border p-2 text-xs transition-colors',
                         checked ? 'border-primary bg-primary/5' : 'border-border bg-background',
                       )}
                     >
                       <input type="checkbox" checked={checked} onChange={() => toggleSpace(s.id)} />
                       <span className="flex-1">{s.name}</span>
                       {s.indoor ? (
-                        <span className="text-[10.5px] uppercase text-muted-foreground">
+                        <span className="text-xs uppercase text-muted-foreground">
                           indoor
                         </span>
                       ) : null}
@@ -1033,7 +1020,7 @@ function ScheduleModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
           >
             Cancelar
           </button>
@@ -1041,7 +1028,7 @@ function ScheduleModal({
             type="button"
             onClick={() => void handleSubmit()}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -1065,7 +1052,7 @@ function formatToday(): string {
 }
 
 const inputCls =
-  'w-full rounded-[10px] border border-input bg-background px-3 py-2.25 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'w-full rounded-md border border-input bg-background px-3 py-2.25 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
 
 function toErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof ApiError) return err.message;
@@ -1098,7 +1085,7 @@ export function BracketView({
 
   if (!bracket) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
+      <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
         Chave ainda não disponível. Torneio precisa ter sido sorteado primeiro.
       </p>
     );
@@ -1106,7 +1093,7 @@ export function BracketView({
 
   if (bracket.categories.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
+      <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
         Nenhuma categoria com matches gerados.
       </p>
     );
@@ -1116,7 +1103,7 @@ export function BracketView({
     bracket.categories.find((c) => c.id === activeCategoryId) ?? bracket.categories[0];
   if (!activeCategory) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
+      <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
         Categoria não encontrada.
       </p>
     );
@@ -1134,7 +1121,7 @@ export function BracketView({
                 type="button"
                 onClick={() => setActiveCategoryId(c.id)}
                 className={cn(
-                  'inline-flex h-8 items-center rounded-md px-3 text-[12px] font-semibold transition-colors',
+                  'inline-flex h-8 items-center rounded-md px-3 text-xs font-semibold transition-colors',
                   isActive
                     ? 'bg-primary text-primary-foreground'
                     : 'border border-border bg-background text-muted-foreground hover:bg-muted',
@@ -1180,7 +1167,7 @@ function BracketByPhases({
 }) {
   if (matches.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
+      <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
         Sem matches gerados.
       </p>
     );
@@ -1306,7 +1293,7 @@ function BracketSection({
   return (
     <section className="space-y-2">
       {title ? (
-        <h3 className="text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           {title}
         </h3>
       ) : null}
@@ -1323,7 +1310,7 @@ function BracketSection({
           <div className="flex min-w-max gap-3">
             {phases.map((p) => (
               <div key={p.phase} className="w-60 shrink-0 space-y-2">
-                <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+                <p className="text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
                   {labelPhase(p.phase)}
                 </p>
                 {p.matches.map((m) => (
@@ -1375,7 +1362,7 @@ function BracketGrid({
         {phases.map((p) => (
           <p
             key={p.phase}
-            className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground"
+            className="text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground"
           >
             {labelPhase(p.phase)}
           </p>
@@ -1479,7 +1466,7 @@ function MatchCard({
         onClick={actionable ? () => setOpen(true) : undefined}
         disabled={!actionable}
         className={cn(
-          'block w-full rounded-lg border bg-card p-2.5 text-left text-[12.5px] transition-colors',
+          'block w-full rounded-lg border bg-card p-2.5 text-left text-xs transition-colors',
           isCompleted && 'border-border',
           isBye && 'border-dashed opacity-60',
           isWalkover && 'border-amber-500/40 bg-amber-500/5',
@@ -1503,22 +1490,22 @@ function MatchCard({
           isWinner={isCompleted && match.winnerId === match.player2Id}
         />
         {match.score ? (
-          <p className="mt-2 text-right font-mono text-[11px] text-muted-foreground">
+          <p className="mt-2 text-right font-mono text-xs text-muted-foreground">
             {match.score}
           </p>
         ) : null}
         {isWalkover ? (
-          <p className="mt-2 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-amber-700 dark:text-amber-400">
+          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.04em] text-amber-700 dark:text-amber-400">
             {match.status === 'double_walkover' ? 'WO duplo' : 'Walkover'}
           </p>
         ) : null}
         {isAwaitingConfirm ? (
-          <p className="mt-2 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-amber-700 dark:text-amber-400">
+          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.04em] text-amber-700 dark:text-amber-400">
             Aguarda confirmação
           </p>
         ) : null}
         {match.scheduledFor && !isCompleted ? (
-          <p className="mt-2 text-[10.5px] text-muted-foreground">
+          <p className="mt-2 text-xs text-muted-foreground">
             {new Date(match.scheduledFor).toLocaleString('pt-BR', {
               day: '2-digit',
               month: 'short',
@@ -1559,7 +1546,7 @@ function PlayerSlot({
   if (!name) {
     return (
       <div className="flex items-center gap-1.5 text-muted-foreground">
-        <span className="truncate text-[12px] italic">{tbdLabel ?? 'A definir'}</span>
+        <span className="truncate text-xs italic">{tbdLabel ?? 'A definir'}</span>
       </div>
     );
   }
@@ -1567,7 +1554,7 @@ function PlayerSlot({
     <div className="flex items-center gap-1.5">
       {isWinner ? <Crown className="size-3 text-amber-500" /> : null}
       {seed ? (
-        <span className="inline-flex h-4 min-w-[18px] shrink-0 items-center justify-center rounded bg-muted px-1 text-[9.5px] font-bold tabular-nums text-muted-foreground">
+        <span className="inline-flex h-4 min-w-[18px] shrink-0 items-center justify-center rounded bg-muted px-1 text-xs font-bold tabular-nums text-muted-foreground">
           {seed}
         </span>
       ) : null}
@@ -1641,7 +1628,7 @@ function MatchActionModal({
         ) : canEditCompleted ? (
           <EditForm match={match} tournament={tournament} onChanged={onChanged} />
         ) : (
-          <p className="rounded-lg border border-dashed border-border p-3 text-[12.5px] text-muted-foreground">
+          <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
             {isCompleted ? 'Match já encerrado.' : 'Você não pode reportar/confirmar esse match.'}
           </p>
         )}
@@ -1656,7 +1643,7 @@ function MatchActionModal({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-background px-3 text-[12.5px] font-medium hover:bg-muted"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-background px-3 text-xs font-medium hover:bg-muted"
           >
             Fechar
           </button>
@@ -1674,7 +1661,7 @@ function MatchSummary({ match }: { match: TournamentMatchView }) {
         ? match.player2Name
         : null;
   return (
-    <div className="rounded-lg border border-border bg-background p-3 text-[12.5px]">
+    <div className="rounded-lg border border-border bg-background p-3 text-xs">
       <div className="flex items-center gap-2">
         <span className={cn(winner === match.player1Name && 'font-semibold')}>
           {match.player1Name ?? match.tbdPlayer1Label ?? 'A definir'}
@@ -1685,10 +1672,10 @@ function MatchSummary({ match }: { match: TournamentMatchView }) {
         </span>
       </div>
       {match.score ? (
-        <p className="mt-1 font-mono text-[11.5px] text-muted-foreground">{match.score}</p>
+        <p className="mt-1 font-mono text-xs text-muted-foreground">{match.score}</p>
       ) : null}
       {match.scheduledFor ? (
-        <p className="mt-0.5 text-[11px] text-muted-foreground">
+        <p className="mt-0.5 text-xs text-muted-foreground">
           {new Date(match.scheduledFor).toLocaleString('pt-BR', {
             day: '2-digit',
             month: 'short',
@@ -1761,13 +1748,10 @@ function ReportForm({
   return (
     <div className="space-y-2.5">
       {error ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-          <AlertCircle className="mr-1 inline size-3.5" />
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
       <div>
-        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Vencedor
         </p>
         <div className="space-y-1.5">
@@ -1796,7 +1780,7 @@ function ReportForm({
         </div>
       </div>
       <div>
-        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Score (opcional)
         </p>
         <input
@@ -1806,12 +1790,12 @@ function ReportForm({
           maxLength={50}
           className={inputCls}
         />
-        <p className="mt-1 text-[11px] text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground">
           Formato livre. Ex: <code>6-3 6-2</code> ou <code>6-4 3-6 7-5</code>.
         </p>
       </div>
       <div>
-        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Notas (opcional)
         </p>
         <textarea
@@ -1822,7 +1806,7 @@ function ReportForm({
           className={inputCls}
         />
       </div>
-      <p className="text-[11.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         {willGoStraight
           ? 'Resultado vai direto pra completed; rating recalculado e bracket avança.'
           : 'Após reportar, o outro player precisa confirmar antes de virar oficial.'}
@@ -1832,7 +1816,7 @@ function ReportForm({
           type="button"
           onClick={() => void handleSubmit()}
           disabled={submitting}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -1873,12 +1857,9 @@ function ConfirmForm({
   return (
     <div className="space-y-2.5">
       {error ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-          <AlertCircle className="mr-1 inline size-3.5" />
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
-      <p className="text-[12.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Resultado já reportado. Ao confirmar, vira oficial: rating é recalculado e bracket avança o
         vencedor pro próximo match.
       </p>
@@ -1887,7 +1868,7 @@ function ConfirmForm({
           type="button"
           onClick={() => void handleConfirm()}
           disabled={submitting}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -1953,18 +1934,14 @@ function EditForm({
   return (
     <div className="space-y-2.5">
       {error ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-          <AlertCircle className="mr-1 inline size-3.5" />
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
-      <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 text-[12px] text-amber-700 dark:text-amber-400">
-        <AlertCircle className="mr-1 inline size-3.5" />
+      <Banner tone="warning">
         Editar resultado já registrado recalcula rating e pode afetar matches posteriores. Use só em
         correção de erro óbvio.
-      </p>
+      </Banner>
       <div>
-        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Vencedor
         </p>
         <div className="space-y-1.5">
@@ -1993,7 +1970,7 @@ function EditForm({
         </div>
       </div>
       <div>
-        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Score
         </p>
         <input
@@ -2009,7 +1986,7 @@ function EditForm({
           type="button"
           onClick={() => void handleSubmit()}
           disabled={submitting}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -2037,7 +2014,7 @@ function WinnerOption({
       type="button"
       onClick={onSelect}
       className={cn(
-        'flex w-full items-center gap-2 rounded-lg border p-2.5 text-left text-[13px] transition-colors',
+        'flex w-full items-center gap-2 rounded-lg border p-2.5 text-left text-sm transition-colors',
         checked
           ? 'border-primary bg-primary/10 text-foreground'
           : 'border-border bg-background hover:bg-muted',
@@ -2102,21 +2079,19 @@ function WalkoverActions({
 
   return (
     <div className="space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-      <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+      <p className="text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
         Walkover (admin)
       </p>
-      <p className="text-[12px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Use quando jogador desistir/não comparecer. Walkover simples avança o outro; double walkover
         finaliza sem vencedor.
       </p>
       {error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
       {confirming ? (
         <div className="space-y-2">
-          <p className="text-[12.5px]">
+          <p className="text-xs">
             <strong>Confirmar:</strong>{' '}
             {confirming === 'double'
               ? `Walkover duplo (ambos players desistem).`
@@ -2135,7 +2110,7 @@ function WalkoverActions({
               type="button"
               onClick={() => void handleApply(confirming)}
               disabled={submitting}
-              className="inline-flex h-9 items-center gap-1 rounded-md bg-amber-600 px-3 text-[12px] font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
+              className="inline-flex h-9 items-center gap-1 rounded-md bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
             >
               {submitting ? <Loader2 className="size-3 animate-spin" /> : null}
               Aplicar
@@ -2147,7 +2122,7 @@ function WalkoverActions({
                 setNotes('');
               }}
               disabled={submitting}
-              className="inline-flex h-9 items-center rounded-md border border-border bg-background px-3 text-[12px] font-medium hover:bg-muted"
+              className="inline-flex h-9 items-center rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-muted"
             >
               Voltar
             </button>
@@ -2158,21 +2133,21 @@ function WalkoverActions({
           <button
             type="button"
             onClick={() => setConfirming('p1')}
-            className="inline-flex h-8 items-center rounded-md border border-amber-500/30 bg-background px-2.5 text-[11.5px] font-semibold hover:bg-amber-500/10"
+            className="inline-flex h-8 items-center rounded-md border border-amber-500/30 bg-background px-2.5 text-xs font-semibold hover:bg-amber-500/10"
           >
             WO: {match.player1Name} avança
           </button>
           <button
             type="button"
             onClick={() => setConfirming('p2')}
-            className="inline-flex h-8 items-center rounded-md border border-amber-500/30 bg-background px-2.5 text-[11.5px] font-semibold hover:bg-amber-500/10"
+            className="inline-flex h-8 items-center rounded-md border border-amber-500/30 bg-background px-2.5 text-xs font-semibold hover:bg-amber-500/10"
           >
             WO: {match.player2Name} avança
           </button>
           <button
             type="button"
             onClick={() => setConfirming('double')}
-            className="inline-flex h-8 items-center rounded-md border border-destructive/30 bg-background px-2.5 text-[11.5px] font-semibold text-destructive hover:bg-destructive/10"
+            className="inline-flex h-8 items-center rounded-md border border-destructive/30 bg-background px-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10"
           >
             WO duplo
           </button>
@@ -2193,17 +2168,17 @@ function RevertSection({
 
   return (
     <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-      <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-destructive">
+      <p className="text-xs font-bold uppercase tracking-[0.06em] text-destructive">
         Reverter resultado (admin)
       </p>
-      <p className="mt-1 text-[12px] text-muted-foreground">
+      <p className="mt-1 text-xs text-muted-foreground">
         Desfaz o resultado: rating dos players é revertido, próximo match volta pra "scheduled" ou
         "TBD slot". Use só em correção de erro.
       </p>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-2 inline-flex h-9 items-center gap-1 rounded-md border border-destructive bg-background px-3 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+        className="mt-2 inline-flex h-9 items-center gap-1 rounded-md border border-destructive bg-background px-3 text-xs font-semibold text-destructive hover:bg-destructive/10"
       >
         Reverter…
       </button>
@@ -2280,9 +2255,7 @@ function RevertModal({
         </div>
 
         {loadError ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-            {loadError}
-          </p>
+          <Banner tone="error">{loadError}</Banner>
         ) : !preview ? (
           <div className="flex items-center justify-center py-6">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -2291,7 +2264,7 @@ function RevertModal({
           <>
             <RevertPreview preview={preview} />
             <div>
-              <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
                 Motivo (opcional, fica em audit trail)
               </p>
               <textarea
@@ -2304,10 +2277,7 @@ function RevertModal({
               />
             </div>
             {submitError ? (
-              <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-                <AlertCircle className="mr-1 inline size-3.5" />
-                {submitError}
-              </p>
+              <Banner tone="error">{submitError}</Banner>
             ) : null}
           </>
         )}
@@ -2317,7 +2287,7 @@ function RevertModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
           >
             Cancelar
           </button>
@@ -2325,7 +2295,7 @@ function RevertModal({
             type="button"
             onClick={() => void handleConfirm()}
             disabled={submitting || !preview}
-            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-4 text-[13px] font-semibold text-white disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-4 text-sm font-semibold text-white disabled:opacity-60"
           >
             {submitting ? <Loader2 className="size-3.5 animate-spin" /> : null}
             Reverter
@@ -2346,13 +2316,13 @@ const REVERT_WARNING_LABELS: Record<string, string> = {
 function RevertPreview({ preview }: { preview: PreviewMatchRevertResult }) {
   const { affectedMatches, ratingDeltas, warnings } = preview.cascade;
   return (
-    <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-[12.5px]">
-      <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-destructive">
+    <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs">
+      <p className="text-xs font-bold uppercase tracking-[0.06em] text-destructive">
         Preview do impacto
       </p>
       <div>
         <p className="font-semibold">Matches afetados ({affectedMatches.length})</p>
-        <ul className="mt-1 space-y-0.5 text-[11.5px] text-muted-foreground">
+        <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
           {affectedMatches.map((m) => (
             <li key={m.id}>
               · {m.phase} #{m.bracketPosition}: {m.status} → {m.willRevertTo}
@@ -2363,7 +2333,7 @@ function RevertPreview({ preview }: { preview: PreviewMatchRevertResult }) {
       {ratingDeltas.length > 0 ? (
         <div>
           <p className="font-semibold">Ratings revertidos</p>
-          <ul className="mt-1 space-y-0.5 text-[11.5px] text-muted-foreground">
+          <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
             {ratingDeltas.map((d) => (
               <li key={d.userId}>
                 · player {d.userId.slice(0, 8)}…: {d.ratingAfter} →{' '}
@@ -2377,10 +2347,10 @@ function RevertPreview({ preview }: { preview: PreviewMatchRevertResult }) {
       ) : null}
       {warnings.length > 0 ? (
         <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2">
-          <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+          <p className="text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
             Avisos
           </p>
-          <ul className="mt-1 space-y-0.5 text-[11.5px] text-muted-foreground">
+          <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
             {warnings.map((w) => (
               <li key={w}>· {REVERT_WARNING_LABELS[w] ?? w}</li>
             ))}
@@ -2411,7 +2381,7 @@ export function EntriesView({
 
   if (!entries) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
+      <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
         Lista de inscritos não disponível.
       </p>
     );
@@ -2424,16 +2394,10 @@ export function EntriesView({
   return (
     <div className="space-y-3">
       {actionMessage ? (
-        <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-          <CheckCircle2 className="mr-1 inline size-3.5" />
-          {actionMessage}
-        </p>
+        <Banner tone="success">{actionMessage}</Banner>
       ) : null}
       {actionError ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-          <AlertCircle className="mr-1 inline size-3.5" />
-          {actionError}
-        </p>
+        <Banner tone="error">{actionError}</Banner>
       ) : null}
 
       <RegistrationCTA
@@ -2452,7 +2416,7 @@ export function EntriesView({
       />
 
       {entries.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
+        <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
           Sem inscritos ainda.
         </p>
       ) : (
@@ -2545,7 +2509,7 @@ function RegistrationCTA({
     const canWithdraw = !isFinished && !isDrawn;
     return (
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-success/30 bg-success/5 p-3.5">
-        <div className="flex items-center gap-2 text-[12.5px]">
+        <div className="flex items-center gap-2 text-xs">
           <CheckCircle2 className="size-4 text-success" />
           <span>
             <strong>Você está inscrito.</strong>{' '}
@@ -2561,7 +2525,7 @@ function RegistrationCTA({
             type="button"
             onClick={() => void handleWithdraw()}
             disabled={submitting}
-            className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3 animate-spin" />
@@ -2578,7 +2542,7 @@ function RegistrationCTA({
   if (isFinished) return null;
   if (isDrawn) {
     return (
-      <p className="rounded-lg border border-dashed border-border p-3 text-[12.5px] text-muted-foreground">
+      <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
         Chave já sorteada. Inscrições novas só na próxima edição.
       </p>
     );
@@ -2586,7 +2550,7 @@ function RegistrationCTA({
   if (!windowOpen) {
     const tooEarly = now < opens;
     return (
-      <p className="rounded-lg border border-dashed border-border p-3 text-[12.5px] text-muted-foreground">
+      <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
         {tooEarly
           ? `Inscrições abrem em ${new Date(opens).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}.`
           : 'Janela de inscrições fechada.'}
@@ -2596,8 +2560,8 @@ function RegistrationCTA({
 
   return (
     <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3.5">
-      <div className="text-[12.5px]">
-        <p className="font-display text-[13.5px] font-bold text-foreground">Inscrições abertas</p>
+      <div className="text-xs">
+        <p className="font-display text-sm font-bold text-foreground">Inscrições abertas</p>
         <p className="mt-0.5 text-muted-foreground">
           {tournament.registrationApproval === 'committee'
             ? 'Comissão revisa cada inscrição antes de aceitar.'
@@ -2608,7 +2572,7 @@ function RegistrationCTA({
         type="button"
         onClick={() => void handleRegister()}
         disabled={submitting}
-        className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+        className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
       >
         {submitting ? (
           <Loader2 className="size-3.5 animate-spin" />
@@ -2662,14 +2626,14 @@ function EntryRow({
     <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate font-display text-[14px] font-bold">{entry.userFullName}</p>
+          <p className="truncate font-display text-sm font-bold">{entry.userFullName}</p>
           {entry.isWildCard ? (
-            <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+            <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
               Wild card
             </span>
           ) : null}
         </div>
-        <p className="mt-0.5 inline-flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
+        <p className="mt-0.5 inline-flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
           {entry.categoryId ? <span>{categoriesById.get(entry.categoryId) ?? '—'}</span> : null}
           {entry.ratingAtEntry != null ? <span>· rating {entry.ratingAtEntry}</span> : null}
         </p>
@@ -2681,7 +2645,7 @@ function EntryRow({
             type="button"
             onClick={() => void handleApprove()}
             disabled={submitting}
-            className="inline-flex h-8 items-center gap-1 rounded-md border border-success/30 bg-success/5 px-2 text-[11px] font-semibold text-success hover:bg-success/10 disabled:opacity-60"
+            className="inline-flex h-8 items-center gap-1 rounded-md border border-success/30 bg-success/5 px-2 text-xs font-semibold text-success hover:bg-success/10 disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3 animate-spin" />
@@ -2695,7 +2659,7 @@ function EntryRow({
           <button
             type="button"
             onClick={() => setMoveOpen(true)}
-            className="inline-flex h-8 items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold hover:bg-muted"
+            className="inline-flex h-8 items-center gap-1 rounded-md border border-border bg-background px-2 text-xs font-semibold hover:bg-muted"
           >
             Mover
           </button>
@@ -2771,17 +2735,15 @@ function MoveCategoryModal({
             ✕
           </button>
         </div>
-        <p className="text-[12.5px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Mover <strong>{entry.userFullName}</strong> de categoria. Wild card permite alocar em
           categoria fora do range esperado de rating.
         </p>
         {localError ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-            {localError}
-          </p>
+          <Banner tone="error">{localError}</Banner>
         ) : null}
         <div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Categoria
           </p>
           <select
@@ -2800,7 +2762,7 @@ function MoveCategoryModal({
             ))}
           </select>
         </div>
-        <label className="flex items-center gap-2 text-[12.5px]">
+        <label className="flex items-center gap-2 text-xs">
           <input
             type="checkbox"
             checked={asWildCard}
@@ -2813,7 +2775,7 @@ function MoveCategoryModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
           >
             Cancelar
           </button>
@@ -2821,7 +2783,7 @@ function MoveCategoryModal({
             type="button"
             onClick={() => void handleSubmit()}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -2839,7 +2801,7 @@ function MoveCategoryModal({
 function EntryStatusBadge({ status }: { status: TournamentEntry['status'] }) {
   if (status === 'seeded') {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-success">
+      <span className="inline-flex items-center gap-1 text-xs font-semibold text-success">
         <CheckCircle2 className="size-3" />
         Confirmado
       </span>
@@ -2847,7 +2809,7 @@ function EntryStatusBadge({ status }: { status: TournamentEntry['status'] }) {
   }
   if (status === 'pending_approval') {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+      <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
         <Loader2 className="size-3" />
         Aguarda aprovação
       </span>
@@ -2855,14 +2817,14 @@ function EntryStatusBadge({ status }: { status: TournamentEntry['status'] }) {
   }
   if (status === 'pending_seeding') {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+      <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
         <Trophy className="size-3" />
         Aguarda sorteio
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-destructive">
+    <span className="inline-flex items-center gap-1 text-xs font-semibold text-destructive">
       <XCircle className="size-3" />
       Withdrawn
     </span>

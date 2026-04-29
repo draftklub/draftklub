@@ -3,9 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import {
-  AlertCircle,
   CalendarDays,
-  CheckCircle2,
   Clock,
   Loader2,
   MapPin,
@@ -24,6 +22,8 @@ import {
   requestExtension,
   type MyBookingItem,
 } from '@/lib/api/bookings';
+import { Banner } from '@/components/ui/banner';
+import { Tabs } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 /**
@@ -98,16 +98,16 @@ export default function MinhasReservasPage() {
       <div className="mx-auto max-w-2xl space-y-4">
         <header className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
               Você
             </p>
             <h1
-              className="mt-1 font-display text-[24px] font-bold leading-tight md:text-[30px]"
+              className="mt-1 font-display text-2xl font-bold leading-tight md:text-3xl"
               style={{ letterSpacing: '-0.02em' }}
             >
               Reservas
             </h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               Reservas em todos os Klubs em que você participa.
             </p>
           </div>
@@ -118,32 +118,22 @@ export default function MinhasReservasPage() {
           <ReservarKlubPicker klubs={klubs} onClose={() => setKlubPickerOpen(false)} />
         ) : null}
 
-        <div className="flex gap-1 border-b border-border">
-          <TabButton
-            active={tab === 'upcoming'}
-            onClick={() => setTab('upcoming')}
-            label="Próximas"
-          />
-          <TabButton active={tab === 'past'} onClick={() => setTab('past')} label="Passadas" />
-          <TabButton
-            active={tab === 'cancelled'}
-            onClick={() => setTab('cancelled')}
-            label="Canceladas"
-          />
-        </div>
+        <Tabs
+          tabs={[
+            { id: 'upcoming', label: 'Próximas' },
+            { id: 'past', label: 'Passadas' },
+            { id: 'cancelled', label: 'Canceladas' },
+          ]}
+          active={tab}
+          onChange={(id) => setTab(id as Tab)}
+        />
 
         {actionMessage ? (
-          <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-            <CheckCircle2 className="mr-1 inline size-3.5" />
-            {actionMessage}
-          </p>
+          <Banner tone="success">{actionMessage}</Banner>
         ) : null}
 
         {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : bookings === null ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -196,7 +186,7 @@ function ReservarCTA({
     return (
       <Link
         href={`/k/${slug}/reservar`}
-        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
       >
         <Plus className="size-3.5" />
         Reservar quadra
@@ -207,7 +197,7 @@ function ReservarCTA({
     <button
       type="button"
       onClick={onPickerOpen}
-      className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+      className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
     >
       <Plus className="size-3.5" />
       Reservar quadra
@@ -224,7 +214,7 @@ function ReservarKlubPicker({
 }) {
   return (
     <Modal title="Em qual Klub?" onClose={onClose}>
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Você participa de mais de um Klub. Escolha onde reservar.
       </p>
       <ul className="mt-3 flex flex-col gap-1.5">
@@ -234,10 +224,10 @@ function ReservarKlubPicker({
             <li key={k.klubId}>
               <Link
                 href={`/k/${k.klubSlug}/reservar`}
-                className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-[13.5px] font-medium hover:bg-muted"
+                className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-medium hover:bg-muted"
               >
                 <span className="truncate">{label}</span>
-                <span className="text-[11.5px] text-muted-foreground">{k.klubSlug}</span>
+                <span className="text-xs text-muted-foreground">{k.klubSlug}</span>
               </Link>
             </li>
           );
@@ -247,30 +237,6 @@ function ReservarKlubPicker({
   );
 }
 
-function TabButton({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex h-10 items-center border-b-2 px-3 text-[13px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
-        active
-          ? 'border-primary text-foreground'
-          : 'border-transparent text-muted-foreground hover:text-foreground',
-      )}
-    >
-      {label}
-    </button>
-  );
-}
 
 function BookingCard({
   booking,
@@ -315,22 +281,22 @@ function BookingCard({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/k/${booking.klub.slug}/dashboard`}
-            className="truncate text-[11px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))] hover:underline"
+            className="truncate text-xs font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))] hover:underline"
           >
             {klubLabel}
           </Link>
           <StatusBadge tone={tone} label={statusLabel(booking.status)} />
           {pendingExtension ? (
-            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-amber-500/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-amber-500/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
               <Timer className="size-3" />
               Extensão pendente
             </span>
           ) : null}
         </div>
-        <h3 className="mt-1 truncate font-display text-[15px] font-bold">
+        <h3 className="mt-1 truncate font-display text-sm font-bold">
           {booking.space?.name ?? 'Quadra'}
         </h3>
-        <p className="mt-1 inline-flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-muted-foreground">
+        <p className="mt-1 inline-flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1 capitalize">
             <CalendarDays className="size-3" />
             {date}
@@ -342,7 +308,7 @@ function BookingCard({
           </span>
         </p>
         {booking.notes ? (
-          <p className="mt-2 rounded-md border-l-2 border-primary/30 bg-muted/40 px-2 py-1 text-[12px] text-muted-foreground">
+          <p className="mt-2 rounded-md border-l-2 border-primary/30 bg-muted/40 px-2 py-1 text-xs text-muted-foreground">
             {booking.notes}
           </p>
         ) : null}
@@ -354,7 +320,7 @@ function BookingCard({
             <button
               type="button"
               onClick={() => setAddPlayersOpen(true)}
-              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[12px] font-semibold hover:bg-muted"
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-semibold hover:bg-muted"
             >
               <Plus className="size-3" />
               Adicionar player
@@ -364,7 +330,7 @@ function BookingCard({
             <button
               type="button"
               onClick={() => setExtendOpen(true)}
-              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[12px] font-semibold hover:bg-muted"
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-semibold hover:bg-muted"
             >
               <Timer className="size-3" />
               Estender
@@ -374,7 +340,7 @@ function BookingCard({
             <button
               type="button"
               onClick={() => setCancelOpen(true)}
-              className="ml-auto inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+              className="ml-auto inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10"
             >
               <X className="size-3" />
               Cancelar
@@ -455,7 +421,7 @@ function CancelModal({
 
   return (
     <Modal title="Cancelar reserva" onClose={onClose}>
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Conta o motivo (mín 10 chars). O Klub vai receber pra ajustar agenda se preciso.
       </p>
       <textarea
@@ -464,22 +430,20 @@ function CancelModal({
         placeholder="Ex: Imprevisto familiar, não vou conseguir."
         rows={3}
         maxLength={500}
-        className="mt-3 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        className="mt-3 w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
       />
-      <p className="mt-1 text-right text-[11px] text-muted-foreground">
+      <p className="mt-1 text-right text-xs text-muted-foreground">
         {reason.trim().length}/500 (mín 10)
       </p>
       {error ? (
-        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
       <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
         >
           Voltar
         </button>
@@ -487,7 +451,7 @@ function CancelModal({
           type="button"
           onClick={() => void handleCancel()}
           disabled={reason.trim().length < 10 || submitting}
-          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-3 text-sm font-semibold text-white disabled:opacity-60"
         >
           {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
           Cancelar reserva
@@ -537,7 +501,7 @@ function AddPlayersModal({
 
   return (
     <Modal title="Adicionar player" onClose={onClose}>
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Se o player não tem conta no DraftKlub, criamos um cadastro guest.
       </p>
       <div className="mt-3 grid grid-cols-2 gap-2">
@@ -546,14 +510,14 @@ function AddPlayersModal({
           onChange={(e) => setFirstName(e.target.value)}
           placeholder="Nome"
           maxLength={100}
-          className="rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+          className="rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
         />
         <input
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           placeholder="Sobrenome"
           maxLength={100}
-          className="rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+          className="rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
         />
       </div>
       <input
@@ -561,19 +525,17 @@ function AddPlayersModal({
         onChange={(e) => setEmail(e.target.value)}
         placeholder="email@example.com"
         type="email"
-        className="mt-2 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        className="mt-2 w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
       />
       {error ? (
-        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
       <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
         >
           Voltar
         </button>
@@ -581,7 +543,7 @@ function AddPlayersModal({
           type="button"
           onClick={() => void handleAdd()}
           disabled={!valid || submitting}
-          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -631,7 +593,7 @@ function ExtendModal({
 
   return (
     <Modal title="Estender reserva" onClose={onClose}>
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Dependendo da config do Klub a extensão pode ser automática ou aguardar aprovação do staff.
       </p>
       <div className="mt-3 flex gap-2">
@@ -641,7 +603,7 @@ function ExtendModal({
             type="button"
             onClick={() => setMinutes(m)}
             className={cn(
-              'flex-1 rounded-[10px] border p-3 text-[13px] font-semibold transition-colors',
+              'flex-1 rounded-md border p-3 text-sm font-semibold transition-colors',
               minutes === m
                 ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
                 : 'border-input bg-background hover:bg-muted',
@@ -657,19 +619,17 @@ function ExtendModal({
         placeholder="Motivo (opcional)"
         rows={2}
         maxLength={500}
-        className="mt-3 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        className="mt-3 w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
       />
       {error ? (
-        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
       <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
         >
           Voltar
         </button>
@@ -677,7 +637,7 @@ function ExtendModal({
           type="button"
           onClick={() => void handleRequest()}
           disabled={submitting}
-          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -738,7 +698,7 @@ function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
         cls,
       )}
     >
@@ -753,7 +713,7 @@ function EmptyState({ tab }: { tab: Tab }) {
       <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
         <MapPin className="size-4" />
       </div>
-      <p className="mt-3 font-display text-[14px] font-bold">
+      <p className="mt-3 font-display text-sm font-bold">
         {tab === 'upcoming'
           ? 'Sem reservas agendadas'
           : tab === 'past'
@@ -761,7 +721,7 @@ function EmptyState({ tab }: { tab: Tab }) {
             : 'Sem reservas canceladas'}
       </p>
       {tab === 'upcoming' ? (
-        <p className="mt-2 text-[12.5px] text-muted-foreground">
+        <p className="mt-2 text-xs text-muted-foreground">
           Entre num Klub e use o botão <strong>Reservar quadra</strong> pra agendar.
         </p>
       ) : null}

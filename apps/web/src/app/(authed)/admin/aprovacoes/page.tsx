@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Loader2, Search, Building2, User as UserIcon } from 'lucide-react';
+import { ArrowRight, Loader2, Search, Building2, User as UserIcon } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
 import type {
   AdminPendingKlubItem,
   AdminPendingKlubsPage,
@@ -10,6 +11,8 @@ import type {
 } from '@draftklub/shared-types';
 import { listPendingKlubs } from '@/lib/api/admin-klubs';
 import { hintDocument } from '@/lib/format-document';
+import { Banner } from '@/components/ui/banner';
+import { Tabs } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 type Tab = 'pj' | 'pf';
@@ -63,41 +66,23 @@ export default function CadastrosPage() {
   return (
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
       <div className="mx-auto max-w-5xl">
-        <Link
-          href="/home"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Voltar pra Home
-        </Link>
-
-        <header className="mb-8">
-          <h1
-            className="font-display text-[28px] font-bold md:text-[34px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Cadastros de Klubs
-          </h1>
-          <p className="mt-2 text-[15px] text-muted-foreground">
-            Aprovação administrativa dos cadastros submetidos via /criar-klub.
-          </p>
-        </header>
+        <PageHeader
+          back={{ href: '/home', label: 'Voltar pra Home' }}
+          title="Cadastros de Klubs"
+          description="Aprovação administrativa dos cadastros submetidos via /criar-klub."
+          className="mb-8"
+        />
 
         {/* Tabs PJ / PF */}
-        <div className="mb-4 flex gap-1 border-b border-border">
-          <TabButton
-            active={tab === 'pj'}
-            onClick={() => setTab('pj')}
-            icon={Building2}
-            label="PJ"
-          />
-          <TabButton
-            active={tab === 'pf'}
-            onClick={() => setTab('pf')}
-            icon={UserIcon}
-            label="PF"
-          />
-        </div>
+        <Tabs
+          className="mb-4"
+          tabs={[
+            { id: 'pj', label: <><Building2 className="size-3.5" />PJ</> },
+            { id: 'pf', label: <><UserIcon className="size-3.5" />PF</> },
+          ]}
+          active={tab}
+          onChange={(id) => setTab(id as Tab)}
+        />
 
         {/* Filtros */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
@@ -111,13 +96,13 @@ export default function CadastrosPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscar por nome do Klub"
-              className="h-10 w-full rounded-[10px] border border-input bg-background pl-9 pr-3.5 text-[14px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+              className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
             />
           </div>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as KlubReviewStatus)}
-            className="h-10 rounded-[10px] border border-input bg-background px-3.5 text-[14px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            className="h-10 rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
           >
             <option value="pending">Pendentes</option>
             <option value="approved">Aprovados</option>
@@ -126,9 +111,7 @@ export default function CadastrosPage() {
         </div>
 
         {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-[13px] text-destructive">
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : loading ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -138,13 +121,13 @@ export default function CadastrosPage() {
             <p className="font-display text-base font-bold">
               Nenhum cadastro {labelStatus(status)}.
             </p>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               Quando alguém criar um Klub {tab === 'pj' ? 'PJ' : 'PF'}, ele aparece aqui.
             </p>
           </div>
         ) : (
           <>
-            <p className="mb-3 text-[12px] text-muted-foreground">
+            <p className="mb-3 text-xs text-muted-foreground">
               {data.total} {data.total === 1 ? 'cadastro' : 'cadastros'}
             </p>
             <ul className="space-y-3">
@@ -161,33 +144,6 @@ export default function CadastrosPage() {
   );
 }
 
-function TabButton({
-  active,
-  onClick,
-  icon: Icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex h-9 items-center gap-1.5 border-b-2 px-3 text-[13px] font-semibold transition-colors',
-        active
-          ? 'border-primary text-foreground'
-          : 'border-transparent text-muted-foreground hover:text-foreground',
-      )}
-    >
-      <Icon className="size-3.5" />
-      {label}
-    </button>
-  );
-}
 
 function CadastroCard({ item }: { item: AdminPendingKlubItem }) {
   const date = new Date(item.createdAt).toLocaleDateString('pt-BR', {
@@ -203,14 +159,14 @@ function CadastroCard({ item }: { item: AdminPendingKlubItem }) {
     >
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="truncate font-display text-[15px] font-bold leading-tight">{item.name}</h3>
+          <h3 className="truncate font-display text-sm font-bold leading-tight">{item.name}</h3>
           <ReviewBadge status={item.reviewStatus} />
           {item.cnpjStatus ? <CnpjBadge status={item.cnpjStatus} /> : null}
         </div>
         {item.legalName ? (
-          <p className="truncate text-[12.5px] text-muted-foreground">{item.legalName}</p>
+          <p className="truncate text-xs text-muted-foreground">{item.legalName}</p>
         ) : null}
-        <p className="truncate text-[12px] text-muted-foreground">
+        <p className="truncate text-xs text-muted-foreground">
           <span className="font-mono">
             {item.entityType === 'pj'
               ? hintDocument(item.documentHint ?? '', 'cnpj')
@@ -222,7 +178,7 @@ function CadastroCard({ item }: { item: AdminPendingKlubItem }) {
           {date}
         </p>
         {item.createdBy ? (
-          <p className="truncate text-[11.5px] text-muted-foreground">
+          <p className="truncate text-xs text-muted-foreground">
             Criado por {item.createdBy.fullName} · {item.createdBy.email}
           </p>
         ) : null}
@@ -244,7 +200,7 @@ function ReviewBadge({ status }: { status: KlubReviewStatus }) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
         tone,
       )}
     >
@@ -261,7 +217,7 @@ function CnpjBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
         tone,
       )}
     >

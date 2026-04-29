@@ -1,18 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import {
-  AlertCircle,
-  ArrowLeft,
   CalendarDays,
   Check,
-  CheckCircle2,
   Clock,
   Loader2,
   Timer,
   X,
 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { Banner } from '@/components/ui/banner';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { Modal } from '@/components/ui/modal';
@@ -64,41 +62,19 @@ export default function ExtensionsPendingPage() {
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-2xl space-y-5">
-        <Link
-          href={`/k/${klub.slug}/dashboard`}
-          className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          Voltar pro Klub
-        </Link>
-
-        <header>
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
-            Admin · {klub.name}
-          </p>
-          <h1
-            className="mt-1 font-display text-[24px] font-bold leading-tight md:text-[30px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Extensões pendentes
-          </h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Players solicitaram estender reservas — aprove ou rejeite.
-          </p>
-        </header>
+        <PageHeader
+          back={{ href: `/k/${klub.slug}/dashboard`, label: 'Voltar pro Klub' }}
+          eyebrow={`Admin · ${klub.name}`}
+          title="Extensões pendentes"
+          description="Players solicitaram estender reservas — aprove ou rejeite."
+        />
 
         {actionMessage ? (
-          <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-            <CheckCircle2 className="mr-1 inline size-3.5" />
-            {actionMessage}
-          </p>
+          <Banner tone="success">{actionMessage}</Banner>
         ) : null}
 
         {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : items === null ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -108,8 +84,8 @@ export default function ExtensionsPendingPage() {
             <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <Timer className="size-4" />
             </div>
-            <p className="mt-3 font-display text-[14px] font-bold">Nada pendente</p>
-            <p className="mt-1 text-[12.5px] text-muted-foreground">
+            <p className="mt-3 font-display text-sm font-bold">Nada pendente</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               Não há extensões aguardando decisão agora.
             </p>
           </div>
@@ -186,12 +162,12 @@ function ExtensionCard({
     <>
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="font-display text-[15px] font-bold">{item.spaceName ?? 'Quadra'}</h3>
-          <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+          <h3 className="font-display text-sm font-bold">{item.spaceName ?? 'Quadra'}</h3>
+          <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
             +{additionalMinutes}min
           </span>
         </div>
-        <p className="mt-1 inline-flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-muted-foreground">
+        <p className="mt-1 inline-flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1 capitalize">
             <CalendarDays className="size-3" />
             {date}
@@ -201,26 +177,24 @@ function ExtensionCard({
             {fromLabel} → {toLabel}
           </span>
         </p>
-        <p className="mt-2 text-[13px]">
+        <p className="mt-2 text-sm">
           <span className="text-muted-foreground">Solicitado por:</span>{' '}
           <span className="font-semibold">{item.requestedByName ?? 'desconhecido'}</span>
         </p>
         {item.extension.decisionReason ? (
-          <p className="mt-1 rounded-md border-l-2 border-primary/30 bg-muted/40 px-2 py-1 text-[12px] text-muted-foreground">
+          <p className="mt-1 rounded-md border-l-2 border-primary/30 bg-muted/40 px-2 py-1 text-xs text-muted-foreground">
             {item.extension.decisionReason}
           </p>
         ) : null}
         {error ? (
-          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
           <button
             type="button"
             onClick={() => void handleApprove()}
             disabled={busy !== null}
-            className="inline-flex h-9 items-center gap-1 rounded-md bg-primary px-3 text-[12px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            className="inline-flex h-9 items-center gap-1 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
           >
             {busy === 'approve' ? (
               <Loader2 className="size-3 animate-spin" />
@@ -233,7 +207,7 @@ function ExtensionCard({
             type="button"
             onClick={() => { setRejectReason(''); setRejectModalOpen(true); }}
             disabled={busy !== null}
-            className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-3 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-3 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
           >
             {busy === 'reject' ? (
               <Loader2 className="size-3 animate-spin" />
@@ -257,14 +231,14 @@ function ExtensionCard({
             <button
               type="button"
               onClick={() => setRejectModalOpen(false)}
-              className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
             >
               Cancelar
             </button>
             <button
               type="button"
               onClick={() => void handleReject()}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-sm font-semibold text-white"
             >
               <X className="size-3.5" />
               Rejeitar
@@ -278,12 +252,13 @@ function ExtensionCard({
           placeholder="Ex: Quadra já ocupada neste horário."
           rows={3}
           maxLength={500}
-          className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+          className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
         />
         <p className="mt-1 text-right text-[11px] text-muted-foreground">
           {rejectReason.trim().length}/500
         </p>
       </Modal>
+
     </>
   );
 }

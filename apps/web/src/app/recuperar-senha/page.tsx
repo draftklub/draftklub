@@ -52,12 +52,12 @@ export default function RecuperarSenhaPage() {
         </div>
 
         <h1
-          className="font-display text-[28px] font-bold md:text-[32px]"
+          className="font-display text-3xl font-bold md:text-3xl"
           style={{ letterSpacing: '-0.02em' }}
         >
           Esqueceu a senha?
         </h1>
-        <p className="mt-2 text-[15px] text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground">
           Informa o seu e-mail. Se ele estiver cadastrado, a gente manda um link pra você criar uma
           nova senha.
         </p>
@@ -68,7 +68,7 @@ export default function RecuperarSenhaPage() {
           noValidate
         >
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-[13px] font-medium text-foreground">
+            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
               E-mail
             </label>
             <input
@@ -86,7 +86,7 @@ export default function RecuperarSenhaPage() {
               autoComplete="email"
               placeholder="seu@email.com"
               className={cn(
-                'h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none transition-colors',
+                'h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none transition-colors',
                 'placeholder:text-muted-foreground',
                 'focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20',
                 status === 'error' && 'border-destructive ring-[3px] ring-destructive/20',
@@ -95,7 +95,7 @@ export default function RecuperarSenhaPage() {
           </div>
 
           {status === 'error' && errorMsg ? (
-            <p className="text-[13px] text-destructive" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {errorMsg}
             </p>
           ) : null}
@@ -103,7 +103,7 @@ export default function RecuperarSenhaPage() {
           <button
             type="submit"
             disabled={status === 'submitting'}
-            className="mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-[10px] bg-primary text-[15px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {status === 'submitting' ? (
               <>
@@ -128,7 +128,7 @@ function SentScreen() {
           <Check className="size-8" strokeWidth={2.5} />
         </div>
         <h1
-          className="mt-6 font-display text-[28px] font-bold"
+          className="mt-6 font-display text-3xl font-bold"
           style={{ letterSpacing: '-0.02em' }}
         >
           Confere sua caixa de entrada
@@ -139,7 +139,7 @@ function SentScreen() {
         </p>
         <Link
           href="/login"
-          className="mt-6 inline-flex h-10 items-center rounded-[10px] border border-border bg-card px-4 text-sm font-medium transition-colors hover:bg-muted"
+          className="mt-6 inline-flex h-10 items-center rounded-md border border-border bg-card px-4 text-sm font-medium transition-colors hover:bg-muted"
         >
           Voltar pro login
         </Link>

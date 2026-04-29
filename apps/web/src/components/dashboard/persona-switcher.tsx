@@ -93,7 +93,7 @@ export function PersonaSwitcher() {
     <div ref={ref} className="fixed bottom-4 right-4 z-50">
       {open ? (
         <div className="mb-2 w-55 rounded-xl border border-border bg-card p-2 shadow-lg">
-          <p className="px-2 pb-1 pt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+          <p className="px-2 pb-1 pt-1 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
             Dev · ver como
           </p>
           <ul className="flex flex-col gap-0.5">
@@ -103,7 +103,7 @@ export function PersonaSwitcher() {
                   type="button"
                   onClick={() => pickPersona(p)}
                   className={cn(
-                    'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-[12.5px] transition-colors hover:bg-muted',
+                    'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted',
                     persona === p && 'font-semibold text-[hsl(var(--brand-primary-600))]',
                   )}
                 >
@@ -118,7 +118,7 @@ export function PersonaSwitcher() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-[12px] font-medium shadow-md transition-colors hover:bg-muted"
+        className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-medium shadow-md transition-colors hover:bg-muted"
       >
         <Eye className="size-3.5 text-muted-foreground" />
         {PERSONA_LABELS[persona]}

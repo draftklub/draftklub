@@ -51,7 +51,7 @@ export default function LoginPage() {
 
         <div className="relative z-10 max-w-130">
           <p
-            className="mb-5 font-mono text-[11px] font-medium uppercase"
+            className="mb-5 font-mono text-xs font-medium uppercase"
             style={{
               letterSpacing: '0.18em',
               color: 'hsl(var(--brand-primary-200))',
@@ -74,7 +74,7 @@ export default function LoginPage() {
             acontece.
           </h1>
           <p
-            className="mt-5 max-w-115 text-[17px]"
+            className="mt-5 max-w-115 text-lg"
             style={{
               lineHeight: 1.55,
               color: 'hsl(var(--brand-primary-100) / 0.75)',
@@ -141,14 +141,14 @@ export default function LoginPage() {
           {/* Desktop heading + form */}
           <div className="hidden w-full max-w-100 lg:block">
             <h2
-              className="mb-1 font-display text-[28px] font-bold text-foreground"
+              className="mb-1 font-display text-3xl font-bold text-foreground"
               style={{ letterSpacing: '-0.02em' }}
             >
               Entrar
             </h2>
             <p className="mb-7 text-sm text-muted-foreground">Acesse sua conta no clube.</p>
             <LoginForm formWidth="100%" />
-            <div className="mt-8 border-t border-border pt-5 text-center text-[13px] text-muted-foreground">
+            <div className="mt-8 border-t border-border pt-5 text-center text-sm text-muted-foreground">
               Sem conta?{' '}
               <Link
                 href="/criar-conta"
@@ -180,7 +180,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer (mobile/tablet) */}
-        <div className="relative z-10 px-6 pb-7 text-center text-[13px] text-muted-foreground md:pb-10 md:text-sm lg:hidden">
+        <div className="relative z-10 px-6 pb-7 text-center text-sm text-muted-foreground md:pb-10 md:text-sm lg:hidden">
           Sem conta?{' '}
           <Link
             href="/criar-conta"

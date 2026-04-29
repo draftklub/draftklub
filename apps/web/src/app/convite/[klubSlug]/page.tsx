@@ -73,7 +73,7 @@ export default function ConvitePage() {
           <p className="mt-2 text-sm text-muted-foreground">{loadError}</p>
           <Link
             href="/login"
-            className="mt-6 inline-flex h-10 items-center rounded-[10px] border border-border bg-card px-4 text-sm font-medium transition-colors hover:bg-muted"
+            className="mt-6 inline-flex h-10 items-center rounded-md border border-border bg-card px-4 text-sm font-medium transition-colors hover:bg-muted"
           >
             Voltar pra tela inicial
           </Link>
@@ -96,32 +96,32 @@ export default function ConvitePage() {
   return (
     <Shell>
       <div className="text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+        <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
           Você foi convidado pra
         </p>
         <h1
-          className="mt-2 font-display text-[28px] font-bold md:text-[36px]"
+          className="mt-2 font-display text-3xl font-bold md:text-4xl"
           style={{ letterSpacing: '-0.02em' }}
         >
           {klub.name}
         </h1>
-        <p className="mt-1 font-mono text-[12px] text-muted-foreground">/k/{klub.slug}</p>
+        <p className="mt-1 font-mono text-xs text-muted-foreground">/k/{klub.slug}</p>
       </div>
 
       {!user ? (
         <div className="mt-8 flex flex-col items-center gap-4">
-          <p className="text-center text-[14px] text-muted-foreground">
+          <p className="text-center text-sm text-muted-foreground">
             Entra com sua conta pra aceitar o convite. Sem conta? Crie uma com o botão Google.
           </p>
           <LoginForm formWidth={320} />
         </div>
       ) : (
         <div className="mt-8 flex flex-col items-center gap-3">
-          <p className="text-center text-[14px] text-muted-foreground">
+          <p className="text-center text-sm text-muted-foreground">
             Logado como <b>{user.email ?? '—'}</b>
           </p>
           {joinError ? (
-            <p className="text-[13px] text-destructive" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {joinError}
             </p>
           ) : null}
@@ -129,7 +129,7 @@ export default function ConvitePage() {
             type="button"
             onClick={() => void handleJoin()}
             disabled={joining}
-            className="inline-flex h-12 items-center gap-2 rounded-[10px] bg-primary px-6 text-[15px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex h-12 items-center gap-2 rounded-md bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {joining ? (
               <>
@@ -144,7 +144,7 @@ export default function ConvitePage() {
               </>
             )}
           </button>
-          <p className="mt-2 text-center text-[11.5px] text-muted-foreground">
+          <p className="mt-2 text-center text-xs text-muted-foreground">
             Você vai entrar como <b>Jogador</b>. O Klub Admin pode promover depois.
           </p>
         </div>

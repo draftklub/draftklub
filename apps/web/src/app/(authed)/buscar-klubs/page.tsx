@@ -3,7 +3,8 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check, Loader2, MapPin, Plus, Search } from 'lucide-react';
+import { ArrowRight, Check, Loader2, MapPin, Plus, Search } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
 import type {
   KlubAccessMode,
   KlubDiscoveryResult,
@@ -17,6 +18,7 @@ import { listSports } from '@/lib/api/sports';
 import { getMe } from '@/lib/api/me';
 import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
 import { rememberLastKlubSlug } from '@/lib/last-klub-cookie';
+import { Banner } from '@/components/ui/banner';
 import { cn } from '@/lib/utils';
 
 /**
@@ -153,25 +155,12 @@ export default function BuscarKlubsPage() {
   return (
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
       <div className="mx-auto max-w-4xl">
-        <Link
-          href="/home"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Voltar pra Home
-        </Link>
-
-        <header className="mb-8">
-          <h1
-            className="font-display text-[28px] font-bold md:text-[34px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Buscar Klubs
-          </h1>
-          <p className="mt-2 text-[15px] text-muted-foreground">
-            Encontre clubes pra entrar como sócio. Resultados ordenados pela sua localização.
-          </p>
-        </header>
+        <PageHeader
+          back={{ href: '/home', label: 'Voltar pra Home' }}
+          title="Buscar Klubs"
+          description="Encontre clubes pra entrar como sócio. Resultados ordenados pela sua localização."
+          className="mb-8"
+        />
 
         {/* Filtros */}
         <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-[1fr_120px_180px]">
@@ -185,13 +174,13 @@ export default function BuscarKlubsPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Nome do Klub (mín 2 letras)"
-              className="h-11 w-full rounded-[10px] border border-input bg-background pl-9 pr-3.5 text-[15px] outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+              className="h-11 w-full rounded-md border border-input bg-background pl-9 pr-3.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
             />
           </div>
           <select
             value={state}
             onChange={(e) => setState(e.target.value)}
-            className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
           >
             <option value="">UF</option>
             {BRAZILIAN_STATES.map((uf) => (
@@ -203,7 +192,7 @@ export default function BuscarKlubsPage() {
           <select
             value={sport}
             onChange={(e) => setSport(e.target.value)}
-            className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
           >
             <option value="">Modalidade</option>
             {sports.map((s) => (
@@ -220,7 +209,7 @@ export default function BuscarKlubsPage() {
             type="button"
             onClick={() => setUseGeo((v) => !v)}
             className={cn(
-              'inline-flex h-9 items-center gap-2 rounded-lg px-3.5 text-[13px] font-semibold transition-colors',
+              'inline-flex h-9 items-center gap-2 rounded-lg px-3.5 text-sm font-semibold transition-colors',
               useGeo
                 ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                 : 'border border-border bg-background hover:bg-muted',
@@ -237,10 +226,10 @@ export default function BuscarKlubsPage() {
           {useGeo ? (
             <div className="flex flex-1 flex-col gap-1.5">
               <div className="flex items-center justify-between gap-3">
-                <label htmlFor="radius" className="text-[12.5px] font-medium text-muted-foreground">
+                <label htmlFor="radius" className="text-xs font-medium text-muted-foreground">
                   Raio
                 </label>
-                <span className="text-[12.5px] font-semibold tabular-nums">{radiusKm} km</span>
+                <span className="text-xs font-semibold tabular-nums">{radiusKm} km</span>
               </div>
               <input
                 id="radius"
@@ -255,7 +244,7 @@ export default function BuscarKlubsPage() {
               <GeoStatusHint status={geoStatus} />
             </div>
           ) : (
-            <p className="text-[12.5px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Use sua localização pra ver os Klubs mais próximos por distância.
             </p>
           )}
@@ -263,7 +252,7 @@ export default function BuscarKlubsPage() {
 
         {/* Período (Sprint B+3) */}
         <div className="mb-8">
-          <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Quando vai jogar?
           </p>
           <div className="flex flex-wrap gap-2">
@@ -281,7 +270,7 @@ export default function BuscarKlubsPage() {
                   type="button"
                   onClick={() => setPeriod(active ? null : p.id)}
                   className={cn(
-                    'inline-flex h-10 items-center gap-2 rounded-full border px-4 text-[13px] font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                    'inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
                     active
                       ? 'border-primary bg-primary text-primary-foreground'
                       : 'border-border bg-background hover:bg-muted',
@@ -289,7 +278,7 @@ export default function BuscarKlubsPage() {
                 >
                   <span>{p.label}</span>
                   <span
-                    className={cn('text-[11px]', active ? 'opacity-90' : 'text-muted-foreground')}
+                    className={cn('text-xs', active ? 'opacity-90' : 'text-muted-foreground')}
                   >
                     {p.hint}
                   </span>
@@ -298,7 +287,7 @@ export default function BuscarKlubsPage() {
             })}
           </div>
           {period ? (
-            <p className="mt-2 text-[11.5px] text-muted-foreground">
+            <p className="mt-2 text-xs text-muted-foreground">
               Mostra Klubs com quadras operando nesse período. Pode estar lotado — confira ao clicar
               em &quot;Reservar&quot;.
             </p>
@@ -332,7 +321,7 @@ export default function BuscarKlubsPage() {
           </ul>
         )}
 
-        <p className="mt-10 text-center text-[12px] text-muted-foreground">
+        <p className="mt-10 text-center text-xs text-muted-foreground">
           Não encontrou seu clube?{' '}
           <Link
             href="/criar-klub"
@@ -396,12 +385,12 @@ function KlubCard({
         <KlubAvatar name={klub.name} />
         <div className="min-w-0 flex-1">
           <h3
-            className="truncate font-display text-[16px] font-bold leading-tight"
+            className="truncate font-display text-base font-bold leading-tight"
             style={{ letterSpacing: '-0.01em' }}
           >
             {klub.name}
           </h3>
-          <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {klub.city ?? '—'}
             {klub.state ? ` · ${klub.state}` : ''}
             {typeof klub.distanceKm === 'number' ? (
@@ -421,11 +410,11 @@ function KlubCard({
           <SportChip key={code} code={code} />
         ))}
         {klub.sports.length > 3 ? (
-          <span className="text-[10.5px] text-muted-foreground">+{klub.sports.length - 3}</span>
+          <span className="text-xs text-muted-foreground">+{klub.sports.length - 3}</span>
         ) : null}
       </div>
 
-      {joinError ? <p className="mt-3 text-[12px] text-destructive">{joinError}</p> : null}
+      {joinError ? <p className="mt-3 text-xs text-destructive">{joinError}</p> : null}
 
       <div className="mt-auto pt-4">
         {klub.accessMode === 'public' ? (
@@ -433,7 +422,7 @@ function KlubCard({
             type="button"
             onClick={() => void handleJoin()}
             disabled={joining}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {joining ? (
               <>
@@ -448,14 +437,14 @@ function KlubCard({
             )}
           </button>
         ) : requestSubmitted ? (
-          <div className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/5 px-4 text-[12.5px] font-medium text-amber-700 dark:text-amber-400">
+          <div className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/5 px-4 text-xs font-medium text-amber-700 dark:text-amber-400">
             Solicitação enviada
           </div>
         ) : (
           <button
             type="button"
             onClick={() => setRequestModalOpen(true)}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-[13px] font-medium transition-colors hover:bg-muted"
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-colors hover:bg-muted"
           >
             Solicitar entrada
             <ArrowRight className="size-3.5" />
@@ -520,7 +509,7 @@ function RequestMembershipModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
           >
             Cancelar
           </button>
@@ -528,7 +517,7 @@ function RequestMembershipModal({
             type="button"
             onClick={() => void handleSubmit()}
             disabled={message.trim().length < 10 || submitting}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -546,15 +535,13 @@ function RequestMembershipModal({
         placeholder="Ex: Sou sócio nº 12345 — fui indicado pelo João da Silva."
         rows={4}
         maxLength={1000}
-        className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
       />
-      <p className="mt-1 text-right text-[11px] text-muted-foreground">
+      <p className="mt-1 text-right text-xs text-muted-foreground">
         {message.trim().length}/1000 (mín 10)
       </p>
       {error ? (
-        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
     </Modal>
   );
@@ -566,21 +553,21 @@ function GeoStatusHint({
   status: 'idle' | 'requesting' | 'granted' | 'denied' | 'fallback' | 'unavailable';
 }) {
   if (status === 'requesting') {
-    return <p className="text-[11.5px] text-muted-foreground">Pedindo permissão de localização…</p>;
+    return <p className="text-xs text-muted-foreground">Pedindo permissão de localização…</p>;
   }
   if (status === 'granted') {
-    return <p className="text-[11.5px] text-muted-foreground">Usando sua localização atual.</p>;
+    return <p className="text-xs text-muted-foreground">Usando sua localização atual.</p>;
   }
   if (status === 'fallback') {
     return (
-      <p className="text-[11.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Localização do navegador negada — usando o CEP do seu perfil.
       </p>
     );
   }
   if (status === 'denied') {
     return (
-      <p className="text-[11.5px] text-destructive">
+      <p className="text-xs text-destructive">
         Localização negada e sem CEP no perfil.{' '}
         <Link href="/perfil" className="underline">
           Cadastre seu CEP
@@ -591,7 +578,7 @@ function GeoStatusHint({
   }
   if (status === 'unavailable') {
     return (
-      <p className="text-[11.5px] text-destructive">
+      <p className="text-xs text-destructive">
         Seu navegador não suporta localização. Cadastre seu CEP no perfil.
       </p>
     );
@@ -624,7 +611,7 @@ function TierBadge({ tier }: { tier: 'same-city' | 'same-state' }) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
         tier === 'same-city'
           ? 'bg-primary/10 text-[hsl(var(--brand-primary-600))]'
           : 'bg-muted text-foreground',
@@ -640,7 +627,7 @@ function AccessBadge({ accessMode }: { accessMode: KlubAccessMode }) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
         isPublic
           ? 'bg-success/12 text-success'
           : 'bg-muted text-muted-foreground',
@@ -653,7 +640,7 @@ function AccessBadge({ accessMode }: { accessMode: KlubAccessMode }) {
 
 function SportChip({ code }: { code: string }) {
   return (
-    <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-[10.5px] font-medium text-muted-foreground">
+    <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-medium text-muted-foreground">
       {code}
     </span>
   );
@@ -676,7 +663,7 @@ function InitialEmptyState() {
         <Search className="size-5" strokeWidth={1.8} />
       </div>
       <h2 className="mt-4 font-display text-lg font-bold">Comece a buscar</h2>
-      <p className="mt-2 text-[13.5px] text-muted-foreground">
+      <p className="mt-2 text-sm text-muted-foreground">
         Digite o nome de um Klub (mín 2 letras) ou use os filtros pra ver resultados.
       </p>
     </div>
@@ -687,13 +674,13 @@ function NoResultsState() {
   return (
     <div className="rounded-xl border border-dashed border-border p-10 text-center">
       <h2 className="font-display text-lg font-bold">Nenhum Klub encontrado</h2>
-      <p className="mt-2 text-[13.5px] text-muted-foreground">
+      <p className="mt-2 text-sm text-muted-foreground">
         Tenta outros filtros — talvez o nome esteja escrito diferente, ou o Klub ainda não optou por
         aparecer em busca.
       </p>
       <Link
         href="/criar-klub"
-        className="mt-5 inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        className="mt-5 inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
       >
         <Plus className="size-3.5" />
         Criar meu Klub
@@ -706,11 +693,11 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <div className="mx-auto max-w-md rounded-xl border border-destructive/40 bg-destructive/5 p-6 text-center">
       <h2 className="font-display text-base font-bold text-destructive">Erro ao buscar</h2>
-      <p className="mt-1 text-[13px] text-muted-foreground">{message}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{message}</p>
       <button
         type="button"
         onClick={onRetry}
-        className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        className="mt-4 inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
       >
         <Loader2 className="size-3.5" />
         Tentar de novo

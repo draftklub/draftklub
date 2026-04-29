@@ -95,7 +95,7 @@ export function SpaceForm({
           onChange={(e) => set('name', e.target.value)}
           maxLength={100}
           placeholder="Ex: Quadra 1"
-          className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+          className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
         />
       </Field>
 
@@ -104,7 +104,7 @@ export function SpaceForm({
           <select
             value={v.type}
             onChange={(e) => set('type', e.target.value as SpaceFormValues['type'])}
-            className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
           >
             <option value="court">Quadra</option>
             <option value="field">Campo</option>
@@ -124,7 +124,7 @@ export function SpaceForm({
                   : (e.target.value as SpaceFormValues['sportCode']),
               )
             }
-            className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
           >
             <option value="">—</option>
             <option value="tennis">Tênis</option>
@@ -145,7 +145,7 @@ export function SpaceForm({
                 e.target.value === '' ? undefined : (e.target.value as SpaceFormValues['surface']),
               )
             }
-            className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
           >
             <option value="">—</option>
             <option value="clay">Saibro</option>
@@ -162,7 +162,7 @@ export function SpaceForm({
             max={50}
             value={v.maxPlayers}
             onChange={(e) => set('maxPlayers', parseInt(e.target.value, 10) || 1)}
-            className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
           />
         </Field>
       </div>
@@ -190,7 +190,7 @@ export function SpaceForm({
                 type="button"
                 onClick={() => toggleMatch(m)}
                 className={cn(
-                  'flex-1 rounded-[10px] border p-3 text-[13px] font-semibold transition-colors',
+                  'flex-1 rounded-md border p-3 text-sm font-semibold transition-colors',
                   active
                     ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
                     : 'border-input bg-background hover:bg-muted',
@@ -210,12 +210,12 @@ export function SpaceForm({
           maxLength={500}
           rows={2}
           placeholder="Detalhes que ajudam o jogador (ex: tipo de bola usada, dimensões…)"
-          className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+          className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
         />
       </Field>
 
       {error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+        <p className="rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
           {error}
         </p>
       ) : null}
@@ -225,7 +225,7 @@ export function SpaceForm({
           type="button"
           onClick={onCancel}
           disabled={submitting}
-          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
         >
           Voltar
         </button>
@@ -233,7 +233,7 @@ export function SpaceForm({
           type="button"
           onClick={() => void handleSubmit()}
           disabled={!valid || submitting}
-          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitLabel}
         </button>
@@ -245,7 +245,7 @@ export function SpaceForm({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+      <label className="mb-1 block text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
         {label}
       </label>
       {children}
@@ -267,7 +267,7 @@ function Toggle({
       type="button"
       onClick={() => onChange(!value)}
       className={cn(
-        'flex items-center justify-between rounded-[10px] border p-3 text-[13px] font-medium transition-colors',
+        'flex items-center justify-between rounded-md border p-3 text-sm font-medium transition-colors',
         value
           ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
           : 'border-input bg-background hover:bg-muted',

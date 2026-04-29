@@ -2,7 +2,9 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { AlertCircle, ArrowLeft, Bell, CheckCircle2, Loader2, Swords, XCircle } from 'lucide-react';
+import { Bell, CheckCircle2, Loader2, Swords, XCircle } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { Banner } from '@/components/ui/banner';
 import type { PendingMatchConfirmationItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { confirmCasualMatch, listPendingMatchConfirmations } from '@/lib/api/rankings';
@@ -52,37 +54,17 @@ export default function NotificacoesPage() {
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-2xl space-y-5">
-        <Link
-          href="/home"
-          className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          Voltar pra Home
-        </Link>
-
-        <header>
-          <h1
-            className="font-display text-[26px] font-bold leading-tight md:text-[32px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Notificações
-          </h1>
-          <p className="mt-1 text-[13.5px] text-muted-foreground">
-            Partidas reportadas pelo seu rival aguardando sua confirmação.
-          </p>
-        </header>
+        <PageHeader
+          back={{ href: '/home', label: 'Voltar pra Home' }}
+          title="Notificações"
+          description="Partidas reportadas pelo seu rival aguardando sua confirmação."
+        />
 
         {actionMessage ? (
-          <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-            <CheckCircle2 className="mr-1 inline size-3.5" />
-            {actionMessage}
-          </p>
+          <Banner tone="success">{actionMessage}</Banner>
         ) : null}
         {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : null}
 
         {items === null ? (
@@ -94,8 +76,8 @@ export default function NotificacoesPage() {
             <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
               <Bell className="size-5" />
             </div>
-            <p className="mt-3 font-display text-[14px] font-bold">Nada pra confirmar</p>
-            <p className="mt-1 text-[12.5px] text-muted-foreground">
+            <p className="mt-3 font-display text-sm font-bold">Nada pra confirmar</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               Você está em dia. Quando alguém reportar partida com você, aparece aqui.
             </p>
           </div>
@@ -120,7 +102,7 @@ export default function NotificacoesPage() {
           </ul>
         )}
 
-        <p className="text-[11.5px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Outras notificações (booking confirmado, lembrete 24h, solicitação de entrada) ainda
           chegam por <strong>email</strong>. Ajusta preferências em{' '}
           <Link href="/perfil" className="text-primary hover:underline">
@@ -173,23 +155,23 @@ function PendingItemCard({
     <article className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3.5">
       <div className="flex flex-wrap items-center gap-2">
         <Swords className="size-4 text-amber-700 dark:text-amber-400" />
-        <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+        <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
           Aguarda confirmação
         </span>
         {item.tournamentName ? (
-          <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-primary-600))]">
+          <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-primary-600))]">
             Torneio
           </span>
         ) : (
-          <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-[10px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">
+          <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">
             Casual
           </span>
         )}
       </div>
-      <p className="mt-2 font-display text-[14px] font-bold">
+      <p className="mt-2 font-display text-sm font-bold">
         {item.player1Name} <span className="text-muted-foreground">vs</span> {item.player2Name}
       </p>
-      <p className="mt-0.5 text-[12px] text-muted-foreground">
+      <p className="mt-0.5 text-xs text-muted-foreground">
         Reportado por <strong>{item.submittedByName}</strong> em{' '}
         {new Date(item.playedAt).toLocaleString('pt-BR', {
           day: '2-digit',
@@ -200,7 +182,7 @@ function PendingItemCard({
         · {item.rankingName}
         {item.tournamentName ? ` · ${item.tournamentName}` : ''}
       </p>
-      <p className="mt-1.5 text-[12.5px]">
+      <p className="mt-1.5 text-xs">
         Vencedor:{' '}
         <strong className={cn(winnerName ? 'text-foreground' : 'text-muted-foreground')}>
           {winnerName ?? '—'}
@@ -214,7 +196,7 @@ function PendingItemCard({
           type="button"
           onClick={() => void handleConfirm()}
           disabled={submitting}
-          className="inline-flex h-9 items-center gap-1 rounded-md border border-success/30 bg-success/5 px-2.5 text-[12px] font-semibold text-success hover:bg-success/10 disabled:opacity-60"
+          className="inline-flex h-9 items-center gap-1 rounded-md border border-success/30 bg-success/5 px-2.5 text-xs font-semibold text-success hover:bg-success/10 disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3 animate-spin" />
@@ -226,7 +208,7 @@ function PendingItemCard({
         <button
           type="button"
           disabled
-          className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[12px] font-medium text-muted-foreground opacity-60"
+          className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-muted-foreground opacity-60"
           title="Disputa virá em sprint futura"
         >
           <XCircle className="size-3" />

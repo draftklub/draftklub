@@ -66,14 +66,14 @@ export function EmailVerifyBanner() {
           <Mail className="size-4" strokeWidth={1.8} />
         </span>
         <div className="min-w-0">
-          <p className="text-[13.5px] font-semibold text-foreground">Verifique seu e-mail</p>
-          <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+          <p className="text-sm font-semibold text-foreground">Verifique seu e-mail</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {status === 'sent'
               ? `Enviamos um link pra ${user.email}. Confere a caixa de entrada e o spam.`
               : `Enviamos um link de confirmação pra ${user.email}. Sem ele, alguns fluxos transacionais podem ficar bloqueados.`}
           </p>
           {status === 'error' ? (
-            <p className="mt-1 text-[12px] text-destructive">{errorMsg}</p>
+            <p className="mt-1 text-xs text-destructive">{errorMsg}</p>
           ) : null}
         </div>
       </div>
@@ -81,7 +81,7 @@ export function EmailVerifyBanner() {
         type="button"
         onClick={() => void handleResend()}
         disabled={status === 'sending' || secondsLeft > 0}
-        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-4 text-[12.5px] font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-4 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
       >
         {status === 'sending' ? (
           <>

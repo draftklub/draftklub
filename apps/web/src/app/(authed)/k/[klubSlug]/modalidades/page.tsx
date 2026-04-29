@@ -22,6 +22,7 @@ import {
   rejectEnrollment,
   requestEnrollment,
 } from '@/lib/api/enrollments';
+import { Banner } from '@/components/ui/banner';
 import { cn } from '@/lib/utils';
 
 const ADMIN_ROLES: Role[] = ['PLATFORM_OWNER', 'KLUB_ADMIN', 'SPORT_COMMISSION'];
@@ -97,7 +98,7 @@ function ModalidadesScreen() {
   return (
     <main className="flex-1 overflow-y-auto px-8 py-6">
       {isAdmin ? (
-        <div className="mb-5 inline-flex rounded-[9px] border border-border bg-card p-0.75">
+        <div className="mb-5 inline-flex rounded-md border border-border bg-card p-0.75">
           <TabButton active={tab === 'all'} onClick={() => setTab('all')}>
             Todas modalidades
           </TabButton>
@@ -108,9 +109,7 @@ function ModalidadesScreen() {
       ) : null}
 
       {error ? (
-        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-[13px] text-destructive">
-          {error}
-        </div>
+        <Banner tone="error">{error}</Banner>
       ) : null}
 
       {tab === 'all' ? (
@@ -147,7 +146,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'h-8 rounded-md px-3.5 text-[12.5px] font-medium transition-colors',
+        'h-8 rounded-md px-3.5 text-xs font-medium transition-colors',
         active
           ? 'bg-primary text-primary-foreground'
           : 'text-muted-foreground hover:text-foreground',
@@ -231,14 +230,14 @@ function ProfileCard({
   return (
     <div className="flex h-full flex-col rounded-xl border border-border bg-card p-5">
       <h3
-        className="truncate font-display text-[16px] font-bold leading-tight"
+        className="truncate font-display text-base font-bold leading-tight"
         style={{ letterSpacing: '-0.01em' }}
       >
         {displayName}
       </h3>
-      <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{profile.sportCode}</p>
+      <p className="mt-0.5 font-mono text-xs text-muted-foreground">{profile.sportCode}</p>
       {profile.description ? (
-        <p className="mt-2 line-clamp-2 text-[12.5px] text-muted-foreground">
+        <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
           {profile.description}
         </p>
       ) : null}
@@ -250,7 +249,7 @@ function ProfileCard({
             type="button"
             onClick={() => void handleClick()}
             disabled={submitting}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {submitting ? (
               <>
@@ -269,7 +268,7 @@ function ProfileCard({
 
 function EnrollmentBadge({ status }: { status: EnrollmentStatus | null }) {
   if (status === null) {
-    return <span className="text-[11px] text-muted-foreground">Não inscrito</span>;
+    return <span className="text-xs text-muted-foreground">Não inscrito</span>;
   }
   const cfg: Record<EnrollmentStatus, { label: string; cls: string; icon: typeof Check }> = {
     pending: {
@@ -297,7 +296,7 @@ function EnrollmentBadge({ status }: { status: EnrollmentStatus | null }) {
   return (
     <span
       className={cn(
-        'inline-flex h-6 items-center gap-1 rounded-full px-2 text-[10.5px] font-bold uppercase tracking-[0.05em]',
+        'inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-bold uppercase tracking-[0.05em]',
         cls,
       )}
     >
@@ -384,15 +383,11 @@ function PendingApprovalsTab({
   }
 
   if (error) {
-    return (
-      <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-[13px] text-destructive">
-        {error}
-      </div>
-    );
+    return <Banner tone="error">{error}</Banner>;
   }
 
   if (pending === null) {
-    return <p className="text-[13px] text-muted-foreground">Carregando pendentes…</p>;
+    return <p className="text-sm text-muted-foreground">Carregando pendentes…</p>;
   }
 
   if (pending.length === 0) {
@@ -412,10 +407,10 @@ function PendingApprovalsTab({
           className="grid grid-cols-1 gap-3 rounded-lg border border-border bg-card p-4 md:grid-cols-[1fr_auto] md:items-center"
         >
           <div>
-            <p className="text-[14px] font-semibold">
+            <p className="text-sm font-semibold">
               {profile.name ?? sportName(profile.sportCode)}
             </p>
-            <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+            <p className="mt-0.5 font-mono text-xs text-muted-foreground">
               user {enrollment.userId.slice(0, 8)}… · pediu{' '}
               {new Date(enrollment.enrolledAt).toLocaleDateString('pt-BR')}
             </p>
@@ -424,14 +419,14 @@ function PendingApprovalsTab({
             <button
               type="button"
               onClick={() => void handleReject(enrollment.id)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-transparent px-3 text-[12.5px] font-medium transition-colors hover:bg-muted"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-transparent px-3 text-xs font-medium transition-colors hover:bg-muted"
             >
               <X className="size-3.5" /> Rejeitar
             </button>
             <button
               type="button"
               onClick={() => void handleApprove(enrollment.id)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <Check className="size-3.5" /> Aprovar
             </button>

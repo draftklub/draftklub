@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils';
  *     <ArrowLeft /> Voltar pra X
  *   </Link>
  *   <header>
- *     <p className="text-[10px] font-bold uppercase...">Eyebrow</p>
- *     <h1 className="font-display text-[26px] md:text-[32px]...">Title</h1>
- *     <p className="text-[13px] text-muted-foreground">Description</p>
+ *     <p className="text-xs font-bold uppercase...">Eyebrow</p>
+ *     <h1 className="font-display text-2xl md:text-3xl...">Title</h1>
+ *     <p className="text-sm text-muted-foreground">Description</p>
  *   </header>
  *
  * Aceita slot de action (CTA tipo "Criar" no header).
@@ -45,7 +45,7 @@ export function PageHeader({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           {eyebrow ? (
-            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
               {eyebrow}
             </p>
           ) : null}

@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, UserCheck } from 'lucide-react';
+import { CheckCircle2, Loader2, UserCheck } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { Banner } from '@/components/ui/banner';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { requestEnrollment } from '@/lib/api/enrollments';
@@ -58,31 +59,15 @@ export default function EnrollRequestPage() {
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-md space-y-5">
-        <Link
-          href={`/k/${klub.slug}/dashboard`}
-          className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          {klubLabel}
-        </Link>
-
-        <header>
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
-            {klubLabel}
-          </p>
-          <h1
-            className="mt-1 font-display text-[24px] font-bold leading-tight md:text-[28px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Solicitar entrada em {sportLabel}
-          </h1>
-          <p className="mt-1 text-[13.5px] text-muted-foreground">
-            A comissão esportiva da modalidade vai aprovar ou rejeitar.
-          </p>
-        </header>
+        <PageHeader
+          back={{ href: `/k/${klub.slug}/dashboard`, label: klubLabel }}
+          eyebrow={klubLabel}
+          title={`Solicitar entrada em ${sportLabel}`}
+          description="A comissão esportiva da modalidade vai aprovar ou rejeitar."
+        />
 
         {success ? (
-          <div className="rounded-xl border border-success/30 bg-success/5 p-4 text-[13px] text-success">
+          <div className="rounded-xl border border-success/30 bg-success/5 p-4 text-sm text-success">
             <CheckCircle2 className="mr-1 inline size-4" />
             <span className="font-semibold">Solicitação enviada!</span> Você vai receber um aviso
             quando for aprovada. Voltando pro Klub…
@@ -90,24 +75,21 @@ export default function EnrollRequestPage() {
         ) : (
           <div className="rounded-xl border border-border bg-card p-4">
             <UserCheck className="size-5 text-muted-foreground" />
-            <p className="mt-2 text-[13px]">
+            <p className="mt-2 text-sm">
               Confirme que quer entrar em <strong>{sportLabel}</strong> no{' '}
               <strong>{klubLabel}</strong>. Após aprovação você poderá participar de torneios e ver
               o ranking dessa modalidade.
             </p>
 
             {error ? (
-              <p className="mt-3 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-                <AlertCircle className="mr-1 inline size-3.5" />
-                {error}
-              </p>
+              <Banner tone="error">{error}</Banner>
             ) : null}
 
             <button
               type="button"
               onClick={() => void handleSubmit()}
               disabled={submitting}
-              className="mt-4 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+              className="mt-4 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
             >
               {submitting ? (
                 <Loader2 className="size-3.5 animate-spin" />
