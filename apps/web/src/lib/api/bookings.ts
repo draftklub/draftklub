@@ -1,9 +1,15 @@
+import type { BookingExtension, MyBookingItem } from '@draftklub/shared-types';
 import { apiFetch } from './client';
 
+// Re-export pra callers que importam tipo a partir de @/lib/api/bookings
+// (mantém compat). Source of truth: @draftklub/shared-types.
+export type { BookingExtension, MyBookingItem };
+
 /**
- * Shape minimo de Booking que consumimos no frontend. NÃO eh o shape
- * autoritativo (BookingPresenter no backend resolve visibility); aqui
- * vai o que precisamos pro dashboard ate Onda 2.
+ * Shape minimo de Booking que consumimos no frontend (lista por Klub).
+ * Diferente de MyBookingItem — este não inclui klub/space metadata
+ * porque o caller já tá no contexto do Klub. Source of truth no
+ * presenter backend (BookingResponseFull/Limited em shared-types).
  */
 export interface BookingListItem {
   id: string;
@@ -117,28 +123,13 @@ export function cancelBooking(bookingId: string, reason: string): Promise<{ id: 
   });
 }
 
-// ─── Sprint Polish PR-B ─────────────────────────────────────────────
+// ─── Sprint Polish PR-B / Sprint N batch 6 ─────────────────────────
+// MyBookingItem + BookingExtension agora em @draftklub/shared-types.
+// Local re-export (alias MyBookingExtensionSummary) mantido enquanto
+// alguma página antiga ainda importa pelo nome legado.
 
-export interface MyBookingExtensionSummary {
-  id: string;
-  status: 'pending' | 'approved' | 'rejected';
-  extendedTo: string;
-  requestedById: string;
-}
-
-export interface MyBookingItem {
-  id: string;
-  startsAt: string;
-  endsAt: string | null;
-  status: string;
-  notes: string | null;
-  matchType: string | null;
-  bookingType: string;
-  primaryPlayerId: string | null;
-  klub: { id: string; slug: string; name: string };
-  space: { id: string; name: string; type: string };
-  extensions: MyBookingExtensionSummary[];
-}
+/** @deprecated use BookingExtension de @draftklub/shared-types. */
+export type MyBookingExtensionSummary = BookingExtension;
 
 /**
  * GET /me/bookings — lista cross-klub das reservas do user logado.
@@ -177,19 +168,6 @@ export function addPlayersToBooking(
     method: 'POST',
     json: { players },
   });
-}
-
-export interface BookingExtension {
-  id: string;
-  extendedFrom: string;
-  extendedTo: string;
-  mode: 'player' | 'staff_approval' | 'staff_only';
-  status: 'approved' | 'pending' | 'rejected';
-  requestedById: string;
-  requestedAt: string;
-  decidedById?: string;
-  decidedAt?: string;
-  decisionReason?: string;
 }
 
 /** POST /bookings/:bookingId/extensions — pede extensão. */

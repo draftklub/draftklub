@@ -558,6 +558,121 @@ export interface UserKlubMembership {
   reviewRejectionReason: string | null;
 }
 
+// ─── Booking (Sprint N batch 6 — output DTOs consolidados) ──────────────
+
+/** Player num booking (primary ou other). Cobre user real + guest. */
+export interface BookingPlayer {
+  userId: string;
+  /** Nome resolvido no momento do booking (snapshot). */
+  name: string;
+}
+
+export type BookingExtensionStatus = 'pending' | 'approved' | 'rejected';
+
+export type BookingExtensionMode = 'player' | 'staff_approval' | 'staff_only';
+
+export interface BookingExtension {
+  id: string;
+  status: BookingExtensionStatus;
+  /** ISO datetime — endsAt anterior à extensão. */
+  extendedFrom: string;
+  /** ISO datetime — novo endsAt proposto. */
+  extendedTo: string;
+  /** Quem aprova: o player extende direto (player), staff aprova
+   *  (staff_approval) ou staff é o único que pode extender (staff_only). */
+  mode: BookingExtensionMode;
+  requestedById: string;
+  /** ISO datetime. */
+  requestedAt: string;
+  decidedById?: string;
+  decidedAt?: string;
+  decisionReason?: string;
+}
+
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'no_show' | 'completed';
+
+export type BookingType =
+  | 'player_match'
+  | 'player_free_play'
+  | 'maintenance'
+  | 'weather_closed'
+  | 'staff_blocked';
+
+export type BookingCreationMode = 'direct' | 'staff_approval' | 'staff_assisted';
+
+export type BookingMatchType = 'singles' | 'doubles';
+
+/** Tournament context inline em booking quando bookingType reflete partida de torneio. */
+export interface BookingTournamentInfo {
+  tournamentName: string;
+  phase: string;
+  matchKind: string;
+}
+
+/**
+ * Resposta completa do GET /bookings/:id pra viewer com permissão full
+ * (Klub admin, staff, comissão, ou player com participação direta).
+ */
+export interface BookingResponseFull {
+  id: string;
+  klubId: string;
+  spaceId: string;
+  /** ISO datetime. */
+  startsAt: string;
+  /** ISO datetime ou null pra blocos operacionais legados. */
+  endsAt: string | null;
+  bookingType: BookingType;
+  creationMode: BookingCreationMode;
+  status: BookingStatus;
+  matchType: BookingMatchType | null;
+  primaryPlayerId: string | null;
+  otherPlayers: BookingPlayer[];
+  responsibleMemberId: string | null;
+  tournamentMatchId: string | null;
+  tournamentInfo?: BookingTournamentInfo;
+  bookingSeriesId: string | null;
+  extensions: BookingExtension[];
+  notes: string | null;
+}
+
+/**
+ * Resposta limitada — viewer sem participação no booking só vê tempo,
+ * espaço e status (pra exibir slot ocupado no calendário sem PII).
+ */
+export interface BookingResponseLimited {
+  id: string;
+  spaceId: string;
+  startsAt: string;
+  endsAt: string | null;
+  bookingType: BookingType;
+  matchType: BookingMatchType | null;
+  status: BookingStatus;
+  tournamentMatchId: string | null;
+  tournamentInfo?: BookingTournamentInfo;
+}
+
+export type BookingResponse = BookingResponseFull | BookingResponseLimited;
+
+/**
+ * Item de listagem cross-klub do GET /me/bookings. Acrescenta klub +
+ * space metadata pra UI renderizar sem JOIN extra.
+ */
+export interface MyBookingItem {
+  id: string;
+  /** ISO datetime. */
+  startsAt: string;
+  /** ISO datetime ou null. */
+  endsAt: string | null;
+  status: BookingStatus | string;
+  notes: string | null;
+  matchType: BookingMatchType | null;
+  bookingType: BookingType | string;
+  primaryPlayerId: string | null;
+  klub: { id: string; slug: string; name: string };
+  space: { id: string; name: string; type: string };
+  extensions: BookingExtension[];
+}
+
 // ─── Sports ─────────────────────────────────────────────────────────────
 
 export interface SportCatalog {
