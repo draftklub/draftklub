@@ -36,8 +36,8 @@ export default function HomePage() {
         if (!cancelled) setPendingRequests([]);
       });
     listMyBookings()
-      .then((data) => {
-        if (!cancelled) setBookings(data);
+      .then((page) => {
+        if (!cancelled) setBookings(page.items);
       })
       .catch(() => {
         if (!cancelled) setBookings([]);

@@ -124,8 +124,11 @@ export class BookingFacade {
     return this.getHandler.executeForViewer({ bookingId, viewerId });
   }
 
-  async listMyBookings(userId: string) {
-    return this.getMyBookingsHandler.execute(userId);
+  async listMyBookings(userId: string, params?: { cursor?: string; limit?: number }) {
+    return this.getMyBookingsHandler.execute(userId, {
+      cursor: params?.cursor,
+      limit: params?.limit ?? 50,
+    });
   }
 
   async createBookingSeries(cmd: CreateBookingSeriesCommand) {

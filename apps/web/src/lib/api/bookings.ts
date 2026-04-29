@@ -140,9 +140,26 @@ export interface MyBookingItem {
   extensions: MyBookingExtensionSummary[];
 }
 
-/** GET /me/bookings — lista cross-klub das reservas do user logado. */
-export function listMyBookings(): Promise<MyBookingItem[]> {
-  return apiFetch<MyBookingItem[]>(`/me/bookings`);
+/**
+ * GET /me/bookings — lista cross-klub das reservas do user logado.
+ * Sprint N batch 4 — agora paginado com cursor. Default limit=50.
+ * Caller que só quer "primeira página" usa `listMyBookings()`; load
+ * more passa `{ cursor }`.
+ */
+export interface MyBookingsPage {
+  items: MyBookingItem[];
+  nextCursor: string | null;
+}
+
+export function listMyBookings(params?: {
+  cursor?: string;
+  limit?: number;
+}): Promise<MyBookingsPage> {
+  const qs = new URLSearchParams();
+  if (params?.cursor) qs.set('cursor', params.cursor);
+  if (params?.limit) qs.set('limit', String(params.limit));
+  const suffix = qs.toString() ? `?${qs.toString()}` : '';
+  return apiFetch<MyBookingsPage>(`/me/bookings${suffix}`);
 }
 
 // ─── Sprint Polish PR-C ─────────────────────────────────────────────

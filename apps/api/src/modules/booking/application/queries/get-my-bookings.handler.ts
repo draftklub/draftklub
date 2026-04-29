@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import {
+  type CursorPage,
+  type CursorPaginationParams,
+  buildCursorPage,
+  decodeCursor,
+} from '../../../../shared/pagination/cursor';
 
 export interface MyBookingExtension {
   id: string;
@@ -23,8 +29,15 @@ export interface MyBookingItem {
   extensions: MyBookingExtension[];
 }
 
+interface BookingCursor extends Record<string, unknown> {
+  startsAt: string; // ISO
+  id: string;
+}
+
 /**
- * Sprint Polish PR-B — lista reservas do user logado em todos os Klubs.
+ * Sprint Polish PR-B + Sprint N batch 4 — lista reservas do user logado
+ * em todos os Klubs com cursor pagination.
+ *
  * Usa OR (primary_player) + JSONB containment (`array_contains`)
  * pra capturar bookings onde o user é otherPlayer também.
  *
@@ -32,25 +45,45 @@ export interface MyBookingItem {
  * pesca Klubs em batch num findMany separado e faz join em JS — barato
  * porque distinct(klubId) costuma ser pequeno.
  *
- * Soft-deleted ignorado. Sem paginação no MVP — assume volume baixo
- * por user; revisitar quando passar de ~200 reservas históricas.
+ * Cursor: { startsAt, id }. Ordering: startsAt DESC, id DESC (tiebreaker).
+ * Cliente pede `limit=N`, recebe `{ items, nextCursor }`. Cursor opaco
+ * (base64 JSON). Soft-deleted ignorado.
  */
 @Injectable()
 export class GetMyBookingsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(userId: string): Promise<MyBookingItem[]> {
+  async execute(
+    userId: string,
+    params: CursorPaginationParams = { limit: 50 },
+  ): Promise<CursorPage<MyBookingItem>> {
+    const limit = params.limit;
+    const cursor = decodeCursor<BookingCursor>(params.cursor);
+
+    // Keyset: WHERE (startsAt, id) < (cursor.startsAt, cursor.id) — em DESC order.
+    // Prisma não tem keyset nativo, usamos OR chain equivalente.
+    const cursorWhere = cursor
+      ? {
+          OR: [
+            { startsAt: { lt: new Date(cursor.startsAt) } },
+            { startsAt: new Date(cursor.startsAt), id: { lt: cursor.id } },
+          ],
+        }
+      : {};
+
     const rows = await this.prisma.booking.findMany({
       where: {
         OR: [{ primaryPlayerId: userId }, { otherPlayers: { array_contains: [{ userId }] } }],
         deletedAt: null,
+        ...cursorWhere,
       },
       include: {
         space: { select: { id: true, name: true, type: true } },
       },
-      orderBy: { startsAt: 'desc' },
+      orderBy: [{ startsAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1, // pesca limit+1 pra detectar nextCursor
     });
-    if (rows.length === 0) return [];
+    if (rows.length === 0) return { items: [], nextCursor: null };
 
     const klubIds = [...new Set(rows.map((r) => r.klubId))];
     const klubs = await this.prisma.klub.findMany({
@@ -59,7 +92,7 @@ export class GetMyBookingsHandler {
     });
     const byId = new Map(klubs.map((k) => [k.id, k]));
 
-    return rows
+    const mapped = rows
       .map((b) => {
         const klub = byId.get(b.klubId);
         if (!klub) return null;
@@ -96,5 +129,10 @@ export class GetMyBookingsHandler {
         };
       })
       .filter((x): x is MyBookingItem => x !== null);
+
+    return buildCursorPage(mapped, limit, (item) => ({
+      startsAt: item.startsAt.toISOString(),
+      id: item.id,
+    }));
   }
 }

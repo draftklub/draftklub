@@ -65,8 +65,8 @@ export default function MinhasReservasPage() {
     let cancelled = false;
     setError(null);
     listMyBookings()
-      .then((data) => {
-        if (!cancelled) setBookings(data);
+      .then((page) => {
+        if (!cancelled) setBookings(page.items);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
