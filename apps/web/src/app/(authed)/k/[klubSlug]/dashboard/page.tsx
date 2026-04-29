@@ -445,9 +445,9 @@ function MetricsPlaceholder() {
           Dashboard de métricas em construção
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Reservas hoje, ocupação por hora, sócios ativos e receita do mês chegam na próxima
-          sprint. Os números serão calculados a partir das suas reservas e bookings reais — sem
-          dados de exemplo.
+          Reservas hoje, ocupação por hora, sócios ativos e receita do mês chegam na próxima sprint.
+          Os números serão calculados a partir das suas reservas e bookings reais — sem dados de
+          exemplo.
         </p>
       </div>
       <div className="flex w-full flex-col gap-2 pt-2" aria-hidden="true">

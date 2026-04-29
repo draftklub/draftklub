@@ -34,61 +34,63 @@ export class CancelTournamentHandler {
     const cancellationReason = `tournament_cancelled:${cmd.tournamentId}`;
     const matchIds = tournament.matches.map((m) => m.id);
 
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.tournament.update({
-        where: { id: cmd.tournamentId },
-        data: {
-          status: 'cancelled',
-          cancelledAt: now,
-          cancelledById: cmd.cancelledById,
-          cancellationReason: cmd.reason ?? 'Cancelled by committee',
-        },
-      });
-
-      const cancelledBookings =
-        matchIds.length > 0
-          ? await tx.booking.findMany({
-              where: {
-                tournamentMatchId: { in: matchIds },
-                status: { in: ['pending', 'confirmed'] },
-              },
-              select: { id: true },
-            })
-          : [];
-
-      if (cancelledBookings.length > 0) {
-        await tx.booking.updateMany({
-          where: {
-            tournamentMatchId: { in: matchIds },
-            status: { in: ['pending', 'confirmed'] },
-          },
+    return this.prisma
+      .$transaction(async (tx) => {
+        const updated = await tx.tournament.update({
+          where: { id: cmd.tournamentId },
           data: {
             status: 'cancelled',
             cancelledAt: now,
             cancelledById: cmd.cancelledById,
-            cancellationReason,
+            cancellationReason: cmd.reason ?? 'Cancelled by committee',
           },
         });
-      }
 
-      return {
-        tournament: updated,
-        cancelledBookings: cancelledBookings.map((b) => b.id),
-      };
-    }).then(async (result) => {
-      await this.audit.record({
-        actorId: cmd.cancelledById,
-        action: 'tournament.cancelled',
-        targetType: 'tournament',
-        targetId: cmd.tournamentId,
-        before: { status: tournament.status },
-        after: { status: 'cancelled' },
-        metadata: {
-          reason: cmd.reason ?? 'Cancelled by committee',
-          cascadeCancelledBookings: result.cancelledBookings.length,
-        },
+        const cancelledBookings =
+          matchIds.length > 0
+            ? await tx.booking.findMany({
+                where: {
+                  tournamentMatchId: { in: matchIds },
+                  status: { in: ['pending', 'confirmed'] },
+                },
+                select: { id: true },
+              })
+            : [];
+
+        if (cancelledBookings.length > 0) {
+          await tx.booking.updateMany({
+            where: {
+              tournamentMatchId: { in: matchIds },
+              status: { in: ['pending', 'confirmed'] },
+            },
+            data: {
+              status: 'cancelled',
+              cancelledAt: now,
+              cancelledById: cmd.cancelledById,
+              cancellationReason,
+            },
+          });
+        }
+
+        return {
+          tournament: updated,
+          cancelledBookings: cancelledBookings.map((b) => b.id),
+        };
+      })
+      .then(async (result) => {
+        await this.audit.record({
+          actorId: cmd.cancelledById,
+          action: 'tournament.cancelled',
+          targetType: 'tournament',
+          targetId: cmd.tournamentId,
+          before: { status: tournament.status },
+          after: { status: 'cancelled' },
+          metadata: {
+            reason: cmd.reason ?? 'Cancelled by committee',
+            cascadeCancelledBookings: result.cancelledBookings.length,
+          },
+        });
+        return result;
       });
-      return result;
-    });
   }
 }

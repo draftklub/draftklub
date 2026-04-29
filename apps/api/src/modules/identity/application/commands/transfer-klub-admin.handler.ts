@@ -61,95 +61,97 @@ export class TransferKlubAdminHandler {
       throw new NotFoundException(`Nenhum user encontrado pro email ${cmd.targetEmail}.`);
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const currentAdmin = await tx.roleAssignment.findFirst({
-        where: { role: 'KLUB_ADMIN', scopeKlubId: cmd.klubId },
-        select: { id: true, userId: true },
-      });
-      if (!currentAdmin) {
-        throw new NotFoundException(
-          `Klub ${cmd.klubId} não tem KLUB_ADMIN ativo — estado inconsistente.`,
-        );
-      }
+    return this.prisma
+      .$transaction(async (tx) => {
+        const currentAdmin = await tx.roleAssignment.findFirst({
+          where: { role: 'KLUB_ADMIN', scopeKlubId: cmd.klubId },
+          select: { id: true, userId: true },
+        });
+        if (!currentAdmin) {
+          throw new NotFoundException(
+            `Klub ${cmd.klubId} não tem KLUB_ADMIN ativo — estado inconsistente.`,
+          );
+        }
 
-      if (currentAdmin.userId === target.id) {
-        throw new BadRequestException(
-          'Target já é o KLUB_ADMIN atual — transferência seria no-op.',
-        );
-      }
+        if (currentAdmin.userId === target.id) {
+          throw new BadRequestException(
+            'Target já é o KLUB_ADMIN atual — transferência seria no-op.',
+          );
+        }
 
-      const targetMembership = await tx.membership.findUnique({
-        where: { userId_klubId: { userId: target.id, klubId: cmd.klubId } },
-        select: { status: true },
-      });
-      if (targetMembership?.status !== 'active') {
-        throw new BadRequestException(
-          'Target precisa ser membro ativo do Klub antes de virar admin.',
-        );
-      }
+        const targetMembership = await tx.membership.findUnique({
+          where: { userId_klubId: { userId: target.id, klubId: cmd.klubId } },
+          select: { status: true },
+        });
+        if (targetMembership?.status !== 'active') {
+          throw new BadRequestException(
+            'Target precisa ser membro ativo do Klub antes de virar admin.',
+          );
+        }
 
-      const klub = await tx.klub.findUnique({
-        where: { id: cmd.klubId },
-        select: { name: true, slug: true },
-      });
-      if (!klub) {
-        throw new NotFoundException(`Klub ${cmd.klubId} não encontrado.`);
-      }
+        const klub = await tx.klub.findUnique({
+          where: { id: cmd.klubId },
+          select: { name: true, slug: true },
+        });
+        if (!klub) {
+          throw new NotFoundException(`Klub ${cmd.klubId} não encontrado.`);
+        }
 
-      // 1. Old admin sai limpo: deleta a row KLUB_ADMIN dele.
-      await tx.roleAssignment.delete({ where: { id: currentAdmin.id } });
+        // 1. Old admin sai limpo: deleta a row KLUB_ADMIN dele.
+        await tx.roleAssignment.delete({ where: { id: currentAdmin.id } });
 
-      // 2. Defensive cleanup: se target já tinha KLUB_ASSISTANT ou SPORT_*
-      //    nesse Klub, KLUB_ADMIN trumps — removemos pra audit trail ficar
-      //    limpo (target só tem KLUB_ADMIN dali em diante).
-      await tx.roleAssignment.deleteMany({
-        where: {
-          userId: target.id,
-          scopeKlubId: cmd.klubId,
-          role: { in: ['KLUB_ASSISTANT', 'SPORT_COMMISSION', 'SPORT_STAFF'] },
-        },
-      });
-
-      // 3. Cria a nova row KLUB_ADMIN. Unique partial index garante singleton.
-      await tx.roleAssignment.create({
-        data: {
-          userId: target.id,
-          role: 'KLUB_ADMIN',
-          scopeKlubId: cmd.klubId,
-          scopeSportId: null,
-          grantedBy: cmd.caller.userId,
-        },
-      });
-
-      await tx.outboxEvent.create({
-        data: {
-          eventType: 'klub.admin.transferred',
-          payload: {
-            klubId: cmd.klubId,
-            klubName: klub.name,
-            klubSlug: klub.slug,
-            oldAdminUserId: currentAdmin.userId,
-            newAdminUserId: target.id,
-            transferredById: cmd.caller.userId,
+        // 2. Defensive cleanup: se target já tinha KLUB_ASSISTANT ou SPORT_*
+        //    nesse Klub, KLUB_ADMIN trumps — removemos pra audit trail ficar
+        //    limpo (target só tem KLUB_ADMIN dali em diante).
+        await tx.roleAssignment.deleteMany({
+          where: {
+            userId: target.id,
+            scopeKlubId: cmd.klubId,
+            role: { in: ['KLUB_ASSISTANT', 'SPORT_COMMISSION', 'SPORT_STAFF'] },
           },
-        },
-      });
+        });
 
-      return {
-        klubId: cmd.klubId,
-        oldAdminUserId: currentAdmin.userId,
-        newAdminUserId: target.id,
-      };
-    }).then(async (result) => {
-      await this.audit.record({
-        actorId: cmd.caller.userId,
-        action: 'klub.admin.transferred',
-        targetType: 'klub',
-        targetId: cmd.klubId,
-        before: { adminUserId: result.oldAdminUserId },
-        after: { adminUserId: result.newAdminUserId, granteeEmail: cmd.targetEmail },
+        // 3. Cria a nova row KLUB_ADMIN. Unique partial index garante singleton.
+        await tx.roleAssignment.create({
+          data: {
+            userId: target.id,
+            role: 'KLUB_ADMIN',
+            scopeKlubId: cmd.klubId,
+            scopeSportId: null,
+            grantedBy: cmd.caller.userId,
+          },
+        });
+
+        await tx.outboxEvent.create({
+          data: {
+            eventType: 'klub.admin.transferred',
+            payload: {
+              klubId: cmd.klubId,
+              klubName: klub.name,
+              klubSlug: klub.slug,
+              oldAdminUserId: currentAdmin.userId,
+              newAdminUserId: target.id,
+              transferredById: cmd.caller.userId,
+            },
+          },
+        });
+
+        return {
+          klubId: cmd.klubId,
+          oldAdminUserId: currentAdmin.userId,
+          newAdminUserId: target.id,
+        };
+      })
+      .then(async (result) => {
+        await this.audit.record({
+          actorId: cmd.caller.userId,
+          action: 'klub.admin.transferred',
+          targetType: 'klub',
+          targetId: cmd.klubId,
+          before: { adminUserId: result.oldAdminUserId },
+          after: { adminUserId: result.newAdminUserId, granteeEmail: cmd.targetEmail },
+        });
+        return result;
       });
-      return result;
-    });
   }
 }

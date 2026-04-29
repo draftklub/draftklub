@@ -3,15 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Bell,
-  CalendarCheck,
-  Castle,
-  Home,
-  ListOrdered,
-  LogOut,
-  X,
-} from 'lucide-react';
+import { Bell, CalendarCheck, Castle, Home, ListOrdered, LogOut, X } from 'lucide-react';
 import type { UserKlubMembership } from '@draftklub/shared-types';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { useAuth } from '@/components/auth-provider';
@@ -266,4 +258,3 @@ function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
     </span>
   );
 }
-

@@ -35,61 +35,63 @@ export class RejectKlubHandler {
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const klub = await tx.klub.findUnique({
-        where: { id: cmd.klubId },
-        select: {
-          id: true,
-          name: true,
-          reviewStatus: true,
-          deletedAt: true,
-          createdById: true,
-        },
-      });
-      if (!klub || klub.deletedAt) {
-        throw new NotFoundException(`Klub ${cmd.klubId} não encontrado`);
-      }
-      if (klub.reviewStatus !== 'pending') {
-        throw new BadRequestException(
-          `Klub ${cmd.klubId} já foi decidido (status=${klub.reviewStatus}).`,
-        );
-      }
-
-      await tx.klub.update({
-        where: { id: cmd.klubId },
-        data: {
-          reviewStatus: 'rejected',
-          reviewDecisionAt: new Date(),
-          reviewDecidedById: cmd.decidedById,
-          reviewRejectionReason: reason,
-        },
-      });
-
-      await tx.outboxEvent.create({
-        data: {
-          eventType: 'klub.review.rejected',
-          payload: {
-            klubId: klub.id,
-            klubName: klub.name,
-            createdById: klub.createdById,
-            decidedById: cmd.decidedById,
-            reason,
+    return this.prisma
+      .$transaction(async (tx) => {
+        const klub = await tx.klub.findUnique({
+          where: { id: cmd.klubId },
+          select: {
+            id: true,
+            name: true,
+            reviewStatus: true,
+            deletedAt: true,
+            createdById: true,
           },
-        },
-      });
+        });
+        if (!klub || klub.deletedAt) {
+          throw new NotFoundException(`Klub ${cmd.klubId} não encontrado`);
+        }
+        if (klub.reviewStatus !== 'pending') {
+          throw new BadRequestException(
+            `Klub ${cmd.klubId} já foi decidido (status=${klub.reviewStatus}).`,
+          );
+        }
 
-      return { id: klub.id };
-    }).then(async (result) => {
-      await this.audit.record({
-        actorId: cmd.decidedById,
-        action: 'klub.rejected',
-        targetType: 'klub',
-        targetId: cmd.klubId,
-        before: { reviewStatus: 'pending' },
-        after: { reviewStatus: 'rejected' },
-        metadata: { reason },
+        await tx.klub.update({
+          where: { id: cmd.klubId },
+          data: {
+            reviewStatus: 'rejected',
+            reviewDecisionAt: new Date(),
+            reviewDecidedById: cmd.decidedById,
+            reviewRejectionReason: reason,
+          },
+        });
+
+        await tx.outboxEvent.create({
+          data: {
+            eventType: 'klub.review.rejected',
+            payload: {
+              klubId: klub.id,
+              klubName: klub.name,
+              createdById: klub.createdById,
+              decidedById: cmd.decidedById,
+              reason,
+            },
+          },
+        });
+
+        return { id: klub.id };
+      })
+      .then(async (result) => {
+        await this.audit.record({
+          actorId: cmd.decidedById,
+          action: 'klub.rejected',
+          targetType: 'klub',
+          targetId: cmd.klubId,
+          before: { reviewStatus: 'pending' },
+          after: { reviewStatus: 'rejected' },
+          metadata: { reason },
+        });
+        return result;
       });
-      return result;
-    });
   }
 }
