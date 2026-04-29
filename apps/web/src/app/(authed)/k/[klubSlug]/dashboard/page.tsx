@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { CalendarDays, LineChart, Trophy, User, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Topbar } from '@/components/dashboard/topbar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { WeatherWidget } from '@/components/weather/weather-widget';
@@ -9,7 +10,7 @@ import { useActiveKlub } from '@/components/active-klub-provider';
 import { listKlubTournaments, type TournamentListItem } from '@/lib/api/tournaments';
 import { listKlubSports } from '@/lib/api/sports';
 import { listKlubSpaces } from '@/lib/api/spaces';
-import { listKlubBookings, type BookingListItem } from '@/lib/api/bookings';
+import { listKlubBookings } from '@/lib/api/bookings';
 import { getMyKlubs } from '@/lib/api/me';
 import Link from 'next/link';
 import { ArrowRight, LayoutGrid, Settings, Sparkles, Timer, UserCheck } from 'lucide-react';
@@ -97,23 +98,16 @@ function KlubWeatherRow() {
  */
 function KlubAdminActions() {
   const { klub } = useActiveKlub();
-  const [isAdmin, setIsAdmin] = React.useState(false);
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    void getMyKlubs()
-      .then((memberships) => {
-        if (cancelled) return;
-        const m = memberships.find((x) => x.klubId === klub.id);
-        const role = m?.role;
-        setIsAdmin(role === 'KLUB_ADMIN' || role === 'KLUB_ASSISTANT' || role === 'SPORT_STAFF');
-      })
-      .catch(() => null);
-    return () => {
-      cancelled = true;
-    };
-  }, [klub]);
+  const { data: memberships } = useQuery({
+    queryKey: ['my-klubs'],
+    queryFn: getMyKlubs,
+    enabled: !!klub,
+  });
+
+  const m = memberships?.find((x) => x.klubId === klub?.id);
+  const role = m?.role;
+  const isAdmin = role === 'KLUB_ADMIN' || role === 'KLUB_ASSISTANT' || role === 'SPORT_STAFF';
 
   if (!klub || !isAdmin) return null;
 
@@ -199,22 +193,17 @@ function ReservarCTA() {
 
 function OnboardingBanner() {
   const { klub } = useActiveKlub();
-  const [needsOnboarding, setNeedsOnboarding] = React.useState<boolean | null>(null);
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    void listKlubSpaces(klub.id)
-      .then((spaces) => {
-        if (!cancelled) setNeedsOnboarding(spaces.length === 0);
-      })
-      .catch(() => {
-        if (!cancelled) setNeedsOnboarding(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub?.id]);
+  const { data: spaces } = useQuery({
+    queryKey: ['klub-spaces', klub?.id],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      return listKlubSpaces(klub.id);
+    },
+    enabled: !!klub,
+  });
+
+  const needsOnboarding = spaces?.length === 0;
 
   if (!klub || !needsOnboarding) return null;
 
@@ -247,52 +236,42 @@ type TournamentWithSport = TournamentListItem & { sportCode: string };
 
 function RealTournaments() {
   const { klub } = useActiveKlub();
-  const [tournaments, setTournaments] = React.useState<TournamentWithSport[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    setError(null);
-    listKlubSports(klub.id)
-      .then(async (profiles) => {
-        const active = profiles.filter((p) => p.status === 'active');
-        const lists = await Promise.all(
-          active.map(async (p) => {
-            const list = await listKlubTournaments(klub.id, p.sportCode).catch(
-              () => [] as TournamentListItem[],
-            );
-            return list.map((t): TournamentWithSport => ({ ...t, sportCode: p.sportCode }));
-          }),
-        );
-        if (cancelled) return;
-        const all = lists.flat();
-        const upcoming = all
-          .filter((t) =>
-            ['in_progress', 'prequalifying', 'open_registrations', 'draft'].includes(t.status),
-          )
-          .sort((a, b) => {
-            const ta = a.mainStartDate ? Date.parse(a.mainStartDate) : Infinity;
-            const tb = b.mainStartDate ? Date.parse(b.mainStartDate) : Infinity;
-            return ta - tb;
-          })
-          .slice(0, 4);
-        setTournaments(upcoming);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Erro ao carregar torneios');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub]);
+  const { data: tournaments, error } = useQuery({
+    queryKey: ['klub-active-tournaments', klub?.id],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      const profiles = await listKlubSports(klub.id);
+      const active = profiles.filter((p) => p.status === 'active');
+      const lists = await Promise.all(
+        active.map(async (p) => {
+          const list = await listKlubTournaments(klub.id, p.sportCode).catch(
+            () => [] as TournamentListItem[],
+          );
+          return list.map((t): TournamentWithSport => ({ ...t, sportCode: p.sportCode }));
+        }),
+      );
+      const all = lists.flat();
+      return all
+        .filter((t) =>
+          ['in_progress', 'prequalifying', 'open_registrations', 'draft'].includes(t.status),
+        )
+        .sort((a, b) => {
+          const ta = a.mainStartDate ? Date.parse(a.mainStartDate) : Infinity;
+          const tb = b.mainStartDate ? Date.parse(b.mainStartDate) : Infinity;
+          return ta - tb;
+        })
+        .slice(0, 4);
+    },
+    enabled: !!klub,
+  });
 
-  if (error) {
-    return <p className="py-2 text-xs text-destructive">{error}</p>;
+  const errorMsg = error instanceof Error ? error.message : null;
+
+  if (errorMsg) {
+    return <p className="py-2 text-xs text-destructive">{errorMsg}</p>;
   }
-  if (tournaments === null) {
+  if (tournaments === undefined) {
     return (
       <ul className="flex flex-col gap-2">
         {Array.from({ length: 3 }).map((_, i) => (
@@ -356,34 +335,24 @@ function RealTournaments() {
 
 function RealActivityFeed() {
   const { klub } = useActiveKlub();
-  const [bookings, setBookings] = React.useState<BookingListItem[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    setError(null);
-    // Ultimas 24h em diante (passado e perto do futuro proximo).
-    const startsAfter = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    listKlubBookings(klub.id, { startsAfter })
-      .then((data) => {
-        if (cancelled) return;
-        setBookings(data.slice(0, 8));
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Erro ao carregar atividade');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub]);
+  const { data: bookings, error } = useQuery({
+    queryKey: ['klub-bookings-recent', klub?.id],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      const startsAfter = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const data = await listKlubBookings(klub.id, { startsAfter });
+      return data.slice(0, 8);
+    },
+    enabled: !!klub,
+  });
 
-  if (error) {
-    return <p className="py-2 text-xs text-destructive">{error}</p>;
+  const errorMsg = error instanceof Error ? error.message : null;
+
+  if (errorMsg) {
+    return <p className="py-2 text-xs text-destructive">{errorMsg}</p>;
   }
-  if (bookings === null) {
+  if (bookings === undefined) {
     return (
       <ul className="grid grid-cols-1 gap-x-8 md:grid-cols-2">
         {Array.from({ length: 6 }).map((_, i) => (

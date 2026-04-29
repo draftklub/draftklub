@@ -2,12 +2,12 @@
 
 import * as React from 'react';
 import { Check, CheckSquare, Clock, Layers, Loader2, X } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   EnrollmentStatus,
   KlubSportProfile,
   PlayerSportEnrollment,
   Role,
-  SportCatalog,
   UserKlubMembership,
 } from '@draftklub/shared-types';
 import { Topbar } from '@/components/dashboard/topbar';
@@ -40,42 +40,44 @@ export default function ModalidadesPage() {
 
 function ModalidadesScreen() {
   const { klub } = useActiveKlub();
+  const queryClient = useQueryClient();
   const [tab, setTab] = React.useState<'all' | 'pending'>('all');
-  const [userId, setUserId] = React.useState<string | null>(null);
-  const [role, setRole] = React.useState<Role | null>(null);
-  const [profiles, setProfiles] = React.useState<KlubSportProfile[] | null>(null);
-  const [catalog, setCatalog] = React.useState<SportCatalog[]>([]);
-  const [myEnrollments, setMyEnrollments] = React.useState<PlayerSportEnrollment[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [reloadToken, setReloadToken] = React.useState(0);
+  const [mutationError, setMutationError] = React.useState<string | null>(null);
 
+  const {
+    data,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: ['modalidades-screen', klub?.id],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      const [me, myKlubs, klubProfiles, sportCatalog] = await Promise.all([
+        getMe(),
+        getMyKlubs(),
+        listKlubSports(klub.id),
+        listSports(),
+      ]);
+      const myMembership = myKlubs.find((k: UserKlubMembership) => k.klubId === klub.id);
+      const ml = await listEnrollmentsByUser(me.id);
+      return {
+        userId: me.id,
+        role: myMembership?.role ?? null,
+        profiles: klubProfiles,
+        catalog: sportCatalog,
+        myEnrollments: ml,
+      };
+    },
+    enabled: !!klub,
+  });
+
+  const userId = data?.userId ?? null;
+  const role = data?.role ?? null;
+  const profiles = data?.profiles ?? null;
+  const catalog = data?.catalog ?? [];
+  const myEnrollments = data?.myEnrollments ?? null;
   const isAdmin = role !== null && ADMIN_ROLES.includes(role);
-
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    setError(null);
-
-    Promise.all([getMe(), getMyKlubs(), listKlubSports(klub.id), listSports()])
-      .then(async ([me, myKlubs, klubProfiles, sportCatalog]) => {
-        if (cancelled) return;
-        setUserId(me.id);
-        const myMembership = myKlubs.find((k: UserKlubMembership) => k.klubId === klub.id);
-        setRole(myMembership?.role ?? null);
-        setProfiles(klubProfiles);
-        setCatalog(sportCatalog);
-        const ml = await listEnrollmentsByUser(me.id);
-        if (!cancelled) setMyEnrollments(ml);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Erro ao carregar modalidades');
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [klub, reloadToken]);
+  const error = fetchError instanceof Error ? fetchError.message : mutationError;
 
   const sportName = (code: string) => catalog.find((s) => s.code === code)?.name ?? code;
 
@@ -91,9 +93,11 @@ function ModalidadesScreen() {
     if (!klub) return;
     try {
       const e = await requestEnrollment(klub.id, profile.sportCode);
-      setMyEnrollments((prev) => [...(prev ?? []), e]);
+      queryClient.setQueryData(['modalidades-screen', klub.id], (old: typeof data) =>
+        old ? { ...old, myEnrollments: [...old.myEnrollments, e] } : old,
+      );
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Erro ao solicitar inscrição');
+      setMutationError(err instanceof Error ? err.message : 'Erro ao solicitar inscrição');
     }
   }
 
@@ -124,7 +128,7 @@ function ModalidadesScreen() {
           klubId={klub?.id ?? null}
           profiles={profiles ?? []}
           sportName={sportName}
-          onChanged={() => setReloadToken((n) => n + 1)}
+          onChanged={() => void refetch()}
           adminUserId={userId}
         />
       )}
@@ -320,51 +324,40 @@ function PendingApprovalsTab({
   onChanged,
   adminUserId: _adminUserId,
 }: PendingApprovalsTabProps) {
-  const [pending, setPending] = React.useState<
-    { enrollment: PlayerSportEnrollment; profile: KlubSportProfile }[] | null
-  >(null);
+  const queryClient = useQueryClient();
+  const pendingQueryKey = ['pending-enrollments', klubId, profiles.map((p) => p.id)];
   const [error, setError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (!klubId || profiles.length === 0) {
-      setPending([]);
-      return;
-    }
-    let cancelled = false;
-    setError(null);
-    setPending(null);
-
-    Promise.all(
-      profiles.map((p) =>
-        listEnrollmentsByProfile(klubId, p.sportCode)
-          .then((list) =>
-            list.filter((e) => e.status === 'pending').map((e) => ({ enrollment: e, profile: p })),
-          )
-          .catch((err: unknown) => {
-            // 403 acontece quando user não é admin daquela modalidade especifica
-            if (err instanceof ApiError && err.status === 403) return [];
-            throw err;
-          }),
-      ),
-    )
-      .then((arrs) => {
-        if (cancelled) return;
-        setPending(arrs.flat());
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Erro ao carregar pendentes');
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [klubId, profiles]);
+  const { data: pending } = useQuery({
+    queryKey: pendingQueryKey,
+    queryFn: async () => {
+      if (!klubId || profiles.length === 0) return [];
+      const arrs = await Promise.all(
+        profiles.map((p) =>
+          listEnrollmentsByProfile(klubId, p.sportCode)
+            .then((list) =>
+              list
+                .filter((e) => e.status === 'pending')
+                .map((e) => ({ enrollment: e, profile: p })),
+            )
+            .catch((err: unknown) => {
+              if (err instanceof ApiError && err.status === 403) return [];
+              throw err;
+            }),
+        ),
+      );
+      return arrs.flat();
+    },
+    enabled: !!klubId,
+  });
 
   async function handleApprove(id: string) {
     try {
       await approveEnrollment(id);
-      setPending((prev) => prev?.filter((p) => p.enrollment.id !== id) ?? null);
+      queryClient.setQueryData<{ enrollment: PlayerSportEnrollment; profile: KlubSportProfile }[]>(
+        pendingQueryKey,
+        (prev) => prev?.filter((p) => p.enrollment.id !== id),
+      );
       onChanged();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao aprovar');
@@ -374,7 +367,10 @@ function PendingApprovalsTab({
   async function handleReject(id: string) {
     try {
       await rejectEnrollment(id);
-      setPending((prev) => prev?.filter((p) => p.enrollment.id !== id) ?? null);
+      queryClient.setQueryData<{ enrollment: PlayerSportEnrollment; profile: KlubSportProfile }[]>(
+        pendingQueryKey,
+        (prev) => prev?.filter((p) => p.enrollment.id !== id),
+      );
       onChanged();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao rejeitar');
@@ -385,7 +381,7 @@ function PendingApprovalsTab({
     return <Banner tone="error">{error}</Banner>;
   }
 
-  if (pending === null) {
+  if (pending === undefined) {
     return <p className="text-sm text-muted-foreground">Carregando pendentes…</p>;
   }
 

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { Check, Inbox, Loader2, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/ui/page-header';
 import type { MembershipRequestAdminItem, MembershipRequestStatus } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
@@ -24,28 +25,22 @@ import { cn } from '@/lib/utils';
 export default function SolicitacoesPage() {
   const { klub } = useActiveKlub();
   const [status, setStatus] = React.useState<MembershipRequestStatus>('pending');
-  const [items, setItems] = React.useState<MembershipRequestAdminItem[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [reloadToken, setReloadToken] = React.useState(0);
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    setError(null);
-    listKlubMembershipRequests(klub.id, { status })
-      .then((data) => {
-        if (!cancelled) setItems(data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Erro ao carregar.');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub, status, reloadToken]);
+  const {
+    data: items,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: ['klub-membership-requests', klub?.id, status],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      return listKlubMembershipRequests(klub.id, { status });
+    },
+    enabled: !!klub,
+  });
+
+  const error = fetchError instanceof Error ? fetchError.message : null;
 
   if (!klub) return null;
 
@@ -76,7 +71,7 @@ export default function SolicitacoesPage() {
 
         {error ? (
           <Banner tone="error">{error}</Banner>
-        ) : items === null ? (
+        ) : items === undefined ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
@@ -94,7 +89,7 @@ export default function SolicitacoesPage() {
                   klubId={klub.id}
                   onActed={(msg) => {
                     setActionMessage(msg);
-                    setReloadToken((n) => n + 1);
+                    void refetch();
                   }}
                 />
               </li>

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { ArrowRight, CalendarDays, Clock, Loader2, MapPin, Plus, Search, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import type { MembershipRequestForUser, UserKlubMembership } from '@draftklub/shared-types';
 import { useAuth } from '@/components/auth-provider';
 import { EmailVerifyBanner } from '@/components/email-verify-banner';
@@ -15,60 +16,52 @@ import { Badge } from '@/components/ui/badge';
 
 export default function HomePage() {
   const { user } = useAuth();
-  const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
-  const [pendingRequests, setPendingRequests] = React.useState<MembershipRequestForUser[] | null>(
-    null,
+
+  const {
+    data: klubs,
+    error: klubsError,
+    refetch: refetchKlubs,
+  } = useQuery({
+    queryKey: ['my-klubs'],
+    queryFn: getMyKlubs,
+  });
+
+  const { data: allRequests, refetch: refetchRequests } = useQuery({
+    queryKey: ['my-membership-requests'],
+    queryFn: listMyMembershipRequests,
+  });
+  const pendingRequests = React.useMemo(
+    () => allRequests?.filter((r) => r.status === 'pending') ?? null,
+    [allRequests],
   );
-  const [bookings, setBookings] = React.useState<MyBookingItem[] | null>(null);
-  const [requestsReloadToken, setRequestsReloadToken] = React.useState(0);
+
+  const {
+    data: bookingsPage,
+    error: bookingsError,
+    refetch: refetchBookings,
+  } = useQuery({
+    queryKey: ['my-bookings'],
+    queryFn: () => listMyBookings(),
+  });
+  const bookings = bookingsPage?.items ?? null;
 
   React.useEffect(() => {
-    let cancelled = false;
-    // Sprint M batch SM-9 — toast com retry button em vez de catch silencioso.
-    // Auditoria flagou: falha de API engolida vira "lista vazia" enganosa.
-    getMyKlubs()
-      .then((data) => {
-        if (!cancelled) setKlubs(data);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setKlubs([]);
-        toast.error('Falha ao carregar seus Klubs', {
-          action: {
-            label: 'Tentar de novo',
-            onClick: () => setRequestsReloadToken((n) => n + 1),
-          },
-        });
-      });
-    listMyMembershipRequests()
-      .then((data) => {
-        if (!cancelled) setPendingRequests(data.filter((r) => r.status === 'pending'));
-      })
-      .catch(() => {
-        if (!cancelled) setPendingRequests([]);
-      });
-    listMyBookings()
-      .then((page) => {
-        if (!cancelled) setBookings(page.items);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setBookings([]);
-        toast.error('Falha ao carregar reservas', {
-          action: {
-            label: 'Tentar de novo',
-            onClick: () => setRequestsReloadToken((n) => n + 1),
-          },
-        });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [requestsReloadToken]);
+    if (!klubsError) return;
+    toast.error('Falha ao carregar seus Klubs', {
+      action: { label: 'Tentar de novo', onClick: () => void refetchKlubs() },
+    });
+  }, [klubsError, refetchKlubs]);
+
+  React.useEffect(() => {
+    if (!bookingsError) return;
+    toast.error('Falha ao carregar reservas', {
+      action: { label: 'Tentar de novo', onClick: () => void refetchBookings() },
+    });
+  }, [bookingsError, refetchBookings]);
 
   const firstName = (user?.displayName ?? user?.email ?? '').split(/[\s@]/)[0] ?? '';
-  const hasKlubs = klubs !== null && klubs.length > 0;
-  const isSingleKlub = klubs !== null && klubs.length === 1;
+  const hasKlubs = klubs !== undefined && klubs.length > 0;
+  const isSingleKlub = klubs?.length === 1;
 
   const now = Date.now();
   const upcomingBookings = React.useMemo(() => {
@@ -81,7 +74,7 @@ export default function HomePage() {
       .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
   }, [bookings, now]);
 
-  const loading = klubs === null;
+  const loading = klubs === undefined && !klubsError;
 
   return (
     <main className="flex-1 overflow-y-auto px-4 py-8 md:px-8 md:py-12">
@@ -117,7 +110,7 @@ export default function HomePage() {
             {pendingRequests && pendingRequests.length > 0 ? (
               <PendingRequestsSection
                 requests={pendingRequests}
-                onCancelled={() => setRequestsReloadToken((n) => n + 1)}
+                onCancelled={() => void refetchRequests()}
               />
             ) : null}
             <ShortcutsSection />
@@ -128,7 +121,7 @@ export default function HomePage() {
             klub={klubs[0]}
             upcomingBookings={upcomingBookings}
             pendingRequestsCount={pendingRequests?.length ?? 0}
-            onCancelRequest={() => setRequestsReloadToken((n) => n + 1)}
+            onCancelRequest={() => void refetchRequests()}
             pendingRequests={pendingRequests ?? []}
           />
         ) : (
@@ -137,7 +130,7 @@ export default function HomePage() {
             klubs={klubs}
             upcomingBookings={upcomingBookings}
             pendingRequests={pendingRequests ?? []}
-            onCancelRequest={() => setRequestsReloadToken((n) => n + 1)}
+            onCancelRequest={() => void refetchRequests()}
           />
         )}
 

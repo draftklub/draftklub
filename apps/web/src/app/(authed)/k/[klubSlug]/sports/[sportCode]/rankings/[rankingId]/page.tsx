@@ -13,6 +13,7 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -50,40 +51,32 @@ export default function RankingDetailPage() {
   const rankingId = params.rankingId;
   const sportLabel = SPORT_LABELS[sportCode] ?? sportCode;
 
-  const [data, setData] = React.useState<RankingDetail | null>(null);
-  const [meId, setMeId] = React.useState<string | null>(null);
-  const [reload, setReload] = React.useState(0);
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
+  const [mutationError, setMutationError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    setError(null);
-    void getMe()
-      .then((me) => {
-        if (!cancelled) setMeId(me.id);
-      })
-      .catch(() => null);
-    getRanking(klub.id, sportCode, rankingId)
-      .then((row) => {
-        if (!cancelled) setData(row);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof ApiError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : 'Erro ao carregar ranking.',
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub, sportCode, rankingId, reload]);
+  const {
+    data: pageData,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: ['ranking-detail', klub?.id, sportCode, rankingId],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      const [ranking, me] = await Promise.all([getRanking(klub.id, sportCode, rankingId), getMe()]);
+      return { ranking, meId: me.id };
+    },
+    enabled: !!klub,
+  });
+
+  const data = pageData?.ranking ?? null;
+  const meId = pageData?.meId ?? null;
+  const fetchErrorMsg =
+    fetchError instanceof ApiError
+      ? fetchError.message
+      : fetchError instanceof Error
+        ? fetchError.message
+        : null;
+  const error = fetchErrorMsg ?? mutationError;
 
   if (!klub) return null;
 
@@ -132,11 +125,11 @@ export default function RankingDetailPage() {
               meId={meId}
               onSuccess={(msg) => {
                 setActionMessage(msg);
-                setError(null);
-                setReload((n) => n + 1);
+                setMutationError(null);
+                void refetch();
               }}
               onError={(msg) => {
-                setError(msg);
+                setMutationError(msg);
                 setActionMessage(null);
               }}
             />

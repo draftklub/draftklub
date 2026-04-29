@@ -4,11 +4,11 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowRight, ListOrdered, Loader2, Plus, Users } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
-import type { RankingListItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { getMe } from '@/lib/api/me';
@@ -41,50 +41,39 @@ export default function SportRankingsPage() {
   const sportCode = params.sportCode;
   const sportLabel = SPORT_LABELS[sportCode] ?? sportCode;
 
-  const [rankings, setRankings] = React.useState<RankingListItem[] | null>(null);
-  const [canCreate, setCanCreate] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
-  const [reload, setReload] = React.useState(0);
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    setError(null);
-    void getMe()
-      .then((me) => {
-        if (cancelled) return;
-        const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
-        const local = me.roleAssignments.some(
-          (r) =>
-            (r.role === 'KLUB_ADMIN' ||
-              r.role === 'KLUB_ASSISTANT' ||
-              r.role === 'SPORT_COMMISSION') &&
-            r.scopeKlubId === klub.id,
-        );
-        setCanCreate(platform || local);
-      })
-      .catch(() => null);
-    listKlubRankings(klub.id, sportCode)
-      .then((rows) => {
-        if (!cancelled) setRankings(rows);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof ApiError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : 'Erro ao carregar rankings.',
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub, sportCode, reload]);
+  const {
+    data,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: ['klub-rankings', klub?.id, sportCode],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      const [rankings, me] = await Promise.all([listKlubRankings(klub.id, sportCode), getMe()]);
+      const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
+      const local = me.roleAssignments.some(
+        (r) =>
+          (r.role === 'KLUB_ADMIN' ||
+            r.role === 'KLUB_ASSISTANT' ||
+            r.role === 'SPORT_COMMISSION') &&
+          r.scopeKlubId === klub.id,
+      );
+      return { rankings, canCreate: platform || local };
+    },
+    enabled: !!klub,
+  });
+
+  const rankings = data?.rankings ?? null;
+  const canCreate = data?.canCreate ?? false;
+  const error =
+    fetchError instanceof ApiError
+      ? fetchError.message
+      : fetchError instanceof Error
+        ? fetchError.message
+        : null;
 
   if (!klub) return null;
 
@@ -168,7 +157,7 @@ export default function SportRankingsPage() {
           onCreated={(name) => {
             setCreateOpen(false);
             setActionMessage(`Ranking "${name}" criado.`);
-            setReload((n) => n + 1);
+            void refetch();
           }}
         />
       ) : null}

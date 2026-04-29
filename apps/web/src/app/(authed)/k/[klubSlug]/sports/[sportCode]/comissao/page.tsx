@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import { Loader2, Sparkles, UserCheck, Users } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -37,36 +38,28 @@ export default function SportCommitteePage() {
   const sportCode = params.sportCode;
   const sportLabel = SPORT_LABELS[sportCode] ?? sportCode;
 
-  const [items, setItems] = React.useState<RoleAssignmentListItem[] | null>(null);
-  const [sportId, setSportId] = React.useState<string | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
+  const { data, error: fetchError } = useQuery({
+    queryKey: ['sport-committee', klub?.id, sportCode],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      const [rows, sports] = await Promise.all([
+        listKlubRoleAssignments(klub.id),
+        listKlubSports(klub.id),
+      ]);
+      const profile = sports.find((s) => s.sportCode === sportCode);
+      return { items: rows, sportId: profile?.id ?? null };
+    },
+    enabled: !!klub,
+  });
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    setError(null);
-    void Promise.all([listKlubRoleAssignments(klub.id), listKlubSports(klub.id)])
-      .then(([rows, sports]) => {
-        if (cancelled) return;
-        setItems(rows);
-        const profile = sports.find((s) => s.sportCode === sportCode);
-        setSportId(profile?.id ?? null);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof ApiError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : 'Erro ao carregar.',
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub, sportCode]);
+  const items = data?.items ?? null;
+  const sportId = data?.sportId ?? null;
+  const error =
+    fetchError instanceof ApiError
+      ? fetchError.message
+      : fetchError instanceof Error
+        ? fetchError.message
+        : null;
 
   if (!klub) return null;
 

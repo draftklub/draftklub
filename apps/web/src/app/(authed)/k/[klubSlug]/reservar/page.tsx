@@ -75,7 +75,8 @@ export default function ReservarPage() {
   const { data: spacesData } = useQuery({
     queryKey: ['klub-spaces-booking', klubId],
     queryFn: async () => {
-      const rows = await listKlubSpaces(klubId!);
+      if (!klubId) throw new Error('unreachable');
+      const rows = await listKlubSpaces(klubId);
       return rows.filter((s) => s.status === 'active' && s.bookingActive);
     },
     enabled: !!klubId,
@@ -88,7 +89,10 @@ export default function ReservarPage() {
     error: availabilityError,
   } = useQuery({
     queryKey: ['space-availability', selectedSpace?.id, dateISO, matchType],
-    queryFn: () => getSpaceAvailability(selectedSpace!.id, dateISO, matchType),
+    queryFn: async () => {
+      if (!selectedSpace) throw new Error('unreachable');
+      return getSpaceAvailability(selectedSpace.id, dateISO, matchType);
+    },
     enabled: step === 2 && !!selectedSpace,
   });
   const availabilityErrorMsg =

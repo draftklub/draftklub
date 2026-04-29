@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { CalendarDays, Check, Clock, Loader2, Timer, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -22,34 +23,27 @@ import {
  */
 export default function ExtensionsPendingPage() {
   const { klub } = useActiveKlub();
-  const [items, setItems] = React.useState<PendingExtensionItem[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [reload, setReload] = React.useState(0);
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    setError(null);
-    listPendingExtensions(klub.id)
-      .then((data) => {
-        if (!cancelled) setItems(data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof ApiError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : 'Erro ao carregar extensões.',
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub, reload]);
+  const {
+    data: items,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: ['klub-extensions-pending', klub?.id],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      return listPendingExtensions(klub.id);
+    },
+    enabled: !!klub,
+  });
+
+  const error =
+    fetchError instanceof ApiError
+      ? fetchError.message
+      : fetchError instanceof Error
+        ? fetchError.message
+        : null;
 
   if (!klub) return null;
 
@@ -67,7 +61,7 @@ export default function ExtensionsPendingPage() {
 
         {error ? (
           <Banner tone="error">{error}</Banner>
-        ) : items === null ? (
+        ) : items === undefined ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
@@ -85,7 +79,7 @@ export default function ExtensionsPendingPage() {
                   item={it}
                   onActed={(msg) => {
                     setActionMessage(msg);
-                    setReload((n) => n + 1);
+                    void refetch();
                   }}
                 />
               </li>

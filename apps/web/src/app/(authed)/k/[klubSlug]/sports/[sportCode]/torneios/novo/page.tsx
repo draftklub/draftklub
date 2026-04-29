@@ -106,10 +106,11 @@ export default function NovoTorneioPage() {
   const { data: bootData, error: bootFetchError } = useQuery({
     queryKey: ['novo-torneio-boot', klub?.id, sportCode],
     queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
       const [me, rks, schemas] = await Promise.all([
         getMe(),
-        listKlubRankings(klub!.id, sportCode),
-        listPointsSchemas(klub!.id, sportCode),
+        listKlubRankings(klub.id, sportCode),
+        listPointsSchemas(klub.id, sportCode),
       ]);
       const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
       const local = me.roleAssignments.some(
@@ -117,7 +118,7 @@ export default function NovoTorneioPage() {
           (r.role === 'KLUB_ADMIN' ||
             r.role === 'KLUB_ASSISTANT' ||
             r.role === 'SPORT_COMMISSION') &&
-          r.scopeKlubId === klub!.id,
+          r.scopeKlubId === klub.id,
       );
       return { canCreate: platform || local, rankings: rks, pointsSchemas: schemas };
     },

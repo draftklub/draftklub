@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowRight, Calendar, Loader2, Plus, Trophy, Users } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -43,47 +44,35 @@ export default function SportTournamentsPage() {
   const sportCode = params.sportCode;
   const sportLabel = SPORT_LABELS[sportCode] ?? sportCode;
 
-  const [tournaments, setTournaments] = React.useState<TournamentListItem[] | null>(null);
-  const [canCreate, setCanCreate] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const { data, error: fetchError } = useQuery({
+    queryKey: ['klub-tournaments', klub?.id, sportCode],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      const [tournaments, me] = await Promise.all([
+        listKlubTournaments(klub.id, sportCode),
+        getMe(),
+      ]);
+      const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
+      const local = me.roleAssignments.some(
+        (r) =>
+          (r.role === 'KLUB_ADMIN' ||
+            r.role === 'KLUB_ASSISTANT' ||
+            r.role === 'SPORT_COMMISSION') &&
+          r.scopeKlubId === klub.id,
+      );
+      return { tournaments, canCreate: platform || local };
+    },
+    enabled: !!klub,
+  });
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    setError(null);
-    void getMe()
-      .then((me) => {
-        if (cancelled) return;
-        const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
-        const local = me.roleAssignments.some(
-          (r) =>
-            (r.role === 'KLUB_ADMIN' ||
-              r.role === 'KLUB_ASSISTANT' ||
-              r.role === 'SPORT_COMMISSION') &&
-            r.scopeKlubId === klub.id,
-        );
-        setCanCreate(platform || local);
-      })
-      .catch(() => null);
-    listKlubTournaments(klub.id, sportCode)
-      .then((rows) => {
-        if (!cancelled) setTournaments(rows);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof ApiError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : 'Erro ao carregar torneios.',
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub, sportCode]);
+  const tournaments = data?.tournaments ?? null;
+  const canCreate = data?.canCreate ?? false;
+  const error =
+    fetchError instanceof ApiError
+      ? fetchError.message
+      : fetchError instanceof Error
+        ? fetchError.message
+        : null;
 
   if (!klub) return null;
 

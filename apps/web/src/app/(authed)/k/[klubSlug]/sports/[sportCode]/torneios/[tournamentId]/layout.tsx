@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import type { TournamentDetail, TournamentStatus } from '@draftklub/shared-types';
+import { useQuery } from '@tanstack/react-query';
+import type { TournamentStatus } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { getMe } from '@/lib/api/me';
@@ -59,50 +60,37 @@ export default function TournamentLayout({ children }: { children: React.ReactNo
   const tournamentId = params.tournamentId;
   const sportLabel = SPORT_LABELS[sportCode] ?? sportCode;
 
-  const [tournament, setTournament] = React.useState<TournamentDetail | null>(null);
-  const [meId, setMeId] = React.useState<string | null>(null);
-  const [canManage, setCanManage] = React.useState(false);
-  const [reload, setReload] = React.useState(0);
-  const [error, setError] = React.useState<string | null>(null);
+  const {
+    data,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: ['tournament', klub?.id, sportCode, tournamentId],
+    queryFn: async () => {
+      if (!klub) throw new Error('unreachable');
+      const [t, me] = await Promise.all([getTournament(klub.id, sportCode, tournamentId), getMe()]);
+      const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
+      const local = me.roleAssignments.some(
+        (r) =>
+          (r.role === 'KLUB_ADMIN' ||
+            r.role === 'KLUB_ASSISTANT' ||
+            r.role === 'SPORT_COMMISSION') &&
+          r.scopeKlubId === klub.id,
+      );
+      return { tournament: t, meId: me.id, canManage: platform || local };
+    },
+    enabled: !!klub,
+  });
 
-  React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    setError(null);
-    void getMe()
-      .then((me) => {
-        if (cancelled) return;
-        setMeId(me.id);
-        const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
-        const local = me.roleAssignments.some(
-          (r) =>
-            (r.role === 'KLUB_ADMIN' ||
-              r.role === 'KLUB_ASSISTANT' ||
-              r.role === 'SPORT_COMMISSION') &&
-            r.scopeKlubId === klub.id,
-        );
-        setCanManage(platform || local);
-      })
-      .catch(() => null);
-    void getTournament(klub.id, sportCode, tournamentId)
-      .then((t) => {
-        if (!cancelled) setTournament(t);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof ApiError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : 'Erro ao carregar torneio.',
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub, sportCode, tournamentId, reload]);
+  const tournament = data?.tournament ?? null;
+  const meId = data?.meId ?? null;
+  const canManage = data?.canManage ?? false;
+  const error =
+    fetchError instanceof ApiError
+      ? fetchError.message
+      : fetchError instanceof Error
+        ? fetchError.message
+        : null;
 
   if (!klub) return null;
 
@@ -179,7 +167,7 @@ export default function TournamentLayout({ children }: { children: React.ReactNo
           value={{
             klub,
             tournament,
-            reload: () => setReload((n) => n + 1),
+            reload: () => void refetch(),
             meId,
             canManage,
           }}
