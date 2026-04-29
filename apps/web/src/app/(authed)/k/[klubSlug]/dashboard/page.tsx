@@ -1,17 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  ArrowDown,
-  ArrowUp,
-  Building2,
-  CalendarDays,
-  DollarSign,
-  Trophy,
-  User,
-  Users,
-  X,
-} from 'lucide-react';
+import { CalendarDays, LineChart, Trophy, User, X } from 'lucide-react';
 import { Topbar } from '@/components/dashboard/topbar';
 import { WeatherWidget } from '@/components/weather/weather-widget';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -23,79 +13,6 @@ import { getMyKlubs } from '@/lib/api/me';
 import Link from 'next/link';
 import { ArrowRight, LayoutGrid, Settings, Sparkles, Timer, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const HOURS: { h: string; pct: number; prime: boolean }[] = [
-  { h: '08:00', pct: 32, prime: false },
-  { h: '09:00', pct: 48, prime: false },
-  { h: '10:00', pct: 65, prime: false },
-  { h: '11:00', pct: 58, prime: false },
-  { h: '12:00', pct: 30, prime: false },
-  { h: '14:00', pct: 42, prime: false },
-  { h: '16:00', pct: 56, prime: false },
-  { h: '17:00', pct: 72, prime: false },
-  { h: '18:00', pct: 92, prime: true },
-  { h: '19:00', pct: 100, prime: true },
-  { h: '20:00', pct: 96, prime: true },
-  { h: '21:00', pct: 88, prime: true },
-  { h: '22:00', pct: 64, prime: true },
-];
-
-interface KpiData {
-  label: string;
-  icon: typeof CalendarDays;
-  value: string | null;
-  unit?: string;
-  delta: string;
-  deltaTone: 'up' | 'down';
-  deltaContext: string;
-  spark: string;
-  sparkColor: 'primary' | 'destructive';
-}
-
-const KPIS: KpiData[] = [
-  {
-    label: 'Reservas hoje',
-    icon: CalendarDays,
-    value: '87',
-    delta: '+12',
-    deltaTone: 'up',
-    deltaContext: 'vs ontem',
-    spark: '0,18 8,14 16,16 24,10 32,12 40,6 48,8 56,2',
-    sparkColor: 'primary',
-  },
-  {
-    label: 'Taxa de ocupação',
-    icon: Building2,
-    value: '74',
-    unit: '%',
-    delta: '+6pp',
-    deltaTone: 'up',
-    deltaContext: 'vs ontem',
-    spark: '0,14 8,12 16,8 24,10 32,6 40,8 48,4 56,3',
-    sparkColor: 'primary',
-  },
-  {
-    label: 'Sócios ativos · mês',
-    icon: Users,
-    value: '412',
-    delta: '+18',
-    deltaTone: 'up',
-    deltaContext: 'vs mês passado',
-    spark: '0,16 8,14 16,12 24,12 32,8 40,9 48,6 56,4',
-    sparkColor: 'primary',
-  },
-  {
-    label: 'Receita do mês',
-    icon: DollarSign,
-    value: null,
-    unit: 'k',
-    delta: '—',
-    deltaTone: 'up',
-    deltaContext: 'em breve',
-    spark: '',
-    sparkColor: 'primary',
-  },
-];
 
 // Tipo do feed permanece pra <FeedIcon /> tipar o icon-by-status.
 interface FeedItem {
@@ -117,32 +34,20 @@ function todayHeader(): string {
 export default function DashboardPage() {
   return (
     <>
-      <Topbar subtitle={todayHeader()} activeSport="Tennis" />
+      <Topbar subtitle={todayHeader()} />
       <main className="flex-1 overflow-y-auto px-4 py-6 pb-24 md:px-8 md:pb-6">
         <KlubWeatherRow />
         <OnboardingBanner />
         <ReservarCTA />
         <KlubAdminActions />
-        {/* KPI row */}
-        <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {KPIS.map((kpi) => (
-            <KpiCard key={kpi.label} kpi={kpi} />
-          ))}
-        </section>
-
-        {/* Two-col: occupancy + tournaments */}
+        {/* Tournaments + métricas em construção */}
         <section className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Panel
-            title="Ocupação por hora · hoje"
-            subtitle="Tennis · 8 quadras · prime time 18h–22h destacado"
+            title="Métricas operacionais"
+            subtitle="Ocupação, KPIs de reserva, sócios ativos e receita"
             className="lg:col-span-2"
-            headerExtra={<OccupancyLegend />}
           >
-            <div className="flex flex-col gap-1.75">
-              {HOURS.map((row) => (
-                <HourRow key={row.h} row={row} />
-              ))}
-            </div>
+            <MetricsPlaceholder />
           </Panel>
 
           <Panel title="Próximos torneios" subtitle="Inscrições ativas">
@@ -529,60 +434,27 @@ function RealActivityFeed() {
 
 // ─── Pieces ──────────────────────────────────────────────────────────
 
-function KpiCard({ kpi }: { kpi: KpiData }) {
-  const Icon = kpi.icon;
-  const sparkStroke =
-    kpi.sparkColor === 'destructive' ? 'hsl(var(--destructive))' : 'hsl(var(--primary))';
+function MetricsPlaceholder() {
   return (
-    <div className="relative rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-        <Icon className="size-3.25" strokeWidth={1.8} />
-        {kpi.label}
+    <div className="flex flex-col items-start gap-3 py-4">
+      <span className="inline-flex size-10 items-center justify-center rounded-lg bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+        <LineChart className="size-5" strokeWidth={1.8} />
+      </span>
+      <div>
+        <p className="font-display text-sm font-bold leading-tight">
+          Dashboard de métricas em construção
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Reservas hoje, ocupação por hora, sócios ativos e receita do mês chegam na próxima
+          sprint. Os números serão calculados a partir das suas reservas e bookings reais — sem
+          dados de exemplo.
+        </p>
       </div>
-      <div
-        className="mt-2 font-display text-3xl font-bold leading-none tabular-nums"
-        style={{ letterSpacing: '-0.02em' }}
-      >
-        {kpi.value ?? '—'}
-        {kpi.unit && kpi.value ? (
-          <span
-            className="ml-0.5 font-medium text-muted-foreground"
-            style={{ fontSize: kpi.value.startsWith('R$') ? '16px' : '18px' }}
-          >
-            {kpi.unit}
-          </span>
-        ) : null}
+      <div className="flex w-full flex-col gap-2 pt-2" aria-hidden="true">
+        <div className="h-2 w-3/4 rounded-full bg-muted" />
+        <div className="h-2 w-1/2 rounded-full bg-muted" />
+        <div className="h-2 w-2/3 rounded-full bg-muted" />
       </div>
-      <div
-        className={cn(
-          'mt-1.5 inline-flex items-center gap-1 font-mono text-xs font-semibold',
-          kpi.deltaTone === 'up' ? 'text-success' : 'text-destructive',
-        )}
-      >
-        {kpi.deltaTone === 'up' ? (
-          <ArrowUp className="size-3" strokeWidth={2} />
-        ) : (
-          <ArrowDown className="size-3" strokeWidth={2} />
-        )}
-        {kpi.delta}
-        <span className="ml-0.5 font-medium text-muted-foreground">{kpi.deltaContext}</span>
-      </div>
-      <svg
-        className="absolute bottom-3.5 right-3.5 opacity-55"
-        width="60"
-        height="22"
-        viewBox="0 0 60 22"
-        aria-hidden="true"
-      >
-        <polyline
-          points={kpi.spark}
-          fill="none"
-          stroke={sparkStroke}
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          opacity={kpi.sparkColor === 'destructive' ? 0.7 : 1}
-        />
-      </svg>
     </div>
   );
 }
@@ -612,56 +484,6 @@ function Panel({
         {headerExtra}
       </div>
       {children}
-    </div>
-  );
-}
-
-function OccupancyLegend() {
-  return (
-    <div className="flex items-center gap-3.5 text-xs text-muted-foreground">
-      <span className="inline-flex items-center gap-1.5">
-        <span className="size-2.5 rounded-sm bg-primary" />
-        Regular
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <span
-          className="size-2.5 rounded-sm"
-          style={{ background: 'hsl(var(--brand-accent-500))' }}
-        />
-        Prime
-      </span>
-    </div>
-  );
-}
-
-function HourRow({ row }: { row: { h: string; pct: number; prime: boolean } }) {
-  return (
-    <div className="grid grid-cols-[50px_1fr_60px] items-center gap-3">
-      <span
-        className={cn(
-          'font-mono text-xs font-semibold',
-          row.prime ? 'text-[hsl(38_92%_28%)] font-bold' : 'text-muted-foreground',
-        )}
-      >
-        {row.h}
-      </span>
-      <div className="relative h-5.5 overflow-hidden rounded-md bg-muted">
-        <div
-          className="absolute inset-y-0 left-0 rounded-md transition-[width] duration-300"
-          style={{
-            width: `${row.pct}%`,
-            background: row.prime ? 'hsl(var(--brand-accent-500))' : 'hsl(var(--primary))',
-          }}
-        />
-      </div>
-      <span
-        className={cn(
-          'text-right font-mono text-xs font-semibold',
-          row.prime ? 'text-[hsl(38_92%_28%)]' : 'text-foreground',
-        )}
-      >
-        {row.pct}%
-      </span>
     </div>
   );
 }

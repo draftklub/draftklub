@@ -13,7 +13,13 @@ export class EncryptionService {
   private getKey(): Buffer {
     const keyHex = this.config.get('ENCRYPTION_KEY', { infer: true });
     if (!keyHex) {
-      this.logger.warn('ENCRYPTION_KEY not set — using dev fallback key');
+      const env = process.env.NODE_ENV ?? 'development';
+      if (env === 'production') {
+        throw new Error(
+          'ENCRYPTION_KEY missing in production — refusing to encrypt with dev fallback key',
+        );
+      }
+      this.logger.warn('ENCRYPTION_KEY not set — using dev fallback key (NODE_ENV=' + env + ')');
       return Buffer.from('0'.repeat(64), 'hex');
     }
     return Buffer.from(keyHex, 'hex');

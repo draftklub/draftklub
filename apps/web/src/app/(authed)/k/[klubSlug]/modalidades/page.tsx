@@ -31,7 +31,7 @@ const ADMIN_ROLES: Role[] = ['PLATFORM_OWNER', 'KLUB_ADMIN', 'SPORT_COMMISSION']
 export default function ModalidadesPage() {
   return (
     <>
-      <Topbar subtitle="Modalidades · inscrições" activeSport="Tennis" />
+      <Topbar subtitle="Modalidades · inscrições" />
       <ModalidadesScreen />
     </>
   );

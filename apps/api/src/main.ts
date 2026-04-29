@@ -1,22 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { type NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
 import { Logger } from 'nestjs-pino';
-import { execSync } from 'node:child_process';
 import { AppModule } from './app.module';
 import { initTelemetry, shutdownTelemetry } from './bootstrap/telemetry/otel';
 import { ZodExceptionFilter } from './shared/filters/zod-exception.filter';
 import { getCorsOrigins } from './bootstrap/config/app.config';
 
-function runMigrations(): void {
-  execSync('./node_modules/.bin/prisma migrate deploy', { stdio: 'inherit' });
-}
-
 async function bootstrap(): Promise<void> {
   const serviceName = process.env.OTEL_SERVICE_NAME ?? 'draftklub-api';
   const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
   initTelemetry(serviceName, otlpEndpoint);
-
-  runMigrations();
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,

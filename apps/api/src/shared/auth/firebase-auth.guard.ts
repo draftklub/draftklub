@@ -26,7 +26,12 @@ export class FirebaseAuthGuard implements CanActivate {
     }
 
     try {
-      const decoded = await admin.auth().verifyIdToken(token);
+      // checkRevoked=true: bloqueia token roubado imediatamente após
+      // logout/disable/password-change (custo: 1 RTT extra ao Firebase
+      // por request). Pode ser desabilitado via env em ambientes onde
+      // a latência for crítica e o risco aceito explicitamente.
+      const checkRevoked = process.env.FIREBASE_AUTH_CHECK_REVOKED !== 'false';
+      const decoded = await admin.auth().verifyIdToken(token, checkRevoked);
 
       const user = await this.identityFacade.syncUser({
         firebaseUid: decoded.uid,
