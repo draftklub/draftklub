@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
 import { DocumentVO } from '../../../klub/domain/value-objects/document.vo';
 
 /**
@@ -61,4 +62,4 @@ export const UpdateMeSchema = z.object({
     .optional(),
 });
 
-export type UpdateMeDto = z.infer<typeof UpdateMeSchema>;
+export class UpdateMeDto extends createZodDto(UpdateMeSchema) {}

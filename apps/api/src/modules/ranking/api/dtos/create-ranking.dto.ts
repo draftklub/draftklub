@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
 
 export const CreateRankingSchema = z.object({
   name: z.string().min(2).max(100),
@@ -11,4 +12,4 @@ export const CreateRankingSchema = z.object({
   initialRating: z.number().int().min(0).max(9999).optional(),
 });
 
-export type CreateRankingDto = z.infer<typeof CreateRankingSchema>;
+export class CreateRankingDto extends createZodDto(CreateRankingSchema) {}

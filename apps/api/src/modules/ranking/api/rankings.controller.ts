@@ -16,7 +16,7 @@ import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.
 import { CursorPaginationSchema } from '../../../shared/pagination/cursor';
 import { EtagInterceptor } from '../../../shared/etag/etag.interceptor';
 import { RankingFacade } from '../public/ranking.facade';
-import { CreateRankingSchema } from './dtos/create-ranking.dto';
+import { CreateRankingDto, CreateRankingSchema } from './dtos/create-ranking.dto';
 import { EnrollPlayerSchema } from './dtos/enroll-player.dto';
 
 @Controller('klubs/:klubId/sports/:sportCode/rankings')
@@ -31,7 +31,7 @@ export class RankingsController {
   async createRanking(
     @Param('klubId') klubId: string,
     @Param('sportCode') sportCode: string,
-    @Body() body: unknown,
+    @Body() body: CreateRankingDto,
   ) {
     const dto = CreateRankingSchema.parse(body);
     return this.facade.createRanking({ klubId, sportCode, ...dto });

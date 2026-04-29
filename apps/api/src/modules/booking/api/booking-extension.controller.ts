@@ -5,7 +5,12 @@ import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
 import { CurrentUser } from '../../../shared/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.interface';
 import { BookingFacade } from '../public/booking.facade';
-import { ExtendBookingSchema, RejectExtensionSchema } from './dtos/extend-booking.dto';
+import {
+  ExtendBookingDto,
+  ExtendBookingSchema,
+  RejectExtensionDto,
+  RejectExtensionSchema,
+} from './dtos/extend-booking.dto';
 
 @Controller('bookings/:bookingId/extensions')
 @UseGuards(FirebaseAuthGuard, PolicyGuard)
@@ -15,7 +20,7 @@ export class BookingExtensionController {
   @Post()
   async extend(
     @Param('bookingId') bookingId: string,
-    @Body() body: unknown,
+    @Body() body: ExtendBookingDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const dto = ExtendBookingSchema.parse(body);
@@ -69,7 +74,7 @@ export class BookingExtensionActionsController {
   async reject(
     @Param('bookingId') bookingId: string,
     @Param('extensionId') extensionId: string,
-    @Body() body: unknown,
+    @Body() body: RejectExtensionDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const dto = RejectExtensionSchema.parse(body ?? {});

@@ -5,7 +5,7 @@ import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
 import { CurrentUser } from '../../../shared/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.interface';
 import { CompetitionFacade } from '../public/competition.facade';
-import { CreateTournamentSchema } from './dtos/create-tournament.dto';
+import { CreateTournamentDto, CreateTournamentSchema } from './dtos/create-tournament.dto';
 import { UpdateTournamentSchema } from './dtos/update-tournament.dto';
 
 @Controller('klubs/:klubId/sports/:sportCode/tournaments')
@@ -30,7 +30,7 @@ export class TournamentsController {
   async create(
     @Param('klubId') klubId: string,
     @Param('sportCode') sportCode: string,
-    @Body() body: unknown,
+    @Body() body: CreateTournamentDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const dto = CreateTournamentSchema.parse(body);

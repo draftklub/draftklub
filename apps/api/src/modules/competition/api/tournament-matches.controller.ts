@@ -5,7 +5,7 @@ import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
 import { CurrentUser } from '../../../shared/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.interface';
 import { CompetitionFacade } from '../public/competition.facade';
-import { ReportMatchSchema } from './dtos/report-match.dto';
+import { ReportMatchDto, ReportMatchSchema } from './dtos/report-match.dto';
 import { WalkoverSchema, DoubleWalkoverSchema } from './dtos/walkover.dto';
 
 @Controller('tournaments/:tournamentId/matches/:matchId')
@@ -18,7 +18,7 @@ export class TournamentMatchesController {
   async report(
     @Param('tournamentId') tournamentId: string,
     @Param('matchId') matchId: string,
-    @Body() body: unknown,
+    @Body() body: ReportMatchDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const dto = ReportMatchSchema.parse(body);
@@ -53,7 +53,7 @@ export class TournamentMatchesController {
   async edit(
     @Param('tournamentId') tournamentId: string,
     @Param('matchId') matchId: string,
-    @Body() body: unknown,
+    @Body() body: ReportMatchDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const dto = ReportMatchSchema.parse(body);

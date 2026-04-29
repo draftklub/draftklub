@@ -10,7 +10,7 @@ import { UpdateMeHandler } from '../application/commands/update-me.handler';
 import { RecordConsentHandler } from '../application/commands/record-consent.handler';
 import { ExportMyDataHandler } from '../application/queries/export-my-data.handler';
 import { DeleteMyAccountHandler } from '../application/commands/delete-my-account.handler';
-import { UpdateMeSchema } from './dtos/update-me.dto';
+import { UpdateMeDto, UpdateMeSchema } from './dtos/update-me.dto';
 
 const ConsentSchema = z.object({
   // 'YYYY-MM-DD-vN' — versão da política aceita.
@@ -46,7 +46,7 @@ export class IdentityController {
   @Patch('me')
   async patchMe(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() body: unknown,
+    @Body() body: UpdateMeDto,
   ): Promise<MeResponse> {
     const dto = UpdateMeSchema.parse(body);
     return this.updateMe.execute({

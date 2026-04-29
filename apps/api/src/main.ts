@@ -81,7 +81,7 @@ async function bootstrap(): Promise<void> {
       .setTitle('DraftKlub API')
       .setDescription(
         'API REST do DraftKlub — gestão de Klubs esportivos, reservas, torneios, ranking. Auth via Bearer Firebase ID token. ' +
-          'Schemas de request body são validados via Zod no controller (212 schemas em src/modules/*/api/dtos/). Conversão pra createZodDto pra renderizar no spec é incremental — controllers que já usam createZodDto aparecem com schema completo aqui.',
+          'Schemas de request body são validados via Zod no controller (212 schemas em src/modules/*/api/dtos/). Conversão pra createZodDto pra renderizar no spec é incremental — controllers que já usam createZodDto aparecem com schema completo aqui. Sprint N batch N-15 — primeiros 7 DTOs migrados (CreateBooking, CreateKlub, CreateTournament, CreateRanking, ReportMatch, ExtendBooking/RejectExtension, UpdateMe).',
       )
       .setVersion('1.0')
       .addBearerAuth(

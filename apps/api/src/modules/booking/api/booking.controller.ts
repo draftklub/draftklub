@@ -5,7 +5,7 @@ import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
 import { CurrentUser } from '../../../shared/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.interface';
 import { BookingFacade } from '../public/booking.facade';
-import { CreateBookingSchema } from './dtos/create-booking.dto';
+import { CreateBookingDto, CreateBookingSchema } from './dtos/create-booking.dto';
 
 @Controller('klubs/:klubId/bookings')
 @UseGuards(FirebaseAuthGuard, PolicyGuard)
@@ -18,7 +18,7 @@ export class BookingController {
   }))
   async create(
     @Param('klubId') klubId: string,
-    @Body() body: unknown,
+    @Body() body: CreateBookingDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const dto = CreateBookingSchema.parse(body);

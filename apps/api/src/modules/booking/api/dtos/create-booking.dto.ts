@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
 import { uuidString } from '../../../../shared/validation/uuid-string';
 
 const ExistingPlayerSchema = z.object({
@@ -29,4 +30,4 @@ export const CreateBookingSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-export type CreateBookingDto = z.infer<typeof CreateBookingSchema>;
+export class CreateBookingDto extends createZodDto(CreateBookingSchema) {}

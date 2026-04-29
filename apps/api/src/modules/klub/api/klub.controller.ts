@@ -15,7 +15,7 @@ import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
 import { PolicyGuard } from '../../../shared/auth/policy.guard';
 import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.interface';
 import { KlubFacade } from '../public/klub.facade';
-import { CreateKlubSchema } from './dtos/create-klub.dto';
+import { CreateKlubDto, CreateKlubSchema } from './dtos/create-klub.dto';
 import { UpdateKlubSchema, DeactivateKlubSchema } from './dtos/update-klub.dto';
 import { AddMemberSchema } from './dtos/add-member.dto';
 import { AddMediaSchema } from './dtos/add-media.dto';
@@ -35,7 +35,7 @@ export class KlubController {
 
   @Post()
   @RequirePolicy('klub.create')
-  async createKlub(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+  async createKlub(@Body() body: CreateKlubDto, @CurrentUser() user: AuthenticatedUser) {
     const dto = CreateKlubSchema.parse(body);
     return this.klubFacade.createKlub({ ...dto, createdById: user.userId });
   }

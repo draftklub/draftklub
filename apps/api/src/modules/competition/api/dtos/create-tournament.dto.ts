@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
 import { uuidString } from '../../../../shared/validation/uuid-string';
 
 export const CreateCategorySchema = z.object({
@@ -57,4 +58,4 @@ export const CreateTournamentSchema = z.object({
   categories: z.array(CreateCategorySchema).min(1),
 });
 
-export type CreateTournamentDto = z.infer<typeof CreateTournamentSchema>;
+export class CreateTournamentDto extends createZodDto(CreateTournamentSchema) {}

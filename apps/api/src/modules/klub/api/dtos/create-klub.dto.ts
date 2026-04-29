@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
 import { uuidString } from '../../../../shared/validation/uuid-string';
 
 /**
@@ -86,4 +87,4 @@ export const CreateKlubSchema = z
     path: ['document'],
   });
 
-export type CreateKlubDto = z.infer<typeof CreateKlubSchema>;
+export class CreateKlubDto extends createZodDto(CreateKlubSchema) {}

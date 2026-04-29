@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
 import { uuidString } from '../../../../shared/validation/uuid-string';
 
 export const ReportMatchSchema = z.object({
@@ -7,4 +8,4 @@ export const ReportMatchSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-export type ReportMatchDto = z.infer<typeof ReportMatchSchema>;
+export class ReportMatchDto extends createZodDto(ReportMatchSchema) {}
