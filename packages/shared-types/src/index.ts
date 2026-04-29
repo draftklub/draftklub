@@ -651,6 +651,10 @@ export interface RankingDetail {
   includesTournamentMatches: boolean;
   includesTournamentPoints: boolean;
   players: RankingPlayerEntry[];
+  /** Sprint N batch 5 — pagination cursor. null = última página. */
+  nextCursor?: string | null;
+  /** Sprint N batch 5 — total de entries no leaderboard (não paginado). */
+  totalCount?: number;
 }
 
 /**

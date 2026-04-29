@@ -1,5 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import {
+  type CursorPaginationParams,
+  decodeCursor,
+  encodeCursor,
+} from '../../../../shared/pagination/cursor';
 
 interface RankingEntryRow {
   userId: string;
@@ -14,11 +19,39 @@ interface RankingEntryRow {
   user: { id: string; fullName: string; avatarUrl: string | null };
 }
 
+interface LeaderboardCursor extends Record<string, unknown> {
+  userId: string;
+}
+
+const DEFAULT_LEADERBOARD_LIMIT = 100;
+
 @Injectable()
 export class GetRankingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(rankingId: string) {
+  /**
+   * Sprint N batch 5 — leaderboard cursor pagination.
+   *
+   * Sort happens em JS (orderBy='rating'|'tournament_points'|'combined'
+   * — `combined` é calculado, não há ORDER BY direto). Aplicamos slice
+   * sobre o array já ordenado: cursor = userId do último item da página
+   * anterior; backend find o índice e fatia a partir dele.
+   *
+   * `position` exposta é ABSOLUTA no leaderboard (não relativa à página)
+   * — primeiro item da página 2 mostra position=N+1, não 1.
+   *
+   * Trade-off: ainda fetch+sort de TODAS as entries (mesmo custo DB);
+   * payload da response é que diminui. Pra rankings com 1000s de
+   * players, próximo passo é particionar a query por orderBy específico
+   * (DB-side keyset pra rating/tournament_points).
+   */
+  async execute(
+    rankingId: string,
+    params: CursorPaginationParams = { limit: DEFAULT_LEADERBOARD_LIMIT },
+  ) {
+    const limit = params.limit ?? DEFAULT_LEADERBOARD_LIMIT;
+    const cursor = decodeCursor<LeaderboardCursor>(params.cursor);
+
     const ranking = await this.prisma.klubSportRanking.findUnique({
       where: { id: rankingId },
       include: {
@@ -45,6 +78,18 @@ export class GetRankingHandler {
       ranking.combinedWeight as { ratingWeight: number; pointsWeight: number } | null,
     );
 
+    let startIdx = 0;
+    if (cursor) {
+      const idx = sorted.findIndex((e) => e.userId === cursor.userId);
+      startIdx = idx >= 0 ? idx + 1 : 0;
+    }
+
+    const slice = sorted.slice(startIdx, startIdx + limit + 1);
+    const pageEntries = slice.slice(0, limit);
+    const hasMore = slice.length > limit;
+    const lastEntry = pageEntries[pageEntries.length - 1];
+    const nextCursor = hasMore && lastEntry ? encodeCursor({ userId: lastEntry.userId }) : null;
+
     return {
       id: ranking.id,
       name: ranking.name,
@@ -61,8 +106,8 @@ export class GetRankingHandler {
       includesCasualMatches: ranking.includesCasualMatches,
       includesTournamentMatches: ranking.includesTournamentMatches,
       includesTournamentPoints: ranking.includesTournamentPoints,
-      players: sorted.map((e, idx) => ({
-        position: idx + 1,
+      players: pageEntries.map((e, idx) => ({
+        position: startIdx + idx + 1,
         userId: e.userId,
         fullName: e.user.fullName,
         avatarUrl: e.user.avatarUrl,
@@ -75,6 +120,10 @@ export class GetRankingHandler {
         lastRatingChange: e.lastRatingChange,
         lastPlayedAt: e.lastPlayedAt,
       })),
+      /** Sprint N batch 5 — pagination cursor. null = última página. */
+      nextCursor,
+      /** Total de entries no ranking (não paginado). UI mostra "X de Y". */
+      totalCount: sorted.length,
     };
   }
 }

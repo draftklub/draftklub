@@ -60,8 +60,11 @@ export class RankingFacade {
     return this.listRankingsHandler.execute(klubId, sportCode);
   }
 
-  async getRanking(rankingId: string) {
-    return this.getRankingHandler.execute(rankingId);
+  async getRanking(rankingId: string, params?: { cursor?: string; limit?: number }) {
+    return this.getRankingHandler.execute(rankingId, {
+      cursor: params?.cursor,
+      limit: params?.limit ?? 100,
+    });
   }
 
   async enrollPlayer(cmd: EnrollPlayerCommand) {
