@@ -4,6 +4,8 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { ThemeProvider, ThemeScript } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth-provider';
+import { ToastProvider } from '@/components/ui/toast';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -60,8 +62,11 @@ export default function RootLayout({
         )}
       >
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+          </AuthProvider>
         </ThemeProvider>
+        <ToastProvider />
       </body>
     </html>
   );

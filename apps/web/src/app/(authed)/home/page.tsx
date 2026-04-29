@@ -10,6 +10,7 @@ import { getMyKlubs } from '@/lib/api/me';
 import { cancelMyMembershipRequest, listMyMembershipRequests } from '@/lib/api/membership-requests';
 import { listMyBookings, type MyBookingItem } from '@/lib/api/bookings';
 import { KlubAvatar } from '@/components/ui/klub-avatar';
+import { toast } from '@/components/ui/toast';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -22,12 +23,21 @@ export default function HomePage() {
 
   React.useEffect(() => {
     let cancelled = false;
+    // Sprint M batch SM-9 — toast com retry button em vez de catch silencioso.
+    // Auditoria flagou: falha de API engolida vira "lista vazia" enganosa.
     getMyKlubs()
       .then((data) => {
         if (!cancelled) setKlubs(data);
       })
       .catch(() => {
-        if (!cancelled) setKlubs([]);
+        if (cancelled) return;
+        setKlubs([]);
+        toast.error('Falha ao carregar seus Klubs', {
+          action: {
+            label: 'Tentar de novo',
+            onClick: () => setRequestsReloadToken((n) => n + 1),
+          },
+        });
       });
     listMyMembershipRequests()
       .then((data) => {
@@ -41,7 +51,14 @@ export default function HomePage() {
         if (!cancelled) setBookings(page.items);
       })
       .catch(() => {
-        if (!cancelled) setBookings([]);
+        if (cancelled) return;
+        setBookings([]);
+        toast.error('Falha ao carregar reservas', {
+          action: {
+            label: 'Tentar de novo',
+            onClick: () => setRequestsReloadToken((n) => n + 1),
+          },
+        });
       });
     return () => {
       cancelled = true;

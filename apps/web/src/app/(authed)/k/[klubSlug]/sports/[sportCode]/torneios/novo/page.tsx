@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
+import { Tooltip } from '@/components/ui/tooltip';
 import type {
   RankingListItem,
   RankingPointsSchema,
@@ -343,7 +344,10 @@ export default function NovoTorneioPage() {
             onChange={setHasPrequalifiers}
           />
 
-          <Field label="Aprovação de inscrição">
+          <Field
+            label="Aprovação de inscrição"
+            tooltip="Automática: qualquer player do Klub se inscreve direto. Comissão: cada inscrição vai pra fila de aprovação."
+          >
             <select
               value={registrationApproval}
               onChange={(e) =>
@@ -356,7 +360,10 @@ export default function NovoTorneioPage() {
             </select>
           </Field>
 
-          <Field label="Reportagem de resultado de match">
+          <Field
+            label="Reportagem de resultado de match"
+            tooltip="Comissão reporta: só comissão técnica registra resultado (mais lento, menos disputas). Player reporta + outro confirma: vencedor envia, perdedor confirma — match vira oficial só após confirmação (rápido, requer dois cliques)."
+          >
             <select
               value={resultReportingMode}
               onChange={(e) =>
@@ -647,11 +654,32 @@ function CategoryEditor({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  tooltip,
+  children,
+}: {
+  label: string;
+  /** Sprint M batch SM-9 — texto curto explicativo no hover de "?" icon. */
+  tooltip?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+      <label className="mb-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         {label}
+        {tooltip ? (
+          <Tooltip content={tooltip}>
+            <span
+              tabIndex={0}
+              role="button"
+              aria-label={`Ajuda: ${label}`}
+              className="inline-flex size-3.5 cursor-help items-center justify-center rounded-full border border-muted-foreground/40 text-[9px] font-bold leading-none text-muted-foreground hover:border-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              ?
+            </span>
+          </Tooltip>
+        ) : null}
       </label>
       {children}
     </div>
