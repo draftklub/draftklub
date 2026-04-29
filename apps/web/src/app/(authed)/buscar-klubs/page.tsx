@@ -536,6 +536,9 @@ function RequestMembershipModal({
       <p className="mt-1 text-right text-xs text-muted-foreground">
         {message.trim().length}/1000 (mín 10)
       </p>
+      <p className="mt-2 text-xs text-muted-foreground">
+        O Klub Admin costuma responder em até 24h.
+      </p>
       {error ? <Banner tone="error">{error}</Banner> : null}
     </Modal>
   );

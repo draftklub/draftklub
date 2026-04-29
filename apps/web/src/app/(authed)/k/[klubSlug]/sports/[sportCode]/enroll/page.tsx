@@ -39,7 +39,9 @@ export default function EnrollRequestPage() {
     try {
       await requestEnrollment(klub.id, sportCode);
       setSuccess(true);
-      setTimeout(() => router.push(`/k/${klub.slug}/dashboard`), 2500);
+      // Sprint M batch SM-8 — antes redirect automático em 2.5s sem
+      // controle do user. Agora botão manual no success state — user
+      // decide quando voltar (UX consistente com outros flows).
     } catch (err: unknown) {
       setError(
         err instanceof ApiError
@@ -67,10 +69,22 @@ export default function EnrollRequestPage() {
         />
 
         {success ? (
-          <div className="rounded-xl border border-success/30 bg-success/5 p-4 text-sm text-success">
-            <CheckCircle2 className="mr-1 inline size-4" />
-            <span className="font-semibold">Solicitação enviada!</span> Você vai receber um aviso
-            quando for aprovada. Voltando pro Klub…
+          <div className="space-y-3 rounded-xl border border-success/30 bg-success/5 p-4 text-sm">
+            <div className="text-success">
+              <CheckCircle2 className="mr-1 inline size-4" />
+              <span className="font-semibold">Solicitação enviada!</span>
+            </div>
+            <p className="text-muted-foreground">
+              A comissão esportiva costuma responder em até 24h. Você vai receber um aviso por
+              e-mail quando for aprovada.
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push(`/k/${klub.slug}/dashboard`)}
+              className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              Voltar pro Klub
+            </button>
           </div>
         ) : (
           <div className="rounded-xl border border-border bg-card p-4">
@@ -79,6 +93,9 @@ export default function EnrollRequestPage() {
               Confirme que quer entrar em <strong>{sportLabel}</strong> no{' '}
               <strong>{klubLabel}</strong>. Após aprovação você poderá participar de torneios e ver
               o ranking dessa modalidade.
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              A comissão esportiva costuma responder em até 24h.
             </p>
 
             {error ? <Banner tone="error">{error}</Banner> : null}

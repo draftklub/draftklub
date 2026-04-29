@@ -89,6 +89,102 @@ export default function CriarKlubPage() {
       .catch(() => null);
   }, []);
 
+  // Sprint M batch SM-8 — localStorage draft persistence.
+  // Antes: F5 ou nav-away no meio do wizard → perde tudo (aud flagged).
+  // Agora: snapshot de todos os campos com debounce 500ms; restore on mount.
+  // Limpado em createKlub success (logo antes do redirect).
+  const DRAFT_KEY = 'draftklub:create-klub:draft:v1';
+  const hydrated = React.useRef(false);
+
+  React.useEffect(() => {
+    // Hydration: roda uma vez no mount.
+    if (hydrated.current) return;
+    hydrated.current = true;
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(DRAFT_KEY) : null;
+      if (!raw) return;
+      const d = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof d.step === 'number' && d.step >= 1 && d.step <= 4) setStep(d.step as Step);
+      if (d.entityType === 'pj' || d.entityType === 'pf') setEntityType(d.entityType);
+      if (typeof d.name === 'string') setName(d.name);
+      if (typeof d.commonName === 'string') setCommonName(d.commonName);
+      if (typeof d.legalName === 'string') setLegalName(d.legalName);
+      if (typeof d.type === 'string') setType(d.type as KlubType);
+      if (typeof d.email === 'string') setEmail(d.email);
+      if (typeof d.phone === 'string') setPhone(d.phone);
+      if (typeof d.cnpj === 'string') setCnpj(d.cnpj);
+      if (typeof d.creatorCpf === 'string') setCreatorCpf(d.creatorCpf);
+      if (typeof d.cep === 'string') setCep(d.cep);
+      if (typeof d.addressStreet === 'string') setAddressStreet(d.addressStreet);
+      if (typeof d.addressNumber === 'string') setAddressNumber(d.addressNumber);
+      if (typeof d.addressComplement === 'string') setAddressComplement(d.addressComplement);
+      if (typeof d.addressNeighborhood === 'string') setAddressNeighborhood(d.addressNeighborhood);
+      if (typeof d.city === 'string') setCity(d.city);
+      if (typeof d.state === 'string') setState(d.state);
+      if (typeof d.discoverable === 'boolean') setDiscoverable(d.discoverable);
+      if (d.accessMode === 'public' || d.accessMode === 'private') setAccessMode(d.accessMode);
+      if (Array.isArray(d.selectedSports)) setSelectedSports(new Set(d.selectedSports as string[]));
+    } catch {
+      // ignore corrupted draft
+    }
+  }, []);
+
+  React.useEffect(() => {
+    // Save debounced. Não persiste cnpjLookupData/sports catalog (ephemeral).
+    if (typeof window === 'undefined') return;
+    const id = setTimeout(() => {
+      const snapshot = {
+        step,
+        entityType,
+        name,
+        commonName,
+        legalName,
+        type,
+        email,
+        phone,
+        cnpj,
+        creatorCpf,
+        cep,
+        addressStreet,
+        addressNumber,
+        addressComplement,
+        addressNeighborhood,
+        city,
+        state,
+        discoverable,
+        accessMode,
+        selectedSports: Array.from(selectedSports),
+      };
+      try {
+        window.localStorage.setItem(DRAFT_KEY, JSON.stringify(snapshot));
+      } catch {
+        // localStorage full / private mode — ignore
+      }
+    }, 500);
+    return () => clearTimeout(id);
+  }, [
+    step,
+    entityType,
+    name,
+    commonName,
+    legalName,
+    type,
+    email,
+    phone,
+    cnpj,
+    creatorCpf,
+    cep,
+    addressStreet,
+    addressNumber,
+    addressComplement,
+    addressNeighborhood,
+    city,
+    state,
+    discoverable,
+    accessMode,
+    selectedSports,
+  ]);
+
   React.useEffect(() => {
     if (step !== 3 || sports !== null) return;
     let cancelled = false;
@@ -244,6 +340,12 @@ export default function CriarKlubPage() {
         discoverable,
         accessMode,
       });
+      // Sprint M batch SM-8 — limpa o draft do localStorage após criar.
+      try {
+        if (typeof window !== 'undefined') window.localStorage.removeItem(DRAFT_KEY);
+      } catch {
+        // ignore
+      }
       router.push(`/criar-klub/sucesso?name=${encodeURIComponent(name.trim())}`);
     } catch (err: unknown) {
       const msg =
