@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { AuditService } from '../../../../shared/audit/audit.service';
+import { MetricsService } from '../../../../shared/metrics/metrics.service';
 
 export interface CancelTournamentCommand {
   tournamentId: string;
@@ -15,12 +16,16 @@ export class CancelTournamentHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async execute(cmd: CancelTournamentCommand) {
     const tournament = await this.prisma.tournament.findUnique({
       where: { id: cmd.tournamentId },
-      include: { matches: { select: { id: true } } },
+      include: {
+        matches: { select: { id: true } },
+        klubSport: { select: { klubId: true, sportCode: true } },
+      },
     });
     if (!tournament) throw new NotFoundException('Tournament not found');
 
@@ -90,6 +95,10 @@ export class CancelTournamentHandler {
             cascadeCancelledBookings: result.cancelledBookings.length,
           },
         });
+        this.metrics.tournamentCancelled(
+          tournament.klubSport.klubId,
+          tournament.klubSport.sportCode,
+        );
         return result;
       });
   }

@@ -8,6 +8,7 @@ interface FakeTournament {
   id: string;
   status: string;
   matches: { id: string }[];
+  klubSport?: { klubId: string; sportCode: string };
 }
 
 interface FakeTx {
@@ -34,9 +35,15 @@ function buildPrisma(opts: { tournament: FakeTournament; bookingsToCancel?: { id
     booking: { findMany: txBookingFindMany, updateMany: txBookingUpdateMany },
   };
 
+  // Default klubSport pra tournaments — necessário pro hook de métricas.
+  const tournamentWithKlubSport = {
+    ...opts.tournament,
+    klubSport: opts.tournament.klubSport ?? { klubId: 'k1', sportCode: 'tennis' },
+  };
+
   return {
     prisma: {
-      tournament: { findUnique: vi.fn().mockResolvedValue(opts.tournament) },
+      tournament: { findUnique: vi.fn().mockResolvedValue(tournamentWithKlubSport) },
       $transaction: vi.fn(async (fn: (tx: FakeTx) => Promise<unknown>) => fn(tx)),
     },
     spies: { txTournamentUpdate, txBookingFindMany, txBookingUpdateMany },
@@ -50,6 +57,7 @@ describe('CancelTournamentHandler', () => {
     handler = new CancelTournamentHandler(
       {} as never,
       { record: vi.fn().mockResolvedValue(undefined) } as never,
+      { tournamentCancelled: vi.fn() } as never,
     );
   });
 

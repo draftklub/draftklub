@@ -15,6 +15,7 @@ import { AuditModule } from './shared/audit/audit.module';
 import { EncryptionModule } from './shared/encryption/encryption.module';
 import { IdempotencyModule } from './shared/idempotency/idempotency.module';
 import { IdempotencyInterceptor } from './shared/idempotency/idempotency.interceptor';
+import { MetricsModule } from './shared/metrics/metrics.module';
 import { GeocodingModule } from './shared/geocoding/geocoding.module';
 import { LookupModule } from './shared/lookup/lookup.module';
 import { EmailModule } from './shared/email/email.module';
@@ -87,6 +88,7 @@ import { FeaturesModule } from './modules/features/features.module';
     AuthModule,
     AuditModule,
     IdempotencyModule,
+    MetricsModule,
     EncryptionModule,
     GeocodingModule,
     LookupModule,

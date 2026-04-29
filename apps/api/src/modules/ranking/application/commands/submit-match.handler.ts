@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { MetricsService } from '../../../../shared/metrics/metrics.service';
 
 export interface SubmitMatchCommand {
   rankingId: string;
@@ -15,7 +16,10 @@ export interface SubmitMatchCommand {
 
 @Injectable()
 export class SubmitMatchHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly metrics: MetricsService,
+  ) {}
 
   async execute(cmd: SubmitMatchCommand) {
     if (cmd.player1Id === cmd.player2Id) {
@@ -75,7 +79,7 @@ export class SubmitMatchHandler {
       throw new NotFoundException('Player entries not found after creation');
     }
 
-    return this.prisma.matchResult.create({
+    const created = await this.prisma.matchResult.create({
       data: {
         rankingId: cmd.rankingId,
         player1Id: cmd.player1Id,
@@ -91,5 +95,7 @@ export class SubmitMatchHandler {
         player2RatingBefore: p2Entry.rating,
       },
     });
+    this.metrics.matchReported('casual');
+    return created;
   }
 }

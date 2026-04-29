@@ -163,7 +163,12 @@ describe('CreateBookingHandler', () => {
   beforeEach(() => {
     resolver = new HourBandResolverService();
     const guestSvc = new GuestUserService({} as never);
-    handler = new CreateBookingHandler({} as never, resolver, guestSvc);
+    // MetricsService mock — métricas são fire-and-forget, mock no-op suficiente.
+    const metricsMock = {
+      bookingCreated: vi.fn(),
+      bookingCancelled: vi.fn(),
+    } as never;
+    handler = new CreateBookingHandler({} as never, resolver, guestSvc, metricsMock);
   });
 
   function attach(prisma: unknown) {

@@ -13,6 +13,7 @@ import {
   type MatchType,
 } from '../../domain/services/hour-band-resolver.service';
 import { GuestUserService, type GuestInput } from '../../domain/services/guest-user.service';
+import { MetricsService } from '../../../../shared/metrics/metrics.service';
 
 export interface ExistingPlayerInput {
   userId: string;
@@ -52,6 +53,7 @@ export class CreateBookingHandler {
     private readonly prisma: PrismaService,
     private readonly hourBandResolver: HourBandResolverService,
     private readonly guestUserService: GuestUserService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async execute(cmd: CreateBookingCommand) {
@@ -307,7 +309,7 @@ export class CreateBookingHandler {
     }
 
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      const result = await this.prisma.$transaction(async (tx) => {
         const booking = await tx.booking.create({
           data: {
             klubId: cmd.klubId,
@@ -362,6 +364,8 @@ export class CreateBookingHandler {
 
         return booking;
       });
+      this.metrics.bookingCreated(cmd.klubId, initialStatus);
+      return result;
     } catch (err) {
       // Sprint M batch 3 — fallback pro caso de o app-level conflict-check
       // ter perdido corrida (TOCTOU). O EXCLUDE constraint
