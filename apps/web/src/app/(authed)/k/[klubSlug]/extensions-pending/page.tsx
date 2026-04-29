@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
+import { Modal } from '@/components/ui/modal';
 import {
   approveExtension,
   listPendingExtensions,
@@ -141,6 +142,8 @@ function ExtensionCard({
 }) {
   const [busy, setBusy] = React.useState<'approve' | 'reject' | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [rejectModalOpen, setRejectModalOpen] = React.useState(false);
+  const [rejectReason, setRejectReason] = React.useState('');
   const start = new Date(item.startsAt);
   const from = new Date(item.extension.extendedFrom);
   const to = new Date(item.extension.extendedTo);
@@ -167,13 +170,11 @@ function ExtensionCard({
   }
 
   async function handleReject() {
-    if (busy) return;
-    const reason = window.prompt('Motivo da rejeição (opcional)');
-    if (reason === null) return;
+    setRejectModalOpen(false);
     setBusy('reject');
     setError(null);
     try {
-      await rejectExtension(item.bookingId, item.extension.id, reason || undefined);
+      await rejectExtension(item.bookingId, item.extension.id, rejectReason.trim() || undefined);
       onActed('Extensão rejeitada.');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao rejeitar.');
@@ -182,65 +183,107 @@ function ExtensionCard({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-display text-[15px] font-bold">{item.spaceName ?? 'Quadra'}</h3>
-        <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
-          +{additionalMinutes}min
-        </span>
-      </div>
-      <p className="mt-1 inline-flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-muted-foreground">
-        <span className="inline-flex items-center gap-1 capitalize">
-          <CalendarDays className="size-3" />
-          {date}
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <Clock className="size-3" />
-          {fromLabel} → {toLabel}
-        </span>
-      </p>
-      <p className="mt-2 text-[13px]">
-        <span className="text-muted-foreground">Solicitado por:</span>{' '}
-        <span className="font-semibold">{item.requestedByName ?? 'desconhecido'}</span>
-      </p>
-      {item.extension.decisionReason ? (
-        <p className="mt-1 rounded-md border-l-2 border-primary/30 bg-muted/40 px-2 py-1 text-[12px] text-muted-foreground">
-          {item.extension.decisionReason}
+    <>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-display text-[15px] font-bold">{item.spaceName ?? 'Quadra'}</h3>
+          <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+            +{additionalMinutes}min
+          </span>
+        </div>
+        <p className="mt-1 inline-flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 capitalize">
+            <CalendarDays className="size-3" />
+            {date}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Clock className="size-3" />
+            {fromLabel} → {toLabel}
+          </span>
         </p>
-      ) : null}
-      {error ? (
-        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-          {error}
+        <p className="mt-2 text-[13px]">
+          <span className="text-muted-foreground">Solicitado por:</span>{' '}
+          <span className="font-semibold">{item.requestedByName ?? 'desconhecido'}</span>
         </p>
-      ) : null}
-      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
-        <button
-          type="button"
-          onClick={() => void handleApprove()}
-          disabled={busy !== null}
-          className="inline-flex h-9 items-center gap-1 rounded-md bg-primary px-3 text-[12px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-        >
-          {busy === 'approve' ? (
-            <Loader2 className="size-3 animate-spin" />
-          ) : (
-            <Check className="size-3" />
-          )}
-          Aprovar
-        </button>
-        <button
-          type="button"
-          onClick={() => void handleReject()}
-          disabled={busy !== null}
-          className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-3 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
-        >
-          {busy === 'reject' ? (
-            <Loader2 className="size-3 animate-spin" />
-          ) : (
-            <X className="size-3" />
-          )}
-          Rejeitar
-        </button>
+        {item.extension.decisionReason ? (
+          <p className="mt-1 rounded-md border-l-2 border-primary/30 bg-muted/40 px-2 py-1 text-[12px] text-muted-foreground">
+            {item.extension.decisionReason}
+          </p>
+        ) : null}
+        {error ? (
+          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+            {error}
+          </p>
+        ) : null}
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          <button
+            type="button"
+            onClick={() => void handleApprove()}
+            disabled={busy !== null}
+            className="inline-flex h-9 items-center gap-1 rounded-md bg-primary px-3 text-[12px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {busy === 'approve' ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <Check className="size-3" />
+            )}
+            Aprovar
+          </button>
+          <button
+            type="button"
+            onClick={() => { setRejectReason(''); setRejectModalOpen(true); }}
+            disabled={busy !== null}
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-3 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+          >
+            {busy === 'reject' ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <X className="size-3" />
+            )}
+            Rejeitar
+          </button>
+        </div>
       </div>
-    </div>
+
+      <Modal
+        title="Rejeitar extensão"
+        description="Motivo da rejeição (opcional)"
+        open={rejectModalOpen}
+        onClose={() => setRejectModalOpen(false)}
+        size="sm"
+        dismissOnBackdropClick={busy !== 'reject'}
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setRejectModalOpen(false)}
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleReject()}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white"
+            >
+              <X className="size-3.5" />
+              Rejeitar
+            </button>
+          </>
+        }
+      >
+        <textarea
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+          placeholder="Ex: Quadra já ocupada neste horário."
+          rows={3}
+          maxLength={500}
+          className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        />
+        <p className="mt-1 text-right text-[11px] text-muted-foreground">
+          {rejectReason.trim().length}/500
+        </p>
+      </Modal>
+    </>
   );
 }

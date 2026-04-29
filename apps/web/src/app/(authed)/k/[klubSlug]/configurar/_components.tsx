@@ -53,6 +53,7 @@ import {
   type UpdateSpaceInput,
 } from '@/lib/api/spaces';
 import { SpaceForm } from '@/components/spaces/space-form';
+import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/utils';
 
 interface FormTabProps {
@@ -372,17 +373,15 @@ export function PerigosaTab({ klub, onDeactivated }: { klub: Klub; onDeactivated
   const [error, setError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
   const [message, setMessage] = React.useState<string | null>(null);
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [deactivateReason, setDeactivateReason] = React.useState('');
 
   async function handleDeactivate() {
-    const reason = window.prompt('Motivo da desativação (opcional)');
-    if (reason === null) return;
-    if (!window.confirm(`Desativar o Klub "${klub.name}"? Members perdem acesso até reativação.`)) {
-      return;
-    }
+    setModalOpen(false);
     setError(null);
     setSubmitting(true);
     try {
-      await apiDeactivateKlub(klub.id, reason || undefined);
+      await apiDeactivateKlub(klub.id, deactivateReason.trim() || undefined);
       setMessage('Klub desativado. Redirecionando…');
       setTimeout(onDeactivated, 1500);
     } catch (err: unknown) {
@@ -392,38 +391,82 @@ export function PerigosaTab({ klub, onDeactivated }: { klub: Klub; onDeactivated
   }
 
   return (
-    <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
-      <h2 className="font-display text-[15px] font-bold text-destructive">Zona perigosa</h2>
-      <p className="mt-1 text-[12.5px] text-muted-foreground">
-        Desativar o Klub é soft delete — `deletedAt` populado, `status='suspended'`. Members perdem
-        acesso. Reversível via SQL.
-      </p>
-      {message ? (
-        <p className="mt-3 rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-          <CheckCircle2 className="mr-1 inline size-3.5" />
-          {message}
+    <>
+      <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
+        <h2 className="font-display text-[15px] font-bold text-destructive">Zona perigosa</h2>
+        <p className="mt-1 text-[12.5px] text-muted-foreground">
+          Desativar o Klub é soft delete — `deletedAt` populado, `status='suspended'`. Members perdem
+          acesso. Reversível via SQL.
         </p>
-      ) : null}
-      {error ? (
-        <p className="mt-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-          <AlertCircle className="mr-1 inline size-3.5" />
-          {error}
-        </p>
-      ) : null}
-      <button
-        type="button"
-        onClick={() => void handleDeactivate()}
-        disabled={submitting}
-        className="mt-3 inline-flex h-10 items-center gap-1.5 rounded-lg border border-destructive bg-destructive/10 px-3 text-[12.5px] font-semibold text-destructive hover:bg-destructive/20 disabled:opacity-60"
+        {message ? (
+          <p className="mt-3 rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
+            <CheckCircle2 className="mr-1 inline size-3.5" />
+            {message}
+          </p>
+        ) : null}
+        {error ? (
+          <p className="mt-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
+            <AlertCircle className="mr-1 inline size-3.5" />
+            {error}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => { setDeactivateReason(''); setModalOpen(true); }}
+          disabled={submitting}
+          className="mt-3 inline-flex h-10 items-center gap-1.5 rounded-lg border border-destructive bg-destructive/10 px-3 text-[12.5px] font-semibold text-destructive hover:bg-destructive/20 disabled:opacity-60"
+        >
+          {submitting ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Power className="size-3.5" />
+          )}
+          Desativar Klub
+        </button>
+      </div>
+
+      <Modal
+        title={`Desativar "${klub.name}"`}
+        description="Members perdem acesso até reativação. Reversível via SQL."
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        size="sm"
+        dismissOnBackdropClick={!submitting}
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setModalOpen(false)}
+              disabled={submitting}
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDeactivate()}
+              disabled={submitting}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
+            >
+              {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Power className="size-3.5" />}
+              Desativar
+            </button>
+          </>
+        }
       >
-        {submitting ? (
-          <Loader2 className="size-3.5 animate-spin" />
-        ) : (
-          <Power className="size-3.5" />
-        )}
-        Desativar Klub
-      </button>
-    </div>
+        <label className="block text-[13px] font-medium text-foreground">
+          Motivo (opcional)
+        </label>
+        <textarea
+          value={deactivateReason}
+          onChange={(e) => setDeactivateReason(e.target.value)}
+          placeholder="Ex: Temporada encerrada até março."
+          rows={3}
+          maxLength={500}
+          className="mt-2 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        />
+      </Modal>
+    </>
   );
 }
 
@@ -766,15 +809,13 @@ function EquipeRow({
   onError: (msg: string) => void;
 }) {
   const [submitting, setSubmitting] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
   const sportName = item.scopeSportId
     ? (sports.find((s) => s.id === item.scopeSportId)?.name ?? null)
     : null;
 
   async function handleRevoke() {
-    if (submitting) return;
-    if (!window.confirm(`Revogar ${item.role} de ${item.userFullName} (${item.userEmail})?`)) {
-      return;
-    }
+    setConfirmOpen(false);
     setSubmitting(true);
     try {
       await revokeKlubRole(klubId, item.id);
@@ -788,31 +829,65 @@ function EquipeRow({
   const canRevoke = item.role !== 'KLUB_ADMIN';
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate font-display text-[14px] font-bold">{item.userFullName}</p>
-          <KlubRoleBadge role={item.role} />
-          {sportName ? (
-            <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-[10px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">
-              {sportName}
-            </span>
-          ) : null}
+    <>
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate font-display text-[14px] font-bold">{item.userFullName}</p>
+            <KlubRoleBadge role={item.role} />
+            {sportName ? (
+              <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-[10px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">
+                {sportName}
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-0.5 truncate text-[12px] text-muted-foreground">{item.userEmail}</p>
         </div>
-        <p className="mt-0.5 truncate text-[12px] text-muted-foreground">{item.userEmail}</p>
+        {canRevoke ? (
+          <button
+            type="button"
+            onClick={() => setConfirmOpen(true)}
+            disabled={submitting}
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+          >
+            {submitting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+            Revogar
+          </button>
+        ) : null}
       </div>
-      {canRevoke ? (
-        <button
-          type="button"
-          onClick={() => void handleRevoke()}
-          disabled={submitting}
-          className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
-        >
-          {submitting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
-          Revogar
-        </button>
-      ) : null}
-    </div>
+
+      <Modal
+        title="Revogar acesso"
+        description={`Revogar ${item.role} de ${item.userFullName} (${item.userEmail})?`}
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        size="sm"
+        dismissOnBackdropClick={!submitting}
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(false)}
+              disabled={submitting}
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleRevoke()}
+              disabled={submitting}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
+            >
+              {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+              Revogar
+            </button>
+          </>
+        }
+      >
+        <p className="text-[13.5px] text-muted-foreground">Esta ação remove o acesso imediatamente.</p>
+      </Modal>
+    </>
   );
 }
 
@@ -1019,22 +1094,20 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
         </ul>
       )}
 
-      {createOpen ? (
-        <Modal title="Adicionar quadra" onClose={() => setCreateOpen(false)}>
-          <CreateSpaceContent
-            klubId={klub.id}
-            onClose={() => setCreateOpen(false)}
-            onCreated={() => {
-              setCreateOpen(false);
-              setMessage('Quadra criada.');
-              setReload((n) => n + 1);
-            }}
-          />
-        </Modal>
-      ) : null}
+      <Modal title="Adicionar quadra" open={createOpen} onClose={() => setCreateOpen(false)}>
+        <CreateSpaceContent
+          klubId={klub.id}
+          onClose={() => setCreateOpen(false)}
+          onCreated={() => {
+            setCreateOpen(false);
+            setMessage('Quadra criada.');
+            setReload((n) => n + 1);
+          }}
+        />
+      </Modal>
 
-      {editing ? (
-        <Modal title={`Editar ${editing.name}`} onClose={() => setEditing(null)}>
+      <Modal title={editing?.name ? `Editar ${editing.name}` : 'Editar quadra'} open={!!editing} onClose={() => setEditing(null)}>
+        {editing ? (
           <EditSpaceContent
             klubId={klub.id}
             space={editing}
@@ -1045,8 +1118,8 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
               setReload((n) => n + 1);
             }}
           />
-        </Modal>
-      ) : null}
+        ) : null}
+      </Modal>
 
       {deleting ? (
         <DeleteConfirmModal
@@ -1277,34 +1350,6 @@ function DeleteConfirmModal({
   );
 }
 
-function Modal({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
-      <div className="w-full max-w-lg rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar"
-            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-          >
-            ✕
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
 
 function StatusBadge({ status }: { status: string }) {
   const tone =
