@@ -24,6 +24,7 @@ import {
   type MyBookingItem,
 } from '@/lib/api/bookings';
 import { Banner } from '@/components/ui/banner';
+import { Modal } from '@/components/ui/modal';
 import { Tabs } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
@@ -99,7 +100,7 @@ export default function MinhasReservasPage() {
       <div className="mx-auto max-w-2xl space-y-4">
         <header className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
+            <p className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--brand-primary-600))]">
               Você
             </p>
             <h1
@@ -214,7 +215,7 @@ function ReservarKlubPicker({
   onClose: () => void;
 }) {
   return (
-    <Modal title="Em qual Klub?" onClose={onClose}>
+    <Modal title="Em qual Klub?" open={true} onClose={onClose}>
       <p className="text-sm text-muted-foreground">
         Você participa de mais de um Klub. Escolha onde reservar.
       </p>
@@ -282,13 +283,13 @@ function BookingCard({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/k/${booking.klub.slug}/dashboard`}
-            className="truncate text-xs font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))] hover:underline"
+            className="truncate text-xs font-bold uppercase tracking-widest text-[hsl(var(--brand-primary-600))] hover:underline"
           >
             {klubLabel}
           </Link>
           <StatusBadge tone={tone} label={statusLabel(booking.status)} />
           {pendingExtension ? (
-            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-amber-500/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-amber-500/15 px-2 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
               <Timer className="size-3" />
               Extensão pendente
             </span>
@@ -421,7 +422,7 @@ function CancelModal({
   }
 
   return (
-    <Modal title="Cancelar reserva" onClose={onClose}>
+    <Modal title="Cancelar reserva" open={true} onClose={onClose}>
       <p className="text-sm text-muted-foreground">
         Conta o motivo (mín 10 chars). O Klub vai receber pra ajustar agenda se preciso.
       </p>
@@ -501,7 +502,7 @@ function AddPlayersModal({
   const valid = firstName.trim() && lastName.trim() && /.+@.+\..+/.test(email);
 
   return (
-    <Modal title="Adicionar player" onClose={onClose}>
+    <Modal title="Adicionar player" open={true} onClose={onClose}>
       <p className="text-sm text-muted-foreground">
         Se o player não tem conta no DraftKlub, criamos um cadastro guest.
       </p>
@@ -593,7 +594,7 @@ function ExtendModal({
   }
 
   return (
-    <Modal title="Estender reserva" onClose={onClose}>
+    <Modal title="Estender reserva" open={true} onClose={onClose}>
       <p className="text-sm text-muted-foreground">
         Dependendo da config do Klub a extensão pode ser automática ou aguardar aprovação do staff.
       </p>
@@ -652,35 +653,6 @@ function ExtendModal({
   );
 }
 
-function Modal({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
-      <div className="w-full max-w-md rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar"
-            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-          >
-            ✕
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 function StatusBadge({
   tone,
   label,
@@ -699,7 +671,7 @@ function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
+        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-wider',
         cls,
       )}
     >

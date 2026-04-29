@@ -23,6 +23,7 @@ import {
 } from '@/lib/api/tournaments';
 import { isPlatformLevel } from '@/lib/auth/role-helpers';
 import { Banner } from '@/components/ui/banner';
+import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/utils';
 
 const SPORT_LABELS: Record<string, string> = {
@@ -530,7 +531,7 @@ function Section({
 
 function CategoriesCount({ n }: { n: number }) {
   return (
-    <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
+    <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
       {n} categoria{n === 1 ? '' : 's'}
     </span>
   );
@@ -554,7 +555,7 @@ function CategoryEditor({
   return (
     <div className="space-y-2 rounded-lg border border-border bg-background p-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Categoria {index + 1}
         </p>
         {onRemove ? (
@@ -645,7 +646,7 @@ function CategoryEditor({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
+      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
       {children}
@@ -777,89 +778,13 @@ function CreatePointsSchemaModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
-      <div className="w-full max-w-md space-y-3 rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold">Novo schema de pontos</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar"
-            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-          >
-            ✕
-          </button>
-        </div>
-
-        {error ? (
-          <Banner tone="error">{error}</Banner>
-        ) : null}
-
-        <Field label="Nome">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Default Tênis"
-            maxLength={100}
-            className={inputCls}
-          />
-        </Field>
-
-        <Field label="Descrição (opcional)">
-          <input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            maxLength={500}
-            className={inputCls}
-          />
-        </Field>
-
-        <div>
-          <p className="mb-1.5 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
-            Pontos por posição
-          </p>
-          <ul className="space-y-2">
-            {points.map((p, i) => (
-              <li key={i} className="flex items-center gap-2">
-                <input
-                  value={p.key}
-                  onChange={(e) => updatePoint(i, { key: e.target.value })}
-                  placeholder="champion"
-                  className={cn(inputCls, 'flex-1')}
-                />
-                <input
-                  type="number"
-                  value={p.value}
-                  onChange={(e) => updatePoint(i, { value: e.target.value })}
-                  placeholder="100"
-                  min={0}
-                  className={cn(inputCls, 'w-24')}
-                />
-                <button
-                  type="button"
-                  onClick={() => removePoint(i)}
-                  aria-label="Remover"
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              </li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            onClick={addPoint}
-            className="mt-2 inline-flex h-8 items-center gap-1 rounded-md border border-dashed border-border bg-background px-2.5 text-xs font-medium hover:bg-muted"
-          >
-            <Plus className="size-3" />
-            Adicionar
-          </button>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Chaves comuns: champion, runnerUp, semi, quarter, round_of_16, round_of_32.
-          </p>
-        </div>
-
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+    <Modal
+      title="Novo schema de pontos"
+      open={true}
+      onClose={onClose}
+      size="sm"
+      footer={
+        <>
           <button
             type="button"
             onClick={onClose}
@@ -881,9 +806,77 @@ function CreatePointsSchemaModal({
             )}
             Criar schema
           </button>
-        </div>
+        </>
+      }
+    >
+      {error ? (
+        <Banner tone="error">{error}</Banner>
+      ) : null}
+
+      <Field label="Nome">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Default Tênis"
+          maxLength={100}
+          className={inputCls}
+        />
+      </Field>
+
+      <Field label="Descrição (opcional)">
+        <input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          maxLength={500}
+          className={inputCls}
+        />
+      </Field>
+
+      <div>
+        <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Pontos por posição
+        </p>
+        <ul className="space-y-2">
+          {points.map((p, i) => (
+            <li key={i} className="flex items-center gap-2">
+              <input
+                value={p.key}
+                onChange={(e) => updatePoint(i, { key: e.target.value })}
+                placeholder="champion"
+                className={cn(inputCls, 'flex-1')}
+              />
+              <input
+                type="number"
+                value={p.value}
+                onChange={(e) => updatePoint(i, { value: e.target.value })}
+                placeholder="100"
+                min={0}
+                className={cn(inputCls, 'w-24')}
+              />
+              <button
+                type="button"
+                onClick={() => removePoint(i)}
+                aria-label="Remover"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          onClick={addPoint}
+          className="mt-2 inline-flex h-8 items-center gap-1 rounded-md border border-dashed border-border bg-background px-2.5 text-xs font-medium hover:bg-muted"
+        >
+          <Plus className="size-3" />
+          Adicionar
+        </button>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Chaves comuns: champion, runnerUp, semi, quarter, round_of_16, round_of_32.
+        </p>
       </div>
-    </div>
+    </Modal>
   );
 }
 
