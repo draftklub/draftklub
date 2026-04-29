@@ -8,6 +8,7 @@ import {
 import type { Role } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { PolicyEngine } from '../../../../shared/auth/policy.engine';
+import { AuditService } from '../../../../shared/audit/audit.service';
 import type { AuthenticatedUser } from '../../../../shared/auth/authenticated-user.interface';
 
 export interface GrantRoleCommand {
@@ -39,6 +40,7 @@ export class GrantRoleHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly policy: PolicyEngine,
+    private readonly audit: AuditService,
   ) {}
 
   async execute(cmd: GrantRoleCommand): Promise<{ id: string; userId: string }> {
@@ -99,6 +101,20 @@ export class GrantRoleHandler {
         grantedBy: cmd.caller.userId,
       },
       select: { id: true },
+    });
+
+    await this.audit.record({
+      actorId: cmd.caller.userId,
+      action: 'role.granted',
+      targetType: 'role_assignment',
+      targetId: created.id,
+      after: {
+        granteeUserId: target.id,
+        granteeEmail: cmd.targetEmail,
+        role: cmd.targetRole,
+        scopeKlubId: cmd.scopeKlubId,
+        scopeSportId: cmd.scopeSportId,
+      },
     });
 
     return { id: created.id, userId: target.id };

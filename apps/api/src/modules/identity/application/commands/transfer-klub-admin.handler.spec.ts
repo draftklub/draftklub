@@ -69,7 +69,8 @@ function makePrisma(opts: PrismaOpts = {}) {
 }
 
 function makeHandler(prisma: ReturnType<typeof makePrisma>): TransferKlubAdminHandler {
-  return new TransferKlubAdminHandler(prisma as never, new PolicyEngine());
+  const auditMock = { record: vi.fn().mockResolvedValue(undefined) } as never;
+  return new TransferKlubAdminHandler(prisma as never, new PolicyEngine(), auditMock);
 }
 
 describe('TransferKlubAdminHandler', () => {

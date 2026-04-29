@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { AuditService } from '../../../../shared/audit/audit.service';
 
 export interface CancelTournamentCommand {
   tournamentId: string;
@@ -11,7 +12,10 @@ const CANCELLABLE_STATUSES = ['draft', 'prequalifying', 'in_progress'];
 
 @Injectable()
 export class CancelTournamentHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+  ) {}
 
   async execute(cmd: CancelTournamentCommand) {
     const tournament = await this.prisma.tournament.findUnique({
@@ -71,6 +75,20 @@ export class CancelTournamentHandler {
         tournament: updated,
         cancelledBookings: cancelledBookings.map((b) => b.id),
       };
+    }).then(async (result) => {
+      await this.audit.record({
+        actorId: cmd.cancelledById,
+        action: 'tournament.cancelled',
+        targetType: 'tournament',
+        targetId: cmd.tournamentId,
+        before: { status: tournament.status },
+        after: { status: 'cancelled' },
+        metadata: {
+          reason: cmd.reason ?? 'Cancelled by committee',
+          cascadeCancelledBookings: result.cancelledBookings.length,
+        },
+      });
+      return result;
     });
   }
 }

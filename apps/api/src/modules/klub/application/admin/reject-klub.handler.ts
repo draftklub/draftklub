@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { AuditService } from '../../../../shared/audit/audit.service';
 
 export interface RejectKlubCommand {
   klubId: string;
@@ -16,7 +17,10 @@ const MAX_REASON_LENGTH = 500;
  */
 @Injectable()
 export class RejectKlubHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+  ) {}
 
   async execute(cmd: RejectKlubCommand): Promise<{ id: string }> {
     const reason = cmd.reason.trim();
@@ -75,6 +79,17 @@ export class RejectKlubHandler {
       });
 
       return { id: klub.id };
+    }).then(async (result) => {
+      await this.audit.record({
+        actorId: cmd.decidedById,
+        action: 'klub.rejected',
+        targetType: 'klub',
+        targetId: cmd.klubId,
+        before: { reviewStatus: 'pending' },
+        after: { reviewStatus: 'rejected' },
+        metadata: { reason },
+      });
+      return result;
     });
   }
 }

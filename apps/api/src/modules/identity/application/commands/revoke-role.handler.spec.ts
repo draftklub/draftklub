@@ -47,7 +47,8 @@ function makePrisma(assignment: ReturnType<typeof assignmentRow> | null) {
 }
 
 function makeHandler(prisma: ReturnType<typeof makePrisma>): RevokeRoleHandler {
-  return new RevokeRoleHandler(prisma as never, new PolicyEngine());
+  const auditMock = { record: vi.fn().mockResolvedValue(undefined) } as never;
+  return new RevokeRoleHandler(prisma as never, new PolicyEngine(), auditMock);
 }
 
 describe('RevokeRoleHandler', () => {

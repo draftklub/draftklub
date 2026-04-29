@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { PolicyEngine } from '../../../../shared/auth/policy.engine';
+import { AuditService } from '../../../../shared/audit/audit.service';
 import type { AuthenticatedUser } from '../../../../shared/auth/authenticated-user.interface';
 
 export interface TransferKlubAdminCommand {
@@ -39,6 +40,7 @@ export class TransferKlubAdminHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly policy: PolicyEngine,
+    private readonly audit: AuditService,
   ) {}
 
   async execute(cmd: TransferKlubAdminCommand): Promise<TransferKlubAdminResult> {
@@ -138,6 +140,16 @@ export class TransferKlubAdminHandler {
         oldAdminUserId: currentAdmin.userId,
         newAdminUserId: target.id,
       };
+    }).then(async (result) => {
+      await this.audit.record({
+        actorId: cmd.caller.userId,
+        action: 'klub.admin.transferred',
+        targetType: 'klub',
+        targetId: cmd.klubId,
+        before: { adminUserId: result.oldAdminUserId },
+        after: { adminUserId: result.newAdminUserId, granteeEmail: cmd.targetEmail },
+      });
+      return result;
     });
   }
 }

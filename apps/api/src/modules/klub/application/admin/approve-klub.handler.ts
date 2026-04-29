@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { AuditService } from '../../../../shared/audit/audit.service';
 
 export interface ApproveKlubCommand {
   klubId: string;
@@ -19,7 +20,10 @@ export interface ApproveKlubCommand {
  */
 @Injectable()
 export class ApproveKlubHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+  ) {}
 
   async execute(cmd: ApproveKlubCommand): Promise<{ id: string; slug: string }> {
     return this.prisma.$transaction(async (tx) => {
@@ -86,6 +90,16 @@ export class ApproveKlubHandler {
         },
       });
 
+      return updated;
+    }).then(async (updated) => {
+      await this.audit.record({
+        actorId: cmd.decidedById,
+        action: 'klub.approved',
+        targetType: 'klub',
+        targetId: cmd.klubId,
+        before: { reviewStatus: 'pending' },
+        after: { reviewStatus: 'approved' },
+      });
       return updated;
     });
   }

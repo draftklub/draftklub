@@ -53,7 +53,8 @@ function makePrisma(
 }
 
 function makeHandler(prisma: ReturnType<typeof makePrisma>): GrantRoleHandler {
-  const handler = new GrantRoleHandler(prisma as never, new PolicyEngine());
+  const auditMock = { record: vi.fn().mockResolvedValue(undefined) } as never;
+  const handler = new GrantRoleHandler(prisma as never, new PolicyEngine(), auditMock);
   return handler;
 }
 

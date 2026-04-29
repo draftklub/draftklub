@@ -32,7 +32,10 @@ function buildHandler(opts: { klub?: MockKlub | null; conflict?: { name: string 
   const prisma = {
     $transaction: vi.fn((fn: (t: typeof tx) => Promise<unknown>) => fn(tx)),
   };
-  const handler = new ApproveKlubHandler(prisma as unknown as PrismaService);
+  const handler = new ApproveKlubHandler(
+    prisma as unknown as PrismaService,
+    { record: vi.fn().mockResolvedValue(undefined) } as never,
+  );
   return { handler, tx, klubUpdate, outboxCreate };
 }
 

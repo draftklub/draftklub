@@ -10,6 +10,7 @@ import { FirebaseModule } from './bootstrap/firebase/firebase.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { HealthModule } from './shared/health/health.module';
 import { AuthModule } from './shared/auth/auth.module';
+import { AuditModule } from './shared/audit/audit.module';
 import { EncryptionModule } from './shared/encryption/encryption.module';
 import { GeocodingModule } from './shared/geocoding/geocoding.module';
 import { LookupModule } from './shared/lookup/lookup.module';
@@ -58,6 +59,7 @@ import { FeaturesModule } from './modules/features/features.module';
     }),
     FirebaseModule,
     AuthModule,
+    AuditModule,
     EncryptionModule,
     GeocodingModule,
     LookupModule,

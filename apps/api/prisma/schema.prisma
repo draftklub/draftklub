@@ -192,6 +192,34 @@ model FeatureAudit {
   @@schema("audit")
 }
 
+/// Sprint M batch 7 — audit log estruturado pra eventos de segurança.
+/// Registra role grants/revokes, klub admin transfers, aprovações
+/// admin, cancelamentos, deleções. Cobre LGPD Art. 37 + forensics.
+model SecurityEvent {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Quem fez a ação. Null = sistema/cron/migration.
+  actorId    String?  @map("actor_id") @db.Uuid
+  /// Tipo do recurso afetado: 'role'|'klub'|'booking'|'tournament'|'user'|'membership'|...
+  targetType String   @map("target_type")
+  /// PK do recurso afetado quando aplicável.
+  targetId   String?  @map("target_id") @db.Uuid
+  /// Ação canônica: 'role.granted', 'klub.admin.transferred', 'tournament.cancelled', etc.
+  action     String
+  /// Estado anterior (parcial — só campos relevantes).
+  before     Json?
+  /// Estado novo (parcial — só campos relevantes).
+  after      Json?
+  /// Contexto extra: ip, user_agent, motivo, escopo, etc.
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([actorId, createdAt(sort: Desc)], map: "security_events_actor_id_created_at_idx")
+  @@index([targetType, targetId, createdAt(sort: Desc)], map: "security_events_target_type_target_id_created_at_idx")
+  @@index([action, createdAt(sort: Desc)], map: "security_events_action_created_at_idx")
+  @@map("security_events")
+  @@schema("audit")
+}
+
 // ═══════════════════════════════════════════════════════════════
 // KLUB
 // ═══════════════════════════════════════════════════════════════

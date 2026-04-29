@@ -28,7 +28,10 @@ function buildHandler(
   const prisma = {
     $transaction: vi.fn((fn: (t: typeof tx) => Promise<unknown>) => fn(tx)),
   };
-  const handler = new RejectKlubHandler(prisma as unknown as PrismaService);
+  const handler = new RejectKlubHandler(
+    prisma as unknown as PrismaService,
+    { record: vi.fn().mockResolvedValue(undefined) } as never,
+  );
   return { handler, update, outbox };
 }
 

@@ -47,7 +47,10 @@ describe('CancelTournamentHandler', () => {
   let handler: CancelTournamentHandler;
 
   beforeEach(() => {
-    handler = new CancelTournamentHandler({} as never);
+    handler = new CancelTournamentHandler(
+      {} as never,
+      { record: vi.fn().mockResolvedValue(undefined) } as never,
+    );
   });
 
   function attach(prisma: unknown) {

@@ -7,6 +7,7 @@ import {
 import type { Role } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { PolicyEngine } from '../../../../shared/auth/policy.engine';
+import { AuditService } from '../../../../shared/audit/audit.service';
 import type { AuthenticatedUser } from '../../../../shared/auth/authenticated-user.interface';
 
 export interface RevokeRoleCommand {
@@ -34,6 +35,7 @@ export class RevokeRoleHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly policy: PolicyEngine,
+    private readonly audit: AuditService,
   ) {}
 
   async execute(cmd: RevokeRoleCommand): Promise<{ id: string }> {
@@ -76,6 +78,20 @@ export class RevokeRoleHandler {
     }
 
     await this.prisma.roleAssignment.delete({ where: { id: assignment.id } });
+
+    await this.audit.record({
+      actorId: cmd.caller.userId,
+      action: 'role.revoked',
+      targetType: 'role_assignment',
+      targetId: assignment.id,
+      before: {
+        granteeUserId: assignment.userId,
+        role: assignment.role,
+        scopeKlubId: assignment.scopeKlubId,
+        scopeSportId: assignment.scopeSportId,
+      },
+    });
+
     return { id: assignment.id };
   }
 }
