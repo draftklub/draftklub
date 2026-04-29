@@ -22,6 +22,7 @@ import type {
   KlubType,
   SportCatalog,
 } from '@draftklub/shared-types';
+import { Select } from '@/components/ui/select';
 import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
 import { hintDocument, maskCnpj, maskCpf, onlyDigits } from '@/lib/format-document';
 import { cn } from '@/lib/utils';
@@ -462,19 +463,14 @@ export function Step2Endereco(p: Step2Props) {
           />
         </Field>
         <Field label="UF" required>
-          <select
-            value={p.state}
-            onChange={(e) => p.setState(e.target.value)}
-            disabled={locked}
-            className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
-          >
+          <Select value={p.state} onChange={(e) => p.setState(e.target.value)} disabled={locked}>
             <option value="">—</option>
             {BRAZILIAN_STATES.map((uf) => (
               <option key={uf} value={uf}>
                 {uf}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
       </div>
     </div>

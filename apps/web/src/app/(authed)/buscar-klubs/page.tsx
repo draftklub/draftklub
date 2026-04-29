@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { KlubAvatar } from '@/components/ui/klub-avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select } from '@/components/ui/select';
 import type {
   KlubAccessMode,
   KlubDiscoveryResult,
@@ -180,30 +181,22 @@ export default function BuscarKlubsPage() {
               className="h-11 w-full rounded-md border border-input bg-background pl-9 pr-3.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
             />
           </div>
-          <select
-            value={state}
-            onChange={(e) => setState(e.target.value)}
-            className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
-          >
+          <Select value={state} onChange={(e) => setState(e.target.value)}>
             <option value="">UF</option>
             {BRAZILIAN_STATES.map((uf) => (
               <option key={uf} value={uf}>
                 {uf}
               </option>
             ))}
-          </select>
-          <select
-            value={sport}
-            onChange={(e) => setSport(e.target.value)}
-            className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
-          >
+          </Select>
+          <Select value={sport} onChange={(e) => setSport(e.target.value)}>
             <option value="">Modalidade</option>
             {sports.map((s) => (
               <option key={s.code} value={s.code}>
                 {s.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         {/* Geolocation toggle + radius slider */}

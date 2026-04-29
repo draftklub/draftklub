@@ -14,6 +14,7 @@ import { hintDocument } from '@/lib/format-document';
 import { Banner } from '@/components/ui/banner';
 import { Tabs } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 type Tab = 'pj' | 'pf';
@@ -116,15 +117,16 @@ export default function CadastrosPage() {
               className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
             />
           </div>
-          <select
+          <Select
+            inputSize="sm"
             value={status}
             onChange={(e) => setStatus(e.target.value as KlubReviewStatus)}
-            className="h-10 rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            className="w-auto"
           >
             <option value="pending">Pendentes</option>
             <option value="approved">Aprovados</option>
             <option value="rejected">Rejeitados</option>
-          </select>
+          </Select>
         </div>
 
         {error ? (
