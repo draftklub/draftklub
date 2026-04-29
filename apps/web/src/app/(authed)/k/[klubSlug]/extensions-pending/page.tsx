@@ -5,6 +5,7 @@ import { CalendarDays, Check, Clock, Loader2, Timer, X } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Badge } from '@/components/ui/badge';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import {
@@ -149,9 +150,7 @@ function ExtensionCard({
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="font-display text-sm font-bold">{item.spaceName ?? 'Quadra'}</h3>
-        <span className="inline-flex h-5 items-center rounded-full bg-warning/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-warning-foreground">
-          +{additionalMinutes}min
-        </span>
+        <Badge tone="warning">+{additionalMinutes}min</Badge>
       </div>
       <p className="mt-1 inline-flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1 capitalize">

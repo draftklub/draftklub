@@ -7,6 +7,7 @@ import { ArrowRight, ListOrdered, Loader2, Plus, Users } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Badge } from '@/components/ui/badge';
 import type { RankingListItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -134,12 +135,8 @@ export default function SportRankingsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="truncate font-display text-base font-bold">{r.name}</h2>
-                      <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-brand-primary-600">
-                        {RANKING_TYPE_LABELS[r.type] ?? r.type}
-                      </span>
-                      <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">
-                        {ENGINE_LABELS[r.ratingEngine] ?? r.ratingEngine}
-                      </span>
+                      <Badge tone="primary">{RANKING_TYPE_LABELS[r.type] ?? r.type}</Badge>
+                      <Badge>{ENGINE_LABELS[r.ratingEngine] ?? r.ratingEngine}</Badge>
                     </div>
                     <p className="mt-1 inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">

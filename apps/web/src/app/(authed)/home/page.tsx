@@ -11,6 +11,7 @@ import { cancelMyMembershipRequest, listMyMembershipRequests } from '@/lib/api/m
 import { listMyBookings, type MyBookingItem } from '@/lib/api/bookings';
 import { KlubAvatar } from '@/components/ui/klub-avatar';
 import { toast } from '@/components/ui/toast';
+import { Badge } from '@/components/ui/badge';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -388,13 +389,13 @@ function KlubDashCard({
           </span>
         </div>
       ) : pending ? (
-        <span className="mt-3 inline-flex w-fit items-center rounded-full bg-warning/15 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-warning-foreground">
+        <Badge tone="warning" className="mt-3 w-fit">
           Em análise
-        </span>
+        </Badge>
       ) : rejected ? (
-        <span className="mt-3 inline-flex w-fit items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-destructive">
+        <Badge tone="destructive" className="mt-3 w-fit">
           Rejeitado
-        </span>
+        </Badge>
       ) : null}
     </Link>
   );

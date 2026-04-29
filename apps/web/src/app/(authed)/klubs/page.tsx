@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Castle, Loader2, Plus, Search } from 'lucide-react';
 import type { UserKlubMembership } from '@draftklub/shared-types';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Badge } from '@/components/ui/badge';
 import { getMyKlubs } from '@/lib/api/me';
 import { rememberLastKlubSlug } from '@/lib/last-klub-cookie';
 import { cn } from '@/lib/utils';
@@ -132,11 +133,7 @@ function KlubCard({ klub }: { klub: UserKlubMembership }) {
         {klub.klubCommonName ? (
           <p className="truncate text-xs text-muted-foreground">{klub.klubName}</p>
         ) : null}
-        {roleLabel ? (
-          <span className="mt-1 inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
-            {roleLabel}
-          </span>
-        ) : null}
+        {roleLabel ? <Badge className="mt-1">{roleLabel}</Badge> : null}
       </div>
     </Link>
   );

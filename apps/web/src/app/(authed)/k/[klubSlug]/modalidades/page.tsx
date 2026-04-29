@@ -24,6 +24,7 @@ import {
 } from '@/lib/api/enrollments';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 const ADMIN_ROLES: Role[] = ['PLATFORM_OWNER', 'KLUB_ADMIN', 'SPORT_COMMISSION'];
@@ -168,7 +169,9 @@ function ProfilesGrid({ profiles, enrollmentByProfile, onRequest, sportName }: P
     return (
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <li key={i} className="h-35 animate-pulse rounded-xl border border-border bg-card" />
+          <li key={i}>
+            <Skeleton className="h-35 rounded-xl border border-border bg-card" />
+          </li>
         ))}
       </ul>
     );

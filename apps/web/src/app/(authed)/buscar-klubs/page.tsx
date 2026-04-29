@@ -7,6 +7,7 @@ import { ArrowRight, Check, Loader2, MapPin, Plus, Search } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { KlubAvatar } from '@/components/ui/klub-avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import type {
   KlubAccessMode,
   KlubDiscoveryResult,
@@ -631,7 +632,9 @@ function SkeletonGrid() {
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <li key={i} className="h-44 animate-pulse rounded-xl border border-border bg-card" />
+        <li key={i}>
+          <Skeleton variant="card" className="bg-card" />
+        </li>
       ))}
     </ul>
   );

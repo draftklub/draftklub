@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { CalendarDays, LineChart, Trophy, User, X } from 'lucide-react';
 import { Topbar } from '@/components/dashboard/topbar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { WeatherWidget } from '@/components/weather/weather-widget';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { listKlubTournaments, type TournamentListItem } from '@/lib/api/tournaments';
@@ -295,7 +296,9 @@ function RealTournaments() {
     return (
       <ul className="flex flex-col gap-2">
         {Array.from({ length: 3 }).map((_, i) => (
-          <li key={i} className="h-11 animate-pulse rounded-md bg-muted" />
+          <li key={i}>
+            <Skeleton className="h-11 rounded-md" />
+          </li>
         ))}
       </ul>
     );
@@ -384,7 +387,9 @@ function RealActivityFeed() {
     return (
       <ul className="grid grid-cols-1 gap-x-8 md:grid-cols-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <li key={i} className="h-12 animate-pulse rounded-md bg-muted" />
+          <li key={i}>
+            <Skeleton className="h-12 rounded-md" />
+          </li>
         ))}
       </ul>
     );

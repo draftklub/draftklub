@@ -18,6 +18,7 @@ import {
 import { Banner } from '@/components/ui/banner';
 import { Modal } from '@/components/ui/modal';
 import { Tabs } from '@/components/ui/tabs';
+import { Badge, type BadgeTone } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 /**
@@ -287,12 +288,12 @@ function BookingCard({
           >
             {klubLabel}
           </Link>
-          <StatusBadge tone={tone} label={statusLabel(booking.status)} />
+          <Badge tone={tone}>{statusLabel(booking.status)}</Badge>
           {pendingExtension ? (
-            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-warning/15 px-2 text-xs font-bold uppercase tracking-wider text-warning-foreground">
+            <Badge tone="warning" className="gap-1">
               <Timer className="size-3" />
               Extensão pendente
-            </span>
+            </Badge>
           ) : null}
         </div>
         <h3 className="mt-1 truncate font-display text-sm font-bold">
@@ -647,33 +648,6 @@ function ExtendModal({
   );
 }
 
-function StatusBadge({
-  tone,
-  label,
-}: {
-  tone: 'green' | 'amber' | 'red' | 'muted';
-  label: string;
-}) {
-  const cls =
-    tone === 'green'
-      ? 'bg-success/12 text-success'
-      : tone === 'amber'
-        ? 'bg-warning/15 text-warning-foreground'
-        : tone === 'red'
-          ? 'bg-destructive/10 text-destructive'
-          : 'bg-muted text-muted-foreground';
-  return (
-    <span
-      className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-wider',
-        cls,
-      )}
-    >
-      {label}
-    </span>
-  );
-}
-
 function BookingEmptyState({ tab }: { tab: Tab }) {
   const title = tab === 'upcoming' ? 'Sem reservas agendadas' : 'Sem histórico de reservas';
   const description =
@@ -681,11 +655,11 @@ function BookingEmptyState({ tab }: { tab: Tab }) {
   return <EmptyState icon={MapPin} title={title} description={description} />;
 }
 
-function statusTone(status: string): 'green' | 'amber' | 'red' | 'muted' {
-  if (status === 'confirmed' || status === 'completed') return 'green';
-  if (status === 'pending' || status === 'pending_payment') return 'amber';
-  if (status === 'cancelled' || status === 'rejected' || status === 'no_show') return 'red';
-  return 'muted';
+function statusTone(status: string): BadgeTone {
+  if (status === 'confirmed' || status === 'completed') return 'success';
+  if (status === 'pending' || status === 'pending_payment') return 'warning';
+  if (status === 'cancelled' || status === 'rejected' || status === 'no_show') return 'destructive';
+  return 'neutral';
 }
 
 function statusLabel(status: string): string {

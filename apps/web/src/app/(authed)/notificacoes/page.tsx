@@ -6,6 +6,7 @@ import { Bell, CheckCircle2, Loader2, Swords, XCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Banner } from '@/components/ui/banner';
+import { Badge } from '@/components/ui/badge';
 import type { PendingMatchConfirmationItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { confirmCasualMatch, listPendingMatchConfirmations } from '@/lib/api/rankings';
@@ -148,18 +149,8 @@ function PendingItemCard({
     <article className="rounded-xl border border-warning/30 bg-warning/5 p-3.5">
       <div className="flex flex-wrap items-center gap-2">
         <Swords className="size-4 text-warning-foreground" />
-        <span className="inline-flex h-5 items-center rounded-full bg-warning/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-warning-foreground">
-          Aguarda confirmação
-        </span>
-        {item.tournamentName ? (
-          <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-brand-primary-600">
-            Torneio
-          </span>
-        ) : (
-          <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">
-            Casual
-          </span>
-        )}
+        <Badge tone="warning">Aguarda confirmação</Badge>
+        {item.tournamentName ? <Badge tone="primary">Torneio</Badge> : <Badge>Casual</Badge>}
       </div>
       <p className="mt-2 font-display text-sm font-bold">
         {item.player1Name} <span className="text-muted-foreground">vs</span> {item.player2Name}
