@@ -1,11 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import type { TournamentBracket } from '@draftklub/shared-types';
+import { Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api/client';
 import { getTournamentBracket } from '@/lib/api/tournaments';
 import { Banner } from '@/components/ui/banner';
-import { Loader2 } from 'lucide-react';
 import { useTournamentContext } from '../_context';
 import { BracketView } from '../_components';
 
@@ -15,31 +15,18 @@ import { BracketView } from '../_components';
  */
 export default function TournamentBracketPage() {
   const { tournament, meId, canManage, reload } = useTournamentContext();
-  const [bracket, setBracket] = React.useState<TournamentBracket | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setError(null);
-    getTournamentBracket(tournament.id)
-      .then((b) => {
-        if (!cancelled) setBracket(b);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof ApiError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : 'Erro ao carregar chave.',
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [tournament.id]);
+  const { data: bracket, error: fetchError } = useQuery({
+    queryKey: ['tournament-bracket', tournament.id],
+    queryFn: () => getTournamentBracket(tournament.id),
+  });
+
+  const error =
+    fetchError instanceof ApiError
+      ? fetchError.message
+      : fetchError instanceof Error
+        ? fetchError.message
+        : null;
 
   if (error) {
     return (

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, Check, Loader2 } from 'lucide-react';
-import type { Klub } from '@draftklub/shared-types';
+import { useQuery } from '@tanstack/react-query';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { LoginForm } from '@/components/login/login-form';
 import { useAuth } from '@/components/auth-provider';
@@ -28,29 +28,20 @@ export default function ConvitePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [klub, setKlub] = React.useState<Klub | null>(null);
-  const [loadError, setLoadError] = React.useState<string | null>(null);
   const [joining, setJoining] = React.useState(false);
   const [joinError, setJoinError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    getKlubBySlug(slug)
-      .then((data) => {
-        if (!cancelled) setKlub(data);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        if (err instanceof ApiError && err.status === 404) {
-          setLoadError(`Convite inválido: nenhum Klub com slug "${slug}".`);
-        } else {
-          setLoadError(err instanceof Error ? err.message : 'Erro ao carregar Klub');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [slug]);
+  const { data: klub, error: fetchError } = useQuery({
+    queryKey: ['klub-by-slug', slug],
+    queryFn: () => getKlubBySlug(slug),
+  });
+
+  const loadError =
+    fetchError instanceof ApiError && fetchError.status === 404
+      ? `Convite inválido: nenhum Klub com slug "${slug}".`
+      : fetchError instanceof Error
+        ? fetchError.message
+        : null;
 
   async function handleJoin() {
     setJoining(true);
@@ -82,7 +73,7 @@ export default function ConvitePage() {
     );
   }
 
-  if (klub === null || authLoading) {
+  if (klub === undefined || authLoading) {
     return (
       <Shell>
         <div className="flex flex-col items-center gap-3">

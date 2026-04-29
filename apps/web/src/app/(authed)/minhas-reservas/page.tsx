@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { CalendarDays, Clock, History, Loader2, MapPin, Plus, Timer, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { UserKlubMembership } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
@@ -34,53 +35,41 @@ type Tab = 'upcoming' | 'past';
 
 export default function MinhasReservasPage() {
   const { user } = useAuth();
-  const [meId, setMeId] = React.useState<string | null>(null);
-  const [klubs, setKlubs] = React.useState<UserKlubMembership[]>([]);
   const [tab, setTab] = React.useState<Tab>('upcoming');
-  const [bookings, setBookings] = React.useState<MyBookingItem[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [reload, setReload] = React.useState(0);
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
   const [klubPickerOpen, setKlubPickerOpen] = React.useState(false);
 
-  React.useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    void getMe()
-      .then((me) => {
-        if (!cancelled) setMeId(me.id);
-      })
-      .catch(() => null);
-    void getMyKlubs()
-      .then((data) => {
-        if (!cancelled) setKlubs(data);
-      })
-      .catch(() => null);
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
+  const { data: meData } = useQuery({
+    queryKey: ['me'],
+    queryFn: getMe,
+    enabled: !!user,
+  });
+  const meId = meData?.id ?? null;
 
-  React.useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    setError(null);
-    listMyBookings()
-      .then((page) => {
-        if (!cancelled) setBookings(page.items);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Erro ao carregar reservas.');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [user, reload]);
+  const { data: klubs = [] } = useQuery<UserKlubMembership[]>({
+    queryKey: ['my-klubs'],
+    queryFn: getMyKlubs,
+    enabled: !!user,
+  });
+
+  const {
+    data: bookingItems,
+    error: bookingsError,
+    isLoading: bookingsLoading,
+    refetch: refetchBookings,
+  } = useQuery({
+    queryKey: ['my-bookings'],
+    queryFn: async () => {
+      const page = await listMyBookings();
+      return page.items;
+    },
+    enabled: !!user,
+  });
+
+  const errorMsg = bookingsError instanceof Error ? bookingsError.message : null;
 
   const now = Date.now();
-  const filtered = (bookings ?? []).filter((b) => {
+  const filtered = (bookingItems ?? []).filter((b) => {
     const start = new Date(b.startsAt).getTime();
     const isCancelled = b.status === 'cancelled' || b.status === 'rejected';
     if (tab === 'upcoming') return !isCancelled && start >= now;
@@ -136,9 +125,9 @@ export default function MinhasReservasPage() {
 
         {actionMessage ? <Banner tone="success">{actionMessage}</Banner> : null}
 
-        {error ? (
-          <Banner tone="error">{error}</Banner>
-        ) : bookings === null ? (
+        {errorMsg ? (
+          <Banner tone="error">{errorMsg}</Banner>
+        ) : bookingsLoading ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
@@ -164,7 +153,7 @@ export default function MinhasReservasPage() {
                     canExtend={tab === 'upcoming' && b.status === 'confirmed'}
                     onActed={(msg) => {
                       setActionMessage(msg);
-                      setReload((n) => n + 1);
+                      void refetchBookings();
                     }}
                   />
                 </li>

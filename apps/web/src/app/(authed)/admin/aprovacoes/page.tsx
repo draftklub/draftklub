@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Loader2, Search, Building2, User as UserIcon } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/ui/page-header';
 import type {
   AdminPendingKlubItem,
@@ -29,41 +30,28 @@ export default function CadastrosPage() {
   const [status, setStatus] = React.useState<KlubReviewStatus>('pending');
   const [q, setQ] = React.useState('');
   const [debouncedQ, setDebouncedQ] = React.useState('');
-  const [data, setData] = React.useState<AdminPendingKlubsPage | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     const id = setTimeout(() => setDebouncedQ(q.trim()), 300);
     return () => clearTimeout(id);
   }, [q]);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    listPendingKlubs({
-      type: tab,
-      status,
-      q: debouncedQ.length >= 2 ? debouncedQ : undefined,
-      limit: 50,
-    })
-      .then((res) => {
-        if (!cancelled) {
-          setData(res);
-          setLoading(false);
-        }
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Erro ao carregar.');
-          setLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [tab, status, debouncedQ]);
+  const {
+    data,
+    error: fetchError,
+    isFetching,
+  } = useQuery<AdminPendingKlubsPage>({
+    queryKey: ['admin-pending-klubs', tab, status, debouncedQ],
+    queryFn: () =>
+      listPendingKlubs({
+        type: tab,
+        status,
+        q: debouncedQ.length >= 2 ? debouncedQ : undefined,
+        limit: 50,
+      }),
+  });
+
+  const error = fetchError instanceof Error ? fetchError.message : null;
 
   return (
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
@@ -131,7 +119,7 @@ export default function CadastrosPage() {
 
         {error ? (
           <Banner tone="error">{error}</Banner>
-        ) : loading ? (
+        ) : isFetching ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>

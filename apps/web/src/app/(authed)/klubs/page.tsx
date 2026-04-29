@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { Castle, Loader2, Plus, Search } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import type { UserKlubMembership } from '@draftklub/shared-types';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
@@ -19,21 +20,10 @@ import { cn } from '@/lib/utils';
  * itens separados). Sidebar agora aponta só pra /klubs.
  */
 export default function KlubsPage() {
-  const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    getMyKlubs()
-      .then((data) => {
-        if (!cancelled) setKlubs(data);
-      })
-      .catch(() => {
-        if (!cancelled) setKlubs([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: klubs } = useQuery({
+    queryKey: ['my-klubs'],
+    queryFn: getMyKlubs,
+  });
 
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
@@ -72,7 +62,7 @@ export default function KlubsPage() {
 
         <section className="space-y-3">
           <h2 className="font-display text-sm font-bold">Meus Klubs</h2>
-          {klubs === null ? (
+          {klubs === undefined ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>

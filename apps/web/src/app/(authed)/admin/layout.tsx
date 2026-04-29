@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { getMe } from '@/lib/api/me';
 
 /**
@@ -12,27 +13,24 @@ import { getMe } from '@/lib/api/me';
  */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [allowed, setAllowed] = React.useState<boolean | null>(null);
+
+  const { data: me, error } = useQuery({
+    queryKey: ['me'],
+    queryFn: getMe,
+  });
 
   React.useEffect(() => {
-    let cancelled = false;
-    void getMe()
-      .then((me) => {
-        if (cancelled) return;
-        const isSuperAdmin = me.roleAssignments.some((r) => r.role === 'PLATFORM_OWNER');
-        if (!isSuperAdmin) {
-          router.replace('/home');
-          return;
-        }
-        setAllowed(true);
-      })
-      .catch(() => {
-        if (!cancelled) router.replace('/home');
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [router]);
+    if (!me) return;
+    const isSuperAdmin = me.roleAssignments.some((r) => r.role === 'PLATFORM_OWNER');
+    if (!isSuperAdmin) router.replace('/home');
+  }, [me, router]);
+
+  React.useEffect(() => {
+    if (error) router.replace('/home');
+  }, [error, router]);
+
+  const allowed: boolean | null =
+    me === undefined ? null : me.roleAssignments.some((r) => r.role === 'PLATFORM_OWNER');
 
   if (allowed === null) {
     return (

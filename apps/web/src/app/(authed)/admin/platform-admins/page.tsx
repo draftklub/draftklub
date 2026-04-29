@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { Loader2, Plus, Shield, Trash2, UserPlus } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Banner } from '@/components/ui/banner';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -28,47 +29,26 @@ import { cn } from '@/lib/utils';
 const PLATFORM_ADMIN_QUOTA = 3;
 
 export default function PlatformAdminsPage() {
-  const [authChecked, setAuthChecked] = React.useState(false);
-  const [isOwner, setIsOwner] = React.useState(false);
-  const [callerUserId, setCallerUserId] = React.useState<string | null>(null);
-  const [items, setItems] = React.useState<RoleAssignmentListItem[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [reload, setReload] = React.useState(0);
   const [message, setMessage] = React.useState<string | null>(null);
+  const [mutationError, setMutationError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    void getMe()
-      .then((me) => {
-        if (cancelled) return;
-        const ownerCheck = me.roleAssignments.some((r) => isPlatformOwner(r.role));
-        setIsOwner(ownerCheck);
-        setCallerUserId(me.id);
-        setAuthChecked(true);
-      })
-      .catch(() => {
-        if (!cancelled) setAuthChecked(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: me, error: meError } = useQuery({ queryKey: ['me'], queryFn: getMe });
 
-  React.useEffect(() => {
-    if (!isOwner) return;
-    let cancelled = false;
-    setError(null);
-    listPlatformRoleAssignments()
-      .then((rows) => {
-        if (!cancelled) setItems(rows);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setError(toErrorMessage(err, 'Erro ao carregar.'));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isOwner, reload]);
+  const isOwner = me?.roleAssignments.some((r) => isPlatformOwner(r.role)) ?? false;
+  const callerUserId = me?.id ?? null;
+  const authChecked = me !== undefined || meError !== null;
+
+  const {
+    data: items,
+    error: listError,
+    refetch,
+  } = useQuery({
+    queryKey: ['platform-role-assignments'],
+    queryFn: listPlatformRoleAssignments,
+    enabled: isOwner,
+  });
+
+  const error = listError ? toErrorMessage(listError, 'Erro ao carregar.') : mutationError;
 
   if (!authChecked) {
     return (
@@ -120,16 +100,16 @@ export default function PlatformAdminsPage() {
           quotaReached={adminCount >= PLATFORM_ADMIN_QUOTA}
           onGranted={(msg) => {
             setMessage(msg);
-            setReload((n) => n + 1);
+            void refetch();
           }}
-          onError={setError}
+          onError={setMutationError}
         />
 
         <section className="space-y-2">
           <h2 className="text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Equipe atual
           </h2>
-          {items === null ? (
+          {items === undefined ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
@@ -144,9 +124,9 @@ export default function PlatformAdminsPage() {
                     canRevoke={item.role === 'PLATFORM_ADMIN' && item.userId !== callerUserId}
                     onRevoked={(msg) => {
                       setMessage(msg);
-                      setReload((n) => n + 1);
+                      void refetch();
                     }}
-                    onError={setError}
+                    onError={setMutationError}
                   />
                 </li>
               ))}

@@ -6,6 +6,7 @@ import { ThemeProvider, ThemeScript } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth-provider';
 import { ToastProvider } from '@/components/ui/toast';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { QueryProvider } from '@/components/query-provider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -63,7 +64,9 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <AuthProvider>
-            <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+            <QueryProvider>
+              <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+            </QueryProvider>
           </AuthProvider>
         </ThemeProvider>
         <ToastProvider />

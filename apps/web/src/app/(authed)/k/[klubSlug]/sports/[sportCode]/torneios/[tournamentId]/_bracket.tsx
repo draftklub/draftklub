@@ -9,6 +9,7 @@
 
 import * as React from 'react';
 import { CheckCircle2, Crown, Dices, Loader2, Save, Trophy } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import type {
   PreviewMatchRevertResult,
   TournamentBracket,
@@ -1155,26 +1156,18 @@ function RevertModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const [preview, setPreview] = React.useState<PreviewMatchRevertResult | null>(null);
-  const [loadError, setLoadError] = React.useState<string | null>(null);
   const [reason, setReason] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setLoadError(null);
-    previewMatchRevert(matchId)
-      .then((row) => {
-        if (!cancelled) setPreview(row);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setLoadError(toErrorMessage(err, 'Erro ao carregar preview.'));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [matchId]);
+  const { data: preview, error: previewFetchError } = useQuery({
+    queryKey: ['match-revert-preview', matchId],
+    queryFn: () => previewMatchRevert(matchId),
+  });
+
+  const loadError = previewFetchError
+    ? toErrorMessage(previewFetchError, 'Erro ao carregar preview.')
+    : null;
 
   async function handleConfirm() {
     if (submitting) return;

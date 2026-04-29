@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { CheckCircle2, Loader2, ToggleLeft, ToggleRight, XCircle } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api/client';
 import { getFeatures } from '@/lib/api/features';
 import type { FeatureItem } from '@/lib/api/features';
@@ -32,25 +33,19 @@ interface RowState {
 }
 
 export default function AdminFeaturesPage() {
-  const [features, setFeatures] = React.useState<FeatureItem[] | null>(null);
-  const [pageError, setPageError] = React.useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { data: features, error: fetchError } = useQuery({
+    queryKey: ['admin-features'],
+    queryFn: getFeatures,
+  });
   const [rowState, setRowState] = React.useState<Record<string, RowState>>({});
 
-  React.useEffect(() => {
-    let cancelled = false;
-    getFeatures()
-      .then((data) => {
-        if (!cancelled) setFeatures(data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setPageError(err instanceof ApiError ? err.message : 'Erro ao carregar features.');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const pageError =
+    fetchError instanceof ApiError
+      ? fetchError.message
+      : fetchError instanceof Error
+        ? fetchError.message
+        : null;
 
   function setRow(id: string, patch: Partial<RowState>) {
     setRowState((prev) => ({
@@ -64,7 +59,7 @@ export default function AdminFeaturesPage() {
     try {
       const updated = await patchFeature(id, input);
       invalidateFeaturesCache();
-      setFeatures((prev) =>
+      queryClient.setQueryData<FeatureItem[]>(['admin-features'], (prev) =>
         prev ? prev.map((f) => (f.id === id ? { ...f, ...updated } : f)) : prev,
       );
       setRow(id, { saving: false, saved: true });
@@ -97,7 +92,7 @@ export default function AdminFeaturesPage() {
         />
 
         <div className="mt-8 rounded-xl border border-border bg-card">
-          {features === null ? (
+          {features === undefined ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>

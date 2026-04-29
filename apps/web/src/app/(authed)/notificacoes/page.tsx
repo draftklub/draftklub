@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Banner } from '@/components/ui/banner';
 import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
 import type { PendingMatchConfirmationItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { confirmCasualMatch, listPendingMatchConfirmations } from '@/lib/api/rankings';
@@ -25,33 +26,26 @@ import { cn } from '@/lib/utils';
  * com `is_read`, push events, etc) — base aqui já abstrai.
  */
 export default function NotificacoesPage() {
-  const [items, setItems] = React.useState<PendingMatchConfirmationItem[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [reload, setReload] = React.useState(0);
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
+  const [mutationError, setMutationError] = React.useState<string | null>(null);
+  const {
+    data: items,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: ['pending-match-confirmations'],
+    queryFn: listPendingMatchConfirmations,
+  });
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setError(null);
-    listPendingMatchConfirmations()
-      .then((rows) => {
-        if (!cancelled) setItems(rows);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof ApiError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : 'Erro ao carregar notificações.',
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [reload]);
+  const fetchErrorMsg =
+    fetchError instanceof ApiError
+      ? fetchError.message
+      : fetchError instanceof Error
+        ? fetchError.message
+        : fetchError
+          ? 'Erro ao carregar notificações.'
+          : null;
+  const displayError = mutationError ?? fetchErrorMsg;
 
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
@@ -63,9 +57,9 @@ export default function NotificacoesPage() {
         />
 
         {actionMessage ? <Banner tone="success">{actionMessage}</Banner> : null}
-        {error ? <Banner tone="error">{error}</Banner> : null}
+        {displayError ? <Banner tone="error">{displayError}</Banner> : null}
 
-        {items === null ? (
+        {items === undefined ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
@@ -83,11 +77,11 @@ export default function NotificacoesPage() {
                   item={item}
                   onConfirmed={(msg) => {
                     setActionMessage(msg);
-                    setError(null);
-                    setReload((n) => n + 1);
+                    setMutationError(null);
+                    void refetch();
                   }}
                   onError={(msg) => {
-                    setError(msg);
+                    setMutationError(msg);
                     setActionMessage(null);
                   }}
                 />

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Loader2 } from 'lucide-react';
-import type { TournamentEntry } from '@draftklub/shared-types';
+import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api/client';
 import { listTournamentEntries } from '@/lib/api/tournaments';
 import { Banner } from '@/components/ui/banner';
@@ -15,31 +15,18 @@ import { EntriesView } from '../_components';
  */
 export default function TournamentEntriesPage() {
   const { tournament, meId, canManage, reload } = useTournamentContext();
-  const [entries, setEntries] = React.useState<TournamentEntry[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setError(null);
-    listTournamentEntries(tournament.id)
-      .then((rows) => {
-        if (!cancelled) setEntries(rows);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(
-            err instanceof ApiError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : 'Erro ao carregar inscritos.',
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [tournament.id]);
+  const { data: entries, error: fetchError } = useQuery({
+    queryKey: ['tournament-entries', tournament.id],
+    queryFn: () => listTournamentEntries(tournament.id),
+  });
+
+  const error =
+    fetchError instanceof ApiError
+      ? fetchError.message
+      : fetchError instanceof Error
+        ? fetchError.message
+        : null;
 
   if (error) {
     return (

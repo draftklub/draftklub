@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { MeResponse } from '@draftklub/shared-types';
 import { useAuth } from '@/components/auth-provider';
 import { getMe } from '@/lib/api/me';
@@ -22,27 +23,17 @@ import { ProfileContextProvider } from './_context';
 export default function PerfilLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const [me, setMe] = React.useState<MeResponse | null>(null);
-  const [loadError, setLoadError] = React.useState<string | null>(null);
-  const [reloadToken, setReloadToken] = React.useState(0);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    setLoadError(null);
-    setMe(null);
-    void getMe()
-      .then((data) => {
-        if (!cancelled) setMe(data);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setLoadError(err instanceof Error ? err.message : 'Erro ao carregar perfil');
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadToken]);
+  const {
+    data: me,
+    error: meError,
+    refetch,
+  } = useQuery({
+    queryKey: ['me'],
+    queryFn: getMe,
+  });
+  const loadError = meError instanceof Error ? meError.message : null;
 
   const baseHref = '/perfil';
   const seg = pathname.replace(baseHref, '').replace(/^\//, '').split('/')[0] ?? '';
@@ -71,7 +62,7 @@ export default function PerfilLayout({ children }: { children: React.ReactNode }
             <span className="block">{loadError}</span>
             <button
               type="button"
-              onClick={() => setReloadToken((n) => n + 1)}
+              onClick={() => void refetch()}
               className="mt-2 inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <Loader2 className="size-3.5" />
@@ -85,7 +76,7 @@ export default function PerfilLayout({ children }: { children: React.ReactNode }
             value={{
               user,
               me,
-              onMeUpdated: (next) => setMe(next),
+              onMeUpdated: (next) => queryClient.setQueryData<MeResponse>(['me'], next),
             }}
           >
             {children}
