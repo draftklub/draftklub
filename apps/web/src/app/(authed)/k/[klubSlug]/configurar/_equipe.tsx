@@ -7,6 +7,7 @@
  */
 
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, Loader2, Plus, Power, Trash2, UserPlus, Users } from 'lucide-react';
 import type { Klub, KlubSportProfile, Role, RoleAssignmentListItem } from '@draftklub/shared-types';
@@ -46,28 +47,28 @@ const KLUB_GRANTABLE_ROLES: {
 ];
 
 export function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferAdmin: boolean }) {
-  const [items, setItems] = React.useState<RoleAssignmentListItem[] | null>(null);
-  const [sports, setSports] = React.useState<KlubSportProfile[]>([]);
-  const [error, setError] = React.useState<string | null>(null);
+  const [mutationError, setMutationError] = React.useState<string | null>(null);
   const [message, setMessage] = React.useState<string | null>(null);
-  const [reload, setReload] = React.useState(0);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setError(null);
-    void Promise.all([listKlubRoleAssignments(klub.id), listKlubSports(klub.id)])
-      .then(([rows, sportsList]) => {
-        if (cancelled) return;
-        setItems(rows);
-        setSports(sportsList);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setError(toErrorMessage(err, 'Erro ao carregar equipe.'));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub.id, reload]);
+  const {
+    data,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: ['equipe-tab', klub.id],
+    queryFn: async () => {
+      const [rows, sportsList] = await Promise.all([
+        listKlubRoleAssignments(klub.id),
+        listKlubSports(klub.id),
+      ]);
+      return { items: rows, sports: sportsList };
+    },
+  });
+
+  const items = data?.items ?? null;
+  const sports = data?.sports ?? [];
+  const fetchErrorMsg = fetchError ? toErrorMessage(fetchError, 'Erro ao carregar equipe.') : null;
+  const error = fetchErrorMsg ?? mutationError;
 
   return (
     <div className="space-y-4">
@@ -87,9 +88,10 @@ export function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferA
         sports={sports}
         onGranted={(msg) => {
           setMessage(msg);
-          setReload((n) => n + 1);
+          setMutationError(null);
+          void refetch();
         }}
-        onError={setError}
+        onError={setMutationError}
       />
 
       <section className="space-y-2">
@@ -116,9 +118,10 @@ export function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferA
                   sports={sports}
                   onRevoked={(msg) => {
                     setMessage(msg);
-                    setReload((n) => n + 1);
+                    setMutationError(null);
+                    void refetch();
                   }}
-                  onError={setError}
+                  onError={setMutationError}
                 />
               </li>
             ))}
@@ -133,9 +136,10 @@ export function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferA
           klubSlug={klub.slug}
           onTransferred={(msg) => {
             setMessage(msg);
-            setReload((n) => n + 1);
+            setMutationError(null);
+            void refetch();
           }}
-          onError={setError}
+          onError={setMutationError}
         />
       ) : null}
     </div>

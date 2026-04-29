@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -59,13 +60,10 @@ export default function ReservarPage() {
   const router = useRouter();
 
   const [step, setStep] = React.useState<Step>(1);
-  const [spaces, setSpaces] = React.useState<Space[] | null>(null);
   const [selectedSpace, setSelectedSpace] = React.useState<Space | null>(null);
   const [matchType, setMatchType] = React.useState<MatchType>('singles');
 
   const [dateISO, setDateISO] = React.useState<string>(() => todayISO());
-  const [availability, setAvailability] = React.useState<SpaceAvailability | null>(null);
-  const [availabilityLoading, setAvailabilityLoading] = React.useState(false);
   const [selectedSlot, setSelectedSlot] = React.useState<SpaceAvailabilitySlot | null>(null);
 
   const [submitting, setSubmitting] = React.useState(false);
@@ -74,45 +72,27 @@ export default function ReservarPage() {
 
   const klubId = klub?.id;
 
-  // Boot — carrega quadras do Klub.
-  React.useEffect(() => {
-    if (!klubId) return;
-    let cancelled = false;
-    void listKlubSpaces(klubId)
-      .then((data) => {
-        if (cancelled) return;
-        const active = data.filter((s) => s.status === 'active' && s.bookingActive);
-        setSpaces(active);
-      })
-      .catch(() => {
-        if (!cancelled) setSpaces([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klubId]);
+  const { data: spacesData } = useQuery({
+    queryKey: ['klub-spaces-booking', klubId],
+    queryFn: async () => {
+      const rows = await listKlubSpaces(klubId!);
+      return rows.filter((s) => s.status === 'active' && s.bookingActive);
+    },
+    enabled: !!klubId,
+  });
+  const spaces = spacesData ?? null;
 
-  // Carrega availability sempre que muda quadra/data/matchType (no step 2).
-  React.useEffect(() => {
-    if (step !== 2 || !selectedSpace) return;
-    let cancelled = false;
-    setAvailabilityLoading(true);
-    setStepError(null);
-    void getSpaceAvailability(selectedSpace.id, dateISO, matchType)
-      .then((data) => {
-        if (!cancelled) setAvailability(data);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setStepError(err instanceof Error ? err.message : 'Erro ao carregar horários.');
-      })
-      .finally(() => {
-        if (!cancelled) setAvailabilityLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [step, selectedSpace, dateISO, matchType]);
+  const {
+    data: availability,
+    isFetching: availabilityLoading,
+    error: availabilityError,
+  } = useQuery({
+    queryKey: ['space-availability', selectedSpace?.id, dateISO, matchType],
+    queryFn: () => getSpaceAvailability(selectedSpace!.id, dateISO, matchType),
+    enabled: step === 2 && !!selectedSpace,
+  });
+  const availabilityErrorMsg =
+    availabilityError instanceof Error ? availabilityError.message : null;
 
   if (!klub) return null;
 
@@ -191,7 +171,7 @@ export default function ReservarPage() {
               setDateISO={setDateISO}
               matchType={matchType}
               setMatchType={setMatchType}
-              availability={availability}
+              availability={availability ?? null}
               loading={availabilityLoading}
               selectedSlot={selectedSlot}
               setSelectedSlot={setSelectedSlot}
@@ -202,7 +182,9 @@ export default function ReservarPage() {
             <Step3Confirmar space={selectedSpace} slot={selectedSlot} matchType={matchType} />
           ) : null}
 
-          {stepError ? <Banner tone="error">{stepError}</Banner> : null}
+          {(stepError ?? availabilityErrorMsg) ? (
+            <Banner tone="error">{stepError ?? availabilityErrorMsg}</Banner>
+          ) : null}
         </div>
       </div>
 

@@ -8,6 +8,7 @@
  */
 
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   CalendarRange,
   Dices,
@@ -19,11 +20,7 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react';
-import type {
-  Space,
-  TournamentDetail,
-  TournamentResultReportingMode,
-} from '@draftklub/shared-types';
+import type { TournamentDetail, TournamentResultReportingMode } from '@draftklub/shared-types';
 import { listKlubSpaces } from '@/lib/api/spaces';
 import {
   cancelTournament,
@@ -730,7 +727,6 @@ function ScheduleModal({
   onSuccess: (msg: string) => void;
   onError: (msg: string) => void;
 }) {
-  const [spaces, setSpaces] = React.useState<Space[] | null>(null);
   const [dates, setDates] = React.useState<string[]>([formatToday()]);
   const [startHour, setStartHour] = React.useState(8);
   const [endHour, setEndHour] = React.useState(22);
@@ -738,27 +734,24 @@ function ScheduleModal({
   const [breakBetweenMatchesMinutes, setBreakBetweenMatchesMinutes] = React.useState(15);
   const [restRuleMinutes, setRestRuleMinutes] = React.useState(60);
   const [spaceIds, setSpaceIds] = React.useState<string[]>([]);
-  const [bootError, setBootError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
   const [localError, setLocalError] = React.useState<string | null>(null);
 
+  const { data: spaces, error: bootFetchError } = useQuery({
+    queryKey: ['klub-spaces-active', klubId],
+    queryFn: async () => {
+      const rows = await listKlubSpaces(klubId);
+      return rows.filter((s) => s.status === 'active');
+    },
+  });
+  const bootError = bootFetchError
+    ? toErrorMessage(bootFetchError, 'Erro ao carregar quadras.')
+    : null;
+
+  // Pre-select all active spaces on first load
   React.useEffect(() => {
-    let cancelled = false;
-    listKlubSpaces(klubId)
-      .then((rows) => {
-        if (cancelled) return;
-        const active = rows.filter((s) => s.status === 'active');
-        setSpaces(active);
-        // Pre-select all active spaces by default
-        setSpaceIds(active.map((s) => s.id));
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setBootError(toErrorMessage(err, 'Erro ao carregar quadras.'));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klubId]);
+    if (spaces && spaceIds.length === 0) setSpaceIds(spaces.map((s) => s.id));
+  }, [spaces, spaceIds.length]);
 
   function addDate() {
     setDates((prev) => [...prev, formatToday()]);

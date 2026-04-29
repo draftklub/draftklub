@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
@@ -76,11 +77,7 @@ export default function NovoTorneioPage() {
   const sportCode = params.sportCode;
   const sportLabel = SPORT_LABELS[sportCode] ?? sportCode;
 
-  const [authChecked, setAuthChecked] = React.useState(false);
-  const [canCreate, setCanCreate] = React.useState(false);
-  const [rankings, setRankings] = React.useState<RankingListItem[] | null>(null);
-  const [pointsSchemas, setPointsSchemas] = React.useState<RankingPointsSchema[] | null>(null);
-  const [bootError, setBootError] = React.useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [submitting, setSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
@@ -106,42 +103,37 @@ export default function NovoTorneioPage() {
   // Modal: criar points schema inline
   const [psModalOpen, setPsModalOpen] = React.useState(false);
 
+  const { data: bootData, error: bootFetchError } = useQuery({
+    queryKey: ['novo-torneio-boot', klub?.id, sportCode],
+    queryFn: async () => {
+      const [me, rks, schemas] = await Promise.all([
+        getMe(),
+        listKlubRankings(klub!.id, sportCode),
+        listPointsSchemas(klub!.id, sportCode),
+      ]);
+      const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
+      const local = me.roleAssignments.some(
+        (r) =>
+          (r.role === 'KLUB_ADMIN' ||
+            r.role === 'KLUB_ASSISTANT' ||
+            r.role === 'SPORT_COMMISSION') &&
+          r.scopeKlubId === klub!.id,
+      );
+      return { canCreate: platform || local, rankings: rks, pointsSchemas: schemas };
+    },
+    enabled: !!klub,
+  });
+
+  const authChecked = bootData !== undefined || bootFetchError !== null;
+  const canCreate = bootData?.canCreate ?? false;
+  const rankings = bootData?.rankings ?? null;
+  const pointsSchemas = bootData?.pointsSchemas ?? null;
+  const bootError = bootFetchError ? toErrorMessage(bootFetchError, 'Erro ao carregar.') : null;
+
+  // Auto-pick primeiro ranking se só houver 1
   React.useEffect(() => {
-    if (!klub) return;
-    let cancelled = false;
-    void Promise.all([
-      getMe(),
-      listKlubRankings(klub.id, sportCode),
-      listPointsSchemas(klub.id, sportCode),
-    ])
-      .then(([me, rks, schemas]) => {
-        if (cancelled) return;
-        const platform = me.roleAssignments.some((r) => isPlatformLevel(r.role));
-        const local = me.roleAssignments.some(
-          (r) =>
-            (r.role === 'KLUB_ADMIN' ||
-              r.role === 'KLUB_ASSISTANT' ||
-              r.role === 'SPORT_COMMISSION') &&
-            r.scopeKlubId === klub.id,
-        );
-        setCanCreate(platform || local);
-        setRankings(rks);
-        setPointsSchemas(schemas);
-        // Auto-pick primeiro ranking se só houver 1
-        const first = rks[0];
-        if (rks.length === 1 && first) setRankingId(first.id);
-        setAuthChecked(true);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setBootError(toErrorMessage(err, 'Erro ao carregar.'));
-          setAuthChecked(true);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub, sportCode]);
+    if (rankings?.length === 1 && rankings[0]) setRankingId(rankings[0].id);
+  }, [rankings]);
 
   function updateCategory(idx: number, patch: Partial<CategoryDraft>) {
     setCategories((prev) => prev.map((c, i) => (i === idx ? { ...c, ...patch } : c)));
@@ -156,7 +148,18 @@ export default function NovoTorneioPage() {
   }
 
   function handlePointsSchemaCreated(created: RankingPointsSchema) {
-    setPointsSchemas((prev) => (prev ? [...prev, created] : [created]));
+    queryClient.setQueryData(
+      ['novo-torneio-boot', klub?.id, sportCode],
+      (
+        old:
+          | {
+              canCreate: boolean;
+              rankings: RankingListItem[];
+              pointsSchemas: RankingPointsSchema[];
+            }
+          | undefined,
+      ) => (old ? { ...old, pointsSchemas: [...old.pointsSchemas, created] } : old),
+    );
     // Auto-aplicar à última categoria sem schema selecionado
     setCategories((prev) => {
       const idx = prev.findIndex((c) => !c.pointsSchemaId);

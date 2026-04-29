@@ -3,13 +3,8 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
-import type {
-  CnpjLookupResult,
-  KlubAddressSource,
-  KlubType,
-  MeResponse,
-  SportCatalog,
-} from '@draftklub/shared-types';
+import type { CnpjLookupResult, KlubAddressSource, KlubType } from '@draftklub/shared-types';
+import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api/client';
 import { checkKlubSlug, createKlub, lookupCnpj } from '@/lib/api/klubs';
 import { getMe } from '@/lib/api/me';
@@ -36,7 +31,7 @@ export default function CriarKlubPage() {
   const router = useRouter();
 
   const [step, setStep] = React.useState<Step>(1);
-  const [me, setMe] = React.useState<MeResponse | null>(null);
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe });
 
   // Step 1 — Identidade
   const [entityType, setEntityType] = React.useState<'pj' | 'pf' | null>(null);
@@ -65,8 +60,13 @@ export default function CriarKlubPage() {
   const [addressSource, setAddressSource] = React.useState<KlubAddressSource>('manual');
 
   // Step 3 — Modalidades + visibilidade & acesso
-  const [sports, setSports] = React.useState<SportCatalog[] | null>(null);
-  const [sportError, setSportError] = React.useState<string | null>(null);
+  const { data: sportsData, error: sportsQueryError } = useQuery({
+    queryKey: ['sport-catalog'],
+    queryFn: listSports,
+    enabled: step === 3,
+  });
+  const sports = sportsData ?? null;
+  const sportError = sportsQueryError instanceof Error ? sportsQueryError.message : null;
   const [selectedSports, setSelectedSports] = React.useState<Set<string>>(new Set());
   const [discoverable, setDiscoverable] = React.useState(false);
   const [accessMode, setAccessMode] = React.useState<'public' | 'private'>('public');
@@ -82,12 +82,6 @@ export default function CriarKlubPage() {
 
   const [stepError, setStepError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
-
-  React.useEffect(() => {
-    void getMe()
-      .then(setMe)
-      .catch(() => null);
-  }, []);
 
   // Sprint M batch SM-8 — localStorage draft persistence.
   // Antes: F5 ou nav-away no meio do wizard → perde tudo (aud flagged).
@@ -184,23 +178,6 @@ export default function CriarKlubPage() {
     accessMode,
     selectedSports,
   ]);
-
-  React.useEffect(() => {
-    if (step !== 3 || sports !== null) return;
-    let cancelled = false;
-    listSports()
-      .then((data) => {
-        if (!cancelled) setSports(data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setSportError(err instanceof Error ? err.message : 'Erro ao carregar modalidades');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [step, sports]);
 
   React.useEffect(() => {
     if (step !== 4 || !name) return;

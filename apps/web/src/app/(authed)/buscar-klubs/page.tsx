@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, Loader2, MapPin, Plus, Search } from 'lucide-react';
@@ -9,12 +10,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { KlubAvatar } from '@/components/ui/klub-avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select } from '@/components/ui/select';
-import type {
-  KlubAccessMode,
-  KlubDiscoveryResult,
-  MeResponse,
-  SportCatalog,
-} from '@draftklub/shared-types';
+import type { KlubAccessMode, KlubDiscoveryResult, SportCatalog } from '@draftklub/shared-types';
 import { discoverKlubs, joinKlubBySlug } from '@/lib/api/klubs';
 import { requestMembership } from '@/lib/api/membership-requests';
 import { listSports } from '@/lib/api/sports';
@@ -36,8 +32,6 @@ import { cn } from '@/lib/utils';
  */
 export default function BuscarKlubsPage() {
   const router = useRouter();
-  const [me, setMe] = React.useState<MeResponse | null>(null);
-  const [sports, setSports] = React.useState<SportCatalog[]>([]);
 
   // Filtros
   const [q, setQ] = React.useState('');
@@ -56,25 +50,19 @@ export default function BuscarKlubsPage() {
   // Período (Sprint B+3)
   const [period, setPeriod] = React.useState<'morning' | 'afternoon' | 'evening' | null>(null);
 
-  // Resultados
-  const [results, setResults] = React.useState<KlubDiscoveryResult[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [reloadToken, setReloadToken] = React.useState(0);
-
-  // Boot: carrega catálogo de sports + me (pra UI mostrar tier badges futuramente).
-  React.useEffect(() => {
-    let cancelled = false;
-    void Promise.all([listSports().catch(() => []), getMe().catch(() => null)]).then(
-      ([sportsList, meRes]) => {
-        if (cancelled) return;
-        setSports(sportsList);
-        setMe(meRes);
-      },
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // Boot: catálogo de sports + me (pra tier badges e fallback geo)
+  const { data: bootData } = useQuery({
+    queryKey: ['buscar-klubs-boot'],
+    queryFn: async () => {
+      const [sportsList, meRes] = await Promise.all([
+        listSports().catch(() => [] as SportCatalog[]),
+        getMe().catch(() => null),
+      ]);
+      return { sports: sportsList, me: meRes };
+    },
+  });
+  const sports = bootData?.sports ?? [];
+  const me = bootData?.me ?? null;
 
   // Debounce do search box
   React.useEffect(() => {
@@ -127,34 +115,34 @@ export default function BuscarKlubsPage() {
     (useGeo && !!geoCoords) ||
     period !== null;
 
-  React.useEffect(() => {
-    if (!hasAnyFilter) {
-      setResults(null);
-      setError(null);
-      return;
-    }
-    let cancelled = false;
-    setError(null);
-    discoverKlubs({
-      q: debouncedQ.length >= 2 ? debouncedQ : undefined,
-      state: state || undefined,
-      sport: sport || undefined,
-      lat: useGeo && geoCoords ? geoCoords.lat : undefined,
-      lng: useGeo && geoCoords ? geoCoords.lng : undefined,
-      radiusKm: useGeo && geoCoords ? radiusKm : undefined,
-      period: period ?? undefined,
-    })
-      .then((data) => {
-        if (!cancelled) setResults(data);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Erro ao buscar Klubs');
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedQ, state, sport, hasAnyFilter, reloadToken, useGeo, geoCoords, radiusKm, period]);
+  const {
+    data: resultsData,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: [
+      'discover-klubs',
+      debouncedQ,
+      state,
+      sport,
+      useGeo && geoCoords ? geoCoords : null,
+      useGeo && geoCoords ? radiusKm : null,
+      period,
+    ],
+    queryFn: () =>
+      discoverKlubs({
+        q: debouncedQ.length >= 2 ? debouncedQ : undefined,
+        state: state || undefined,
+        sport: sport || undefined,
+        lat: useGeo && geoCoords ? geoCoords.lat : undefined,
+        lng: useGeo && geoCoords ? geoCoords.lng : undefined,
+        radiusKm: useGeo && geoCoords ? radiusKm : undefined,
+        period: period ?? undefined,
+      }),
+    enabled: hasAnyFilter,
+  });
+  const results = resultsData ?? null;
+  const error = fetchError instanceof Error ? fetchError.message : null;
 
   return (
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
@@ -290,7 +278,7 @@ export default function BuscarKlubsPage() {
 
         {/* Conteúdo */}
         {error ? (
-          <ErrorState message={error} onRetry={() => setReloadToken((n) => n + 1)} />
+          <ErrorState message={error} onRetry={() => void refetch()} />
         ) : !hasAnyFilter ? (
           <InitialEmptyState />
         ) : results === null ? (

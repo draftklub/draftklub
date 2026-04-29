@@ -5,6 +5,7 @@
  */
 
 import * as React from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Loader2, Plus } from 'lucide-react';
 import type { Klub, KlubSportProfile, SportCatalog } from '@draftklub/shared-types';
 import { addSportToKlub, listKlubSports, listSports } from '@/lib/api/sports';
@@ -15,38 +16,40 @@ import { toErrorMessage } from './_form-helpers';
 // ─── Modalidades tab ────────────────────────────────────────────────────
 
 export function ModalidadesTab({ klub }: { klub: Klub }) {
-  const [sports, setSports] = React.useState<SportCatalog[] | null>(null);
-  const [enabled, setEnabled] = React.useState<KlubSportProfile[]>([]);
+  const queryClient = useQueryClient();
   const [enabling, setEnabling] = React.useState<string | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
+  const [mutationError, setMutationError] = React.useState<string | null>(null);
   const [message, setMessage] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    void Promise.all([listSports(), listKlubSports(klub.id)])
-      .then(([all, profiles]) => {
-        if (cancelled) return;
-        setSports(all);
-        setEnabled(profiles);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setError(toErrorMessage(err, 'Erro ao carregar modalidades.'));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub.id]);
+  const { data, error: fetchError } = useQuery({
+    queryKey: ['modalidades-tab', klub.id],
+    queryFn: async () => {
+      const [all, profiles] = await Promise.all([listSports(), listKlubSports(klub.id)]);
+      return { sports: all, enabled: profiles };
+    },
+  });
+
+  const sports = data?.sports ?? null;
+  const enabled = data?.enabled ?? [];
+  const fetchErrorMsg = fetchError
+    ? toErrorMessage(fetchError, 'Erro ao carregar modalidades.')
+    : null;
+  const error = fetchErrorMsg ?? mutationError;
 
   async function handleEnable(code: string) {
     if (enabling) return;
     setEnabling(code);
-    setError(null);
+    setMutationError(null);
     try {
       const profile = await addSportToKlub(klub.id, code);
-      setEnabled((prev) => [...prev, profile]);
+      queryClient.setQueryData(
+        ['modalidades-tab', klub.id],
+        (old: { sports: SportCatalog[]; enabled: KlubSportProfile[] } | undefined) =>
+          old ? { ...old, enabled: [...old.enabled, profile] } : old,
+      );
       setMessage(`Modalidade ${profile.sportCode} habilitada.`);
     } catch (err: unknown) {
-      setError(toErrorMessage(err, 'Erro ao habilitar modalidade.'));
+      setMutationError(toErrorMessage(err, 'Erro ao habilitar modalidade.'));
     } finally {
       setEnabling(null);
     }

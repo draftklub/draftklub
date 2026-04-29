@@ -7,6 +7,7 @@
  */
 
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Loader2, MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Klub, Space } from '@draftklub/shared-types';
 import {
@@ -26,28 +27,22 @@ import { toErrorMessage } from './_form-helpers';
 // ─── Quadras tab (porta /quadras) ───────────────────────────────────────
 
 export function QuadrasTab({ klub }: { klub: Klub }) {
-  const [spaces, setSpaces] = React.useState<Space[] | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [reload, setReload] = React.useState(0);
   const [message, setMessage] = React.useState<string | null>(null);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Space | null>(null);
   const [deleting, setDeleting] = React.useState<Space | null>(null);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    setError(null);
-    listKlubSpaces(klub.id)
-      .then((data) => {
-        if (!cancelled) setSpaces(data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setError(toErrorMessage(err, 'Erro ao carregar quadras.'));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [klub.id, reload]);
+  const {
+    data,
+    error: fetchError,
+    refetch,
+  } = useQuery({
+    queryKey: ['klub-spaces', klub.id],
+    queryFn: () => listKlubSpaces(klub.id),
+  });
+
+  const spaces = data ?? null;
+  const error = fetchError ? toErrorMessage(fetchError, 'Erro ao carregar quadras.') : null;
 
   return (
     <section className="space-y-3">
@@ -99,7 +94,7 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
             onCreated={() => {
               setCreateOpen(false);
               setMessage('Quadra criada.');
-              setReload((n) => n + 1);
+              void refetch();
             }}
           />
         </Modal>
@@ -114,7 +109,7 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
             onUpdated={() => {
               setEditing(null);
               setMessage('Quadra atualizada.');
-              setReload((n) => n + 1);
+              void refetch();
             }}
           />
         </Modal>
@@ -128,7 +123,7 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
           onDeleted={() => {
             setDeleting(null);
             setMessage('Quadra excluída.');
-            setReload((n) => n + 1);
+            void refetch();
           }}
         />
       ) : null}
