@@ -56,8 +56,7 @@ base cresce, aparecem dois problemas:
   sem benefício de queue.
 
 **Trade-off aceito:** Manter sync até dor real. Cloud Run cold-start
-
-- in-process já cobre o uso atual sem queue.
+combinado com execução in-process já cobre o uso atual sem queue.
 
 ### 2. API versioning (`/v1`)
 
@@ -77,10 +76,9 @@ clients antigos quebram.
   - Deprecation header (`Sunset: <date>`) automatizado
 
 **Quando entrar:** Junto com a primeira release de mobile pública.
-Antes disso, não. Vamos pinning major version no Capacitor `appVersion`
-
-- rejeitar requests com major < N (server-side gate, sem precisar
-  versionar URL).
+Antes disso, não. Por enquanto vamos pinning major version no
+Capacitor `appVersion` e rejeitando requests com major < N (server-side
+gate, sem precisar versionar URL).
 
 **Trade-off aceito:** Quebra de contrato hoje exige deploy
 coordenado de api+web no mesmo PR. Não é problema enquanto não houver
