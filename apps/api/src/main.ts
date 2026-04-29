@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { type NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
+import helmet from '@fastify/helmet';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { initTelemetry, shutdownTelemetry } from './bootstrap/telemetry/otel';
@@ -22,6 +23,33 @@ async function bootstrap(): Promise<void> {
 
   app.useLogger(app.get(Logger));
   app.useGlobalFilters(new ZodExceptionFilter());
+
+  // Security headers via Fastify Helmet. API só serve JSON, então CSP é
+  // restritiva — sem inline scripts, sem origens externas. HSTS de 1 ano.
+  // Frame-ancestors none (defesa em profundidade contra clickjacking,
+  // mesmo a API não tendo HTML).
+  // Cast: @fastify/helmet 13 traz tipos do fastify 5.8.4, projeto roda
+  // 5.8.5 — divergência tipográfica de DecorationMethod sem impacto em
+  // runtime. Em runtime tudo funciona.
+  /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
+  await app.register(helmet as any, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'none'"],
+        formAction: ["'none'"],
+      },
+    },
+    crossOriginResourcePolicy: { policy: 'same-site' },
+    referrerPolicy: { policy: 'no-referrer' },
+    strictTransportSecurity: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  });
+  /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
 
   app.enableCors({
     origin: getCorsOrigins(),

@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { validateConfig } from './bootstrap/config/app.config';
 import { FirebaseModule } from './bootstrap/firebase/firebase.module';
@@ -44,6 +46,12 @@ import { FeaturesModule } from './modules/features/features.module';
       },
     }),
     ScheduleModule.forRoot(),
+    // Rate limiting global. Default: 100 req / 60s por IP. Rotas
+    // sensíveis (login, role grant, klub.create) podem aplicar
+    // @Throttle({ short: { limit: N, ttl: ms } }) em cima desse default.
+    ThrottlerModule.forRoot({
+      throttlers: [{ name: 'default', ttl: 60_000, limit: 100 }],
+    }),
     FirebaseModule,
     AuthModule,
     EncryptionModule,
@@ -62,5 +70,6 @@ import { FeaturesModule } from './modules/features/features.module';
     BookingModule,
     FeaturesModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}
