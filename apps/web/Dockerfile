@@ -1,7 +1,7 @@
 # ═══════════════════════════════════════
 # Stage 1: deps
 # ═══════════════════════════════════════
-FROM node:24-alpine AS deps
+FROM node:25-alpine AS deps
 WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.6.5 --activate
@@ -17,7 +17,7 @@ RUN pnpm install --frozen-lockfile --filter @draftklub/web...
 # ═══════════════════════════════════════
 # Stage 2: builder
 # ═══════════════════════════════════════
-FROM node:24-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.6.5 --activate
@@ -55,7 +55,7 @@ RUN pnpm --filter @draftklub/web build
 # ═══════════════════════════════════════
 # Stage 3: runner — usa next standalone output
 # ═══════════════════════════════════════
-FROM node:24-alpine AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
