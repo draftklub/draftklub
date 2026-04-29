@@ -1,31 +1,20 @@
-import type { KlubConfig } from '@prisma/client';
+import type { KlubConfig as PrismaKlubConfig } from '@prisma/client';
+import type { KlubConfig } from '@draftklub/shared-types';
 
-export interface KlubConfigResponse {
-  bookingPolicy: string;
-  accessMode: string;
-  bookingModes: unknown;
-  cancellationMode: string;
-  agendaVisibility: string;
-  cancellationWindowHours: number;
-  cancellationFeePercent: string;
-  noShowFeeEnabled: boolean;
-  noShowFeeAmount: string;
-  gatewayAccountId: string | null;
-  openingHour: number;
-  closingHour: number;
-  openDays: string;
-  maxRecurrenceMonths: number;
-  extensionMode: string;
-}
-
-export function mapKlubConfig(config: KlubConfig | null): KlubConfigResponse | null {
+/**
+ * Sprint N batch N-14 — mapper alinhado com KlubConfig shared-types.
+ * Antes: shape local KlubConfigResponse omitia `guestsAddedBy` e
+ * `tournamentBookingConflictMode` que existem no DB. Agora retorna
+ * shape canônico do contrato.
+ */
+export function mapKlubConfig(config: PrismaKlubConfig | null): KlubConfig | null {
   if (!config) return null;
   return {
     bookingPolicy: config.bookingPolicy,
-    accessMode: config.accessMode,
-    bookingModes: config.bookingModes,
-    cancellationMode: config.cancellationMode,
-    agendaVisibility: config.agendaVisibility,
+    accessMode: config.accessMode as KlubConfig['accessMode'],
+    bookingModes: config.bookingModes as KlubConfig['bookingModes'],
+    cancellationMode: config.cancellationMode as KlubConfig['cancellationMode'],
+    agendaVisibility: config.agendaVisibility as KlubConfig['agendaVisibility'],
     cancellationWindowHours: config.cancellationWindowHours,
     cancellationFeePercent: config.cancellationFeePercent.toString(),
     noShowFeeEnabled: config.noShowFeeEnabled,
@@ -35,6 +24,9 @@ export function mapKlubConfig(config: KlubConfig | null): KlubConfigResponse | n
     closingHour: config.closingHour,
     openDays: config.openDays,
     maxRecurrenceMonths: config.maxRecurrenceMonths,
-    extensionMode: config.extensionMode,
+    extensionMode: config.extensionMode as KlubConfig['extensionMode'],
+    guestsAddedBy: config.guestsAddedBy as KlubConfig['guestsAddedBy'],
+    tournamentBookingConflictMode:
+      config.tournamentBookingConflictMode as KlubConfig['tournamentBookingConflictMode'],
   };
 }

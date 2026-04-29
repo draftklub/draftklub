@@ -1,5 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { KlubAccessMode, KlubReviewStatus } from '@draftklub/shared-types';
+import type {
+  Klub,
+  KlubAccessMode,
+  KlubPlan,
+  KlubReviewStatus,
+  KlubStatus,
+  KlubType,
+} from '@draftklub/shared-types';
 import { KlubPrismaRepository } from '../../infrastructure/repositories/klub.prisma.repository';
 import { mapKlubConfig } from '../mappers/klub-config.mapper';
 
@@ -13,7 +20,7 @@ export class GetKlubByIdHandler {
    * /escolher-klub e /criar-klub/sucesso). 404 ao invés de 403 pra não
    * vazar existência.
    */
-  async execute(id: string, viewerId?: string) {
+  async execute(id: string, viewerId?: string): Promise<Klub> {
     const klub = await this.klubRepo.findById(id);
     if (!klub) throw new NotFoundException(`Klub ${id} not found`);
 
@@ -28,9 +35,9 @@ export class GetKlubByIdHandler {
       abbreviation: klub.abbreviation,
       commonName: klub.commonName,
       description: klub.description,
-      type: klub.type,
-      plan: klub.plan,
-      status: klub.status,
+      type: klub.type as KlubType,
+      plan: klub.plan as KlubPlan,
+      status: klub.status as KlubStatus,
       city: klub.city,
       state: klub.state,
       timezone: klub.timezone,
@@ -56,7 +63,7 @@ export class GetKlubByIdHandler {
       longitude: klub.longitude ? Number(klub.longitude) : null,
       reviewStatus: klub.reviewStatus as KlubReviewStatus,
       reviewRejectionReason: klub.reviewRejectionReason,
-      createdAt: klub.createdAt,
+      createdAt: klub.createdAt.toISOString(),
     };
   }
 }

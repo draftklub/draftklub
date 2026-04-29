@@ -18,6 +18,10 @@ const EXPECTED_CONFIG_KEYS = [
   'openDays',
   'maxRecurrenceMonths',
   'extensionMode',
+  // Sprint N batch N-14 — mapper agora expõe campos que estavam no
+  // shared-types KlubConfig mas faltavam no response.
+  'guestsAddedBy',
+  'tournamentBookingConflictMode',
 ];
 
 function fakeKlub() {

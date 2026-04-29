@@ -1,5 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { KlubAccessMode, KlubReviewStatus } from '@draftklub/shared-types';
+import type {
+  Klub,
+  KlubAccessMode,
+  KlubPlan,
+  KlubReviewStatus,
+  KlubStatus,
+  KlubType,
+} from '@draftklub/shared-types';
 import { KlubPrismaRepository } from '../../infrastructure/repositories/klub.prisma.repository';
 import { mapKlubConfig } from '../mappers/klub-config.mapper';
 
@@ -9,8 +16,11 @@ export class GetKlubBySlugHandler {
 
   /**
    * Sprint D PR1: pendentes ficam visíveis só pro criador. Demais 404.
+   *
+   * Sprint N batch N-14 — return type pinned em `Klub` (shared-types)
+   * pra travar contrato do wire format. TS quebra se shape divergir.
    */
-  async execute(slug: string, viewerId?: string) {
+  async execute(slug: string, viewerId?: string): Promise<Klub> {
     const klub = await this.klubRepo.findBySlug(slug);
     if (!klub) throw new NotFoundException(`Klub '${slug}' not found`);
 
@@ -25,9 +35,9 @@ export class GetKlubBySlugHandler {
       abbreviation: klub.abbreviation,
       commonName: klub.commonName,
       description: klub.description,
-      type: klub.type,
-      plan: klub.plan,
-      status: klub.status,
+      type: klub.type as KlubType,
+      plan: klub.plan as KlubPlan,
+      status: klub.status as KlubStatus,
       city: klub.city,
       state: klub.state,
       timezone: klub.timezone,
@@ -53,7 +63,7 @@ export class GetKlubBySlugHandler {
       longitude: klub.longitude ? Number(klub.longitude) : null,
       reviewStatus: klub.reviewStatus as KlubReviewStatus,
       reviewRejectionReason: klub.reviewRejectionReason,
-      createdAt: klub.createdAt,
+      createdAt: klub.createdAt.toISOString(),
     };
   }
 }
