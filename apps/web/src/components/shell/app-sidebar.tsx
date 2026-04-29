@@ -127,7 +127,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
         {/* Brand row */}
         <div className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-4 pb-3.5 pt-4">
           <Link href="/home" className="flex items-center gap-2.5" onClick={onClose}>
-            <BrandLockup size="lg" />
+            <BrandLockup size="sm" />
           </Link>
           <button
             type="button"

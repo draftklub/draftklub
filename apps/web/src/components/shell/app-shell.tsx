@@ -18,10 +18,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background md:h-screen md:overflow-hidden">
       <AppSidebar open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col md:overflow-hidden">
         {/* Topbar mobile (hamburger). Em md+, sidebar dá tudo. */}
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4 md:hidden">
           <button
