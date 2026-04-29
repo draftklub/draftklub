@@ -2,51 +2,45 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Loader2, Plus, Search, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, Clock, Loader2, MapPin, Plus, Search, X } from 'lucide-react';
 import type { MembershipRequestForUser, UserKlubMembership } from '@draftklub/shared-types';
 import { useAuth } from '@/components/auth-provider';
 import { EmailVerifyBanner } from '@/components/email-verify-banner';
 import { getMyKlubs } from '@/lib/api/me';
 import { cancelMyMembershipRequest, listMyMembershipRequests } from '@/lib/api/membership-requests';
-import { readLastKlubSlug } from '@/lib/last-klub-cookie';
+import { listMyBookings, type MyBookingItem } from '@/lib/api/bookings';
 
-/**
- * Home — landing autenticada. Conteúdo cross-Klub (feed unificado,
- * próximas partidas, ranking pessoal) chega na Onda 3. Por enquanto,
- * shell minimalista: saudação + atalho pro último Klub visitado +
- * cards CTAs principais.
- */
 export default function HomePage() {
   const { user } = useAuth();
   const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
-  const [lastKlub, setLastKlub] = React.useState<UserKlubMembership | null>(null);
   const [pendingRequests, setPendingRequests] = React.useState<MembershipRequestForUser[] | null>(
     null,
   );
+  const [bookings, setBookings] = React.useState<MyBookingItem[] | null>(null);
   const [requestsReloadToken, setRequestsReloadToken] = React.useState(0);
 
   React.useEffect(() => {
     let cancelled = false;
     getMyKlubs()
       .then((data) => {
-        if (cancelled) return;
-        setKlubs(data);
-        const lastSlug = readLastKlubSlug();
-        const last = lastSlug
-          ? (data.find((k) => k.klubSlug === lastSlug && k.reviewStatus === 'approved') ?? null)
-          : null;
-        setLastKlub(last);
+        if (!cancelled) setKlubs(data);
       })
       .catch(() => {
         if (!cancelled) setKlubs([]);
       });
     listMyMembershipRequests()
       .then((data) => {
-        if (cancelled) return;
-        setPendingRequests(data.filter((r) => r.status === 'pending'));
+        if (!cancelled) setPendingRequests(data.filter((r) => r.status === 'pending'));
       })
       .catch(() => {
         if (!cancelled) setPendingRequests([]);
+      });
+    listMyBookings()
+      .then((data) => {
+        if (!cancelled) setBookings(data);
+      })
+      .catch(() => {
+        if (!cancelled) setBookings([]);
       });
     return () => {
       cancelled = true;
@@ -55,116 +49,81 @@ export default function HomePage() {
 
   const firstName = (user?.displayName ?? user?.email ?? '').split(/[\s@]/)[0] ?? '';
   const hasKlubs = klubs !== null && klubs.length > 0;
+  const isSingleKlub = klubs !== null && klubs.length === 1;
+
+  const now = Date.now();
+  const upcomingBookings = React.useMemo(() => {
+    if (!bookings) return [];
+    return bookings
+      .filter((b) => {
+        const isCancelled = b.status === 'cancelled' || b.status === 'rejected';
+        return !isCancelled && new Date(b.startsAt).getTime() >= now;
+      })
+      .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+  }, [bookings, now]);
+
+  const loading = klubs === null;
 
   return (
-    <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
-      <div className="mx-auto max-w-4xl">
+    <main className="flex-1 overflow-y-auto px-4 py-8 md:px-8 md:py-12">
+      <div className="mx-auto max-w-3xl">
         <EmailVerifyBanner />
-        <header className="mb-10">
+
+        {/* Header */}
+        <header className="mb-8">
           <h1
             className="font-display text-3xl font-bold md:text-4xl"
             style={{ letterSpacing: '-0.02em' }}
           >
             Olá{firstName ? `, ${firstName}` : ''}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {hasKlubs
-              ? 'Continue de onde parou ou troque de Klub na barra lateral.'
-              : klubs === null
-                ? 'Carregando seus Klubs…'
-                : 'Você ainda não está em nenhum Klub. Use a barra lateral pra encontrar ou criar um.'}
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {loading
+              ? 'Carregando seus Klubs…'
+              : !hasKlubs
+                ? 'Você ainda não está em nenhum Klub. Use a barra lateral pra encontrar ou criar um.'
+                : isSingleKlub
+                  ? 'Aqui está o resumo do seu Klub.'
+                  : `Aqui está o resumo dos seus ${klubs.length} Klubs.`}
           </p>
         </header>
 
-        {/* Continue de onde parou */}
-        {lastKlub ? (
-          <section className="mb-8">
-            <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-              Continue de onde parou
-            </h2>
-            <Link
-              href={`/k/${lastKlub.klubSlug}/dashboard`}
-              className="group flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
-            >
-              <div className="flex min-w-0 items-center gap-4">
-                <KlubAvatar name={lastKlub.klubName} />
-                <div className="min-w-0">
-                  <h3
-                    className="truncate font-display text-lg font-bold leading-tight"
-                    style={{ letterSpacing: '-0.01em' }}
-                  >
-                    {lastKlub.klubName}
-                  </h3>
-                  <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
-                    /k/{lastKlub.klubSlug}
-                  </p>
-                </div>
-              </div>
-              <ArrowRight className="size-5 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
-            </Link>
-          </section>
-        ) : null}
-
-        {/* Outros Klubs */}
-        {hasKlubs && klubs && klubs.length > (lastKlub ? 1 : 0) ? (
-          <section className="mb-8">
-            <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-              Seus outros Klubs
-            </h2>
-            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {klubs
-                .filter((k) => k.klubSlug !== lastKlub?.klubSlug)
-                .map((k) => (
-                  <li key={k.klubId}>
-                    <KlubCard klub={k} />
-                  </li>
-                ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {/* Solicitações pendentes (Sprint C) */}
-        {pendingRequests && pendingRequests.length > 0 ? (
-          <section className="mb-8">
-            <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-              Solicitações em análise
-            </h2>
-            <ul className="space-y-2">
-              {pendingRequests.map((r) => (
-                <li key={r.id}>
-                  <PendingRequestCard
-                    request={r}
-                    onCancelled={() => setRequestsReloadToken((n) => n + 1)}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {/* Atalhos */}
-        <section>
-          <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-            Atalhos
-          </h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <ShortcutCard
-              href="/buscar-klubs"
-              icon={Search}
-              title="Buscar um Klub"
-              body="Encontre clubes pra entrar como sócio."
-            />
-            <ShortcutCard
-              href="/criar-klub"
-              icon={Plus}
-              title="Criar meu Klub"
-              body="Self-service: você vira Klub Admin."
-            />
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
           </div>
-        </section>
+        ) : !hasKlubs ? (
+          /* ── Sem Klubs ────────────────────────────────────────── */
+          <>
+            {pendingRequests && pendingRequests.length > 0 ? (
+              <PendingRequestsSection
+                requests={pendingRequests}
+                onCancelled={() => setRequestsReloadToken((n) => n + 1)}
+              />
+            ) : null}
+            <ShortcutsSection />
+          </>
+        ) : isSingleKlub && klubs[0] ? (
+          /* ── Single-Klub dashboard ────────────────────────────── */
+          <SingleKlubDashboard
+            klub={klubs[0]}
+            upcomingBookings={upcomingBookings}
+            pendingRequestsCount={pendingRequests?.length ?? 0}
+            onCancelRequest={() => setRequestsReloadToken((n) => n + 1)}
+            pendingRequests={pendingRequests ?? []}
+          />
+        ) : (
+          /* ── Multi-Klub dashboard ─────────────────────────────── */
+          <MultiKlubDashboard
+            klubs={klubs}
+            upcomingBookings={upcomingBookings}
+            pendingRequests={pendingRequests ?? []}
+            onCancelRequest={() => setRequestsReloadToken((n) => n + 1)}
+          />
+        )}
 
         {/* Sales-led */}
-        <p className="mt-10 text-center text-xs text-muted-foreground">
+        <p className="mt-12 text-center text-xs text-muted-foreground">
           <Link
             href="/quero-criar-klub"
             className="underline-offset-4 hover:text-foreground hover:underline"
@@ -174,6 +133,350 @@ export default function HomePage() {
         </p>
       </div>
     </main>
+  );
+}
+
+// ─── Single-Klub Dashboard ────────────────────────────────────────────────────
+
+function SingleKlubDashboard({
+  klub,
+  upcomingBookings,
+  pendingRequestsCount,
+  pendingRequests,
+  onCancelRequest,
+}: {
+  klub: UserKlubMembership;
+  upcomingBookings: MyBookingItem[];
+  pendingRequestsCount: number;
+  pendingRequests: MembershipRequestForUser[];
+  onCancelRequest: () => void;
+}) {
+  const klubBookings = upcomingBookings.filter((b) => b.klub.slug === klub.klubSlug);
+  const firstSport = klub.sports?.[0];
+
+  return (
+    <div className="space-y-6">
+      {/* Klub hero card */}
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
+            <KlubAvatar name={klub.klubCommonName ?? klub.klubName} />
+            <div className="min-w-0">
+              <h2
+                className="truncate font-display text-xl font-bold leading-tight"
+                style={{ letterSpacing: '-0.01em' }}
+              >
+                {klub.klubCommonName ?? klub.klubName}
+              </h2>
+              <p className="mt-0.5 font-mono text-xs text-muted-foreground">/{klub.klubSlug}</p>
+            </div>
+          </div>
+          <Link
+            href={`/k/${klub.klubSlug}/dashboard`}
+            className="shrink-0 inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-semibold hover:bg-muted"
+          >
+            Dashboard
+            <ArrowRight className="size-3.5" />
+          </Link>
+        </div>
+
+        {/* KPI row */}
+        <div className="mt-5 grid grid-cols-3 gap-3">
+          <KpiCard label="Próximas reservas" value={klubBookings.length} href="/minhas-reservas" />
+          <KpiCard
+            label="Solicitações"
+            value={pendingRequestsCount}
+            href="#"
+            muted={pendingRequestsCount === 0}
+          />
+          <KpiCard
+            label="Modalidades"
+            value={klub.sports?.length ?? 0}
+            href={firstSport ? `/k/${klub.klubSlug}/sports/${firstSport}/dashboard` : '#'}
+          />
+        </div>
+
+        {/* Quick actions */}
+        <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
+          <Link
+            href={`/k/${klub.klubSlug}/reservar`}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Plus className="size-3.5" />
+            Reservar quadra
+          </Link>
+          {firstSport ? (
+            <>
+              <Link
+                href={`/k/${klub.klubSlug}/sports/${firstSport}/torneios`}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-4 text-xs font-semibold hover:bg-muted"
+              >
+                Torneios
+              </Link>
+              <Link
+                href={`/k/${klub.klubSlug}/sports/${firstSport}/rankings`}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-4 text-xs font-semibold hover:bg-muted"
+              >
+                Rankings
+              </Link>
+            </>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Próximas reservas */}
+      {klubBookings.length > 0 ? (
+        <section>
+          <SectionTitle
+            label="Próximas reservas"
+            action={{ href: '/minhas-reservas', label: 'Ver todas' }}
+          />
+          <ul className="space-y-2">
+            {klubBookings.slice(0, 3).map((b) => (
+              <li key={b.id}>
+                <BookingRow booking={b} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* Solicitações pendentes */}
+      {pendingRequests.length > 0 ? (
+        <PendingRequestsSection requests={pendingRequests} onCancelled={onCancelRequest} />
+      ) : null}
+
+      <ShortcutsSection />
+    </div>
+  );
+}
+
+// ─── Multi-Klub Dashboard ─────────────────────────────────────────────────────
+
+function MultiKlubDashboard({
+  klubs,
+  upcomingBookings,
+  pendingRequests,
+  onCancelRequest,
+}: {
+  klubs: UserKlubMembership[];
+  upcomingBookings: MyBookingItem[];
+  pendingRequests: MembershipRequestForUser[];
+  onCancelRequest: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      {/* KPI summary row */}
+      <div className="grid grid-cols-3 gap-3">
+        <KpiCard
+          label="Próximas reservas"
+          value={upcomingBookings.length}
+          href="/minhas-reservas"
+        />
+        <KpiCard label="Seus Klubs" value={klubs.length} href="/klubs" />
+        <KpiCard
+          label="Solicitações"
+          value={pendingRequests.length}
+          href="#"
+          muted={pendingRequests.length === 0}
+        />
+      </div>
+
+      {/* Próximas reservas — cross-klub */}
+      {upcomingBookings.length > 0 ? (
+        <section>
+          <SectionTitle
+            label="Próximas reservas"
+            action={{ href: '/minhas-reservas', label: 'Ver todas' }}
+          />
+          <ul className="space-y-2">
+            {upcomingBookings.slice(0, 5).map((b) => (
+              <li key={b.id}>
+                <BookingRow booking={b} showKlub />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* Per-klub cards */}
+      <section>
+        <SectionTitle label="Seus Klubs" action={{ href: '/klubs', label: 'Ver todos' }} />
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {klubs.map((k) => {
+            const next = upcomingBookings.find((b) => b.klub.slug === k.klubSlug);
+            return (
+              <li key={k.klubId}>
+                <KlubDashCard klub={k} nextBooking={next} />
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      {/* Solicitações pendentes */}
+      {pendingRequests.length > 0 ? (
+        <PendingRequestsSection requests={pendingRequests} onCancelled={onCancelRequest} />
+      ) : null}
+
+      <ShortcutsSection />
+    </div>
+  );
+}
+
+// ─── KlubDashCard ─────────────────────────────────────────────────────────────
+
+function KlubDashCard({
+  klub,
+  nextBooking,
+}: {
+  klub: UserKlubMembership;
+  nextBooking?: MyBookingItem;
+}) {
+  const pending = klub.reviewStatus === 'pending';
+  const rejected = klub.reviewStatus === 'rejected';
+  const href = pending || rejected ? '/klubs' : `/k/${klub.klubSlug}/dashboard`;
+  const label = klub.klubCommonName ?? klub.klubName;
+
+  return (
+    <Link
+      href={href}
+      className="group flex h-full flex-col rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-sm"
+    >
+      <div className="flex items-center gap-3">
+        <KlubAvatar name={label} small />
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-sm font-semibold leading-tight">{label}</h3>
+          <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
+            /{klub.klubSlug}
+          </p>
+        </div>
+        <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+      </div>
+      {nextBooking ? (
+        <div className="mt-3 flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
+          <CalendarDays className="size-3 shrink-0" />
+          <span className="truncate">
+            {new Date(nextBooking.startsAt).toLocaleDateString('pt-BR', {
+              weekday: 'short',
+              day: '2-digit',
+              month: 'short',
+            })}
+            {' · '}
+            {new Date(nextBooking.startsAt).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        </div>
+      ) : pending ? (
+        <span className="mt-3 inline-flex w-fit items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+          Em análise
+        </span>
+      ) : rejected ? (
+        <span className="mt-3 inline-flex w-fit items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-destructive">
+          Rejeitado
+        </span>
+      ) : null}
+    </Link>
+  );
+}
+
+// ─── BookingRow ───────────────────────────────────────────────────────────────
+
+function BookingRow({ booking, showKlub }: { booking: MyBookingItem; showKlub?: boolean }) {
+  const start = new Date(booking.startsAt);
+  const end = booking.endsAt ? new Date(booking.endsAt) : null;
+  const dateLabel = start.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'short',
+  });
+  const timeLabel = `${start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}${end ? ` – ${end.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}`;
+
+  return (
+    <Link
+      href="/minhas-reservas"
+      className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 transition-colors hover:border-primary/30 hover:bg-muted/30"
+    >
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <MapPin className="size-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        {showKlub ? (
+          <p className="mb-0.5 truncate text-xs font-bold uppercase tracking-widest text-[hsl(var(--brand-primary-600))]">
+            {booking.klub.name}
+          </p>
+        ) : null}
+        <p className="truncate text-sm font-semibold">{booking.space?.name ?? 'Quadra'}</p>
+        <p className="mt-0.5 inline-flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 capitalize">
+            <CalendarDays className="size-3" />
+            {dateLabel}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Clock className="size-3" />
+            {timeLabel}
+          </span>
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+// ─── KpiCard ──────────────────────────────────────────────────────────────────
+
+function KpiCard({
+  label,
+  value,
+  href,
+  muted,
+}: {
+  label: string;
+  value: number;
+  href: string;
+  muted?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex flex-col rounded-xl border border-border bg-card p-3.5 transition-colors hover:border-primary/30"
+    >
+      <span
+        className={
+          muted
+            ? 'font-display text-2xl font-bold text-muted-foreground'
+            : 'font-display text-2xl font-bold'
+        }
+        style={{ letterSpacing: '-0.02em' }}
+      >
+        {value}
+      </span>
+      <span className="mt-0.5 text-xs text-muted-foreground">{label}</span>
+    </Link>
+  );
+}
+
+// ─── PendingRequestsSection ───────────────────────────────────────────────────
+
+function PendingRequestsSection({
+  requests,
+  onCancelled,
+}: {
+  requests: MembershipRequestForUser[];
+  onCancelled: () => void;
+}) {
+  return (
+    <section>
+      <SectionTitle label="Solicitações em análise" />
+      <ul className="space-y-2">
+        {requests.map((r) => (
+          <li key={r.id}>
+            <PendingRequestCard request={r} onCancelled={onCancelled} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -222,52 +525,27 @@ function PendingRequestCard({
   );
 }
 
-function KlubCard({ klub }: { klub: UserKlubMembership }) {
-  const pending = klub.reviewStatus === 'pending';
-  const rejected = klub.reviewStatus === 'rejected';
-  const href = pending || rejected ? '/criar-klub/sucesso' : `/k/${klub.klubSlug}/dashboard`;
-  return (
-    <Link
-      href={href}
-      className="group flex h-full flex-col rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-sm"
-    >
-      <div className="flex items-center gap-3">
-        <KlubAvatar name={klub.klubName} small />
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold leading-tight">{klub.klubName}</h3>
-          <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
-            /{klub.klubSlug}
-          </p>
-        </div>
-      </div>
-      {pending ? (
-        <span className="mt-2.5 inline-flex w-fit items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
-          Em análise
-        </span>
-      ) : rejected ? (
-        <span className="mt-2.5 inline-flex w-fit items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-destructive">
-          Rejeitado
-        </span>
-      ) : null}
-    </Link>
-  );
-}
+// ─── ShortcutsSection ─────────────────────────────────────────────────────────
 
-function KlubAvatar({ name, small }: { name: string; small?: boolean }) {
-  const initial = name.trim().charAt(0).toUpperCase() || 'K';
-  const hue = Array.from(name).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+function ShortcutsSection() {
   return (
-    <span
-      className={
-        small
-          ? 'flex size-8 shrink-0 items-center justify-center rounded-md font-display text-xs font-bold text-white'
-          : 'flex size-12 shrink-0 items-center justify-center rounded-lg font-display text-base font-bold text-white'
-      }
-      style={{ background: `hsl(${hue} 55% 42%)` }}
-      aria-hidden="true"
-    >
-      {initial}
-    </span>
+    <section>
+      <SectionTitle label="Atalhos" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <ShortcutCard
+          href="/buscar-klubs"
+          icon={Search}
+          title="Buscar um Klub"
+          body="Encontre clubes pra entrar como sócio."
+        />
+        <ShortcutCard
+          href="/criar-klub"
+          icon={Plus}
+          title="Criar meu Klub"
+          body="Self-service: você vira Klub Admin."
+        />
+      </div>
+    </section>
   );
 }
 
@@ -296,5 +574,51 @@ function ShortcutCard({
       </div>
       <ArrowRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
     </Link>
+  );
+}
+
+// ─── SectionTitle ─────────────────────────────────────────────────────────────
+
+function SectionTitle({
+  label,
+  action,
+}: {
+  label: string;
+  action?: { href: string; label: string };
+}) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-2">
+      <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        {label}
+      </h2>
+      {action ? (
+        <Link
+          href={action.href}
+          className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {action.label} →
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+// ─── KlubAvatar ───────────────────────────────────────────────────────────────
+
+function KlubAvatar({ name, small }: { name: string; small?: boolean }) {
+  const initial = name.trim().charAt(0).toUpperCase() || 'K';
+  const hue = Array.from(name).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+  return (
+    <span
+      className={
+        small
+          ? 'flex size-8 shrink-0 items-center justify-center rounded-md font-display text-xs font-bold text-white'
+          : 'flex size-12 shrink-0 items-center justify-center rounded-lg font-display text-base font-bold text-white'
+      }
+      style={{ background: `hsl(${hue} 55% 42%)` }}
+      aria-hidden="true"
+    >
+      {initial}
+    </span>
   );
 }

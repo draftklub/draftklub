@@ -10,19 +10,15 @@ import {
   ChevronDown,
   ChevronRight,
   Home,
-  ListOrdered,
   LogOut,
   Loader2,
-  Shield,
-  Trophy,
   X,
 } from 'lucide-react';
 import type { PlayerSportEnrollment, UserKlubMembership, Role } from '@draftklub/shared-types';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { useAuth } from '@/components/auth-provider';
 import { listMyEnrollments } from '@/lib/api/enrollments';
-import { getMe, getMyKlubs } from '@/lib/api/me';
-import { isPlatformLevel, isPlatformOwner } from '@/lib/auth/role-helpers';
+import { getMyKlubs } from '@/lib/api/me';
 import { logout } from '@/lib/auth';
 import { forgetLastKlubSlug } from '@/lib/last-klub-cookie';
 import { cn } from '@/lib/utils';
@@ -41,32 +37,15 @@ const SPORT_LABELS: Record<string, string> = {
 };
 
 interface AppSidebarProps {
-  /** Em mobile, controla visibilidade do drawer. */
   open: boolean;
-  /** Callback pra fechar o drawer (mobile). */
   onClose: () => void;
 }
 
-/**
- * Sidebar persistente do shell autenticado. Sempre visível em md+,
- * vira drawer em mobile.
- *
- * Sprint Polish PR-H1 — reorganização:
- * - Você: Home, Reservas, Klubs, Torneios (em breve), Rankings (em breve)
- * - Seus Klubs: só nomes (Nome usual quando preenchido)
- * - Footer: avatar (clicável → perfil), notif, theme, logout
- *
- * `Criar Klub` e `Buscar Klubs` saem da sidebar e moram dentro de /klubs
- * (PR-H2). Convites removido (defer). Perfil duplicado removido — só
- * via avatar do footer.
- */
 export function AppSidebar({ open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
   const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
-  const [isPlatformAdminOrOwner, setIsPlatformAdminOrOwner] = React.useState(false);
-  const [isOwner, setIsOwner] = React.useState(false);
   const [enrollments, setEnrollments] = React.useState<EnrollmentWithProfile[]>([]);
 
   React.useEffect(() => {
@@ -78,13 +57,6 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
       .catch(() => {
         if (!cancelled) setKlubs([]);
       });
-    void getMe()
-      .then((me) => {
-        if (cancelled) return;
-        setIsPlatformAdminOrOwner(me.roleAssignments.some((r) => isPlatformLevel(r.role)));
-        setIsOwner(me.roleAssignments.some((r) => isPlatformOwner(r.role)));
-      })
-      .catch(() => null);
     listMyEnrollments()
       .then((data) => {
         if (!cancelled) setEnrollments(data);
@@ -97,14 +69,12 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
     };
   }, []);
 
-  /** Map de "klubId:sportCode" → status do user (active|pending|suspended|none). */
   const enrollmentStatusByKey = React.useMemo(() => {
     const map = new Map<string, SportEnrollmentStatus>();
     for (const e of enrollments) {
       const profile = e.klubSportProfile;
       if (!profile) continue;
       const key = `${profile.klubId}:${profile.sportCode}`;
-      // Prioridade: active > pending > suspended (mais recente vence em empate).
       const current = map.get(key);
       const status: SportEnrollmentStatus =
         e.status === 'active'
@@ -125,10 +95,9 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
     return map;
   }, [enrollments]);
 
-  // Match Klub ativo pelo pathname /k/[slug]/...
   const activeKlubSlug = React.useMemo(() => {
     const m = /^\/k\/([^/]+)/.exec(pathname);
-    return m ? m[1] : null;
+    return m ? (m[1] ?? null) : null;
   }, [pathname]);
 
   async function handleLogout() {
@@ -139,7 +108,6 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
 
   return (
     <>
-      {/* Backdrop mobile */}
       {open ? (
         <button
           type="button"
@@ -157,9 +125,9 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
         )}
       >
         {/* Brand row */}
-        <div className="flex items-center justify-between gap-2.5 border-b border-border px-5 pb-3 pt-4">
+        <div className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-4 pb-3.5 pt-4">
           <Link href="/home" className="flex items-center gap-2.5" onClick={onClose}>
-            <BrandLockup size="sm" />
+            <BrandLockup size="lg" />
           </Link>
           <button
             type="button"
@@ -171,102 +139,48 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           </button>
         </div>
 
-        {/* Você */}
-        <SectionLabel>Você</SectionLabel>
-        <nav className="flex flex-col gap-0.5 px-3 pb-1.5">
-          <NavLink
-            href="/home"
-            label="Home"
-            icon={Home}
-            active={pathname === '/home'}
-            onNavigate={onClose}
-          />
-          <NavLink
-            href="/minhas-reservas"
-            label="Reservas"
-            icon={CalendarCheck}
-            active={pathname === '/minhas-reservas'}
-            onNavigate={onClose}
-          />
-          <NavLink
-            href="/klubs"
-            label="Klubs"
-            icon={Castle}
-            active={
-              pathname === '/klubs' || pathname === '/criar-klub' || pathname === '/buscar-klubs'
-            }
-            onNavigate={onClose}
-          />
-          <NavLink
-            href="/notificacoes"
-            label="Notificações"
-            icon={Bell}
-            active={pathname.startsWith('/notificacoes')}
-            onNavigate={onClose}
-          />
-          <NavLink href="#" label="Torneios" icon={Trophy} disabled badge="em breve" />
-          <NavLink href="#" label="Rankings" icon={ListOrdered} disabled badge="em breve" />
-        </nav>
+        {/* Scrollable nav area */}
+        <div className="flex-1 overflow-y-auto py-2">
+          {/* Spacer — placeholder onde "Você" estava */}
+          <div className="h-1" />
 
-        {/* Seus Klubs — só nomes, sem botões de criar/buscar (movidos pra /klubs). */}
-        <SectionLabel>Seus Klubs</SectionLabel>
-        <nav className="flex flex-col gap-0.5 px-3">
-          {klubs === null ? (
-            <div className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" />
-              Carregando…
-            </div>
-          ) : klubs.length === 0 ? (
-            <p className="px-2.5 py-2 text-xs text-muted-foreground">
-              Nenhum Klub ainda.{' '}
-              <Link href="/klubs" className="font-semibold text-primary hover:underline">
-                Buscar
-              </Link>
-            </p>
-          ) : (
-            klubs.map((k) => (
-              <KlubItem
-                key={k.klubId}
-                klub={k}
-                active={activeKlubSlug === k.klubSlug}
-                pathname={pathname}
-                enrollmentStatusByKey={enrollmentStatusByKey}
-                onNavigate={onClose}
-              />
-            ))
-          )}
-        </nav>
+          <nav className="flex flex-col gap-0.5 px-3 pb-1.5">
+            <NavLink
+              href="/home"
+              label="Home"
+              icon={Home}
+              active={pathname === '/home'}
+              onNavigate={onClose}
+            />
+            <NavLink
+              href="/minhas-reservas"
+              label="Reservas"
+              icon={CalendarCheck}
+              active={pathname === '/minhas-reservas'}
+              onNavigate={onClose}
+            />
 
-        {/* Administrativa — Platform-level (Owner + Admin). PR-I1 / PR-J2b. */}
-        {isPlatformAdminOrOwner ? (
-          <>
-            <SectionLabel>Administrativa</SectionLabel>
-            <nav className="flex flex-col gap-0.5 px-3">
-              <NavLink
-                href="/admin/aprovacoes"
-                label="Aprovações"
-                icon={Shield}
-                active={
-                  pathname.startsWith('/admin/aprovacoes') ||
-                  pathname.startsWith('/admin/cadastros')
-                }
-                onNavigate={onClose}
-              />
-              {isOwner ? (
-                <NavLink
-                  href="/admin/platform-admins"
-                  label="Platform Admins"
-                  icon={Shield}
-                  active={pathname.startsWith('/admin/platform-admins')}
-                  onNavigate={onClose}
-                />
-              ) : null}
-            </nav>
-          </>
-        ) : null}
+            {/* Klubs — accordion com klubs inscritos */}
+            <KlubsAccordion
+              klubs={klubs}
+              activeKlubSlug={activeKlubSlug}
+              pathname={pathname}
+              enrollmentStatusByKey={enrollmentStatusByKey}
+              onNavigate={onClose}
+            />
+
+            <NavLink
+              href="/notificacoes"
+              label="Notificações"
+              icon={Bell}
+              active={pathname.startsWith('/notificacoes')}
+              onNavigate={onClose}
+            />
+          </nav>
+        </div>
 
         {/* Footer */}
-        <div className="mt-auto border-t border-border p-3">
+        <div className="shrink-0 border-t border-border p-3">
           <Link
             href="/perfil"
             onClick={onClose}
@@ -302,13 +216,256 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+// ─── KlubsAccordion ──────────────────────────────────────────────────────────
+
+function KlubsAccordion({
+  klubs,
+  activeKlubSlug,
+  pathname,
+  enrollmentStatusByKey,
+  onNavigate,
+}: {
+  klubs: UserKlubMembership[] | null;
+  activeKlubSlug: string | null;
+  pathname: string;
+  enrollmentStatusByKey: Map<string, SportEnrollmentStatus>;
+  onNavigate?: () => void;
+}) {
+  const [expanded, setExpanded] = React.useState(activeKlubSlug !== null);
+  const isActive =
+    pathname === '/klubs' || pathname === '/criar-klub' || pathname === '/buscar-klubs';
+  const ChevIcon = expanded ? ChevronDown : ChevronRight;
+
   return (
-    <p className="mt-2 px-5 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-      {children}
-    </p>
+    <div>
+      <div
+        className={cn(
+          'flex items-center gap-1 rounded-lg pr-1 transition-colors',
+          isActive ? 'bg-primary/10' : 'hover:bg-muted',
+        )}
+      >
+        <Link
+          href="/klubs"
+          onClick={onNavigate}
+          className={cn(
+            'flex min-w-0 flex-1 items-center gap-2.75 rounded-lg px-2.5 py-1.75 text-sm',
+            isActive
+              ? 'font-semibold text-[hsl(var(--brand-primary-600))]'
+              : 'font-medium text-foreground',
+          )}
+        >
+          <Castle
+            className={cn(
+              'size-4.25 shrink-0',
+              isActive ? 'text-primary' : 'text-muted-foreground',
+            )}
+            strokeWidth={1.8}
+          />
+          <span className="flex-1 truncate">Klubs</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setExpanded((x) => !x)}
+          aria-label={expanded ? 'Recolher Klubs' : 'Expandir Klubs'}
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground"
+        >
+          <ChevIcon className="size-3.5" />
+        </button>
+      </div>
+
+      {expanded ? (
+        <div className="ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
+          {klubs === null ? (
+            <div className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              Carregando…
+            </div>
+          ) : klubs.length === 0 ? (
+            <p className="px-2.5 py-2 text-xs text-muted-foreground">
+              Nenhum Klub ainda.{' '}
+              <Link href="/klubs" className="font-semibold text-primary hover:underline">
+                Buscar
+              </Link>
+            </p>
+          ) : (
+            klubs.map((k) => (
+              <KlubItem
+                key={k.klubId}
+                klub={k}
+                pathname={pathname}
+                enrollmentStatusByKey={enrollmentStatusByKey}
+                onNavigate={onNavigate}
+              />
+            ))
+          )}
+        </div>
+      ) : null}
+    </div>
   );
 }
+
+// ─── KlubItem ─────────────────────────────────────────────────────────────────
+
+function KlubItem({
+  klub,
+  pathname,
+  enrollmentStatusByKey,
+  onNavigate,
+}: {
+  klub: UserKlubMembership;
+  pathname: string;
+  enrollmentStatusByKey: Map<string, SportEnrollmentStatus>;
+  onNavigate?: () => void;
+}) {
+  const label = klub.klubCommonName ?? klub.klubName;
+  const sports = klub.sports ?? [];
+  const [expanded, setExpanded] = React.useState(false);
+  const hasSports = sports.length > 0;
+  const ChevIcon = expanded ? ChevronDown : ChevronRight;
+
+  return (
+    <div>
+      <div className="flex items-center gap-1 rounded-lg pr-1 transition-colors hover:bg-muted">
+        <Link
+          href={`/k/${klub.klubSlug}/dashboard`}
+          onClick={onNavigate}
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.75 text-sm font-medium"
+        >
+          <KlubAvatar name={label} size="sm" />
+          <span className="min-w-0 flex-1 truncate">{label}</span>
+          {klub.role ? <RoleDot role={klub.role} /> : null}
+        </Link>
+        {hasSports ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((x) => !x)}
+            aria-label={expanded ? 'Recolher modalidades' : 'Expandir modalidades'}
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground"
+          >
+            <ChevIcon className="size-3.5" />
+          </button>
+        ) : null}
+      </div>
+
+      {expanded && hasSports ? (
+        <ul className="ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
+          {sports.map((code) => (
+            <li key={code}>
+              <SportLink
+                klubSlug={klub.klubSlug}
+                klubId={klub.klubId}
+                sportCode={code}
+                status={enrollmentStatusByKey.get(`${klub.klubId}:${code}`) ?? 'none'}
+                onNavigate={onNavigate}
+              />
+              {/* Torneios + Rankings sub-links */}
+              <div className="ml-3 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
+                <SubLink
+                  href={`/k/${klub.klubSlug}/sports/${code}/torneios`}
+                  label="Torneios"
+                  pathname={pathname}
+                  onNavigate={onNavigate}
+                />
+                <SubLink
+                  href={`/k/${klub.klubSlug}/sports/${code}/rankings`}
+                  label="Rankings"
+                  pathname={pathname}
+                  onNavigate={onNavigate}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+// ─── SportLink ────────────────────────────────────────────────────────────────
+
+function SportLink({
+  klubSlug,
+  klubId,
+  sportCode,
+  status,
+  onNavigate,
+}: {
+  klubSlug: string;
+  klubId: string;
+  sportCode: string;
+  status: SportEnrollmentStatus;
+  onNavigate?: () => void;
+}) {
+  void klubId;
+  const label = SPORT_LABELS[sportCode] ?? sportCode;
+  const dashboardHref = `/k/${klubSlug}/sports/${sportCode}/dashboard`;
+  const enrollHref = `/k/${klubSlug}/sports/${sportCode}/enroll`;
+  const href = status === 'active' ? dashboardHref : status === 'none' ? enrollHref : null;
+
+  const inner = (
+    <span className="flex flex-1 items-center justify-between gap-2">
+      <span className="truncate">{label}</span>
+      {status === 'pending' ? (
+        <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+          pendente
+        </span>
+      ) : status === 'suspended' ? (
+        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          suspenso
+        </span>
+      ) : status === 'none' ? (
+        <span className="text-xs text-muted-foreground">solicitar</span>
+      ) : null}
+    </span>
+  );
+
+  const cls =
+    'flex items-center gap-2 rounded px-2 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted';
+
+  if (!href) {
+    return (
+      <span className={cn(cls, 'cursor-not-allowed opacity-70 hover:bg-transparent')}>{inner}</span>
+    );
+  }
+
+  return (
+    <Link href={href} onClick={onNavigate} className={cls}>
+      {inner}
+    </Link>
+  );
+}
+
+// ─── SubLink (Torneios / Rankings) ────────────────────────────────────────────
+
+function SubLink({
+  href,
+  label,
+  pathname,
+  onNavigate,
+}: {
+  href: string;
+  label: string;
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  const isActive = pathname.startsWith(href);
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      className={cn(
+        'flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-colors',
+        isActive
+          ? 'font-semibold text-[hsl(var(--brand-primary-600))]'
+          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+      )}
+    >
+      {label}
+    </Link>
+  );
+}
+
+// ─── NavLink ──────────────────────────────────────────────────────────────────
 
 interface NavLinkProps {
   href: string;
@@ -359,153 +516,7 @@ function NavLink({ href, label, icon: Icon, active, disabled, badge, onNavigate 
   );
 }
 
-/**
- * Sprint Polish PR-H3 — item de Klub na sidebar com submenu colapsável
- * de modalidades. Click no nome navega pro dashboard E expande o
- * submenu. Cada modalidade mostra status de enrollment do user:
- * - active → link pro sport dashboard
- * - pending → tag "pendente" disabled
- * - suspended → tag "suspenso" disabled
- * - none → link pro request enrollment page
- */
-function KlubItem({
-  klub,
-  active,
-  pathname,
-  enrollmentStatusByKey,
-  onNavigate,
-}: {
-  klub: UserKlubMembership;
-  active: boolean;
-  pathname: string;
-  enrollmentStatusByKey: Map<string, SportEnrollmentStatus>;
-  onNavigate?: () => void;
-}) {
-  const label = klub.klubCommonName ?? klub.klubName;
-  const sports = klub.sports ?? [];
-  // Klub ativo começa expandido. Outros user expande manualmente.
-  const [expanded, setExpanded] = React.useState(active);
-  React.useEffect(() => {
-    if (active) setExpanded(true);
-  }, [active]);
-
-  const hasSports = sports.length > 0;
-  const ChevIcon = expanded ? ChevronDown : ChevronRight;
-
-  return (
-    <div>
-      <div
-        className={cn(
-          'flex items-center gap-1 rounded-lg pr-1 transition-colors',
-          active
-            ? 'bg-primary/10 text-[hsl(var(--brand-primary-600))]'
-            : 'text-foreground hover:bg-muted',
-        )}
-      >
-        <Link
-          href={`/k/${klub.klubSlug}/dashboard`}
-          onClick={onNavigate}
-          className={cn(
-            'flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.75 text-sm',
-            active ? 'font-semibold' : 'font-medium',
-          )}
-        >
-          <KlubAvatar name={label} size="sm" />
-          <span className="min-w-0 flex-1 truncate">{label}</span>
-          {klub.role ? <RoleDot role={klub.role} /> : null}
-        </Link>
-        {hasSports ? (
-          <button
-            type="button"
-            onClick={() => setExpanded((x) => !x)}
-            aria-label={expanded ? 'Recolher modalidades' : 'Expandir modalidades'}
-            className="inline-flex size-7 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground"
-          >
-            <ChevIcon className="size-3.5" />
-          </button>
-        ) : null}
-      </div>
-      {expanded && hasSports ? (
-        <ul className="ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
-          {sports.map((code) => (
-            <li key={code}>
-              <SportLink
-                klubSlug={klub.klubSlug}
-                klubId={klub.klubId}
-                sportCode={code}
-                status={enrollmentStatusByKey.get(`${klub.klubId}:${code}`) ?? 'none'}
-                pathname={pathname}
-                onNavigate={onNavigate}
-              />
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
-}
-
-function SportLink({
-  klubSlug,
-  klubId,
-  sportCode,
-  status,
-  pathname,
-  onNavigate,
-}: {
-  klubSlug: string;
-  klubId: string;
-  sportCode: string;
-  status: SportEnrollmentStatus;
-  pathname: string;
-  onNavigate?: () => void;
-}) {
-  void klubId;
-  const label = SPORT_LABELS[sportCode] ?? sportCode;
-  const dashboardHref = `/k/${klubSlug}/sports/${sportCode}/dashboard`;
-  const enrollHref = `/k/${klubSlug}/sports/${sportCode}/enroll`;
-  const href = status === 'active' ? dashboardHref : status === 'none' ? enrollHref : null;
-  const isActive =
-    pathname === dashboardHref || pathname === enrollHref || pathname.startsWith(dashboardHref);
-
-  const inner = (
-    <span className="flex flex-1 items-center justify-between gap-2">
-      <span className="truncate">{label}</span>
-      {status === 'pending' ? (
-        <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
-          pendente
-        </span>
-      ) : status === 'suspended' ? (
-        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
-          suspenso
-        </span>
-      ) : status === 'none' ? (
-        <span className="text-xs text-muted-foreground">solicitar</span>
-      ) : null}
-    </span>
-  );
-
-  const cls = cn(
-    'flex items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors',
-    isActive
-      ? 'bg-primary/10 font-semibold text-[hsl(var(--brand-primary-600))]'
-      : status === 'active'
-        ? 'font-medium text-foreground hover:bg-muted'
-        : 'text-muted-foreground hover:bg-muted',
-  );
-
-  if (!href) {
-    return (
-      <span className={cn(cls, 'cursor-not-allowed opacity-70 hover:bg-transparent')}>{inner}</span>
-    );
-  }
-
-  return (
-    <Link href={href} onClick={onNavigate} className={cls}>
-      {inner}
-    </Link>
-  );
-}
+// ─── KlubAvatar ───────────────────────────────────────────────────────────────
 
 function KlubAvatar({ name, size = 'sm' }: { name: string; size?: 'sm' }) {
   const initial = name.trim().charAt(0).toUpperCase() || 'K';
@@ -524,6 +535,8 @@ function KlubAvatar({ name, size = 'sm' }: { name: string; size?: 'sm' }) {
     </span>
   );
 }
+
+// ─── Avatar ───────────────────────────────────────────────────────────────────
 
 function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
   const initial = name.trim().charAt(0).toUpperCase() || '?';
@@ -548,6 +561,8 @@ function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
     </span>
   );
 }
+
+// ─── RoleDot ──────────────────────────────────────────────────────────────────
 
 function RoleDot({ role }: { role: Role }) {
   const isAdmin = role === 'KLUB_ADMIN' || role === 'PLATFORM_OWNER';

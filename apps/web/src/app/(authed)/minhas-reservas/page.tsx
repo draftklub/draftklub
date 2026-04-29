@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { CalendarDays, Clock, Loader2, MapPin, Plus, Timer, X } from 'lucide-react';
+import { CalendarDays, Clock, History, Loader2, MapPin, Plus, Timer, X } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { UserKlubMembership } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils';
  * - Adicionar player (só primary player)
  */
 
-type Tab = 'upcoming' | 'past' | 'cancelled';
+type Tab = 'upcoming' | 'past';
 
 export default function MinhasReservasPage() {
   const { user } = useAuth();
@@ -82,7 +82,6 @@ export default function MinhasReservasPage() {
   const filtered = (bookings ?? []).filter((b) => {
     const start = new Date(b.startsAt).getTime();
     const isCancelled = b.status === 'cancelled' || b.status === 'rejected';
-    if (tab === 'cancelled') return isCancelled;
     if (tab === 'upcoming') return !isCancelled && start >= now;
     return !isCancelled && start < now;
   });
@@ -92,9 +91,6 @@ export default function MinhasReservasPage() {
       <div className="mx-auto max-w-2xl space-y-4">
         <header className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--brand-primary-600))]">
-              Você
-            </p>
             <h1
               className="mt-1 font-display text-2xl font-bold leading-tight md:text-3xl"
               style={{ letterSpacing: '-0.02em' }}
@@ -114,9 +110,24 @@ export default function MinhasReservasPage() {
 
         <Tabs
           tabs={[
-            { id: 'upcoming', label: 'Próximas' },
-            { id: 'past', label: 'Passadas' },
-            { id: 'cancelled', label: 'Canceladas' },
+            {
+              id: 'upcoming',
+              label: (
+                <span className="inline-flex items-center gap-1.5">
+                  <CalendarDays className="size-3.5" />
+                  Próximas
+                </span>
+              ),
+            },
+            {
+              id: 'past',
+              label: (
+                <span className="inline-flex items-center gap-1.5">
+                  <History className="size-3.5" />
+                  Histórico
+                </span>
+              ),
+            },
           ]}
           active={tab}
           onChange={(id) => setTab(id as Tab)}
@@ -664,12 +675,7 @@ function StatusBadge({
 }
 
 function BookingEmptyState({ tab }: { tab: Tab }) {
-  const title =
-    tab === 'upcoming'
-      ? 'Sem reservas agendadas'
-      : tab === 'past'
-        ? 'Sem reservas passadas'
-        : 'Sem reservas canceladas';
+  const title = tab === 'upcoming' ? 'Sem reservas agendadas' : 'Sem histórico de reservas';
   const description =
     tab === 'upcoming' ? 'Entre num Klub e use o botão Reservar quadra pra agendar.' : undefined;
   return <EmptyState icon={MapPin} title={title} description={description} />;

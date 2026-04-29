@@ -84,7 +84,7 @@ export default function CriarContaPage() {
           style={{ color: 'hsl(var(--brand-primary-200) / 0.7)' }}
         >
           <span>© DraftKlub 2026</span>
-          <span>v2.4 · São Paulo, BR</span>
+          <span>v1.0</span>
         </div>
       </section>
 

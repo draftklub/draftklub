@@ -91,7 +91,7 @@ export default function LoginPage() {
           style={{ color: 'hsl(var(--brand-primary-200) / 0.7)' }}
         >
           <span>© DraftKlub 2026</span>
-          <span>v2.4 · São Paulo, BR</span>
+          <span>v1.0</span>
         </div>
       </section>
 
@@ -144,9 +144,9 @@ export default function LoginPage() {
               className="mb-1 font-display text-3xl font-bold text-foreground"
               style={{ letterSpacing: '-0.02em' }}
             >
-              Entrar
+              Acesse sua conta
             </h2>
-            <p className="mb-7 text-sm text-muted-foreground">Acesse sua conta no clube.</p>
+            <p className="mb-7 text-sm text-muted-foreground">Entre com e-mail ou Google.</p>
             <LoginForm formWidth="100%" />
             <div className="mt-8 border-t border-border pt-5 text-center text-sm text-muted-foreground">
               Sem conta?{' '}

@@ -61,7 +61,7 @@ export function Tabs({
 
   return (
     <nav className={cn('-mx-4 overflow-x-auto border-b border-border md:mx-0', className)}>
-      <ul className="flex min-w-max gap-1 px-4 md:px-0">
+      <ul className="flex gap-1 px-4 md:px-0">
         {visibleTabs.map((tab) => (
           <li key={tab.id}>
             {mode === 'link' && tab.href ? (
