@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -30,4 +32,19 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// withSentryConfig só ativa upload de source maps quando SENTRY_AUTH_TOKEN
+// é fornecido em build-time. Sem auth token, vira no-op funcional —
+// runtime Sentry continua sendo controlado por SENTRY_DSN /
+// NEXT_PUBLIC_SENTRY_DSN nos arquivos sentry.*.config.ts.
+const sentryWebpackPluginOptions = {
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT ?? 'draftklub-web',
+  // Disabled by default — habilitar quando tivermos SENTRY_AUTH_TOKEN
+  // em Cloud Build pra source maps upload.
+  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  tunnelRoute: '/monitoring',
+};
+
+export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);

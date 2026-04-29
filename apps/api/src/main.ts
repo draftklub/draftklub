@@ -1,3 +1,7 @@
+// Sentry instrumentation MUST be the first import — pre-loads o
+// auto-instrument antes de qualquer require de framework.
+import './instrument';
+
 import { NestFactory } from '@nestjs/core';
 import { type NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
 import helmet from '@fastify/helmet';

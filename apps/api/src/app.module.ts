@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { validateConfig } from './bootstrap/config/app.config';
@@ -25,6 +26,9 @@ import { FeaturesModule } from './modules/features/features.module';
 
 @Module({
   imports: [
+    // Sentry primeiro pra interceptar exceptions de outros módulos.
+    // forRoot() não recebe DSN — Sentry.init já rodou em instrument.ts.
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateConfig,
@@ -70,6 +74,13 @@ import { FeaturesModule } from './modules/features/features.module';
     BookingModule,
     FeaturesModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    // SentryGlobalFilter captura exceptions não-tratadas e envia pro
+    // Sentry mantendo o flow padrão do Nest (re-throw). Coloca antes do
+    // ZodExceptionFilter (que é registrado em main.ts via
+    // useGlobalFilters); APP_FILTER é avaliado primeiro e não consome.
+    { provide: APP_FILTER, useClass: SentryGlobalFilter },
+  ],
 })
 export class AppModule {}
