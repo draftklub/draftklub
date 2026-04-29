@@ -5,13 +5,9 @@
  * Cobre a aba de operações do torneio: OperacoesView + EditTournamentSection +
  * EditTournamentModal + CancelTournamentSection + DrawSection + ScheduleSection +
  * ReportingModeSection + ScheduleModal e helpers de data/formulário.
- *
- * Helpers (inputCls, toErrorMessage, useSportCodeFromTournament) duplicados
- * temporariamente — próximo batch consolida em `./_shared`.
  */
 
 import * as React from 'react';
-import { useParams } from 'next/navigation';
 import {
   CalendarRange,
   Dices,
@@ -28,7 +24,6 @@ import type {
   TournamentDetail,
   TournamentResultReportingMode,
 } from '@draftklub/shared-types';
-import { ApiError } from '@/lib/api/client';
 import { listKlubSpaces } from '@/lib/api/spaces';
 import {
   cancelTournament,
@@ -41,6 +36,7 @@ import {
 } from '@/lib/api/tournaments';
 import { Banner } from '@/components/ui/banner';
 import { cn } from '@/lib/utils';
+import { inputCls, toErrorMessage, useSportCodeFromTournament } from './_shared';
 
 export function OperacoesView({
   tournament,
@@ -429,12 +425,7 @@ function localToIso(local: string): string {
   return new Date(local).toISOString();
 }
 
-function useSportCodeFromTournament(_tournament: TournamentDetail): string {
-  // sportCode vive na URL; lemos via useParams. Wrapper hook pra evitar
-  // ter que passar sportCode por props pelas seções inteiras.
-  const params = useParams<{ sportCode: string }>();
-  return params.sportCode;
-}
+// useSportCodeFromTournament → importado de ./_shared
 
 function CancelTournamentSection({
   tournament,
@@ -1017,11 +1008,4 @@ function formatToday(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-const inputCls =
-  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
-
-function toErrorMessage(err: unknown, fallback: string): string {
-  if (err instanceof ApiError) return err.message;
-  if (err instanceof Error) return err.message;
-  return fallback;
-}
+// inputCls, toErrorMessage → importados de ./_shared

@@ -5,15 +5,11 @@
  * Cobre o lado consumer da rota /torneios/:id/inscritos: EntriesView +
  * RegistrationCTA (CTA do player), EntryRow (cada inscrito), MoveCategoryModal
  * e EntryStatusBadge.
- *
- * Helpers (`toErrorMessage`, `inputCls`) duplicados temporariamente —
- * próximo batch consolida em `./_shared`.
  */
 
 import * as React from 'react';
 import { CheckCircle2, Inbox, Loader2, Trophy, Users, XCircle } from 'lucide-react';
 import type { TournamentDetail, TournamentEntry } from '@draftklub/shared-types';
-import { ApiError } from '@/lib/api/client';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -22,15 +18,7 @@ import {
   registerTournamentEntry,
   withdrawMyTournamentEntry,
 } from '@/lib/api/tournaments';
-
-const inputCls =
-  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
-
-function toErrorMessage(err: unknown, fallback: string): string {
-  if (err instanceof ApiError) return err.message;
-  if (err instanceof Error) return err.message;
-  return fallback;
-}
+import { inputCls, toErrorMessage } from './_shared';
 
 // ─── Entries view ───────────────────────────────────────────────────────
 

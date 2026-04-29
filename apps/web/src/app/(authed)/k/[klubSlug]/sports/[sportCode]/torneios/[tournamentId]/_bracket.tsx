@@ -5,21 +5,16 @@
  * Cobre o lado visual da chave: BracketView, BracketByPhases, BracketSection,
  * BracketGrid, MatchCard, PlayerSlot, MatchActionModal, WalkoverActions,
  * RevertSection, RevertModal, RevertPreview e helpers de score.
- *
- * Helpers (`toErrorMessage`) duplicados temporariamente —
- * próximo batch consolida em `./_shared`.
  */
 
 import * as React from 'react';
 import { CheckCircle2, Crown, Dices, Loader2, Save, Trophy } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import type {
   PreviewMatchRevertResult,
   TournamentBracket,
   TournamentDetail,
   TournamentMatchView,
 } from '@draftklub/shared-types';
-import { ApiError } from '@/lib/api/client';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -33,20 +28,7 @@ import {
 } from '@/lib/api/tournaments';
 import { validateMatchScore } from '@/lib/sport-validation';
 import { cn } from '@/lib/utils';
-
-const inputCls =
-  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
-
-function toErrorMessage(err: unknown, fallback: string): string {
-  if (err instanceof ApiError) return err.message;
-  if (err instanceof Error) return err.message;
-  return fallback;
-}
-
-function useSportCodeFromTournament(_tournament: TournamentDetail): string {
-  const params = useParams<{ sportCode: string }>();
-  return params.sportCode;
-}
+import { inputCls, toErrorMessage, useSportCodeFromTournament } from './_shared';
 
 // ─── Bracket view ───────────────────────────────────────────────────────
 
