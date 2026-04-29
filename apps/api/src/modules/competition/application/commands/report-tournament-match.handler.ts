@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { MetricsService } from '../../../../shared/metrics/metrics.service';
 import { RatingCalculatorService } from '../../../ranking/domain/rating-calculator.service';
 import { TournamentProgressionService } from '../../domain/services/tournament-progression.service';
 
@@ -27,6 +28,7 @@ export class ReportTournamentMatchHandler {
     private readonly prisma: PrismaService,
     private readonly calculator: RatingCalculatorService,
     private readonly progression: TournamentProgressionService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async execute(cmd: ReportTournamentMatchCommand) {
@@ -107,7 +109,7 @@ export class ReportTournamentMatchHandler {
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const matchResult = await tx.matchResult.create({
         data: {
           rankingId: match.tournament.rankingId,
@@ -185,6 +187,8 @@ export class ReportTournamentMatchHandler {
 
       return matchResult;
     });
+    this.metrics.matchReported('tournament');
+    return result;
   }
 }
 

@@ -35,6 +35,8 @@ export class MetricsService {
     private readonly klubCreatedTotal: Counter<'plan'>,
     @InjectMetric('membership_request_decided_total')
     private readonly membershipRequestDecidedTotal: Counter<'decision'>,
+    @InjectMetric('klub_review_decided_total')
+    private readonly klubReviewDecidedTotal: Counter<'decision'>,
   ) {}
 
   bookingCreated(klubId: string, status: 'pending' | 'confirmed'): void {
@@ -63,6 +65,10 @@ export class MetricsService {
 
   membershipRequestDecided(decision: 'approved' | 'rejected'): void {
     this.safe(() => this.membershipRequestDecidedTotal.inc({ decision }));
+  }
+
+  klubReviewDecided(decision: 'approved' | 'rejected'): void {
+    this.safe(() => this.klubReviewDecidedTotal.inc({ decision }));
   }
 
   private safe(fn: () => void): void {

@@ -58,6 +58,11 @@ import { MetricsService } from './metrics.service';
       help: 'Solicitações de entrada decididas, label decision=approved|rejected',
       labelNames: ['decision'],
     }),
+    makeCounterProvider({
+      name: 'klub_review_decided_total',
+      help: 'Klubs cadastrados moderados pelo platform admin, decision=approved|rejected',
+      labelNames: ['decision'],
+    }),
   ],
   exports: [MetricsService],
 })

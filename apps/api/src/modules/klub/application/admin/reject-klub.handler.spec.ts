@@ -31,6 +31,7 @@ function buildHandler(
   const handler = new RejectKlubHandler(
     prisma as unknown as PrismaService,
     { record: vi.fn().mockResolvedValue(undefined) } as never,
+    { klubReviewDecided: vi.fn() } as never,
   );
   return { handler, update, outbox };
 }

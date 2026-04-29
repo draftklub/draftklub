@@ -35,6 +35,7 @@ function buildHandler(opts: { klub?: MockKlub | null; conflict?: { name: string 
   const handler = new ApproveKlubHandler(
     prisma as unknown as PrismaService,
     { record: vi.fn().mockResolvedValue(undefined) } as never,
+    { klubReviewDecided: vi.fn() } as never,
   );
   return { handler, tx, klubUpdate, outboxCreate };
 }
