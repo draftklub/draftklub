@@ -13,6 +13,7 @@ import type {
 } from '@draftklub/shared-types';
 import { discoverKlubs, joinKlubBySlug } from '@/lib/api/klubs';
 import { requestMembership } from '@/lib/api/membership-requests';
+import { Modal } from '@/components/ui/modal';
 import { listSports } from '@/lib/api/sports';
 import { getMe } from '@/lib/api/me';
 import { BRAZILIAN_STATES } from '@/lib/brazilian-states';
@@ -495,28 +496,15 @@ function RequestMembershipModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card p-5">
-        <h2 className="font-display text-lg font-bold">Solicitar entrada em {klubName}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          O admin do Klub vai revisar. Inclua sua matrícula, indicação ou outra informação que ajude
-          a identificar você.
-        </p>
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Ex: Sou sócio nº 12345 — fui indicado pelo João da Silva."
-          rows={4}
-          maxLength={1000}
-          className="mt-3 w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
-        />
-        <p className="mt-1 text-right text-xs text-muted-foreground">
-          {message.trim().length}/1000 (mín 10)
-        </p>
-        {error ? (
-          <Banner tone="error">{error}</Banner>
-        ) : null}
-        <div className="mt-4 flex justify-end gap-2">
+    <Modal
+      title={`Solicitar entrada em ${klubName}`}
+      description="O admin do Klub vai revisar. Inclua sua matrícula, indicação ou outra informação que ajude a identificar você."
+      open
+      onClose={onClose}
+      size="sm"
+      dismissOnBackdropClick={!submitting}
+      footer={
+        <>
           <button
             type="button"
             onClick={onClose}
@@ -538,9 +526,24 @@ function RequestMembershipModal({
             )}
             Enviar solicitação
           </button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Ex: Sou sócio nº 12345 — fui indicado pelo João da Silva."
+        rows={4}
+        maxLength={1000}
+        className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+      />
+      <p className="mt-1 text-right text-xs text-muted-foreground">
+        {message.trim().length}/1000 (mín 10)
+      </p>
+      {error ? (
+        <Banner tone="error">{error}</Banner>
+      ) : null}
+    </Modal>
   );
 }
 

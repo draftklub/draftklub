@@ -17,6 +17,7 @@ import {
 import type { AdminPendingKlubDetail } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { approveKlub, getPendingKlub, rejectKlub, updatePendingKlub } from '@/lib/api/admin-klubs';
+import { Modal } from '@/components/ui/modal';
 import { hintDocument } from '@/lib/format-document';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
@@ -384,51 +385,51 @@ export default function CadastroDetailPage() {
         ) : null}
       </div>
 
-      {/* Reject modal */}
-      {rejectModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl border border-border bg-card p-5">
-            <h2 className="font-display text-lg font-bold">Rejeitar cadastro</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Escreve um motivo claro — o usuário vai receber por email.
-            </p>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Ex: CNPJ não encontrado na Receita Federal. Conferir os dígitos."
-              rows={4}
-              maxLength={500}
-              className="mt-3 w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
-            />
-            <p className="mt-1 text-right text-xs text-muted-foreground">
-              {rejectReason.trim().length}/500 (mín 10)
-            </p>
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setRejectModalOpen(false)}
-                disabled={rejectSaving}
-                className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleReject()}
-                disabled={rejectReason.trim().length < 10 || rejectSaving}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-sm font-semibold text-white disabled:opacity-60"
-              >
-                {rejectSaving ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <X className="size-3.5" />
-                )}
-                Rejeitar
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <Modal
+        title="Rejeitar cadastro"
+        description="Escreve um motivo claro — o usuário vai receber por email."
+        open={rejectModalOpen}
+        onClose={() => setRejectModalOpen(false)}
+        size="sm"
+        dismissOnBackdropClick={!rejectSaving}
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setRejectModalOpen(false)}
+              disabled={rejectSaving}
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleReject()}
+              disabled={rejectReason.trim().length < 10 || rejectSaving}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-sm font-semibold text-white disabled:opacity-60"
+            >
+              {rejectSaving ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <X className="size-3.5" />
+              )}
+              Rejeitar
+            </button>
+          </>
+        }
+      >
+        <textarea
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+          placeholder="Ex: CNPJ não encontrado na Receita Federal. Conferir os dígitos."
+          rows={4}
+          maxLength={500}
+          className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        />
+        <p className="mt-1 text-right text-xs text-muted-foreground">
+          {rejectReason.trim().length}/500 (mín 10)
+        </p>
+      </Modal>
     </main>
   );
 }
@@ -447,7 +448,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[110px_1fr] items-baseline gap-3 py-1 text-sm">
-      <dt className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground">
+      <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </dt>
       <dd>{children}</dd>
