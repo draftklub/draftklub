@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { AlertCircle, ArrowLeft, Check, CheckCircle2, Loader2, X } from 'lucide-react';
+import { Modal } from '@/components/ui/modal';
 import type { MembershipRequestAdminItem, MembershipRequestStatus } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -321,29 +322,15 @@ function RejectModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card p-5">
-        <h2 className="font-display text-lg font-bold">Rejeitar solicitação</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          {applicantName} vai receber este motivo por email.
-        </p>
-        <textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Ex: Não conseguimos confirmar sua matrícula. Entre em contato com a secretaria."
-          rows={4}
-          maxLength={500}
-          className="mt-3 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
-        />
-        <p className="mt-1 text-right text-[11px] text-muted-foreground">
-          {reason.trim().length}/500 (mín 10)
-        </p>
-        {error ? (
-          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-            {error}
-          </p>
-        ) : null}
-        <div className="mt-4 flex justify-end gap-2">
+    <Modal
+      title="Rejeitar solicitação"
+      description={`${applicantName} vai receber este motivo por email.`}
+      open
+      onClose={onClose}
+      size="sm"
+      dismissOnBackdropClick={!submitting}
+      footer={
+        <>
           <button
             type="button"
             onClick={onClose}
@@ -365,9 +352,26 @@ function RejectModal({
             )}
             Rejeitar
           </button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <textarea
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="Ex: Não conseguimos confirmar sua matrícula. Entre em contato com a secretaria."
+        rows={4}
+        maxLength={500}
+        className="w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+      />
+      <p className="mt-1 text-right text-[11px] text-muted-foreground">
+        {reason.trim().length}/500 (mín 10)
+      </p>
+      {error ? (
+        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </Modal>
   );
 }
 

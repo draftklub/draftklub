@@ -21,6 +21,7 @@ import {
   revokePlatformRole,
 } from '@/lib/api/role-assignments';
 import { isPlatformOwner } from '@/lib/auth/role-helpers';
+import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/utils';
 
 /**
@@ -271,12 +272,10 @@ function AssignmentRow({
   onError: (msg: string) => void;
 }) {
   const [submitting, setSubmitting] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   async function handleRevoke() {
-    if (submitting) return;
-    if (!window.confirm(`Revogar PLATFORM_ADMIN de ${item.userFullName} (${item.userEmail})?`)) {
-      return;
-    }
+    setConfirmOpen(false);
     setSubmitting(true);
     try {
       await revokePlatformRole(item.id);
@@ -288,29 +287,63 @@ function AssignmentRow({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate font-display text-[14px] font-bold">{item.userFullName}</p>
-          <RoleBadge role={item.role} />
+    <>
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate font-display text-[14px] font-bold">{item.userFullName}</p>
+            <RoleBadge role={item.role} />
+          </div>
+          <p className="mt-0.5 truncate text-[12px] text-muted-foreground">{item.userEmail}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Concedido em {new Date(item.grantedAt).toLocaleDateString('pt-BR')}
+          </p>
         </div>
-        <p className="mt-0.5 truncate text-[12px] text-muted-foreground">{item.userEmail}</p>
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          Concedido em {new Date(item.grantedAt).toLocaleDateString('pt-BR')}
-        </p>
+        {canRevoke ? (
+          <button
+            type="button"
+            onClick={() => setConfirmOpen(true)}
+            disabled={submitting}
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+          >
+            {submitting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+            Revogar
+          </button>
+        ) : null}
       </div>
-      {canRevoke ? (
-        <button
-          type="button"
-          onClick={() => void handleRevoke()}
-          disabled={submitting}
-          className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
-        >
-          {submitting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
-          Revogar
-        </button>
-      ) : null}
-    </div>
+
+      <Modal
+        title="Revogar acesso"
+        description={`Revogar PLATFORM_ADMIN de ${item.userFullName} (${item.userEmail})?`}
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        size="sm"
+        dismissOnBackdropClick={!submitting}
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(false)}
+              disabled={submitting}
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleRevoke()}
+              disabled={submitting}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
+            >
+              {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+              Revogar
+            </button>
+          </>
+        }
+      >
+        <p className="text-[13.5px] text-muted-foreground">Esta ação remove o acesso administrativo imediatamente. O usuário pode ser readicionado se necessário.</p>
+      </Modal>
+    </>
   );
 }
 
