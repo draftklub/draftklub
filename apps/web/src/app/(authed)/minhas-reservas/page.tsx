@@ -283,13 +283,13 @@ function BookingCard({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/k/${booking.klub.slug}/dashboard`}
-            className="truncate text-xs font-bold uppercase tracking-widest text-[hsl(var(--brand-primary-600))] hover:underline"
+            className="truncate text-xs font-bold uppercase tracking-widest text-brand-primary-600 hover:underline"
           >
             {klubLabel}
           </Link>
           <StatusBadge tone={tone} label={statusLabel(booking.status)} />
           {pendingExtension ? (
-            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-amber-500/15 px-2 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+            <span className="inline-flex h-5 items-center gap-1 rounded-full bg-warning/15 px-2 text-xs font-bold uppercase tracking-wider text-warning-foreground">
               <Timer className="size-3" />
               Extensão pendente
             </span>
@@ -603,7 +603,7 @@ function ExtendModal({
             className={cn(
               'flex-1 rounded-md border p-3 text-sm font-semibold transition-colors',
               minutes === m
-                ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+                ? 'border-primary bg-primary/10 text-brand-primary-600'
                 : 'border-input bg-background hover:bg-muted',
             )}
           >
@@ -658,7 +658,7 @@ function StatusBadge({
     tone === 'green'
       ? 'bg-success/12 text-success'
       : tone === 'amber'
-        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+        ? 'bg-warning/15 text-warning-foreground'
         : tone === 'red'
           ? 'bg-destructive/10 text-destructive'
           : 'bg-muted text-muted-foreground';

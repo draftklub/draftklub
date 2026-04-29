@@ -297,7 +297,7 @@ function Stepper({ step }: { step: Step }) {
                 done
                   ? 'bg-primary text-primary-foreground'
                   : active
-                    ? 'bg-primary/15 text-[hsl(var(--brand-primary-600))]'
+                    ? 'bg-primary/15 text-brand-primary-600'
                     : 'bg-muted text-muted-foreground',
               )}
             >

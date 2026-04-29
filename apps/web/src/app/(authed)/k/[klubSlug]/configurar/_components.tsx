@@ -315,12 +315,12 @@ export function LegalTab({ klub, onUpdated }: FormTabProps) {
   });
 
   return (
-    <section className="space-y-2.5 rounded-xl border border-amber-500/40 bg-amber-500/5 p-3.5">
+    <section className="space-y-2.5 rounded-xl border border-warning/40 bg-warning/5 p-3.5">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h2 className="font-display text-sm font-bold">
             Identidade legal{' '}
-            <span className="ml-2 inline-flex h-5 items-center rounded-full bg-amber-500/20 px-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+            <span className="ml-2 inline-flex h-5 items-center rounded-full bg-warning/20 px-2 text-xs font-bold uppercase tracking-[0.06em] text-warning-foreground">
               Platform-level
             </span>
           </h2>
@@ -580,9 +580,9 @@ function TransferAdminSection({
   }
 
   return (
-    <section className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+    <section className="space-y-3 rounded-xl border border-warning/40 bg-warning/5 p-4">
       <div className="flex items-center gap-2">
-        <AlertCircle className="size-4 text-amber-700 dark:text-amber-400" />
+        <AlertCircle className="size-4 text-warning-foreground" />
         <h3 className="font-display text-sm font-bold">Transferir Klub Admin</h3>
       </div>
       <p className="text-xs text-muted-foreground">
@@ -603,7 +603,7 @@ function TransferAdminSection({
           type="button"
           onClick={() => void handleTransfer()}
           disabled={submitting || !email.trim()}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-amber-500 bg-amber-500/10 px-4 text-sm font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-400 disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-warning bg-warning/10 px-4 text-sm font-semibold text-warning-foreground hover:bg-warning/20 disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -809,7 +809,7 @@ function KlubRoleBadge({ role }: { role: Role }) {
     SPORT_STAFF: 'Sport Staff',
   };
   return (
-    <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-primary-600))]">
+    <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-brand-primary-600">
       {map[role] ?? role}
     </span>
   );
@@ -1268,7 +1268,7 @@ function StatusBadge({ status }: { status: string }) {
     status === 'active'
       ? 'bg-success/12 text-success'
       : status === 'maintenance'
-        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+        ? 'bg-warning/15 text-warning-foreground'
         : 'bg-muted text-muted-foreground';
   const label = status === 'active' ? 'Ativa' : status === 'maintenance' ? 'Manutenção' : 'Inativa';
   return (
@@ -1377,7 +1377,7 @@ function SaveButton({ submitting, onClick }: { submitting: boolean; onClick: () 
 }
 
 const inputCls =
-  'w-full rounded-md border border-input bg-background px-3 py-2.25 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
 
 function Field({
   label,
@@ -1418,7 +1418,7 @@ function Toggle({
         className={cn(
           'flex w-full items-center justify-between rounded-md border p-3 text-sm font-medium transition-colors',
           value
-            ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+            ? 'border-primary bg-primary/10 text-brand-primary-600'
             : 'border-input bg-background hover:bg-muted',
         )}
       >

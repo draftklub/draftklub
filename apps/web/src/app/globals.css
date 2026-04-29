@@ -28,6 +28,27 @@ html {
   --color-success-foreground: hsl(var(--success-foreground));
   --color-warning: hsl(var(--warning));
   --color-warning-foreground: hsl(var(--warning-foreground));
+
+  /* Sprint M batch 9 — brand palette exposta como Tailwind v4 utilities.
+   * Antes: 27 ocorrências de `text-[hsl(var(--brand-primary-600))]` etc.
+   * Agora: `text-brand-primary-600`, `bg-brand-secondary-500/10`, etc. */
+  --color-brand-primary-50: hsl(var(--brand-primary-50));
+  --color-brand-primary-100: hsl(var(--brand-primary-100));
+  --color-brand-primary-200: hsl(var(--brand-primary-200));
+  --color-brand-primary-300: hsl(var(--brand-primary-300));
+  --color-brand-primary-400: hsl(var(--brand-primary-400));
+  --color-brand-primary-500: hsl(var(--brand-primary-500));
+  --color-brand-primary-600: hsl(var(--brand-primary-600));
+  --color-brand-primary-700: hsl(var(--brand-primary-700));
+  --color-brand-primary-800: hsl(var(--brand-primary-800));
+  --color-brand-primary-900: hsl(var(--brand-primary-900));
+  --color-brand-secondary-400: hsl(var(--brand-secondary-400));
+  --color-brand-secondary-500: hsl(var(--brand-secondary-500));
+  --color-brand-secondary-600: hsl(var(--brand-secondary-600));
+  --color-brand-accent-400: hsl(var(--brand-accent-400));
+  --color-brand-accent-500: hsl(var(--brand-accent-500));
+  --color-brand-accent-600: hsl(var(--brand-accent-600));
+
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
@@ -100,7 +121,10 @@ html {
   --success:              142 71% 32%;
   --success-foreground:   0 0% 100%;
   --warning:              38 92% 50%;
-  --warning-foreground:   20 14% 10%;
+  /* foreground = texto AMBER ESCURO usado sobre bg-warning/15 (warning-tinted).
+   * Sprint M batch 9 — antes era preto-quase (20 14% 10%) que não passava
+   * em uso "text-amber-700 dark:amber-400". Agora bate com amber-700. */
+  --warning-foreground:   38 92% 30%;
 
   --border:               20 6% 90%;
   --input:                20 6% 90%;
@@ -147,7 +171,8 @@ html {
   --success:              142 60% 42%;
   --success-foreground:   0 0% 100%;
   --warning:              38 92% 55%;
-  --warning-foreground:   20 14% 10%;
+  /* dark mode = texto AMBER CLARO sobre bg-warning/15 (= antes era amber-400). */
+  --warning-foreground:   38 92% 70%;
   --border:               24 6% 22%;
   --input:                24 6% 18%;
   --ring:                 158 64% 52%;

@@ -149,7 +149,7 @@ function ExtensionCard({
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="font-display text-sm font-bold">{item.spaceName ?? 'Quadra'}</h3>
-        <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+        <span className="inline-flex h-5 items-center rounded-full bg-warning/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-warning-foreground">
           +{additionalMinutes}min
         </span>
       </div>

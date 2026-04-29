@@ -270,8 +270,8 @@ export default function NovoTorneioPage() {
             eyebrow={`${klub.commonName ?? klub.name} · ${sportLabel}`}
             title="Criar torneio"
           />
-          <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-6 text-center">
-            <AlertCircle className="mx-auto mb-3 size-8 text-amber-700 dark:text-amber-400" />
+          <div className="rounded-xl border border-warning/40 bg-warning/5 p-6 text-center">
+            <AlertCircle className="mx-auto mb-3 size-8 text-warning-foreground" />
             <h2 className="font-display text-base font-bold">Nenhum ranking ativo</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Antes de criar torneio, é preciso ter pelo menos um ranking ativo dessa modalidade.
@@ -433,7 +433,7 @@ export default function NovoTorneioPage() {
           </div>
 
           {hasPrequalifiers ? (
-            <div className="grid grid-cols-1 gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 rounded-lg border border-warning/30 bg-warning/5 p-3 sm:grid-cols-2">
               <Field label="Pré-qualificatória — início">
                 <input
                   type="datetime-local"
@@ -677,7 +677,7 @@ function Toggle({
         className={cn(
           'flex w-full items-center justify-between rounded-md border p-3 text-sm font-medium transition-colors',
           value
-            ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+            ? 'border-primary bg-primary/10 text-brand-primary-600'
             : 'border-input bg-background hover:bg-muted',
         )}
       >
@@ -702,7 +702,7 @@ function Toggle({
 }
 
 const inputCls =
-  'w-full rounded-md border border-input bg-background px-3 py-2.25 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
 
 // ─── Modal: criar points schema ────────────────────────────────────────
 

@@ -192,7 +192,7 @@ export function SpaceForm({
                 className={cn(
                   'flex-1 rounded-md border p-3 text-sm font-semibold transition-colors',
                   active
-                    ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+                    ? 'border-primary bg-primary/10 text-brand-primary-600'
                     : 'border-input bg-background hover:bg-muted',
                 )}
               >
@@ -269,7 +269,7 @@ function Toggle({
       className={cn(
         'flex items-center justify-between rounded-md border p-3 text-sm font-medium transition-colors',
         value
-          ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+          ? 'border-primary bg-primary/10 text-brand-primary-600'
           : 'border-input bg-background hover:bg-muted',
       )}
     >

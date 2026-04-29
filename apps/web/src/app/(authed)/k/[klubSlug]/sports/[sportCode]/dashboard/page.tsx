@@ -45,7 +45,7 @@ export default function SportDashboardPage() {
             href={`/k/${klub.slug}/sports/${sportCode}/torneios`}
             className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-muted/30"
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-brand-primary-600">
               <Trophy className="size-4" />
             </span>
             <div className="min-w-0 flex-1">
@@ -59,7 +59,7 @@ export default function SportDashboardPage() {
             href={`/k/${klub.slug}/sports/${sportCode}/rankings`}
             className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-muted/30"
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-brand-primary-600">
               <ListOrdered className="size-4" />
             </span>
             <div className="min-w-0 flex-1">
@@ -73,7 +73,7 @@ export default function SportDashboardPage() {
             href={`/k/${klub.slug}/sports/${sportCode}/comissao`}
             className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-muted/30"
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-brand-primary-600">
               <Sparkles className="size-4" />
             </span>
             <div className="min-w-0 flex-1">

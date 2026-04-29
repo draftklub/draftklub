@@ -204,7 +204,7 @@ function CadastroCard({ item }: { item: AdminPendingKlubItem }) {
 function ReviewBadge({ status }: { status: KlubReviewStatus }) {
   const tone =
     status === 'pending'
-      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+      ? 'bg-warning/15 text-warning-foreground'
       : status === 'approved'
         ? 'bg-success/12 text-success'
         : 'bg-destructive/10 text-destructive';
@@ -224,9 +224,7 @@ function ReviewBadge({ status }: { status: KlubReviewStatus }) {
 
 function CnpjBadge({ status }: { status: string }) {
   const tone =
-    status === 'ativa'
-      ? 'bg-success/12 text-success'
-      : 'bg-amber-500/15 text-amber-700 dark:text-amber-400';
+    status === 'ativa' ? 'bg-success/12 text-success' : 'bg-warning/15 text-warning-foreground';
   return (
     <span
       className={cn(

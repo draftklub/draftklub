@@ -63,7 +63,7 @@ export default function DashboardPage() {
             headerExtra={
               <button
                 type="button"
-                className="rounded-lg border border-border bg-transparent px-3 py-1.75 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                className="rounded-lg border border-border bg-transparent px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
               >
                 Ver tudo
               </button>
@@ -155,7 +155,7 @@ function KlubAdminActions() {
               href={c.href}
               className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/40 hover:bg-muted/30"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-brand-primary-600">
                 <c.icon className="size-4" />
               </span>
               <div className="min-w-0 flex-1">
@@ -223,7 +223,7 @@ function OnboardingBanner() {
       className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
     >
       <div className="flex items-start gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-[hsl(var(--brand-primary-600))]">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-brand-primary-600">
           <Sparkles className="size-4" />
         </div>
         <div className="min-w-0">
@@ -235,7 +235,7 @@ function OnboardingBanner() {
           </p>
         </div>
       </div>
-      <ArrowRight className="size-4 shrink-0 text-[hsl(var(--brand-primary-600))]" />
+      <ArrowRight className="size-4 shrink-0 text-brand-primary-600" />
     </Link>
   );
 }
@@ -437,7 +437,7 @@ function RealActivityFeed() {
 function MetricsPlaceholder() {
   return (
     <div className="flex flex-col items-start gap-3 py-4">
-      <span className="inline-flex size-10 items-center justify-center rounded-lg bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+      <span className="inline-flex size-10 items-center justify-center rounded-lg bg-primary/10 text-brand-primary-600">
         <LineChart className="size-5" strokeWidth={1.8} />
       </span>
       <div>
@@ -474,7 +474,7 @@ function Panel({
 }) {
   return (
     <div className={cn('rounded-xl border border-border bg-card p-5', className)}>
-      <div className="mb-4.5 flex items-start justify-between gap-3">
+      <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="mb-1 font-display text-sm font-bold" style={{ letterSpacing: '-0.01em' }}>
             {title}
@@ -489,8 +489,8 @@ function Panel({
 }
 
 function FeedIcon({ type }: { type: FeedItem['type'] }) {
-  const cls = 'flex size-7.5 shrink-0 items-center justify-center rounded-lg';
-  const inner = 'size-3.75';
+  const cls = 'flex size-8 shrink-0 items-center justify-center rounded-lg';
+  const inner = 'size-4';
   if (type === 'book') {
     return (
       <span

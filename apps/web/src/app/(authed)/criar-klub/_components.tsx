@@ -76,7 +76,7 @@ export function Stepper({ step }: { step: Step }) {
                 done
                   ? 'bg-primary text-primary-foreground'
                   : active
-                    ? 'bg-primary/15 text-[hsl(var(--brand-primary-600))]'
+                    ? 'bg-primary/15 text-brand-primary-600'
                     : 'bg-muted text-muted-foreground',
               )}
             >
@@ -778,7 +778,7 @@ export function Step4Revisao(p: Step4Props) {
             {p.slugCheck.available ? (
               <Badge tone="green">URL livre</Badge>
             ) : (
-              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-xs text-amber-700 dark:text-amber-400">
+              <div className="rounded-md border border-warning/30 bg-warning/5 p-2 text-xs text-warning-foreground">
                 Já existe um Klub com essa URL{' '}
                 {p.slugCheck.conflictKlubName ? `(${p.slugCheck.conflictKlubName})` : ''}.
                 {p.slugCheck.suggestedSlug ? (

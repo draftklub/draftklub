@@ -218,7 +218,7 @@ function GrantForm({
         </button>
       </div>
       {quotaReached ? (
-        <p className="text-xs text-amber-700 dark:text-amber-400">
+        <p className="text-xs text-warning-foreground">
           Quota máxima atingida. Revogue um Admin existente pra liberar slot.
         </p>
       ) : null}
@@ -289,9 +289,7 @@ function RoleBadge({ role }: { role: Role }) {
     <span
       className={cn(
         'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
-        isOwner
-          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
-          : 'bg-primary/15 text-[hsl(var(--brand-primary-600))]',
+        isOwner ? 'bg-warning/15 text-warning-foreground' : 'bg-primary/15 text-brand-primary-600',
       )}
     >
       {isOwner ? 'Owner' : 'Admin'}

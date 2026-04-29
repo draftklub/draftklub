@@ -211,7 +211,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
             tabIndex={-1}
             className="absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
           >
-            {showPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -285,7 +285,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
         type="submit"
         disabled={isLoading}
         className={cn(
-          'mt-1 inline-flex h-11.5 items-center justify-center gap-2 rounded-md bg-primary text-sm font-semibold text-primary-foreground transition-colors',
+          'mt-1 inline-flex h-11 items-center justify-center gap-2 rounded-md bg-primary text-sm font-semibold text-primary-foreground transition-colors',
           'hover:bg-primary/90 active:translate-y-px',
           'focus-visible:ring-[3px] focus-visible:ring-primary/30 focus-visible:outline-none',
           'disabled:cursor-not-allowed disabled:opacity-95',
@@ -316,7 +316,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
         onClick={() => void handleGoogle()}
         disabled={isLoading || googleLoading}
         className={cn(
-          'inline-flex h-11.5 items-center justify-center gap-2.5 rounded-md border border-border bg-card text-sm font-medium text-foreground transition-colors',
+          'inline-flex h-11 items-center justify-center gap-2.5 rounded-md border border-border bg-card text-sm font-medium text-foreground transition-colors',
           'hover:bg-muted',
           'focus-visible:ring-[3px] focus-visible:ring-primary/20 focus-visible:outline-none',
           'disabled:cursor-not-allowed disabled:opacity-60',

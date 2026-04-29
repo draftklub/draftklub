@@ -377,7 +377,7 @@ function EditTournamentModal({
         </div>
 
         {tournament.hasPrequalifiers ? (
-          <div className="grid grid-cols-1 gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 rounded-lg border border-warning/30 bg-warning/5 p-2.5 sm:grid-cols-2">
             <DateField
               label="Pré-qualificatória — início"
               value={prequalifierStartDate}
@@ -1043,7 +1043,7 @@ function formatToday(): string {
 }
 
 const inputCls =
-  'w-full rounded-md border border-input bg-background px-3 py-2.25 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
 
 function toErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof ApiError) return err.message;
@@ -1450,8 +1450,8 @@ function MatchCard({
           'block w-full rounded-lg border bg-card p-2.5 text-left text-xs transition-colors',
           isCompleted && 'border-border',
           isBye && 'border-dashed opacity-60',
-          isWalkover && 'border-amber-500/40 bg-amber-500/5',
-          isAwaitingConfirm && 'border-amber-500/40 bg-amber-500/5',
+          isWalkover && 'border-warning/40 bg-warning/5',
+          isAwaitingConfirm && 'border-warning/40 bg-warning/5',
           !isCompleted && !isBye && !isWalkover && !isAwaitingConfirm && 'border-border/60',
           actionable && 'cursor-pointer hover:border-primary/40 hover:bg-muted/30',
           !actionable && 'cursor-default',
@@ -1474,12 +1474,12 @@ function MatchCard({
           <p className="mt-2 text-right font-mono text-xs text-muted-foreground">{match.score}</p>
         ) : null}
         {isWalkover ? (
-          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.04em] text-amber-700 dark:text-amber-400">
+          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.04em] text-warning-foreground">
             {match.status === 'double_walkover' ? 'WO duplo' : 'Walkover'}
           </p>
         ) : null}
         {isAwaitingConfirm ? (
-          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.04em] text-amber-700 dark:text-amber-400">
+          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.04em] text-warning-foreground">
             Aguarda confirmação
           </p>
         ) : null}
@@ -1531,7 +1531,7 @@ function PlayerSlot({
   }
   return (
     <div className="flex items-center gap-1.5">
-      {isWinner ? <Crown className="size-3 text-amber-500" /> : null}
+      {isWinner ? <Crown className="size-3 text-warning" /> : null}
       {seed ? (
         <span className="inline-flex h-4 min-w-[18px] shrink-0 items-center justify-center rounded bg-muted px-1 text-xs font-bold tabular-nums text-muted-foreground">
           {seed}
@@ -2051,8 +2051,8 @@ function WalkoverActions({
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-      <p className="text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+    <div className="space-y-2 rounded-lg border border-warning/30 bg-warning/5 p-3">
+      <p className="text-xs font-bold uppercase tracking-[0.06em] text-warning-foreground">
         Walkover (admin)
       </p>
       <p className="text-xs text-muted-foreground">
@@ -2081,7 +2081,7 @@ function WalkoverActions({
               type="button"
               onClick={() => void handleApply(confirming)}
               disabled={submitting}
-              className="inline-flex h-9 items-center gap-1 rounded-md bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
+              className="inline-flex h-9 items-center gap-1 rounded-md bg-warning px-3 text-xs font-semibold text-white hover:bg-warning/90 disabled:opacity-60"
             >
               {submitting ? <Loader2 className="size-3 animate-spin" /> : null}
               Aplicar
@@ -2104,14 +2104,14 @@ function WalkoverActions({
           <button
             type="button"
             onClick={() => setConfirming('p1')}
-            className="inline-flex h-8 items-center rounded-md border border-amber-500/30 bg-background px-2.5 text-xs font-semibold hover:bg-amber-500/10"
+            className="inline-flex h-8 items-center rounded-md border border-warning/30 bg-background px-2.5 text-xs font-semibold hover:bg-warning/10"
           >
             WO: {match.player1Name} avança
           </button>
           <button
             type="button"
             onClick={() => setConfirming('p2')}
-            className="inline-flex h-8 items-center rounded-md border border-amber-500/30 bg-background px-2.5 text-xs font-semibold hover:bg-amber-500/10"
+            className="inline-flex h-8 items-center rounded-md border border-warning/30 bg-background px-2.5 text-xs font-semibold hover:bg-warning/10"
           >
             WO: {match.player2Name} avança
           </button>
@@ -2315,8 +2315,8 @@ function RevertPreview({ preview }: { preview: PreviewMatchRevertResult }) {
         </div>
       ) : null}
       {warnings.length > 0 ? (
-        <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2">
-          <p className="text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+        <div className="rounded border border-warning/30 bg-warning/5 p-2">
+          <p className="text-xs font-bold uppercase tracking-[0.06em] text-warning-foreground">
             Avisos
           </p>
           <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
@@ -2587,7 +2587,7 @@ function EntryRow({
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate font-display text-sm font-bold">{entry.userFullName}</p>
           {entry.isWildCard ? (
-            <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+            <span className="inline-flex h-5 items-center rounded-full bg-warning/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-warning-foreground">
               Wild card
             </span>
           ) : null}
@@ -2766,7 +2766,7 @@ function EntryStatusBadge({ status }: { status: TournamentEntry['status'] }) {
   }
   if (status === 'pending_approval') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
+      <span className="inline-flex items-center gap-1 text-xs font-semibold text-warning-foreground">
         <Loader2 className="size-3" />
         Aguarda aprovação
       </span>

@@ -313,7 +313,7 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
                 className={cn(
                   'inline-flex h-9 items-center rounded-lg border px-3 text-xs font-medium transition-colors',
                   isOn
-                    ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+                    ? 'border-primary bg-primary/10 text-brand-primary-600'
                     : 'border-border bg-transparent text-foreground hover:bg-muted',
                 )}
               >
@@ -1289,7 +1289,7 @@ function ProviderCard({
           className={cn(
             'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
             badgeTone === 'success'
-              ? 'bg-primary/10 text-[hsl(var(--brand-primary-600))]'
+              ? 'bg-primary/10 text-brand-primary-600'
               : 'bg-muted text-muted-foreground',
           )}
         >

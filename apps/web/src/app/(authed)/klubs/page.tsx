@@ -38,7 +38,7 @@ export default function KlubsPage() {
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-3xl space-y-5">
         <header>
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-brand-primary-600">
             Você
           </p>
           <h1

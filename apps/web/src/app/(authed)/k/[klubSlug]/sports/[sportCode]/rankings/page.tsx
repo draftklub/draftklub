@@ -134,7 +134,7 @@ export default function SportRankingsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="truncate font-display text-base font-bold">{r.name}</h2>
-                      <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-primary-600))]">
+                      <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-brand-primary-600">
                         {RANKING_TYPE_LABELS[r.type] ?? r.type}
                       </span>
                       <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">
@@ -385,4 +385,4 @@ function CreateRankingModal({
 }
 
 const inputCls =
-  'w-full rounded-md border border-input bg-background px-3 py-2.25 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';

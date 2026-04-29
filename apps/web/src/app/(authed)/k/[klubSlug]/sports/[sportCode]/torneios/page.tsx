@@ -182,11 +182,11 @@ function Section({
       <h2
         className={cn(
           'flex items-center gap-2 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground',
-          tone === 'live' && 'text-[hsl(var(--brand-primary-600))]',
+          tone === 'live' && 'text-brand-primary-600',
         )}
       >
         {tone === 'live' ? (
-          <span className="inline-block size-2 animate-pulse rounded-full bg-[hsl(var(--brand-primary-600))]" />
+          <span className="inline-block size-2 animate-pulse rounded-full bg-brand-primary-600" />
         ) : null}
         {title}
       </h2>
@@ -244,12 +244,12 @@ function TournamentCard({
 function StatusBadge({ status }: { status: TournamentStatus }) {
   const tone =
     status === 'in_progress' || status === 'prequalifying'
-      ? 'bg-primary/15 text-[hsl(var(--brand-primary-600))]'
+      ? 'bg-primary/15 text-brand-primary-600'
       : status === 'finished'
         ? 'bg-muted text-muted-foreground'
         : status === 'cancelled'
           ? 'bg-destructive/10 text-destructive'
-          : 'bg-amber-500/15 text-amber-700 dark:text-amber-400';
+          : 'bg-warning/15 text-warning-foreground';
   return (
     <span
       className={cn(

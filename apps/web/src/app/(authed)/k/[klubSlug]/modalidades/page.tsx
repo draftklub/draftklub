@@ -274,7 +274,7 @@ function EnrollmentBadge({ status }: { status: EnrollmentStatus | null }) {
     },
     active: {
       label: 'Inscrito',
-      cls: 'bg-primary/10 text-[hsl(var(--brand-primary-600))]',
+      cls: 'bg-primary/10 text-brand-primary-600',
       icon: Check,
     },
     suspended: {

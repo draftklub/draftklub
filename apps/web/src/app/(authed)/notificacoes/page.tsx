@@ -145,14 +145,14 @@ function PendingItemCard({
   }
 
   return (
-    <article className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3.5">
+    <article className="rounded-xl border border-warning/30 bg-warning/5 p-3.5">
       <div className="flex flex-wrap items-center gap-2">
-        <Swords className="size-4 text-amber-700 dark:text-amber-400" />
-        <span className="inline-flex h-5 items-center rounded-full bg-amber-500/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+        <Swords className="size-4 text-warning-foreground" />
+        <span className="inline-flex h-5 items-center rounded-full bg-warning/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-warning-foreground">
           Aguarda confirmação
         </span>
         {item.tournamentName ? (
-          <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-primary-600))]">
+          <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-brand-primary-600">
             Torneio
           </span>
         ) : (

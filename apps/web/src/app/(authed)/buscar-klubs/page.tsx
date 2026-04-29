@@ -390,7 +390,7 @@ function KlubCard({
             {klub.city ?? '—'}
             {klub.state ? ` · ${klub.state}` : ''}
             {typeof klub.distanceKm === 'number' ? (
-              <span className="ml-1.5 inline-flex items-center gap-0.5 text-[hsl(var(--brand-primary-600))]">
+              <span className="ml-1.5 inline-flex items-center gap-0.5 text-brand-primary-600">
                 <MapPin className="size-3" />
                 {formatDistance(klub.distanceKm)}
               </span>
@@ -433,7 +433,7 @@ function KlubCard({
             )}
           </button>
         ) : requestSubmitted ? (
-          <div className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/5 px-4 text-xs font-medium text-amber-700 dark:text-amber-400">
+          <div className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-warning/40 bg-warning/5 px-4 text-xs font-medium text-warning-foreground">
             Solicitação enviada
           </div>
         ) : (
@@ -605,9 +605,7 @@ function TierBadge({ tier }: { tier: 'same-city' | 'same-state' }) {
     <span
       className={cn(
         'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
-        tier === 'same-city'
-          ? 'bg-primary/10 text-[hsl(var(--brand-primary-600))]'
-          : 'bg-muted text-foreground',
+        tier === 'same-city' ? 'bg-primary/10 text-brand-primary-600' : 'bg-muted text-foreground',
       )}
     >
       {label}

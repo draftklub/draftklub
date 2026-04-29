@@ -104,7 +104,7 @@ export function PersonaSwitcher() {
                   onClick={() => pickPersona(p)}
                   className={cn(
                     'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted',
-                    persona === p && 'font-semibold text-[hsl(var(--brand-primary-600))]',
+                    persona === p && 'font-semibold text-brand-primary-600',
                   )}
                 >
                   <span>{PERSONA_LABELS[p]}</span>

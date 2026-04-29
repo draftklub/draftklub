@@ -535,7 +535,7 @@ function formatNowLocal(): string {
 }
 
 const inputCls =
-  'w-full rounded-md border border-input bg-background px-3 py-2.25 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
 
 function toErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof ApiError) return err.message;

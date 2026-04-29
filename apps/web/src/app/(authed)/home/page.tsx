@@ -370,7 +370,7 @@ function KlubDashCard({
           </span>
         </div>
       ) : pending ? (
-        <span className="mt-3 inline-flex w-fit items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+        <span className="mt-3 inline-flex w-fit items-center rounded-full bg-warning/15 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-warning-foreground">
           Em análise
         </span>
       ) : rejected ? (
@@ -404,7 +404,7 @@ function BookingRow({ booking, showKlub }: { booking: MyBookingItem; showKlub?: 
       </div>
       <div className="min-w-0 flex-1">
         {showKlub ? (
-          <p className="mb-0.5 truncate text-xs font-bold uppercase tracking-widest text-[hsl(var(--brand-primary-600))]">
+          <p className="mb-0.5 truncate text-xs font-bold uppercase tracking-widest text-brand-primary-600">
             {booking.klub.name}
           </p>
         ) : null}
@@ -504,7 +504,7 @@ function PendingRequestCard({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-warning/30 bg-warning/5 p-3">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{request.klub.name}</p>
         <p className="truncate text-xs text-muted-foreground">
@@ -565,7 +565,7 @@ function ShortcutCard({
       href={href}
       className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-sm"
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[hsl(var(--brand-primary-600))]">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-brand-primary-600">
         <Icon className="size-5" strokeWidth={1.8} />
       </span>
       <div className="min-w-0 flex-1">

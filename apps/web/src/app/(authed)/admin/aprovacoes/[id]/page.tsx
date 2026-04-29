@@ -310,7 +310,7 @@ export default function CadastroDetailPage() {
           ) : null}
 
           {slugConflict && isPending ? (
-            <div className="mt-3 rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-400">
+            <div className="mt-3 rounded-md border border-warning/40 bg-warning/5 p-3 text-xs text-warning-foreground">
               <AlertCircle className="mr-1 inline size-3.5" />
               Slug em uso por <strong>{data.slugConflictKlubName}</strong>. Edite antes de aprovar.
             </div>
@@ -454,7 +454,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function ReviewBadge({ status }: { status: 'pending' | 'approved' | 'rejected' }) {
   const tone =
     status === 'pending'
-      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+      ? 'bg-warning/15 text-warning-foreground'
       : status === 'approved'
         ? 'bg-success/12 text-success'
         : 'bg-destructive/10 text-destructive';

@@ -91,7 +91,7 @@ export function WeatherWidget({
 
   return (
     <div className="inline-flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2 text-xs">
-      <Icon className="size-4 text-[hsl(var(--brand-primary-600))]" />
+      <Icon className="size-4 text-brand-primary-600" />
       <span>
         <span className="font-semibold">{Math.round(data.tempC)}°C</span>
         <span className="text-muted-foreground"> · {description}</span>

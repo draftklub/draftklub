@@ -172,7 +172,7 @@ function RequestCard({
             href={item.attachmentUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[hsl(var(--brand-primary-600))] underline"
+            className="text-brand-primary-600 underline"
           >
             {item.attachmentUrl}
           </a>
@@ -333,7 +333,7 @@ function UserAvatar({ name, url }: { name: string; url: string | null }) {
 function RequestBadge({ status }: { status: MembershipRequestStatus }) {
   const tone =
     status === 'pending'
-      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+      ? 'bg-warning/15 text-warning-foreground'
       : status === 'approved'
         ? 'bg-success/12 text-success'
         : status === 'rejected'

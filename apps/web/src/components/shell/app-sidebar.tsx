@@ -196,9 +196,9 @@ interface NavLinkProps {
 
 function NavLink({ href, label, icon: Icon, active, disabled, badge, onNavigate }: NavLinkProps) {
   const cls = cn(
-    'flex items-center gap-2.75 rounded-lg px-2.5 py-1.75 text-sm transition-colors',
+    'flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors',
     active
-      ? 'bg-primary/10 font-semibold text-[hsl(var(--brand-primary-600))]'
+      ? 'bg-primary/10 font-semibold text-brand-primary-600'
       : 'font-medium text-foreground hover:bg-muted',
     disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent',
   );
@@ -206,7 +206,7 @@ function NavLink({ href, label, icon: Icon, active, disabled, badge, onNavigate 
   const content = (
     <>
       <Icon
-        className={cn('size-4.25 shrink-0', active ? 'text-primary' : 'text-muted-foreground')}
+        className={cn('size-4 shrink-0', active ? 'text-primary' : 'text-muted-foreground')}
         strokeWidth={1.8}
       />
       <span className="flex-1 truncate">{label}</span>

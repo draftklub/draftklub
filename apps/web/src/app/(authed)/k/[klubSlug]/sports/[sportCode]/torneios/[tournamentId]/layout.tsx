@@ -194,7 +194,7 @@ export default function TournamentLayout({ children }: { children: React.ReactNo
 function StatusBadge({ status }: { status: TournamentStatus }) {
   const tone = STATUS_TONE[status];
   const toneClass: Record<typeof tone, string> = {
-    primary: 'bg-primary/15 text-[hsl(var(--brand-primary-600))]',
+    primary: 'bg-primary/15 text-brand-primary-600',
     muted: 'bg-muted text-muted-foreground',
     destructive: 'bg-destructive/10 text-destructive',
     warning: 'bg-warning/15 text-warning dark:text-warning',
