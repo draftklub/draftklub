@@ -95,10 +95,27 @@ export class CreateBookingHandler {
     );
 
     const allowGuestAdd = this.canAddGuests(config.guestsAddedBy, cmd.createdByIsStaff);
+
+    // Sprint N batch 1 — N+1 fix: era findUnique por player em loop (4
+    // players = 4 RTTs ao DB). Agora um findMany batch resolve todos os
+    // existing-userId players em 1 query. Guests seguem 1 RTT cada
+    // porque createOrGet pode criar (write).
+    const existingUserIds = cmd.otherPlayers
+      .filter((p): p is ExistingPlayerInput => 'userId' in p)
+      .map((p) => p.userId);
+    const existingUsers =
+      existingUserIds.length > 0
+        ? await this.prisma.user.findMany({
+            where: { id: { in: existingUserIds } },
+            select: { id: true, fullName: true },
+          })
+        : [];
+    const existingByid = new Map(existingUsers.map((u) => [u.id, u]));
+
     const resolvedOtherPlayers: ResolvedPlayer[] = [];
     for (const player of cmd.otherPlayers) {
       if ('userId' in player) {
-        const user = await this.prisma.user.findUnique({ where: { id: player.userId } });
+        const user = existingByid.get(player.userId);
         if (!user) throw new BadRequestException(`User ${player.userId} not found`);
         resolvedOtherPlayers.push({ userId: user.id, name: user.fullName });
       } else {

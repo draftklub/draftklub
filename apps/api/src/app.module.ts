@@ -1,3 +1,4 @@
+import * as crypto from 'node:crypto';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
@@ -42,10 +43,33 @@ import { FeaturesModule } from './modules/features/features.module';
           process.env.NODE_ENV === 'development'
             ? { target: 'pino-pretty', options: { colorize: true } }
             : undefined,
-        redact: ['req.headers.authorization', 'req.headers.cookie'],
+        // Sprint N batch 1 — Request-ID propagation. Lê x-request-id se
+        // veio do client (LB / mobile retry com mesma key); senão gera
+        // UUID. Setado em cada log via `req.id` automaticamente, e
+        // ecoado no header da response pra debug client-side.
+        genReqId(req, res) {
+          const incoming =
+            (req.headers['x-request-id'] as string | undefined) ??
+            (req.headers['x-cloud-trace-context'] as string | undefined);
+          const id = incoming ?? crypto.randomUUID();
+          res.setHeader('x-request-id', id);
+          return id;
+        },
+        // Sprint M batch 1 + N batch 1 — redact estendido.
+        // PII em request bodies (CPF, email, password) não vaza pros logs.
+        redact: [
+          'req.headers.authorization',
+          'req.headers.cookie',
+          'req.body.password',
+          'req.body.documentNumber',
+          'req.body.cep',
+          'req.body.email',
+          '*.password',
+          '*.documentNumber',
+        ],
         serializers: {
-          req(req: { method: string; url: string }) {
-            return { method: req.method, url: req.url };
+          req(req: { id?: string; method: string; url: string }) {
+            return { id: req.id, method: req.method, url: req.url };
           },
         },
       },

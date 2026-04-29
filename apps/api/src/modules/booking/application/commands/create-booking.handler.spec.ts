@@ -102,6 +102,16 @@ function makePrisma(
         .mockImplementation(({ where }: { where: { id: string } }) =>
           Promise.resolve({ id: where.id, fullName: `User ${where.id}` }),
         ),
+      // Sprint N batch 1 — handler agora faz findMany batch dos
+      // existing-userId players. Mock retorna pseudo-rows dos ids
+      // pedidos.
+      findMany: vi
+        .fn()
+        .mockImplementation(({ where }: { where: { id: { in: string[] } } }) =>
+          Promise.resolve(
+            (where.id.in ?? []).map((id) => ({ id, fullName: `User ${id}` })),
+          ),
+        ),
     },
     membership: {
       findFirst: vi.fn().mockResolvedValue(overrides.isMember === false ? null : { id: 'm1' }),
