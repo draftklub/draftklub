@@ -289,7 +289,8 @@ export class CreateBookingHandler {
       }
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
       const booking = await tx.booking.create({
         data: {
           klubId: cmd.klubId,
@@ -344,6 +345,21 @@ export class CreateBookingHandler {
 
       return booking;
     });
+    } catch (err) {
+      // Sprint M batch 3 — fallback pro caso de o app-level conflict-check
+      // ter perdido corrida (TOCTOU). O EXCLUDE constraint
+      // `bookings_no_space_overlap` (migration 20260518) cobre o gap.
+      // Postgres lança SQLSTATE 23P01 (exclusion_violation); Prisma
+      // surfaceia como erro com mensagem contendo o nome da constraint.
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('bookings_no_space_overlap')) {
+        throw new ConflictException({
+          type: 'space_conflict',
+          message: 'Space already has a booking overlapping this time window',
+        });
+      }
+      throw err;
+    }
   }
 
   private canAddGuests(mode: string, isStaff: boolean): boolean {
