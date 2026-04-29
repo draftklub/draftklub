@@ -109,7 +109,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
     >
       {/* E-mail */}
       <div>
-        <label htmlFor="email" className="mb-1.5 block text-[13px] font-medium text-foreground">
+        <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
           E-mail
         </label>
         <input
@@ -124,7 +124,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
           autoComplete="email"
           disabled={isLoading}
           className={cn(
-            'h-11 w-full rounded-[10px] border border-input bg-card px-3.5 text-[15px] text-foreground transition-colors outline-none',
+            'h-11 w-full rounded-md border border-input bg-card px-3.5 text-sm text-foreground transition-colors outline-none',
             'placeholder:text-muted-foreground',
             'focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20',
             'disabled:cursor-not-allowed disabled:opacity-60',
@@ -136,7 +136,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
       {/* Senha */}
       <div>
         <div className="mb-1.5 flex items-baseline justify-between gap-2">
-          <label htmlFor="password" className="text-[13px] font-medium text-foreground">
+          <label htmlFor="password" className="text-sm font-medium text-foreground">
             Senha
           </label>
           <Link
@@ -159,7 +159,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
             autoComplete="current-password"
             disabled={isLoading}
             className={cn(
-              'h-11 w-full rounded-[10px] border border-input bg-card pl-3.5 pr-11 text-[15px] text-foreground transition-colors outline-none',
+              'h-11 w-full rounded-md border border-input bg-card pl-3.5 pr-11 text-sm text-foreground transition-colors outline-none',
               'placeholder:text-muted-foreground',
               'focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20',
               'disabled:cursor-not-allowed disabled:opacity-60',
@@ -180,7 +180,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
         {isError && errorMsg ? (
           <div
             role="alert"
-            className="dk-shake mt-2 flex items-start gap-1.5 text-[13px] leading-tight text-destructive"
+            className="dk-shake mt-2 flex items-start gap-1.5 text-sm leading-tight text-destructive"
           >
             <AlertCircle className="mt-px size-3.5 shrink-0" />
             <span>{errorMsg}</span>
@@ -193,7 +193,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
         type="submit"
         disabled={isLoading}
         className={cn(
-          'mt-1 inline-flex h-11.5 items-center justify-center gap-2 rounded-[10px] bg-primary text-[15px] font-semibold text-primary-foreground transition-colors',
+          'mt-1 inline-flex h-11.5 items-center justify-center gap-2 rounded-md bg-primary text-sm font-semibold text-primary-foreground transition-colors',
           'hover:bg-primary/90 active:translate-y-px',
           'focus-visible:ring-[3px] focus-visible:ring-primary/30 focus-visible:outline-none',
           'disabled:cursor-not-allowed disabled:opacity-95',
@@ -212,7 +212,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
       {/* Divisor "ou" */}
       <div className="my-1 flex items-center gap-3">
         <div className="h-px flex-1 bg-border" />
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           ou
         </span>
         <div className="h-px flex-1 bg-border" />
@@ -224,7 +224,7 @@ export function LoginForm({ formWidth = 320 }: LoginFormProps) {
         onClick={() => void handleGoogle()}
         disabled={isLoading || googleLoading}
         className={cn(
-          'inline-flex h-11.5 items-center justify-center gap-2.5 rounded-[10px] border border-border bg-card text-[15px] font-medium text-foreground transition-colors',
+          'inline-flex h-11.5 items-center justify-center gap-2.5 rounded-md border border-border bg-card text-sm font-medium text-foreground transition-colors',
           'hover:bg-muted',
           'focus-visible:ring-[3px] focus-visible:ring-primary/20 focus-visible:outline-none',
           'disabled:cursor-not-allowed disabled:opacity-60',

@@ -62,12 +62,12 @@ export default function HomePage() {
         <EmailVerifyBanner />
         <header className="mb-10">
           <h1
-            className="font-display text-[28px] font-bold md:text-[34px]"
+            className="font-display text-3xl font-bold md:text-4xl"
             style={{ letterSpacing: '-0.02em' }}
           >
             Olá{firstName ? `, ${firstName}` : ''}
           </h1>
-          <p className="mt-2 text-[15px] text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             {hasKlubs
               ? 'Continue de onde parou ou troque de Klub na barra lateral.'
               : klubs === null
@@ -79,7 +79,7 @@ export default function HomePage() {
         {/* Continue de onde parou */}
         {lastKlub ? (
           <section className="mb-8">
-            <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
               Continue de onde parou
             </h2>
             <Link
@@ -90,12 +90,12 @@ export default function HomePage() {
                 <KlubAvatar name={lastKlub.klubName} />
                 <div className="min-w-0">
                   <h3
-                    className="truncate font-display text-[18px] font-bold leading-tight"
+                    className="truncate font-display text-lg font-bold leading-tight"
                     style={{ letterSpacing: '-0.01em' }}
                   >
                     {lastKlub.klubName}
                   </h3>
-                  <p className="mt-0.5 truncate font-mono text-[11.5px] text-muted-foreground">
+                  <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
                     /k/{lastKlub.klubSlug}
                   </p>
                 </div>
@@ -108,7 +108,7 @@ export default function HomePage() {
         {/* Outros Klubs */}
         {hasKlubs && klubs && klubs.length > (lastKlub ? 1 : 0) ? (
           <section className="mb-8">
-            <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
               Seus outros Klubs
             </h2>
             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -126,7 +126,7 @@ export default function HomePage() {
         {/* Solicitações pendentes (Sprint C) */}
         {pendingRequests && pendingRequests.length > 0 ? (
           <section className="mb-8">
-            <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
               Solicitações em análise
             </h2>
             <ul className="space-y-2">
@@ -144,7 +144,7 @@ export default function HomePage() {
 
         {/* Atalhos */}
         <section>
-          <h2 className="mb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
             Atalhos
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -164,7 +164,7 @@ export default function HomePage() {
         </section>
 
         {/* Sales-led */}
-        <p className="mt-10 text-center text-[12px] text-muted-foreground">
+        <p className="mt-10 text-center text-xs text-muted-foreground">
           <Link
             href="/quero-criar-klub"
             className="underline-offset-4 hover:text-foreground hover:underline"
@@ -203,17 +203,17 @@ function PendingRequestCard({
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13.5px] font-semibold">{request.klub.name}</p>
-        <p className="truncate text-[11.5px] text-muted-foreground">
+        <p className="truncate text-sm font-semibold">{request.klub.name}</p>
+        <p className="truncate text-xs text-muted-foreground">
           Aguardando aprovação do admin do Klub.
         </p>
-        {error ? <p className="mt-1 text-[11px] text-destructive">{error}</p> : null}
+        {error ? <p className="mt-1 text-xs text-destructive">{error}</p> : null}
       </div>
       <button
         type="button"
         onClick={() => void handleCancel()}
         disabled={cancelling}
-        className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[11.5px] font-medium hover:bg-muted disabled:opacity-60"
+        className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-medium hover:bg-muted disabled:opacity-60"
       >
         {cancelling ? <Loader2 className="size-3 animate-spin" /> : <X className="size-3" />}
         Cancelar
@@ -234,18 +234,18 @@ function KlubCard({ klub }: { klub: UserKlubMembership }) {
       <div className="flex items-center gap-3">
         <KlubAvatar name={klub.klubName} small />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[14.5px] font-semibold leading-tight">{klub.klubName}</h3>
-          <p className="mt-0.5 truncate font-mono text-[10.5px] text-muted-foreground">
+          <h3 className="truncate text-sm font-semibold leading-tight">{klub.klubName}</h3>
+          <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
             /{klub.klubSlug}
           </p>
         </div>
       </div>
       {pending ? (
-        <span className="mt-2.5 inline-flex w-fit items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+        <span className="mt-2.5 inline-flex w-fit items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
           Em análise
         </span>
       ) : rejected ? (
-        <span className="mt-2.5 inline-flex w-fit items-center rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-destructive">
+        <span className="mt-2.5 inline-flex w-fit items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-destructive">
           Rejeitado
         </span>
       ) : null}
@@ -260,7 +260,7 @@ function KlubAvatar({ name, small }: { name: string; small?: boolean }) {
     <span
       className={
         small
-          ? 'flex size-8 shrink-0 items-center justify-center rounded-md font-display text-[12px] font-bold text-white'
+          ? 'flex size-8 shrink-0 items-center justify-center rounded-md font-display text-xs font-bold text-white'
           : 'flex size-12 shrink-0 items-center justify-center rounded-lg font-display text-base font-bold text-white'
       }
       style={{ background: `hsl(${hue} 55% 42%)` }}
@@ -291,8 +291,8 @@ function ShortcutCard({
         <Icon className="size-5" strokeWidth={1.8} />
       </span>
       <div className="min-w-0 flex-1">
-        <h3 className="text-[14.5px] font-semibold leading-tight">{title}</h3>
-        <p className="mt-1 text-[12.5px] text-muted-foreground">{body}</p>
+        <h3 className="text-sm font-semibold leading-tight">{title}</h3>
+        <p className="mt-1 text-xs text-muted-foreground">{body}</p>
       </div>
       <ArrowRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
     </Link>

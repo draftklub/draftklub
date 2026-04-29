@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { AlertCircle, ArrowLeft, Loader2, Sparkles, UserCheck, Users } from 'lucide-react';
+import { Loader2, Sparkles, UserCheck, Users } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { Banner } from '@/components/ui/banner';
 import type { RoleAssignmentListItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -87,40 +88,21 @@ export default function SportCommitteePage() {
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-2xl space-y-5">
-        <Link
-          href={`/k/${klub.slug}/sports/${sportCode}/dashboard`}
-          className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          {sportLabel}
-        </Link>
-
-        <header>
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
-            {klub.commonName ?? klub.name} · {sportLabel}
-          </p>
-          <h1
-            className="mt-1 font-display text-[26px] font-bold leading-tight md:text-[32px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Comissão e operação
-          </h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Quem organiza e opera essa modalidade no Klub.
-          </p>
-        </header>
+        <PageHeader
+          back={{ href: `/k/${klub.slug}/sports/${sportCode}/dashboard`, label: sportLabel }}
+          eyebrow={`${klub.commonName ?? klub.name} · ${sportLabel}`}
+          title="Comissão e operação"
+          description="Quem organiza e opera essa modalidade no Klub."
+        />
 
         {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : items === null ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : filtered.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border p-8 text-center text-[12.5px] text-muted-foreground">
+          <p className="rounded-xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
             Sem comissão nem staff designados ainda. KLUB_ADMIN pode promover via Configurar Klub →
             tab Equipe.
           </p>
@@ -167,8 +149,8 @@ function Group({
     <section className="space-y-2 rounded-xl border border-border bg-card p-3.5">
       <div className="flex items-center gap-2">
         <Icon className="size-4 text-muted-foreground" />
-        <h2 className="font-display text-[13.5px] font-bold">{title}</h2>
-        <span className="text-[11.5px] text-muted-foreground">· {hint}</span>
+        <h2 className="font-display text-sm font-bold">{title}</h2>
+        <span className="text-xs text-muted-foreground">· {hint}</span>
       </div>
       <ul className="space-y-1.5">
         {items.map((item) => (
@@ -179,13 +161,13 @@ function Group({
             )}
           >
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-semibold">{item.userFullName}</p>
-              <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+              <p className="truncate text-sm font-semibold">{item.userFullName}</p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
                 {item.userEmail}
               </p>
             </div>
             {item.scopeSportId ? (
-              <span className="inline-flex h-5 items-center rounded-full bg-primary/10 px-2 text-[10px] font-semibold uppercase tracking-[0.04em] text-[hsl(var(--brand-primary-600))]">
+              <span className="inline-flex h-5 items-center rounded-full bg-primary/10 px-2 text-xs font-semibold uppercase tracking-[0.04em] text-[hsl(var(--brand-primary-600))]">
                 escopo: este sport
               </span>
             ) : null}

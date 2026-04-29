@@ -158,7 +158,7 @@ export default function DashboardPage() {
             headerExtra={
               <button
                 type="button"
-                className="rounded-lg border border-border bg-transparent px-3 py-1.75 text-[12.5px] font-medium text-foreground transition-colors hover:bg-muted"
+                className="rounded-lg border border-border bg-transparent px-3 py-1.75 text-xs font-medium text-foreground transition-colors hover:bg-muted"
               >
                 Ver tudo
               </button>
@@ -240,7 +240,7 @@ function KlubAdminActions() {
 
   return (
     <section className="mb-6">
-      <h2 className="mb-2 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+      <h2 className="mb-2 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
         Gerenciar Klub
       </h2>
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -254,8 +254,8 @@ function KlubAdminActions() {
                 <c.icon className="size-4" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-semibold">{c.label}</p>
-                <p className="truncate text-[11.5px] text-muted-foreground">{c.hint}</p>
+                <p className="truncate text-sm font-semibold">{c.label}</p>
+                <p className="truncate text-xs text-muted-foreground">{c.hint}</p>
               </div>
             </Link>
           </li>
@@ -278,8 +278,8 @@ function ReservarCTA() {
           <CalendarDays className="size-5" />
         </div>
         <div>
-          <p className="font-display text-[14px] font-bold leading-tight">Reservar quadra</p>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="font-display text-sm font-bold leading-tight">Reservar quadra</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Escolhe quadra, dia e horário em 3 toques
           </p>
         </div>
@@ -322,10 +322,10 @@ function OnboardingBanner() {
           <Sparkles className="size-4" />
         </div>
         <div className="min-w-0">
-          <p className="font-display text-[14px] font-bold leading-tight">
+          <p className="font-display text-sm font-bold leading-tight">
             Configure seu Klub pra começar a receber reservas
           </p>
-          <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Habilita modalidades, cria a primeira quadra e define horários — leva uns 3 minutos.
           </p>
         </div>
@@ -384,7 +384,7 @@ function RealTournaments() {
   }, [klub]);
 
   if (error) {
-    return <p className="py-2 text-[12px] text-destructive">{error}</p>;
+    return <p className="py-2 text-xs text-destructive">{error}</p>;
   }
   if (tournaments === null) {
     return (
@@ -397,7 +397,7 @@ function RealTournaments() {
   }
   if (tournaments.length === 0) {
     return (
-      <p className="py-3 text-[12.5px] text-muted-foreground">
+      <p className="py-3 text-xs text-muted-foreground">
         Sem torneios ativos. Clique em <b>Torneios</b> pra criar.
       </p>
     );
@@ -425,13 +425,13 @@ function RealTournaments() {
               href={`/k/${klub?.slug}/sports/${t.sportCode}/torneios/${t.id}`}
               className="min-w-0 transition-colors hover:text-foreground"
             >
-              <p className="mb-0.5 truncate text-[13.5px] font-semibold leading-tight">{t.name}</p>
-              <p className="font-mono text-[11px] text-muted-foreground">
+              <p className="mb-0.5 truncate text-sm font-semibold leading-tight">{t.name}</p>
+              <p className="font-mono text-xs text-muted-foreground">
                 Início {dateLabel} · {t.entryCount} inscritos
               </p>
             </Link>
             <span
-              className="inline-flex h-5 items-center whitespace-nowrap rounded-full px-2 text-[9.5px] font-bold uppercase tracking-[0.08em]"
+              className="inline-flex h-5 items-center whitespace-nowrap rounded-full px-2 text-xs font-bold uppercase tracking-[0.08em]"
               style={{
                 background: 'hsl(var(--primary) / 0.1)',
                 color: 'hsl(var(--brand-primary-600))',
@@ -473,7 +473,7 @@ function RealActivityFeed() {
   }, [klub]);
 
   if (error) {
-    return <p className="py-2 text-[12px] text-destructive">{error}</p>;
+    return <p className="py-2 text-xs text-destructive">{error}</p>;
   }
   if (bookings === null) {
     return (
@@ -486,7 +486,7 @@ function RealActivityFeed() {
   }
   if (bookings.length === 0) {
     return (
-      <p className="py-3 text-[12.5px] text-muted-foreground">
+      <p className="py-3 text-xs text-muted-foreground">
         Sem reservas recentes nas últimas 24h.
       </p>
     );
@@ -505,7 +505,7 @@ function RealActivityFeed() {
               <li
                 key={b.id}
                 className={cn(
-                  'flex gap-3 py-3 text-[13px]',
+                  'flex gap-3 py-3 text-sm',
                   i < column.length - 1 && 'border-b border-border',
                 )}
               >
@@ -516,7 +516,7 @@ function RealActivityFeed() {
                     {time}
                     {b.status === 'cancelled' ? ' · cancelada' : ''}
                   </p>
-                  <p className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
+                  <p className="mt-0.5 font-mono text-xs text-muted-foreground">
                     user {b.primaryPlayerId.slice(0, 8)}…
                   </p>
                 </div>
@@ -537,12 +537,12 @@ function KpiCard({ kpi }: { kpi: KpiData }) {
     kpi.sparkColor === 'destructive' ? 'hsl(var(--destructive))' : 'hsl(var(--primary))';
   return (
     <div className="relative rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+      <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
         <Icon className="size-3.25" strokeWidth={1.8} />
         {kpi.label}
       </div>
       <div
-        className="mt-2 font-display text-[30px] font-bold leading-none tabular-nums"
+        className="mt-2 font-display text-3xl font-bold leading-none tabular-nums"
         style={{ letterSpacing: '-0.02em' }}
       >
         {kpi.value ?? '—'}
@@ -557,7 +557,7 @@ function KpiCard({ kpi }: { kpi: KpiData }) {
       </div>
       <div
         className={cn(
-          'mt-1.5 inline-flex items-center gap-1 font-mono text-[11.5px] font-semibold',
+          'mt-1.5 inline-flex items-center gap-1 font-mono text-xs font-semibold',
           kpi.deltaTone === 'up' ? 'text-success' : 'text-destructive',
         )}
       >
@@ -607,7 +607,7 @@ function Panel({
       <div className="mb-4.5 flex items-start justify-between gap-3">
         <div>
           <h2
-            className="mb-1 font-display text-[15px] font-bold"
+            className="mb-1 font-display text-sm font-bold"
             style={{ letterSpacing: '-0.01em' }}
           >
             {title}
@@ -623,7 +623,7 @@ function Panel({
 
 function OccupancyLegend() {
   return (
-    <div className="flex items-center gap-3.5 text-[11.5px] text-muted-foreground">
+    <div className="flex items-center gap-3.5 text-xs text-muted-foreground">
       <span className="inline-flex items-center gap-1.5">
         <span className="size-2.5 rounded-sm bg-primary" />
         Regular
@@ -644,7 +644,7 @@ function HourRow({ row }: { row: { h: string; pct: number; prime: boolean } }) {
     <div className="grid grid-cols-[50px_1fr_60px] items-center gap-3">
       <span
         className={cn(
-          'font-mono text-[11px] font-semibold',
+          'font-mono text-xs font-semibold',
           row.prime ? 'text-[hsl(38_92%_28%)] font-bold' : 'text-muted-foreground',
         )}
       >
@@ -661,7 +661,7 @@ function HourRow({ row }: { row: { h: string; pct: number; prime: boolean } }) {
       </div>
       <span
         className={cn(
-          'text-right font-mono text-[11.5px] font-semibold',
+          'text-right font-mono text-xs font-semibold',
           row.prime ? 'text-[hsl(38_92%_28%)]' : 'text-foreground',
         )}
       >

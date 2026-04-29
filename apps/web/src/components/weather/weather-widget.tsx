@@ -77,7 +77,7 @@ export function WeatherWidget({
 
   if (loading && !data) {
     return (
-      <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-[12.5px] text-muted-foreground">
+      <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
         <Loader2 className="size-3.5 animate-spin" />
         Clima…
       </div>
@@ -90,7 +90,7 @@ export function WeatherWidget({
   const description = describeCode(data.weatherCode);
 
   return (
-    <div className="inline-flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2 text-[12.5px]">
+    <div className="inline-flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2 text-xs">
       <Icon className="size-4 text-[hsl(var(--brand-primary-600))]" />
       <span>
         <span className="font-semibold">{Math.round(data.tempC)}°C</span>

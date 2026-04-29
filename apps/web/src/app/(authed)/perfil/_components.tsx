@@ -98,11 +98,11 @@ function AvatarRow({ userId, avatarUrl, displayName, onUpdated }: AvatarRowProps
         )}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-medium">Foto de perfil</p>
-        <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+        <p className="text-sm font-medium">Foto de perfil</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
           JPEG, PNG ou WebP. Redimensionada pra 512px.
         </p>
-        {errorMsg ? <p className="mt-1 text-[12px] text-destructive">{errorMsg}</p> : null}
+        {errorMsg ? <p className="mt-1 text-xs text-destructive">{errorMsg}</p> : null}
       </div>
       <input
         ref={fileInputRef}
@@ -119,7 +119,7 @@ function AvatarRow({ userId, avatarUrl, displayName, onUpdated }: AvatarRowProps
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={uploading}
-        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3 text-[12.5px] font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
       >
         {uploading ? (
           <>
@@ -285,7 +285,7 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
                   clearStatusOnChange();
                 }}
                 className={cn(
-                  'inline-flex h-9 items-center rounded-lg border px-3 text-[12.5px] font-medium transition-colors',
+                  'inline-flex h-9 items-center rounded-lg border px-3 text-xs font-medium transition-colors',
                   isOn
                     ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
                     : 'border-border bg-transparent text-foreground hover:bg-muted',
@@ -302,7 +302,7 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
                 setGender('');
                 clearStatusOnChange();
               }}
-              className="inline-flex h-9 items-center rounded-lg bg-transparent px-2 text-[11.5px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex h-9 items-center rounded-lg bg-transparent px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Limpar
             </button>
@@ -389,7 +389,7 @@ export function PessoaFisicaSection({ initial, onUpdated }: PessoaFisicaSectionP
 
   return (
     <Section title="Pessoa física">
-      <p className="-mt-2 mb-2 text-[12.5px] text-muted-foreground">
+      <p className="-mt-2 mb-2 text-xs text-muted-foreground">
         Necessário pra emissão de nota fiscal e fluxos de pagamento.
       </p>
       <Field label="CPF" hint="11 dígitos. Salvamos como número puro; mostramos formatado.">
@@ -549,7 +549,7 @@ export function EnderecoSection({ initial, onUpdated }: EnderecoSectionProps) {
 
   return (
     <Section title="Endereço">
-      <p className="-mt-2 mb-2 text-[12.5px] text-muted-foreground">
+      <p className="-mt-2 mb-2 text-xs text-muted-foreground">
         Pra correspondência e nota fiscal. Preenchemos automático quando você digita o CEP.
       </p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[140px_1fr]">
@@ -719,8 +719,8 @@ export function PreferenciasSection() {
                     : 'border-border bg-transparent hover:border-foreground/20',
                 )}
               >
-                <span className="text-[13px] font-semibold">{opt.label}</span>
-                <span className="text-[11px] text-muted-foreground">{opt.hint}</span>
+                <span className="text-sm font-semibold">{opt.label}</span>
+                <span className="text-xs text-muted-foreground">{opt.hint}</span>
               </button>
             );
           })}
@@ -818,15 +818,15 @@ export function NotificacoesSection({ initial, onUpdated }: NotificacoesSectionP
 
   return (
     <Section title="Notificações">
-      <p className="-mt-2 mb-1 text-[12.5px] text-muted-foreground">
+      <p className="-mt-2 mb-1 text-xs text-muted-foreground">
         Por e-mail. Push notifications chegam em breve.
       </p>
       <ul className="flex flex-col divide-y divide-border">
         {NOTIF_TYPES.map((t) => (
           <li key={t.key} className="flex items-start justify-between gap-3 py-3">
             <div className="min-w-0 flex-1">
-              <p className="text-[13.5px] font-medium">{t.label}</p>
-              <p className="mt-0.5 text-[11.5px] text-muted-foreground">{t.hint}</p>
+              <p className="text-sm font-medium">{t.label}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{t.hint}</p>
             </div>
             <Toggle checked={!!email[t.key]} onChange={() => toggle(t.key)} ariaLabel={t.label} />
           </li>
@@ -901,7 +901,7 @@ export function AccessSection({
 
   return (
     <Section title="Acesso">
-      <p className="-mt-2 mb-2 text-[12.5px] text-muted-foreground">
+      <p className="-mt-2 mb-2 text-xs text-muted-foreground">
         Métodos de login conectados à sua conta.
       </p>
       <PasswordRow email={email} hasPassword={hasPassword} canUnlink={hasGoogle} />
@@ -1122,7 +1122,7 @@ function GoogleRow({ hasGoogle, canUnlink }: { hasGoogle: boolean; canUnlink: bo
               {status === 'working' ? <Loader2 className="size-4 animate-spin" /> : 'Desconectar'}
             </button>
           ) : (
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Pra desconectar Google, defina uma senha primeiro.
             </p>
           )
@@ -1138,7 +1138,7 @@ function GoogleRow({ hasGoogle, canUnlink }: { hasGoogle: boolean; canUnlink: bo
         )}
       </div>
       {status === 'error' ? (
-        <p className="mt-2 flex items-start gap-1.5 text-[12.5px] text-destructive" role="alert">
+        <p className="mt-2 flex items-start gap-1.5 text-xs text-destructive" role="alert">
           <AlertCircle className="mt-px size-3.5 shrink-0" />
           {errorMsg}
         </p>
@@ -1153,18 +1153,18 @@ export function DangerZone() {
   return (
     <Section title="Zona de risco" tone="danger">
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-        <h3 className="text-[14px] font-semibold">Excluir conta</h3>
-        <p className="mt-1 text-[12.5px] text-muted-foreground">
+        <h3 className="text-sm font-semibold">Excluir conta</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
           Apaga sua conta no DraftKlub permanentemente. Esta ação não pode ser desfeita.
         </p>
         <button
           type="button"
           disabled
           title="Em breve — precisa de endpoint backend pra cleanup de dados (Memberships, RoleAssignments, etc.)"
-          className="mt-3 inline-flex h-9 cursor-not-allowed items-center gap-2 rounded-lg bg-destructive px-3 text-[12.5px] font-semibold text-destructive-foreground opacity-50"
+          className="mt-3 inline-flex h-9 cursor-not-allowed items-center gap-2 rounded-lg bg-destructive px-3 text-xs font-semibold text-destructive-foreground opacity-50"
         >
           Excluir conta
-          <span className="rounded bg-destructive-foreground/20 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.06em]">
+          <span className="rounded bg-destructive-foreground/20 px-1.5 py-0.5 text-xs font-bold uppercase tracking-[0.06em]">
             em breve
           </span>
         </button>
@@ -1188,7 +1188,7 @@ function Section({
     <section>
       <h2
         className={cn(
-          'mb-2 font-display text-[12px] font-bold uppercase tracking-[0.06em]',
+          'mb-2 font-display text-xs font-bold uppercase tracking-[0.06em]',
           tone === 'danger' ? 'text-destructive' : 'text-muted-foreground',
         )}
       >
@@ -1212,9 +1212,9 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-[13px] font-medium">{label}</label>
+      <label className="mb-1.5 block text-sm font-medium">{label}</label>
       {children}
-      {hint ? <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
@@ -1232,14 +1232,14 @@ function FormFooter({
     <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
       <div className="flex-1">
         {error ? (
-          <p className="flex items-start gap-1.5 text-[12.5px] text-destructive" role="alert">
+          <p className="flex items-start gap-1.5 text-xs text-destructive" role="alert">
             <AlertCircle className="mt-px size-3.5 shrink-0" />
             {error}
           </p>
         ) : null}
         {success ? (
           <p
-            className="flex items-start gap-1.5 text-[12.5px] text-success"
+            className="flex items-start gap-1.5 text-xs text-success"
             role="status"
           >
             <Check className="mt-px size-3.5 shrink-0" />
@@ -1269,14 +1269,14 @@ function ProviderCard({
     <div className="flex flex-col gap-3 rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[13.5px] font-semibold">{label}</p>
+          <p className="text-sm font-semibold">{label}</p>
           {email ? (
-            <p className="mt-0.5 truncate font-mono text-[10.5px] text-muted-foreground">{email}</p>
+            <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">{email}</p>
           ) : null}
         </div>
         <span
           className={cn(
-            'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+            'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
             badgeTone === 'success'
               ? 'bg-primary/10 text-[hsl(var(--brand-primary-600))]'
               : 'bg-muted text-muted-foreground',
@@ -1292,17 +1292,17 @@ function ProviderCard({
 
 const inputCls = (hasError: boolean) =>
   cn(
-    'h-10 w-full rounded-[10px] border border-input bg-background px-3 text-[14px] outline-none transition-colors',
+    'h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors',
     'focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20',
     'disabled:cursor-not-allowed disabled:opacity-60',
     hasError && 'border-destructive ring-[3px] ring-destructive/20',
   );
 
 const primaryBtnCls =
-  'inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50';
 
 const secondaryBtnCls =
-  'inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-4 text-[12.5px] font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-4 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50';
 
 const ghostBtnCls =
-  'inline-flex h-9 items-center gap-2 rounded-lg bg-transparent px-3 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex h-9 items-center gap-2 rounded-lg bg-transparent px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50';

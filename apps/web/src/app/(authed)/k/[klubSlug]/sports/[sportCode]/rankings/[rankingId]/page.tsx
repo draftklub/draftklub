@@ -1,12 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
-  AlertCircle,
-  ArrowLeft,
-  CheckCircle2,
   Loader2,
   Minus,
   Plus,
@@ -15,6 +11,8 @@ import {
   TrendingUp,
   UserPlus,
 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { Banner } from '@/components/ui/banner';
 import type { RankingDetail, RankingPlayerEntry } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -89,36 +87,13 @@ export default function RankingDetailPage() {
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-3xl space-y-5">
-        <Link
-          href={`/k/${klub.slug}/sports/${sportCode}/rankings`}
-          className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          Rankings · {sportLabel}
-        </Link>
-
-        {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {error}
-          </p>
-        ) : data === null ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="size-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <>
-            <header>
-              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
-                {klub.commonName ?? klub.name} · {sportLabel}
-              </p>
-              <h1
-                className="mt-1 font-display text-[26px] font-bold leading-tight md:text-[32px]"
-                style={{ letterSpacing: '-0.02em' }}
-              >
-                {data.name}
-              </h1>
-              <p className="mt-1 inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12.5px] text-muted-foreground">
+        <PageHeader
+          back={{ href: `/k/${klub.slug}/sports/${sportCode}/rankings`, label: `Rankings · ${sportLabel}` }}
+          eyebrow={`${klub.commonName ?? klub.name} · ${sportLabel}`}
+          title={data?.name ?? ''}
+          description={
+            data ? (
+              <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5">
                 <span>{data.type}</span>
                 {data.gender ? <span>· {data.gender}</span> : null}
                 {data.ageMin || data.ageMax ? (
@@ -128,14 +103,22 @@ export default function RankingDetailPage() {
                 ) : null}
                 <span>· engine {ENGINE_LABELS[data.ratingEngine] ?? data.ratingEngine}</span>
                 <span>· ordenado por {ORDER_BY_LABELS[data.orderBy] ?? data.orderBy}</span>
-              </p>
-            </header>
+              </span>
+            ) : undefined
+          }
+        />
+
+        {error ? (
+          <Banner tone="error">{error}</Banner>
+        ) : data === null ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <>
 
             {actionMessage ? (
-              <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-                <CheckCircle2 className="mr-1 inline size-3.5" />
-                {actionMessage}
-              </p>
+              <Banner tone="success">{actionMessage}</Banner>
             ) : null}
 
             <CasualMatchActions
@@ -191,7 +174,7 @@ function CasualMatchActions({
 
   if (!acceptsCasual) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-3 text-[12.5px] text-muted-foreground">
+      <p className="rounded-xl border border-dashed border-border p-3 text-xs text-muted-foreground">
         Esse ranking não considera partidas casuais — só matches de torneio contam.
       </p>
     );
@@ -213,8 +196,8 @@ function CasualMatchActions({
     <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3.5">
       {isEnrolled ? (
         <>
-          <div className="text-[12.5px]">
-            <p className="font-display text-[13.5px] font-bold text-foreground">Reportar partida</p>
+          <div className="text-xs">
+            <p className="font-display text-sm font-bold text-foreground">Reportar partida</p>
             <p className="mt-0.5 text-muted-foreground">
               Match casual entre 2 players inscritos. Após reportar, o outro precisa confirmar.
             </p>
@@ -222,7 +205,7 @@ function CasualMatchActions({
           <button
             type="button"
             onClick={() => setMatchOpen(true)}
-            className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90"
+            className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
             <Swords className="size-3.5" />
             Reportar partida
@@ -230,8 +213,8 @@ function CasualMatchActions({
         </>
       ) : (
         <>
-          <div className="text-[12.5px]">
-            <p className="font-display text-[13.5px] font-bold text-foreground">
+          <div className="text-xs">
+            <p className="font-display text-sm font-bold text-foreground">
               Você ainda não está nesse ranking
             </p>
             <p className="mt-0.5 text-muted-foreground">
@@ -242,7 +225,7 @@ function CasualMatchActions({
             type="button"
             onClick={() => void handleEnroll()}
             disabled={enrolling}
-            className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
           >
             {enrolling ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -363,14 +346,11 @@ function SubmitMatchModal({
         </div>
 
         {localError ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {localError}
-          </p>
+          <Banner tone="error">{localError}</Banner>
         ) : null}
 
         <div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Player 1
           </p>
           <select
@@ -390,7 +370,7 @@ function SubmitMatchModal({
         </div>
 
         <div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Player 2
           </p>
           <select
@@ -409,7 +389,7 @@ function SubmitMatchModal({
         </div>
 
         <div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Vencedor
           </p>
           <div className="space-y-1.5">
@@ -438,7 +418,7 @@ function SubmitMatchModal({
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div>
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
               Score (opcional)
             </p>
             <input
@@ -450,7 +430,7 @@ function SubmitMatchModal({
             />
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
               Quando
             </p>
             <input
@@ -463,7 +443,7 @@ function SubmitMatchModal({
         </div>
 
         <div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Notas (opcional)
           </p>
           <textarea
@@ -475,7 +455,7 @@ function SubmitMatchModal({
           />
         </div>
 
-        <p className="text-[11.5px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Após reportar, o oponente precisa confirmar pra rating ser recalculado e ranking
           atualizado.
         </p>
@@ -485,7 +465,7 @@ function SubmitMatchModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
           >
             Cancelar
           </button>
@@ -493,7 +473,7 @@ function SubmitMatchModal({
             type="button"
             onClick={() => void handleSubmit()}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -525,7 +505,7 @@ function WinnerOption({
       onClick={onSelect}
       disabled={disabled}
       className={cn(
-        'flex w-full items-center gap-2 rounded-lg border p-2.5 text-left text-[13px] transition-colors disabled:opacity-50',
+        'flex w-full items-center gap-2 rounded-lg border p-2.5 text-left text-sm transition-colors disabled:opacity-50',
         checked
           ? 'border-primary bg-primary/10 text-foreground'
           : 'border-border bg-background hover:bg-muted',
@@ -552,7 +532,7 @@ function formatNowLocal(): string {
 }
 
 const inputCls =
-  'w-full rounded-[10px] border border-input bg-background px-3 py-2.25 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'w-full rounded-md border border-input bg-background px-3 py-2.25 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
 
 function toErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof ApiError) return err.message;
@@ -564,8 +544,8 @@ function PlayerTable({ players, orderBy }: { players: RankingPlayerEntry[]; orde
   if (players.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border p-8 text-center">
-        <p className="font-display text-[14px] font-bold">Sem jogadores ainda</p>
-        <p className="mt-1 text-[12.5px] text-muted-foreground">
+        <p className="font-display text-sm font-bold">Sem jogadores ainda</p>
+        <p className="mt-1 text-xs text-muted-foreground">
           Players são enrolados no ranking quando comissão aprova ou via primeira partida.
         </p>
       </div>
@@ -576,8 +556,8 @@ function PlayerTable({ players, orderBy }: { players: RankingPlayerEntry[]; orde
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <table className="w-full table-fixed text-[13px]">
-        <thead className="border-b border-border bg-muted/40 text-[11px] uppercase tracking-[0.04em] text-muted-foreground">
+      <table className="w-full table-fixed text-sm">
+        <thead className="border-b border-border bg-muted/40 text-xs uppercase tracking-[0.04em] text-muted-foreground">
           <tr>
             <th className="w-10 px-3 py-2 text-left font-semibold">#</th>
             <th className="px-3 py-2 text-left font-semibold">Jogador</th>
@@ -594,7 +574,7 @@ function PlayerTable({ players, orderBy }: { players: RankingPlayerEntry[]; orde
         <tbody>
           {players.map((p) => (
             <tr key={p.userId} className="border-t border-border first:border-t-0">
-              <td className="px-3 py-2.5 font-display text-[13.5px] font-bold tabular-nums">
+              <td className="px-3 py-2.5 font-display text-sm font-bold tabular-nums">
                 {p.position}
               </td>
               <td className="truncate px-3 py-2.5">
@@ -607,7 +587,7 @@ function PlayerTable({ players, orderBy }: { players: RankingPlayerEntry[]; orde
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="flex size-7 items-center justify-center rounded-full bg-muted text-[10px] font-bold uppercase text-muted-foreground">
+                    <div className="flex size-7 items-center justify-center rounded-full bg-muted text-xs font-bold uppercase text-muted-foreground">
                       {p.fullName.charAt(0)}
                     </div>
                   )}
@@ -642,7 +622,7 @@ function RatingDelta({ delta }: { delta: number }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-0.5 text-[12px] font-semibold tabular-nums',
+        'inline-flex items-center gap-0.5 text-xs font-semibold tabular-nums',
         positive ? 'text-success' : 'text-destructive',
       )}
     >

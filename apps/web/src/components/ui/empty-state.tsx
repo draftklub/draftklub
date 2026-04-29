@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils';
  *     <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted">
  *       <Icon className="size-4" />
  *     </div>
- *     <p className="mt-3 font-display text-[14px] font-bold">Title</p>
- *     <p className="mt-1 text-[12.5px] text-muted-foreground">Description</p>
+ *     <p className="mt-3 font-display text-sm font-bold">Title</p>
+ *     <p className="mt-1 text-xs text-muted-foreground">Description</p>
  *   </div>
  *
  * Use quando uma lista/tabela/seção está vazia e há contexto pro user

@@ -44,7 +44,7 @@ export default function CriarContaPage() {
 
         <div className="relative z-10 max-w-130">
           <p
-            className="mb-5 font-mono text-[11px] font-medium uppercase"
+            className="mb-5 font-mono text-xs font-medium uppercase"
             style={{
               letterSpacing: '0.18em',
               color: 'hsl(var(--brand-primary-200))',
@@ -67,7 +67,7 @@ export default function CriarContaPage() {
             seu <span style={{ color: 'hsl(var(--brand-primary-300))' }}>Klub</span>.
           </h1>
           <p
-            className="mt-5 max-w-115 text-[17px]"
+            className="mt-5 max-w-115 text-lg"
             style={{
               lineHeight: 1.55,
               color: 'hsl(var(--brand-primary-100) / 0.75)',
@@ -133,7 +133,7 @@ export default function CriarContaPage() {
           {/* Desktop heading + form */}
           <div className="hidden w-full max-w-100 lg:block">
             <h2
-              className="mb-1 font-display text-[28px] font-bold text-foreground"
+              className="mb-1 font-display text-3xl font-bold text-foreground"
               style={{ letterSpacing: '-0.02em' }}
             >
               Criar conta
@@ -163,7 +163,7 @@ export default function CriarContaPage() {
         </div>
 
         {/* Footer (mobile/tablet) */}
-        <div className="relative z-10 px-6 pb-7 text-center text-[13px] text-muted-foreground md:pb-10 md:text-sm lg:hidden">
+        <div className="relative z-10 px-6 pb-7 text-center text-sm text-muted-foreground md:pb-10 md:text-sm lg:hidden">
           Já tem conta?{' '}
           <Link
             href="/login"

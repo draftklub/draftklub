@@ -30,31 +30,31 @@ function Inner() {
         </div>
 
         <h1
-          className="mt-6 font-display text-[26px] font-bold md:text-[30px]"
+          className="mt-6 font-display text-2xl font-bold md:text-3xl"
           style={{ letterSpacing: '-0.02em' }}
         >
           Recebemos sua solicitação!
         </h1>
 
-        <p className="mt-3 text-[14.5px] leading-relaxed text-muted-foreground">
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           A solicitação de cadastro do <strong className="text-foreground">{name}</strong> foi
           enviada pra análise da nossa equipe. A gente confere os dados (Receita Federal, endereço,
           modalidades) e te avisa por email assim que liberar — costuma rolar em até{' '}
           <strong className="text-foreground">2 dias úteis</strong>.
         </p>
 
-        <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           Se faltar alguma coisa, a gente também avisa por lá.
         </p>
 
-        <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[12px] text-muted-foreground">
+        <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
           <Mail className="size-3.5" />
           Resposta vai por email cadastrado
         </div>
 
         <Link
           href="/home"
-          className="mt-8 inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-5 text-[13.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          className="mt-8 inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
         >
           Voltar pro início
           <ArrowRight className="size-3.5" />

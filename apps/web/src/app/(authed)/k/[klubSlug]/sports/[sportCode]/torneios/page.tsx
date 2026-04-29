@@ -4,8 +4,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
-  AlertCircle,
-  ArrowLeft,
   ArrowRight,
   Calendar,
   Loader2,
@@ -13,6 +11,8 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { Banner } from '@/components/ui/banner';
 import type { TournamentStatus } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -111,42 +111,25 @@ export default function SportTournamentsPage() {
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-3xl space-y-5">
-        <Link
-          href={`/k/${klub.slug}/sports/${sportCode}/dashboard`}
-          className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          {sportLabel}
-        </Link>
-
-        <header className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
-              {klub.commonName ?? klub.name} · {sportLabel}
-            </p>
-            <h1
-              className="mt-1 font-display text-[26px] font-bold leading-tight md:text-[32px]"
-              style={{ letterSpacing: '-0.02em' }}
-            >
-              Torneios
-            </h1>
-          </div>
-          {canCreate ? (
-            <Link
-              href={`/k/${klub.slug}/sports/${sportCode}/torneios/novo`}
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              <Plus className="size-3.5" />
-              Criar
-            </Link>
-          ) : null}
-        </header>
+        <PageHeader
+          back={{ href: `/k/${klub.slug}/sports/${sportCode}/dashboard`, label: sportLabel }}
+          eyebrow={`${klub.commonName ?? klub.name} · ${sportLabel}`}
+          title="Torneios"
+          action={
+            canCreate ? (
+              <Link
+                href={`/k/${klub.slug}/sports/${sportCode}/torneios/novo`}
+                className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                <Plus className="size-3.5" />
+                Criar
+              </Link>
+            ) : null
+          }
+        />
 
         {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : grouped === null ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -156,8 +139,8 @@ export default function SportTournamentsPage() {
             <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <Trophy className="size-4" />
             </div>
-            <p className="mt-3 font-display text-[14px] font-bold">Nenhum torneio ainda</p>
-            <p className="mt-1 text-[12.5px] text-muted-foreground">
+            <p className="mt-3 font-display text-sm font-bold">Nenhum torneio ainda</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               {canCreate
                 ? 'Clique em "Criar" no topo pra abrir o primeiro.'
                 : 'A comissão dessa modalidade ainda não criou nenhum.'}
@@ -206,7 +189,7 @@ function Section({
     <section className="space-y-2">
       <h2
         className={cn(
-          'flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground',
+          'flex items-center gap-2 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground',
           tone === 'live' && 'text-[hsl(var(--brand-primary-600))]',
         )}
       >
@@ -240,10 +223,10 @@ function TournamentCard({
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="truncate font-display text-[16px] font-bold">{t.name}</h3>
+          <h3 className="truncate font-display text-base font-bold">{t.name}</h3>
           <StatusBadge status={t.status} />
         </div>
-        <p className="mt-1 inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12.5px] text-muted-foreground">
+        <p className="mt-1 inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
           <span>{FORMAT_LABELS[t.format] ?? t.format}</span>
           {t.hasPrequalifiers ? <span>· com pré-qualificatória</span> : null}
           <span>· {t.categoryCount} categorias</span>
@@ -278,7 +261,7 @@ function StatusBadge({ status }: { status: TournamentStatus }) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
         tone,
       )}
     >

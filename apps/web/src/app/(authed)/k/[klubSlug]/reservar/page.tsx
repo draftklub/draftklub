@@ -18,6 +18,8 @@ import {
   Users,
 } from 'lucide-react';
 import type { Space } from '@draftklub/shared-types';
+import { Banner } from '@/components/ui/banner';
+import { PageHeader } from '@/components/ui/page-header';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { listKlubSpaces } from '@/lib/api/spaces';
@@ -158,25 +160,12 @@ export default function ReservarPage() {
   return (
     <main className="flex-1 overflow-y-auto pb-24">
       <div className="mx-auto max-w-2xl px-4 py-6 md:px-6 md:py-10">
-        <Link
-          href={`/k/${klub.slug}/dashboard`}
-          className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          Voltar
-        </Link>
-
-        <header className="mb-6">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
-            Reservar quadra
-          </p>
-          <h1
-            className="mt-1 font-display text-[24px] font-bold leading-tight md:text-[30px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            {klub.name}
-          </h1>
-        </header>
+        <PageHeader
+          back={{ href: `/k/${klub.slug}/dashboard`, label: 'Voltar' }}
+          eyebrow="Reservar quadra"
+          title={klub.name}
+          className="mb-6"
+        />
 
         <Stepper step={step} />
 
@@ -214,9 +203,7 @@ export default function ReservarPage() {
           ) : null}
 
           {stepError ? (
-            <p className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-[12.5px] text-destructive">
-              {stepError}
-            </p>
+            <Banner tone="error">{stepError}</Banner>
           ) : null}
         </div>
       </div>
@@ -231,7 +218,7 @@ export default function ReservarPage() {
               setStep((s) => (s > 1 ? ((s - 1) as Step) : s));
             }}
             disabled={step === 1 || submitting}
-            className="inline-flex h-11 items-center gap-1 rounded-lg px-3 text-[13px] font-medium text-muted-foreground hover:bg-muted disabled:opacity-50"
+            className="inline-flex h-11 items-center gap-1 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-muted disabled:opacity-50"
           >
             <ArrowLeft className="size-4" />
             Voltar
@@ -248,7 +235,7 @@ export default function ReservarPage() {
                 }
                 setStep(2);
               }}
-              className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[14px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:flex-none sm:px-6"
+              className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:flex-none sm:px-6"
             >
               Próximo
               <ArrowRight className="size-4" />
@@ -266,7 +253,7 @@ export default function ReservarPage() {
                 }
                 setStep(3);
               }}
-              className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[14px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:flex-none sm:px-6"
+              className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:flex-none sm:px-6"
             >
               Próximo
               <ArrowRight className="size-4" />
@@ -278,7 +265,7 @@ export default function ReservarPage() {
               type="button"
               onClick={() => void handleConfirm()}
               disabled={submitting}
-              className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[14px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-70 sm:flex-none sm:px-6"
+              className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-70 sm:flex-none sm:px-6"
             >
               {submitting ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -308,7 +295,7 @@ function Stepper({ step }: { step: Step }) {
           <li key={label} className="flex flex-1 items-center gap-1.5">
             <span
               className={cn(
-                'flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
+                'flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
                 done
                   ? 'bg-primary text-primary-foreground'
                   : active
@@ -320,7 +307,7 @@ function Stepper({ step }: { step: Step }) {
             </span>
             <span
               className={cn(
-                'truncate text-[11.5px] font-medium',
+                'truncate text-xs font-medium',
                 active ? 'text-foreground' : 'text-muted-foreground',
               )}
             >
@@ -355,8 +342,8 @@ function Step1Quadra({
   if (spaces.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border p-6 text-center">
-        <p className="font-display text-[14px] font-bold">Sem quadras disponíveis</p>
-        <p className="mt-1 text-[12px] text-muted-foreground">
+        <p className="font-display text-sm font-bold">Sem quadras disponíveis</p>
+        <p className="mt-1 text-xs text-muted-foreground">
           Esse Klub ainda não cadastrou quadras pra reserva.
         </p>
       </div>
@@ -365,7 +352,7 @@ function Step1Quadra({
 
   return (
     <div className="space-y-3">
-      <h2 className="font-display text-[15px] font-bold">Qual quadra?</h2>
+      <h2 className="font-display text-sm font-bold">Qual quadra?</h2>
       <ul className="space-y-2">
         {spaces.map((s) => {
           const selected = selectedSpace?.id === s.id;
@@ -390,8 +377,8 @@ function Step1Quadra({
                   {selected ? <Check className="size-3 text-primary-foreground" /> : null}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-[14px] font-bold">{s.name}</p>
-                  <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+                  <p className="truncate font-display text-sm font-bold">{s.name}</p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
                     {s.sportCode ? sportLabel(s.sportCode) : 'Sem modalidade'} ·{' '}
                     {s.indoor ? 'Coberta' : 'Aberta'}
                     {s.hasLighting ? ' · Iluminação' : ''}
@@ -437,7 +424,7 @@ function Step2DataHorario({
   return (
     <div className="space-y-5">
       {space ? (
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Reservando em <strong className="text-foreground">{space.name}</strong>
         </p>
       ) : null}
@@ -445,7 +432,7 @@ function Step2DataHorario({
       {/* Match type — só mostra se a quadra suporta os 2 */}
       {allowedMatchTypes.length > 1 ? (
         <div>
-          <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Tipo de jogo
           </p>
           <div className="flex gap-2">
@@ -467,7 +454,7 @@ function Step2DataHorario({
 
       {/* Data — scroll horizontal de 14 dias */}
       <div>
-        <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Data
         </p>
         <div className="-mx-4 overflow-x-auto px-4 md:-mx-6 md:px-6">
@@ -492,7 +479,7 @@ function Step2DataHorario({
 
       {/* Slots */}
       <div>
-        <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Horário
         </p>
         {loading ? (
@@ -500,7 +487,7 @@ function Step2DataHorario({
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : !availability || availability.slots.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-5 text-center text-[12.5px] text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-border p-5 text-center text-xs text-muted-foreground">
             Sem horários configurados para essa data.
           </div>
         ) : (
@@ -511,7 +498,7 @@ function Step2DataHorario({
               const [, , label, Icon] = PERIOD_RANGES[period];
               return (
                 <div key={period}>
-                  <p className="mb-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+                  <p className="mb-1.5 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
                     <Icon className="size-3" />
                     {label}
                   </p>
@@ -548,7 +535,7 @@ function Step3Confirmar({
 }) {
   if (!space || !slot) {
     return (
-      <p className="text-[13px] text-muted-foreground">Volta um passo e completa as escolhas.</p>
+      <p className="text-sm text-muted-foreground">Volta um passo e completa as escolhas.</p>
     );
   }
   const start = new Date(slot.startTime);
@@ -564,31 +551,31 @@ function Step3Confirmar({
 
   return (
     <div className="space-y-4">
-      <h2 className="font-display text-[15px] font-bold">Tudo certo?</h2>
+      <h2 className="font-display text-sm font-bold">Tudo certo?</h2>
 
       <div className="rounded-lg border border-border bg-background">
         <ReviewRow icon={MapPin} label="Quadra">
-          <p className="font-display text-[14px] font-bold">{space.name}</p>
-          <p className="text-[11.5px] text-muted-foreground">
+          <p className="font-display text-sm font-bold">{space.name}</p>
+          <p className="text-xs text-muted-foreground">
             {space.sportCode ? sportLabel(space.sportCode) : ''}
             {space.indoor ? ' · Coberta' : ' · Aberta'}
           </p>
         </ReviewRow>
         <ReviewRow icon={CalendarDays} label="Data">
-          <p className="capitalize text-[14px]">{date}</p>
+          <p className="capitalize text-sm">{date}</p>
         </ReviewRow>
         <ReviewRow icon={Clock} label="Horário">
-          <p className="text-[14px]">
+          <p className="text-sm">
             {startLabel} – {endLabel}
           </p>
-          <p className="text-[11.5px] text-muted-foreground">{durationMin} min</p>
+          <p className="text-xs text-muted-foreground">{durationMin} min</p>
         </ReviewRow>
         <ReviewRow icon={Users} label="Tipo">
-          <p className="text-[14px]">{matchType === 'singles' ? 'Singles' : 'Doubles'}</p>
+          <p className="text-sm">{matchType === 'singles' ? 'Singles' : 'Doubles'}</p>
         </ReviewRow>
       </div>
 
-      <p className="text-[11.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Você é o jogador principal. Outros participantes podem ser adicionados depois pela tela do
         booking.
       </p>
@@ -634,32 +621,32 @@ function SuccessView({
           <CheckCircle2 className="size-7" strokeWidth={1.8} />
         </div>
         <h1
-          className="mt-6 font-display text-[26px] font-bold"
+          className="mt-6 font-display text-2xl font-bold"
           style={{ letterSpacing: '-0.02em' }}
         >
           Reservado!
         </h1>
-        <p className="mt-2 text-[14px] text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground">
           {space?.name} no {klubName} · <span className="capitalize">{date}</span> às {time}
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <button
             type="button"
             onClick={onAnother}
-            className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-[14px] font-semibold transition-colors hover:bg-muted"
+            className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-semibold transition-colors hover:bg-muted"
           >
             Reservar outro horário
           </button>
           <button
             type="button"
             onClick={onDone}
-            className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[14px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Voltar pro Klub
             <ArrowRight className="size-3.5" />
           </button>
         </div>
-        <p className="mt-4 text-[11px] text-muted-foreground">
+        <p className="mt-4 text-xs text-muted-foreground">
           Você verá essa reserva em{' '}
           <Link href={`/k/${klubSlug}/dashboard`} className="underline">
             {klubSlug}
@@ -694,7 +681,7 @@ function SlotButton({
       disabled={disabled}
       aria-pressed={active}
       className={cn(
-        'flex h-12 items-center justify-center rounded-lg border text-[13px] font-semibold transition-colors',
+        'flex h-12 items-center justify-center rounded-lg border text-sm font-semibold transition-colors',
         active
           ? 'border-primary bg-primary text-primary-foreground'
           : disabled
@@ -729,10 +716,10 @@ function MatchTypePill({
         active ? 'border-primary bg-primary/5' : 'border-border bg-background hover:bg-muted',
       )}
     >
-      <span className={cn('text-[13px] font-semibold', active ? 'text-foreground' : '')}>
+      <span className={cn('text-sm font-semibold', active ? 'text-foreground' : '')}>
         {label}
       </span>
-      <span className="text-[10.5px] text-muted-foreground">{hint}</span>
+      <span className="text-xs text-muted-foreground">{hint}</span>
     </button>
   );
 }
@@ -764,9 +751,9 @@ function DayChip({
           : 'border-border bg-background hover:bg-muted',
       )}
     >
-      <span className="text-[10px] font-semibold uppercase">{weekday}</span>
-      <span className="font-display text-[18px] font-bold leading-none">{day}</span>
-      <span className="mt-0.5 text-[9.5px] uppercase opacity-80">{month}</span>
+      <span className="text-xs font-semibold uppercase">{weekday}</span>
+      <span className="font-display text-lg font-bold leading-none">{day}</span>
+      <span className="mt-0.5 text-xs uppercase opacity-80">{month}</span>
     </button>
   );
 }
@@ -786,7 +773,7 @@ function ReviewRow({
         <Icon className="size-3.5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           {label}
         </p>
         <div className="mt-0.5">{children}</div>

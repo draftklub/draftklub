@@ -72,7 +72,7 @@ export function Stepper({ step }: { step: Step }) {
           <li key={label} className="flex flex-1 items-center gap-2">
             <span
               className={cn(
-                'flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold',
+                'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold',
                 done
                   ? 'bg-primary text-primary-foreground'
                   : active
@@ -84,7 +84,7 @@ export function Stepper({ step }: { step: Step }) {
             </span>
             <span
               className={cn(
-                'truncate text-[12px] font-medium',
+                'truncate text-xs font-medium',
                 active ? 'text-foreground' : 'text-muted-foreground',
               )}
             >
@@ -140,7 +140,7 @@ export function Step1Identidade(p: Step1Props) {
     <div className="space-y-6">
       <div>
         <h2 className="font-display text-lg font-bold">Quem é você</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           O Klub está no nome de uma empresa (CNPJ) ou no seu CPF?
         </p>
       </div>
@@ -169,13 +169,13 @@ export function Step1Identidade(p: Step1Props) {
                 onChange={(e) => p.setCnpj(maskCnpj(e.target.value))}
                 placeholder="XX.XXX.XXX/XXXX-XX"
                 inputMode="numeric"
-                className="h-11 flex-1 rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+                className="h-11 flex-1 rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
               />
               <button
                 type="button"
                 onClick={p.onLookupCnpj}
                 disabled={!p.cnpjValid || p.cnpjLookupLoading}
-                className="inline-flex h-11 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[13px] font-semibold transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-11 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-semibold transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {p.cnpjLookupLoading ? (
                   <Loader2 className="size-3.5 animate-spin" />
@@ -187,7 +187,7 @@ export function Step1Identidade(p: Step1Props) {
             </div>
           </Field>
           {p.cnpjLookupData ? (
-            <div className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px]">
+            <div className="rounded-lg border border-success/30 bg-success/5 p-3 text-xs">
               <p className="font-semibold text-success">
                 <CheckCircle2 className="mr-1 inline size-3.5" />
                 {p.cnpjLookupData.razaoSocial ?? '(sem razão social)'}
@@ -205,7 +205,7 @@ export function Step1Identidade(p: Step1Props) {
               </p>
             </div>
           ) : p.cnpjLookupTried && !p.cnpjLookupLoading ? (
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Não achamos dados na Receita. Você pode preencher manualmente o endereço.
             </p>
           ) : null}
@@ -215,7 +215,7 @@ export function Step1Identidade(p: Step1Props) {
       {p.entityType === 'pf' ? (
         <div className="space-y-3">
           {p.userHasCpfAlready ? (
-            <div className="rounded-lg border border-border bg-muted/30 p-3 text-[13px]">
+            <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
               Vamos usar o CPF cadastrado no seu perfil:{' '}
               <span className="font-mono font-semibold">{hintDocument(p.meCpf ?? '', 'cpf')}</span>
             </div>
@@ -226,7 +226,7 @@ export function Step1Identidade(p: Step1Props) {
                 onChange={(e) => p.setCreatorCpf(maskCpf(e.target.value))}
                 placeholder="XXX.XXX.XXX-XX"
                 inputMode="numeric"
-                className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+                className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
               />
             </Field>
           )}
@@ -241,7 +241,7 @@ export function Step1Identidade(p: Step1Props) {
               onChange={(e) => p.setName(e.target.value)}
               placeholder="Ex: Tennis Club Botafogo"
               maxLength={100}
-              className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+              className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
             />
           </Field>
 
@@ -254,7 +254,7 @@ export function Step1Identidade(p: Step1Props) {
               onChange={(e) => p.setCommonName(e.target.value)}
               placeholder="(opcional)"
               maxLength={100}
-              className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+              className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
             />
           </Field>
 
@@ -263,7 +263,7 @@ export function Step1Identidade(p: Step1Props) {
               <input
                 value={p.legalName}
                 disabled
-                className="h-11 w-full rounded-[10px] border border-input bg-muted px-3.5 text-[15px] text-muted-foreground"
+                className="h-11 w-full rounded-md border border-input bg-muted px-3.5 text-sm text-muted-foreground"
               />
             </Field>
           ) : null}
@@ -276,7 +276,7 @@ export function Step1Identidade(p: Step1Props) {
                 onChange={(e) => p.setEmail(e.target.value)}
                 placeholder="contato@seuklub.com.br"
                 maxLength={150}
-                className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+                className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
               />
             </Field>
             <Field label="Telefone">
@@ -285,7 +285,7 @@ export function Step1Identidade(p: Step1Props) {
                 onChange={(e) => p.setPhone(e.target.value)}
                 placeholder="(00) 00000-0000"
                 maxLength={30}
-                className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+                className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
               />
             </Field>
           </div>
@@ -304,8 +304,8 @@ export function Step1Identidade(p: Step1Props) {
                       : 'border-border bg-background hover:bg-muted',
                   )}
                 >
-                  <span className="text-[13.5px] font-semibold">{t.label}</span>
-                  <span className="text-[11.5px] text-muted-foreground">{t.hint}</span>
+                  <span className="text-sm font-semibold">{t.label}</span>
+                  <span className="text-xs text-muted-foreground">{t.hint}</span>
                 </button>
               ))}
             </div>
@@ -336,8 +336,8 @@ function EntityCard({
         selected ? 'border-primary bg-primary/5' : 'border-border bg-background hover:bg-muted',
       )}
     >
-      <span className="font-display text-[15px] font-bold">{label}</span>
-      <span className="mt-1 text-[12.5px] text-muted-foreground">{hint}</span>
+      <span className="font-display text-sm font-bold">{label}</span>
+      <span className="mt-1 text-xs text-muted-foreground">{hint}</span>
     </button>
   );
 }
@@ -371,14 +371,14 @@ export function Step2Endereco(p: Step2Props) {
     <div className="space-y-5">
       <div>
         <h2 className="font-display text-lg font-bold">Onde fica o Klub</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           Endereço completo. Bairro e cidade entram na URL pública do Klub.
         </p>
       </div>
 
       {locked ? (
         <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3">
-          <div className="text-[12.5px]">
+          <div className="text-xs">
             <p className="font-semibold">Dados da Receita Federal</p>
             <p className="text-muted-foreground">
               Endereço preenchido automaticamente. Pra alterar, clique ao lado.
@@ -387,7 +387,7 @@ export function Step2Endereco(p: Step2Props) {
           <button
             type="button"
             onClick={() => p.setAddressSource('manual')}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-[12px] font-medium hover:bg-muted"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-xs font-medium hover:bg-muted"
           >
             <Pencil className="size-3" />
             Editar manualmente
@@ -403,7 +403,7 @@ export function Step2Endereco(p: Step2Props) {
             placeholder="22440000"
             inputMode="numeric"
             disabled={locked}
-            className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
+            className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
           />
         </Field>
         <div className="sm:col-span-2">
@@ -413,7 +413,7 @@ export function Step2Endereco(p: Step2Props) {
               onChange={(e) => p.setAddressStreet(e.target.value)}
               placeholder="Rua, avenida..."
               disabled={locked}
-              className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
+              className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
             />
           </Field>
         </div>
@@ -426,7 +426,7 @@ export function Step2Endereco(p: Step2Props) {
             onChange={(e) => p.setAddressNumber(e.target.value)}
             placeholder="100"
             disabled={locked}
-            className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
+            className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
           />
         </Field>
         <div className="sm:col-span-2">
@@ -435,7 +435,7 @@ export function Step2Endereco(p: Step2Props) {
               value={p.addressComplement}
               onChange={(e) => p.setAddressComplement(e.target.value)}
               placeholder="Sala, andar, bloco..."
-              className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+              className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
             />
           </Field>
         </div>
@@ -447,7 +447,7 @@ export function Step2Endereco(p: Step2Props) {
           onChange={(e) => p.setAddressNeighborhood(e.target.value)}
           placeholder="Botafogo"
           disabled={locked}
-          className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
+          className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
         />
       </Field>
 
@@ -458,7 +458,7 @@ export function Step2Endereco(p: Step2Props) {
             onChange={(e) => p.setCity(e.target.value)}
             placeholder="Rio de Janeiro"
             disabled={locked}
-            className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
+            className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
           />
         </Field>
         <Field label="UF" required>
@@ -466,7 +466,7 @@ export function Step2Endereco(p: Step2Props) {
             value={p.state}
             onChange={(e) => p.setState(e.target.value)}
             disabled={locked}
-            className="h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
+            className="h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:opacity-70"
           >
             <option value="">—</option>
             {BRAZILIAN_STATES.map((uf) => (
@@ -508,15 +508,15 @@ export function Step3Modalidades(p: Step3Props) {
     <div className="space-y-7">
       <div>
         <h2 className="font-display text-lg font-bold">Modalidades</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           Quais esportes seu Klub oferece? Selecione pelo menos uma.
         </p>
       </div>
 
       {p.sportError ? (
-        <p className="text-[13px] text-destructive">{p.sportError}</p>
+        <p className="text-sm text-destructive">{p.sportError}</p>
       ) : p.sports === null ? (
-        <p className="text-[13px] text-muted-foreground">Carregando…</p>
+        <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {p.sports.map((s) => (
@@ -525,7 +525,7 @@ export function Step3Modalidades(p: Step3Props) {
               type="button"
               onClick={() => toggleSport(s.code)}
               className={cn(
-                'inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-colors',
+                'inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors',
                 p.selectedSports.has(s.code)
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'border-border bg-background hover:bg-muted',
@@ -543,7 +543,7 @@ export function Step3Modalidades(p: Step3Props) {
       <div className="space-y-4">
         <div>
           <h3 className="font-display text-base font-bold">Visibilidade na plataforma</h3>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Controla se outros usuários vão achar seu Klub na busca pública.
           </p>
         </div>
@@ -563,7 +563,7 @@ export function Step3Modalidades(p: Step3Props) {
       <div className="space-y-4">
         <div>
           <h3 className="font-display text-base font-bold">Modo de acesso</h3>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Como novos jogadores entram no Klub. Independente da visibilidade.
           </p>
         </div>
@@ -611,8 +611,8 @@ function ToggleCard({
       )}
     >
       <div className="min-w-0">
-        <p className="text-[13.5px] font-semibold">{title}</p>
-        <p className="text-[12px] text-muted-foreground">{hint}</p>
+        <p className="text-sm font-semibold">{title}</p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
       </div>
       <span
         className={cn(
@@ -664,13 +664,13 @@ function RadioCard({
         {checked ? <span className="size-2 rounded-full bg-primary" /> : null}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="text-[13.5px] font-semibold">{title}</span>
+        <span className="text-sm font-semibold">{title}</span>
         {badge ? (
-          <span className="ml-1.5 inline-flex items-center rounded bg-muted px-1.5 py-0.5 align-middle text-[9.5px] font-bold uppercase tracking-[0.06em]">
+          <span className="ml-1.5 inline-flex items-center rounded bg-muted px-1.5 py-0.5 align-middle text-xs font-bold uppercase tracking-[0.06em]">
             {badge}
           </span>
         ) : null}
-        <span className="block text-[12px] text-muted-foreground">{hint}</span>
+        <span className="block text-xs text-muted-foreground">{hint}</span>
       </span>
     </button>
   );
@@ -714,7 +714,7 @@ export function Step4Revisao(p: Step4Props) {
     <div className="space-y-5">
       <div>
         <h2 className="font-display text-lg font-bold">Revisão</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           Confira os dados antes de enviar pra análise.
         </p>
       </div>
@@ -747,7 +747,7 @@ export function Step4Revisao(p: Step4Props) {
           {p.cep ? ` · CEP ${p.cep}` : ''}
         </p>
         {p.addressSource === 'cnpj_lookup' ? (
-          <p className="text-[11px] text-muted-foreground">Auto-preenchido pela Receita.</p>
+          <p className="text-xs text-muted-foreground">Auto-preenchido pela Receita.</p>
         ) : null}
       </ReviewBlock>
 
@@ -778,7 +778,7 @@ export function Step4Revisao(p: Step4Props) {
             {p.slugCheck.available ? (
               <Badge tone="green">URL livre</Badge>
             ) : (
-              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-[12px] text-amber-700 dark:text-amber-400">
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-xs text-amber-700 dark:text-amber-400">
                 Já existe um Klub com essa URL{' '}
                 {p.slugCheck.conflictKlubName ? `(${p.slugCheck.conflictKlubName})` : ''}.
                 {p.slugCheck.suggestedSlug ? (
@@ -800,10 +800,10 @@ export function Step4Revisao(p: Step4Props) {
 function ReviewBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-border bg-background p-3">
-      <p className="mb-1 text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+      <p className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
         {title}
       </p>
-      <div className="space-y-0.5 text-[13.5px]">{children}</div>
+      <div className="space-y-0.5 text-sm">{children}</div>
     </div>
   );
 }
@@ -812,7 +812,7 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: 'green' | 
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10.5px] font-bold uppercase tracking-[0.06em]',
+        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
         tone === 'green'
           ? 'bg-success/12 text-success'
           : 'bg-muted text-muted-foreground',
@@ -838,12 +838,12 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[12.5px] font-semibold">
+      <span className="mb-1.5 block text-xs font-semibold">
         {label}
         {required ? <span className="ml-0.5 text-destructive">*</span> : null}
       </span>
       {children}
-      {hint ? <span className="mt-1 block text-[11.5px] text-muted-foreground">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-xs text-muted-foreground">{hint}</span> : null}
     </label>
   );
 }

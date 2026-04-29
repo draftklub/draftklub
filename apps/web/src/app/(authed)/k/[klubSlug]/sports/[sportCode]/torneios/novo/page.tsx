@@ -1,9 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, Plus, Save, Trash2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Plus, Save, Trash2 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
 import type {
   RankingListItem,
   RankingPointsSchema,
@@ -22,6 +22,7 @@ import {
   type CreateTournamentCategoryInput,
 } from '@/lib/api/tournaments';
 import { isPlatformLevel } from '@/lib/auth/role-helpers';
+import { Banner } from '@/components/ui/banner';
 import { cn } from '@/lib/utils';
 
 const SPORT_LABELS: Record<string, string> = {
@@ -239,7 +240,7 @@ export default function NovoTorneioPage() {
         <div className="max-w-md rounded-xl border border-border bg-card p-6 text-center">
           <AlertCircle className="mx-auto mb-3 size-8 text-muted-foreground" />
           <h1 className="font-display text-lg font-bold">Acesso restrito</h1>
-          <p className="mt-2 text-[13px] text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             Apenas KLUB_ADMIN, KLUB_ASSISTANT, SPORT_COMMISSION ou Platform-level pode criar
             torneios.
           </p>
@@ -251,7 +252,7 @@ export default function NovoTorneioPage() {
   if (bootError) {
     return (
       <main className="flex flex-1 items-center justify-center px-4">
-        <p className="text-[13px] text-destructive">{bootError}</p>
+        <p className="text-sm text-destructive">{bootError}</p>
       </main>
     );
   }
@@ -260,11 +261,15 @@ export default function NovoTorneioPage() {
     return (
       <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
         <div className="mx-auto max-w-2xl space-y-4">
-          <BackLink klubSlug={klub.slug} sportCode={sportCode} sportLabel={sportLabel} />
+          <PageHeader
+            back={{ href: `/k/${klub.slug}/sports/${sportCode}/torneios`, label: `Torneios · ${sportLabel}` }}
+            eyebrow={`${klub.commonName ?? klub.name} · ${sportLabel}`}
+            title="Criar torneio"
+          />
           <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-6 text-center">
             <AlertCircle className="mx-auto mb-3 size-8 text-amber-700 dark:text-amber-400" />
-            <h2 className="font-display text-[16px] font-bold">Nenhum ranking ativo</h2>
-            <p className="mt-2 text-[13px] text-muted-foreground">
+            <h2 className="font-display text-base font-bold">Nenhum ranking ativo</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
               Antes de criar torneio, é preciso ter pelo menos um ranking ativo dessa modalidade.
               Criação de ranking pela UI entra em PR-K3.
             </p>
@@ -277,25 +282,14 @@ export default function NovoTorneioPage() {
   return (
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-2xl space-y-4">
-        <BackLink klubSlug={klub.slug} sportCode={sportCode} sportLabel={sportLabel} />
-
-        <header>
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--brand-primary-600))]">
-            {klub.commonName ?? klub.name} · {sportLabel}
-          </p>
-          <h1
-            className="mt-1 font-display text-[24px] font-bold leading-tight md:text-[30px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Criar torneio
-          </h1>
-        </header>
+        <PageHeader
+          back={{ href: `/k/${klub.slug}/sports/${sportCode}/torneios`, label: `Torneios · ${sportLabel}` }}
+          eyebrow={`${klub.commonName ?? klub.name} · ${sportLabel}`}
+          title="Criar torneio"
+        />
 
         {submitError ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {submitError}
-          </p>
+          <Banner tone="error">{submitError}</Banner>
         ) : null}
 
         <Section title="Identidade">
@@ -332,7 +326,7 @@ export default function NovoTorneioPage() {
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               {FORMAT_OPTIONS.find((o) => o.value === format)?.hint}
             </p>
           </Field>
@@ -383,7 +377,7 @@ export default function NovoTorneioPage() {
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               Pontos do torneio aplicam neste ranking.
             </p>
           </Field>
@@ -456,7 +450,7 @@ export default function NovoTorneioPage() {
         </Section>
 
         <Section title="Categorias" extra={<CategoriesCount n={categories.length} />}>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Cada categoria tem chave própria. Ex: Masculino A, Feminino A, Mista B.
           </p>
           <ul className="space-y-3">
@@ -476,7 +470,7 @@ export default function NovoTorneioPage() {
           <button
             type="button"
             onClick={addCategory}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-dashed border-border bg-background px-3.5 text-[12.5px] font-medium hover:bg-muted"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-dashed border-border bg-background px-3.5 text-xs font-medium hover:bg-muted"
           >
             <Plus className="size-3.5" />
             Adicionar categoria
@@ -488,7 +482,7 @@ export default function NovoTorneioPage() {
             type="button"
             onClick={() => void handleSubmit()}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -514,26 +508,6 @@ export default function NovoTorneioPage() {
 
 // ─── Helpers UI ────────────────────────────────────────────────────────
 
-function BackLink({
-  klubSlug,
-  sportCode,
-  sportLabel,
-}: {
-  klubSlug: string;
-  sportCode: string;
-  sportLabel: string;
-}) {
-  return (
-    <Link
-      href={`/k/${klubSlug}/sports/${sportCode}/torneios`}
-      className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-    >
-      <ArrowLeft className="size-3.5" />
-      Torneios · {sportLabel}
-    </Link>
-  );
-}
-
 function Section({
   title,
   extra,
@@ -546,7 +520,7 @@ function Section({
   return (
     <section className="space-y-3 rounded-xl border border-border bg-card p-3.5">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-display text-[14px] font-bold">{title}</h2>
+        <h2 className="font-display text-sm font-bold">{title}</h2>
         {extra}
       </div>
       <div className="space-y-2.5">{children}</div>
@@ -556,7 +530,7 @@ function Section({
 
 function CategoriesCount({ n }: { n: number }) {
   return (
-    <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+    <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
       {n} categoria{n === 1 ? '' : 's'}
     </span>
   );
@@ -580,7 +554,7 @@ function CategoryEditor({
   return (
     <div className="space-y-2 rounded-lg border border-border bg-background p-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <p className="text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Categoria {index + 1}
         </p>
         {onRemove ? (
@@ -654,13 +628,13 @@ function CategoryEditor({
           <button
             type="button"
             onClick={onCreatePointsSchema}
-            className="inline-flex h-10 items-center justify-center gap-1 rounded-lg border border-border bg-background px-3 text-[12px] font-semibold hover:bg-muted"
+            className="inline-flex h-10 items-center justify-center gap-1 rounded-lg border border-border bg-background px-3 text-xs font-semibold hover:bg-muted"
           >
             <Plus className="size-3.5" />
             Novo
           </button>
         </div>
-        <p className="mt-1 text-[11px] text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground">
           Ex: champion=100, runnerUp=50, semi=25 — define quanto cada posição pontua no ranking.
         </p>
       </Field>
@@ -671,7 +645,7 @@ function CategoryEditor({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+      <label className="mb-1 block text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
         {label}
       </label>
       {children}
@@ -696,7 +670,7 @@ function Toggle({
         type="button"
         onClick={() => onChange(!value)}
         className={cn(
-          'flex w-full items-center justify-between rounded-[10px] border p-3 text-[13px] font-medium transition-colors',
+          'flex w-full items-center justify-between rounded-md border p-3 text-sm font-medium transition-colors',
           value
             ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
             : 'border-input bg-background hover:bg-muted',
@@ -717,13 +691,13 @@ function Toggle({
           />
         </span>
       </button>
-      {help ? <p className="mt-1 text-[11px] text-muted-foreground">{help}</p> : null}
+      {help ? <p className="mt-1 text-xs text-muted-foreground">{help}</p> : null}
     </div>
   );
 }
 
 const inputCls =
-  'w-full rounded-[10px] border border-input bg-background px-3 py-2.25 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'w-full rounded-md border border-input bg-background px-3 py-2.25 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
 
 // ─── Modal: criar points schema ────────────────────────────────────────
 
@@ -818,10 +792,7 @@ function CreatePointsSchemaModal({
         </div>
 
         {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : null}
 
         <Field label="Nome">
@@ -844,7 +815,7 @@ function CreatePointsSchemaModal({
         </Field>
 
         <div>
-          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Pontos por posição
           </p>
           <ul className="space-y-2">
@@ -878,12 +849,12 @@ function CreatePointsSchemaModal({
           <button
             type="button"
             onClick={addPoint}
-            className="mt-2 inline-flex h-8 items-center gap-1 rounded-md border border-dashed border-border bg-background px-2.5 text-[12px] font-medium hover:bg-muted"
+            className="mt-2 inline-flex h-8 items-center gap-1 rounded-md border border-dashed border-border bg-background px-2.5 text-xs font-medium hover:bg-muted"
           >
             <Plus className="size-3" />
             Adicionar
           </button>
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-xs text-muted-foreground">
             Chaves comuns: champion, runnerUp, semi, quarter, round_of_16, round_of_32.
           </p>
         </div>
@@ -893,7 +864,7 @@ function CreatePointsSchemaModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
           >
             Cancelar
           </button>
@@ -901,7 +872,7 @@ function CreatePointsSchemaModal({
             type="button"
             onClick={() => void handleSubmit()}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3.5 animate-spin" />

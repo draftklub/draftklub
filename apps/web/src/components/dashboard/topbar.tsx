@@ -30,17 +30,17 @@ export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
     <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-card px-4 md:gap-6 md:px-8">
       <div className="flex min-w-0 flex-1 flex-col md:flex-none">
         <h1
-          className="truncate font-display text-[18px] font-bold leading-none md:text-[20px]"
+          className="truncate font-display text-lg font-bold leading-none md:text-[20px]"
           style={{ letterSpacing: '-0.02em' }}
         >
           {klub?.name ?? 'Klub'}
         </h1>
-        <p className="mt-1 truncate font-mono text-[10.5px] text-muted-foreground">
+        <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
           {subtitle ?? `/k/${slug}`}
         </p>
       </div>
 
-      <div className="hidden rounded-[9px] border border-border bg-card p-0.75 md:inline-flex">
+      <div className="hidden rounded-md border border-border bg-card p-0.75 md:inline-flex">
         {SPORTS.map((sport) => {
           const isOn = sport === activeSport;
           return (
@@ -49,7 +49,7 @@ export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
               type="button"
               aria-pressed={isOn}
               className={cn(
-                'h-8 rounded-md px-3 text-[12.5px] font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                'h-8 rounded-md px-3 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
                 isOn
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground',
@@ -70,7 +70,7 @@ export function Topbar({ subtitle, activeSport = 'Tennis' }: TopbarProps) {
           <input
             type="search"
             placeholder="Buscar sócio, quadra…"
-            className="h-9 w-full rounded-[9px] border border-border bg-background pl-8 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+            className="h-9 w-full rounded-md border border-border bg-background pl-8 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
           />
         </div>
 

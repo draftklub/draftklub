@@ -212,12 +212,12 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
         <SectionLabel>Seus Klubs</SectionLabel>
         <nav className="flex flex-col gap-0.5 px-3">
           {klubs === null ? (
-            <div className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-muted-foreground">
+            <div className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
               Carregando…
             </div>
           ) : klubs.length === 0 ? (
-            <p className="px-2.5 py-2 text-[12px] text-muted-foreground">
+            <p className="px-2.5 py-2 text-xs text-muted-foreground">
               Nenhum Klub ainda.{' '}
               <Link href="/klubs" className="font-semibold text-primary hover:underline">
                 Buscar
@@ -280,18 +280,18 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
               photoUrl={user?.photoURL ?? null}
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-semibold leading-tight">
+              <p className="truncate text-sm font-semibold leading-tight">
                 {user?.displayName ?? user?.email?.split('@')[0] ?? 'Você'}
               </p>
               {user?.email ? (
-                <p className="truncate text-[10.5px] text-muted-foreground">{user.email}</p>
+                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
               ) : null}
             </div>
           </Link>
           <button
             type="button"
             onClick={() => void handleLogout()}
-            className="mt-1 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="mt-1 flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <LogOut className="size-3.5" />
             Sair
@@ -304,7 +304,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mt-2 px-5 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+    <p className="mt-2 px-5 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
       {children}
     </p>
   );
@@ -322,7 +322,7 @@ interface NavLinkProps {
 
 function NavLink({ href, label, icon: Icon, active, disabled, badge, onNavigate }: NavLinkProps) {
   const cls = cn(
-    'flex items-center gap-2.75 rounded-lg px-2.5 py-1.75 text-[13.5px] transition-colors',
+    'flex items-center gap-2.75 rounded-lg px-2.5 py-1.75 text-sm transition-colors',
     active
       ? 'bg-primary/10 font-semibold text-[hsl(var(--brand-primary-600))]'
       : 'font-medium text-foreground hover:bg-muted',
@@ -337,7 +337,7 @@ function NavLink({ href, label, icon: Icon, active, disabled, badge, onNavigate 
       />
       <span className="flex-1 truncate">{label}</span>
       {badge ? (
-        <span className="rounded-full bg-muted px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           {badge}
         </span>
       ) : null}
@@ -406,7 +406,7 @@ function KlubItem({
           href={`/k/${klub.klubSlug}/dashboard`}
           onClick={onNavigate}
           className={cn(
-            'flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.75 text-[13.5px]',
+            'flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.75 text-sm',
             active ? 'font-semibold' : 'font-medium',
           )}
         >
@@ -480,13 +480,13 @@ function SportLink({
           suspenso
         </span>
       ) : status === 'none' ? (
-        <span className="text-[10px] text-muted-foreground">solicitar</span>
+        <span className="text-xs text-muted-foreground">solicitar</span>
       ) : null}
     </span>
   );
 
   const cls = cn(
-    'flex items-center gap-2 rounded px-2 py-1.5 text-[12.5px] transition-colors',
+    'flex items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors',
     isActive
       ? 'bg-primary/10 font-semibold text-[hsl(var(--brand-primary-600))]'
       : status === 'active'
@@ -510,7 +510,7 @@ function SportLink({
 function KlubAvatar({ name, size = 'sm' }: { name: string; size?: 'sm' }) {
   const initial = name.trim().charAt(0).toUpperCase() || 'K';
   const hue = Array.from(name).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
-  const dim = size === 'sm' ? 'size-6 text-[11px]' : 'size-10 text-base';
+  const dim = size === 'sm' ? 'size-6 text-xs' : 'size-10 text-base';
   return (
     <span
       className={cn(
@@ -541,7 +541,7 @@ function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
   }
   return (
     <span
-      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-[12px] font-bold text-primary-foreground"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
       aria-hidden="true"
     >
       {initial}

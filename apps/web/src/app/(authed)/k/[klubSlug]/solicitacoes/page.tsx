@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
-import { AlertCircle, ArrowLeft, Check, CheckCircle2, Loader2, X } from 'lucide-react';
+import { Check, Loader2, X } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
 import type { MembershipRequestAdminItem, MembershipRequestStatus } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -11,6 +11,8 @@ import {
   listKlubMembershipRequests,
   rejectMembershipRequest,
 } from '@/lib/api/membership-requests';
+import { Banner } from '@/components/ui/banner';
+import { Tabs } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 /**
@@ -49,58 +51,32 @@ export default function SolicitacoesPage() {
   return (
     <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 md:py-14">
       <div className="mx-auto max-w-3xl space-y-6">
-        <Link
-          href={`/k/${klub.slug}/dashboard`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Voltar pro Klub
-        </Link>
-
-        <header>
-          <h1
-            className="font-display text-[28px] font-bold md:text-[32px]"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            Solicitações de entrada
-          </h1>
-          <p className="mt-2 text-[14.5px] text-muted-foreground">
-            {klub.accessMode === 'private'
+        <PageHeader
+          back={{ href: `/k/${klub.slug}/dashboard`, label: 'Voltar pro Klub' }}
+          title="Solicitações de entrada"
+          description={
+            klub.accessMode === 'private'
               ? 'Aprove ou rejeite jogadores que pediram pra entrar no Klub.'
-              : 'Este Klub é aberto. Solicitações só aparecem se você mudar pra modo de aprovação manual nas configurações.'}
-          </p>
-        </header>
+              : 'Este Klub é aberto. Solicitações só aparecem se você mudar pra modo de aprovação manual nas configurações.'
+          }
+        />
 
-        <div className="flex gap-1 border-b border-border">
-          <TabButton
-            active={status === 'pending'}
-            onClick={() => setStatus('pending')}
-            label="Pendentes"
-          />
-          <TabButton
-            active={status === 'approved'}
-            onClick={() => setStatus('approved')}
-            label="Aprovadas"
-          />
-          <TabButton
-            active={status === 'rejected'}
-            onClick={() => setStatus('rejected')}
-            label="Rejeitadas"
-          />
-        </div>
+        <Tabs
+          tabs={[
+            { id: 'pending', label: 'Pendentes' },
+            { id: 'approved', label: 'Aprovadas' },
+            { id: 'rejected', label: 'Rejeitadas' },
+          ]}
+          active={status}
+          onChange={(id) => setStatus(id as MembershipRequestStatus)}
+        />
 
         {actionMessage ? (
-          <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[13px] text-success">
-            <CheckCircle2 className="mr-1 inline size-3.5" />
-            {actionMessage}
-          </p>
+          <Banner tone="success">{actionMessage}</Banner>
         ) : null}
 
         {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-[13px] text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : items === null ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -134,30 +110,6 @@ export default function SolicitacoesPage() {
   );
 }
 
-function TabButton({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex h-9 items-center border-b-2 px-3 text-[13px] font-semibold transition-colors',
-        active
-          ? 'border-primary text-foreground'
-          : 'border-transparent text-muted-foreground hover:text-foreground',
-      )}
-    >
-      {label}
-    </button>
-  );
-}
 
 function RequestCard({
   item,
@@ -202,12 +154,12 @@ function RequestCard({
         <UserAvatar name={item.user.fullName} url={item.user.avatarUrl} />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-[15px] font-bold leading-tight">
+            <h3 className="font-display text-sm font-bold leading-tight">
               {item.user.fullName}
             </h3>
             <RequestBadge status={item.status} />
           </div>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             <a href={`mailto:${item.user.email}`} className="underline">
               {item.user.email}
             </a>{' '}
@@ -216,12 +168,12 @@ function RequestCard({
         </div>
       </div>
 
-      <blockquote className="mt-3 rounded-md border-l-2 border-primary/40 bg-muted/40 px-3 py-2 text-[13.5px] leading-relaxed">
+      <blockquote className="mt-3 rounded-md border-l-2 border-primary/40 bg-muted/40 px-3 py-2 text-sm leading-relaxed">
         {item.message}
       </blockquote>
 
       {item.attachmentUrl ? (
-        <p className="mt-2 text-[12px]">
+        <p className="mt-2 text-xs">
           Anexo:{' '}
           <a
             href={item.attachmentUrl}
@@ -235,15 +187,11 @@ function RequestCard({
       ) : null}
 
       {item.rejectionReason ? (
-        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-          <strong>Motivo da rejeição:</strong> {item.rejectionReason}
-        </p>
+        <Banner tone="error"><strong>Motivo da rejeição:</strong> {item.rejectionReason}</Banner>
       ) : null}
 
       {actionError ? (
-        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-          {actionError}
-        </p>
+        <Banner tone="error">{actionError}</Banner>
       ) : null}
 
       {item.status === 'pending' ? (
@@ -252,7 +200,7 @@ function RequestCard({
             type="button"
             onClick={() => void handleApprove()}
             disabled={approving}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-success px-3.5 text-[13px] font-semibold text-white hover:bg-[hsl(142_71%_28%)] disabled:opacity-60"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-success px-3.5 text-sm font-semibold text-white hover:bg-[hsl(142_71%_28%)] disabled:opacity-60"
           >
             {approving ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -264,7 +212,7 @@ function RequestCard({
           <button
             type="button"
             onClick={() => setRejectModalOpen(true)}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/5 px-3.5 text-[13px] font-semibold text-destructive hover:bg-destructive/10"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/5 px-3.5 text-sm font-semibold text-destructive hover:bg-destructive/10"
           >
             <X className="size-3.5" />
             Rejeitar
@@ -324,7 +272,7 @@ function RejectModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-5">
         <h2 className="font-display text-lg font-bold">Rejeitar solicitação</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           {applicantName} vai receber este motivo por email.
         </p>
         <textarea
@@ -333,22 +281,20 @@ function RejectModal({
           placeholder="Ex: Não conseguimos confirmar sua matrícula. Entre em contato com a secretaria."
           rows={4}
           maxLength={500}
-          className="mt-3 w-full rounded-[10px] border border-input bg-background p-3 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+          className="mt-3 w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
         />
-        <p className="mt-1 text-right text-[11px] text-muted-foreground">
+        <p className="mt-1 text-right text-xs text-muted-foreground">
           {reason.trim().length}/500 (mín 10)
         </p>
         {error ? (
-          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : null}
         <div className="mt-4 flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
           >
             Cancelar
           </button>
@@ -356,7 +302,7 @@ function RejectModal({
             type="button"
             onClick={() => void handleReject()}
             disabled={reason.trim().length < 10 || submitting}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-sm font-semibold text-white disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -413,7 +359,7 @@ function RequestBadge({ status }: { status: MembershipRequestStatus }) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
         tone,
       )}
     >

@@ -107,16 +107,16 @@ export default function AdminFeaturesPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                       Feature
                     </th>
-                    <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                       Tier
                     </th>
-                    <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                       Ativo
                     </th>
-                    <th className="w-[140px] px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                    <th className="w-[140px] px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                       Rollout %
                     </th>
                     <th className="w-[80px] px-4 py-3.5" />
@@ -139,7 +139,7 @@ export default function AdminFeaturesPage() {
                               void handlePatch(f.id, { tier: e.target.value as FeatureTier })
                             }
                             className={cn(
-                              'rounded-md border border-border bg-background px-2.5 py-1.5 text-[12.5px] font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50',
+                              'rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50',
                               TIER_COLORS[f.tier] ?? '',
                             )}
                           >
@@ -158,7 +158,7 @@ export default function AdminFeaturesPage() {
                             type="button"
                             disabled={rs?.saving}
                             onClick={() => void handlePatch(f.id, { enabled: !f.enabled })}
-                            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] font-medium transition-colors hover:bg-muted disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-muted disabled:opacity-50"
                             aria-label={f.enabled ? 'Desativar feature' : 'Ativar feature'}
                           >
                             {f.enabled ? (
@@ -180,10 +180,10 @@ export default function AdminFeaturesPage() {
                               min={0}
                               max={100}
                               disabled
-                              className="w-16 rounded-md border border-border bg-muted px-2.5 py-1.5 text-center text-[12.5px] text-muted-foreground"
+                              className="w-16 rounded-md border border-border bg-muted px-2.5 py-1.5 text-center text-xs text-muted-foreground"
                             />
-                            <span className="text-[11px] text-muted-foreground">%</span>
-                            <span className="pointer-events-none absolute -top-7 left-0 hidden whitespace-nowrap rounded bg-foreground px-2 py-1 text-[11px] text-background group-hover:block">
+                            <span className="text-xs text-muted-foreground">%</span>
+                            <span className="pointer-events-none absolute -top-7 left-0 hidden whitespace-nowrap rounded bg-foreground px-2 py-1 text-xs text-background group-hover:block">
                               em breve
                             </span>
                           </div>
@@ -214,7 +214,7 @@ export default function AdminFeaturesPage() {
           )}
         </div>
 
-        <p className="mt-4 text-[12px] text-muted-foreground">
+        <p className="mt-4 text-xs text-muted-foreground">
           Mudanças são gravadas imediatamente + trilha de auditoria.
           Feature inexistente num Klub = tier <code>free</code> por padrão.
         </p>

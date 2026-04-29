@@ -64,12 +64,12 @@ export default function QueroCriarKlubPage() {
         </div>
 
         <h1
-          className="font-display text-[28px] font-bold md:text-[36px]"
+          className="font-display text-3xl font-bold md:text-4xl"
           style={{ letterSpacing: '-0.02em' }}
         >
           Quero criar um Klub
         </h1>
-        <p className="mt-2 text-[15px] text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground">
           Conta um pouco do seu Klub. Nosso time entra em contato em até 2 dias úteis pra montar
           tudo junto.
         </p>
@@ -178,7 +178,7 @@ export default function QueroCriarKlubPage() {
           </Section>
 
           {errorMsg ? (
-            <p className="text-[13px] text-destructive" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {errorMsg}
             </p>
           ) : null}
@@ -186,7 +186,7 @@ export default function QueroCriarKlubPage() {
           <button
             type="submit"
             disabled={status === 'submitting'}
-            className="mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-[10px] bg-primary text-[15px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {status === 'submitting' ? (
               <>
@@ -212,7 +212,7 @@ function SentScreen({ contactName }: { contactName: string }) {
           <Check className="size-8" strokeWidth={2.5} />
         </div>
         <h1
-          className="mt-6 font-display text-[28px] font-bold"
+          className="mt-6 font-display text-3xl font-bold"
           style={{ letterSpacing: '-0.02em' }}
         >
           Recebemos seu pedido, {firstName}!
@@ -223,7 +223,7 @@ function SentScreen({ contactName }: { contactName: string }) {
         </p>
         <Link
           href="/login"
-          className="mt-6 inline-flex h-10 items-center rounded-[10px] border border-border bg-card px-4 text-sm font-medium transition-colors hover:bg-muted"
+          className="mt-6 inline-flex h-10 items-center rounded-md border border-border bg-card px-4 text-sm font-medium transition-colors hover:bg-muted"
         >
           Voltar pra tela inicial
         </Link>
@@ -233,12 +233,12 @@ function SentScreen({ contactName }: { contactName: string }) {
 }
 
 const inputCls =
-  'h-11 w-full rounded-[10px] border border-input bg-background px-3.5 text-[15px] outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="mb-1 text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+      <legend className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
         {title}
       </legend>
       {children}
@@ -259,7 +259,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-[13px] font-medium">
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium">
         {label}
         {required ? <span className="ml-0.5 text-destructive">*</span> : null}
       </label>

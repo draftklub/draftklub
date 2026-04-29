@@ -53,6 +53,7 @@ import {
   type UpdateSpaceInput,
 } from '@/lib/api/spaces';
 import { SpaceForm } from '@/components/spaces/space-form';
+import { Banner } from '@/components/ui/banner';
 import { cn } from '@/lib/utils';
 
 interface FormTabProps {
@@ -315,13 +316,13 @@ export function LegalTab({ klub, onUpdated }: FormTabProps) {
     <section className="space-y-2.5 rounded-xl border border-amber-500/40 bg-amber-500/5 p-3.5">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h2 className="font-display text-[14px] font-bold">
+          <h2 className="font-display text-sm font-bold">
             Identidade legal{' '}
-            <span className="ml-2 inline-flex h-5 items-center rounded-full bg-amber-500/20 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
+            <span className="ml-2 inline-flex h-5 items-center rounded-full bg-amber-500/20 px-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
               Platform-level
             </span>
           </h2>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Mudanças aqui têm impacto operacional alto. Slug rompe URLs/bookmarks. CNPJ não revalida
             KYC automaticamente.
           </p>
@@ -393,28 +394,22 @@ export function PerigosaTab({ klub, onDeactivated }: { klub: Klub; onDeactivated
 
   return (
     <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
-      <h2 className="font-display text-[15px] font-bold text-destructive">Zona perigosa</h2>
-      <p className="mt-1 text-[12.5px] text-muted-foreground">
+      <h2 className="font-display text-sm font-bold text-destructive">Zona perigosa</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
         Desativar o Klub é soft delete — `deletedAt` populado, `status='suspended'`. Members perdem
         acesso. Reversível via SQL.
       </p>
       {message ? (
-        <p className="mt-3 rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-          <CheckCircle2 className="mr-1 inline size-3.5" />
-          {message}
-        </p>
+        <Banner tone="success">{message}</Banner>
       ) : null}
       {error ? (
-        <p className="mt-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-          <AlertCircle className="mr-1 inline size-3.5" />
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
       <button
         type="button"
         onClick={() => void handleDeactivate()}
         disabled={submitting}
-        className="mt-3 inline-flex h-10 items-center gap-1.5 rounded-lg border border-destructive bg-destructive/10 px-3 text-[12.5px] font-semibold text-destructive hover:bg-destructive/20 disabled:opacity-60"
+        className="mt-3 inline-flex h-10 items-center gap-1.5 rounded-lg border border-destructive bg-destructive/10 px-3 text-xs font-semibold text-destructive hover:bg-destructive/20 disabled:opacity-60"
       >
         {submitting ? (
           <Loader2 className="size-3.5 animate-spin" />
@@ -478,24 +473,18 @@ export function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferA
   return (
     <div className="space-y-4">
       <header>
-        <h2 className="font-display text-[14px] font-bold">Equipe</h2>
-        <p className="mt-1 text-[12.5px] text-muted-foreground">
+        <h2 className="font-display text-sm font-bold">Equipe</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
           Conceda roles operacionais (Assistant, Sport Commission, Sport Staff). Transfira
           KLUB_ADMIN pra outro membro abaixo se for o caso.
         </p>
       </header>
 
       {message ? (
-        <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-          <CheckCircle2 className="mr-1 inline size-3.5" />
-          {message}
-        </p>
+        <Banner tone="success">{message}</Banner>
       ) : null}
       {error ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-          <AlertCircle className="mr-1 inline size-3.5" />
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
 
       <EquipeGrantForm
@@ -509,7 +498,7 @@ export function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferA
       />
 
       <section className="space-y-2">
-        <h3 className="text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+        <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Equipe atual
         </h3>
         {items === null ? (
@@ -517,7 +506,7 @@ export function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferA
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : items.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border p-6 text-center text-[12.5px] text-muted-foreground">
+          <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
             Sem roles operacionais ainda — você ainda é o único admin desse Klub.
           </p>
         ) : (
@@ -598,9 +587,9 @@ function TransferAdminSection({
     <section className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
       <div className="flex items-center gap-2">
         <AlertCircle className="size-4 text-amber-700 dark:text-amber-400" />
-        <h3 className="font-display text-[14px] font-bold">Transferir Klub Admin</h3>
+        <h3 className="font-display text-sm font-bold">Transferir Klub Admin</h3>
       </div>
-      <p className="text-[12.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Passa o controle deste Klub pra outro membro. Você <strong>sai limpo</strong> da
         administração — zero role. Membership/sócio permanece. Target precisa já ser membro ativo do
         Klub.
@@ -618,7 +607,7 @@ function TransferAdminSection({
           type="button"
           onClick={() => void handleTransfer()}
           disabled={submitting || !email.trim()}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-amber-500 bg-amber-500/10 px-4 text-[13px] font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-400 disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-amber-500 bg-amber-500/10 px-4 text-sm font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-400 disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -676,11 +665,11 @@ function EquipeGrantForm({
     <section className="space-y-3 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2">
         <UserPlus className="size-4 text-muted-foreground" />
-        <h3 className="font-display text-[14px] font-bold">Adicionar membro</h3>
+        <h3 className="font-display text-sm font-bold">Adicionar membro</h3>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <label className="mb-1 block text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Email
           </label>
           <input
@@ -693,7 +682,7 @@ function EquipeGrantForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <label className="mb-1 block text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Role
           </label>
           <select
@@ -714,7 +703,7 @@ function EquipeGrantForm({
       </div>
       {isSportRole && sports.length > 0 ? (
         <div>
-          <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          <label className="mb-1 block text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Modalidade (opcional)
           </label>
           <select
@@ -732,13 +721,13 @@ function EquipeGrantForm({
           </select>
         </div>
       ) : null}
-      {roleHint ? <p className="text-[11.5px] text-muted-foreground">{roleHint}</p> : null}
+      {roleHint ? <p className="text-xs text-muted-foreground">{roleHint}</p> : null}
       <div className="flex justify-end">
         <button
           type="button"
           onClick={() => void handleSubmit()}
           disabled={submitting || !email.trim()}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitting ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -791,22 +780,22 @@ function EquipeRow({
     <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate font-display text-[14px] font-bold">{item.userFullName}</p>
+          <p className="truncate font-display text-sm font-bold">{item.userFullName}</p>
           <KlubRoleBadge role={item.role} />
           {sportName ? (
-            <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-[10px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">
+            <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">
               {sportName}
             </span>
           ) : null}
         </div>
-        <p className="mt-0.5 truncate text-[12px] text-muted-foreground">{item.userEmail}</p>
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">{item.userEmail}</p>
       </div>
       {canRevoke ? (
         <button
           type="button"
           onClick={() => void handleRevoke()}
           disabled={submitting}
-          className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+          className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
         >
           {submitting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
           Revogar
@@ -824,7 +813,7 @@ function KlubRoleBadge({ role }: { role: Role }) {
     SPORT_STAFF: 'Sport Staff',
   };
   return (
-    <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-[10px] font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-primary-600))]">
+    <span className="inline-flex h-5 items-center rounded-full bg-primary/15 px-2 text-xs font-bold uppercase tracking-[0.06em] text-[hsl(var(--brand-primary-600))]">
       {map[role] ?? role}
     </span>
   );
@@ -875,24 +864,18 @@ export function ModalidadesTab({ klub }: { klub: Klub }) {
   return (
     <section className="space-y-3 rounded-xl border border-border bg-card p-3.5">
       <div>
-        <h2 className="font-display text-[14px] font-bold">Modalidades</h2>
-        <p className="mt-1 text-[12.5px] text-muted-foreground">
+        <h2 className="font-display text-sm font-bold">Modalidades</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
           Cada modalidade habilita catálogo próprio (ranking, torneios, regras de partida). Habilita
           só o que tu realmente atende.
         </p>
       </div>
 
       {message ? (
-        <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-          <CheckCircle2 className="mr-1 inline size-3.5" />
-          {message}
-        </p>
+        <Banner tone="success">{message}</Banner>
       ) : null}
       {error ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-          <AlertCircle className="mr-1 inline size-3.5" />
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
 
       {sports === null ? (
@@ -918,8 +901,8 @@ export function ModalidadesTab({ klub }: { klub: Klub }) {
                 )}
               >
                 <div className="min-w-0 flex-1">
-                  <p className="font-display text-[14px] font-bold">{s.name}</p>
-                  <p className="truncate text-[11.5px] text-muted-foreground">{s.code}</p>
+                  <p className="font-display text-sm font-bold">{s.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{s.code}</p>
                 </div>
                 {loading ? (
                   <Loader2 className="size-4 animate-spin text-muted-foreground" />
@@ -967,15 +950,15 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
     <section className="space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-[14px] font-bold">Quadras</h2>
-          <p className="mt-1 text-[12.5px] text-muted-foreground">
+          <h2 className="font-display text-sm font-bold">Quadras</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
             Gerencie quadras/espaços disponíveis pra reserva.
           </p>
         </div>
         <button
           type="button"
           onClick={() => setCreateOpen(true)}
-          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
         >
           <Plus className="size-3.5" />
           Adicionar
@@ -983,16 +966,10 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
       </div>
 
       {message ? (
-        <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-[12.5px] text-success">
-          <CheckCircle2 className="mr-1 inline size-3.5" />
-          {message}
-        </p>
+        <Banner tone="success">{message}</Banner>
       ) : null}
       {error ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-[13px] text-destructive">
-          <AlertCircle className="mr-1 inline size-3.5" />
-          {error}
-        </p>
+        <Banner tone="error">{error}</Banner>
       ) : null}
 
       {spaces === null ? (
@@ -1004,8 +981,8 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
           <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
             <MapPin className="size-4" />
           </div>
-          <p className="mt-3 font-display text-[14px] font-bold">Nenhuma quadra cadastrada</p>
-          <p className="mt-1 text-[12.5px] text-muted-foreground">
+          <p className="mt-3 font-display text-sm font-bold">Nenhuma quadra cadastrada</p>
+          <p className="mt-1 text-xs text-muted-foreground">
             Adicione a primeira quadra pra players começarem a reservar.
           </p>
         </div>
@@ -1082,10 +1059,10 @@ function SpaceCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate font-display text-[16px] font-bold">{space.name}</h3>
+            <h3 className="truncate font-display text-base font-bold">{space.name}</h3>
             <StatusBadge status={space.status} />
           </div>
-          <p className="mt-1 inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12.5px] text-muted-foreground">
+          <p className="mt-1 inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
             {sport ? <span>{sport}</span> : null}
             {surface ? <span>· {surface}</span> : null}
             <span>· {space.indoor ? 'Indoor' : 'Outdoor'}</span>
@@ -1093,7 +1070,7 @@ function SpaceCard({
             <span>· até {space.maxPlayers} players</span>
           </p>
           {space.description ? (
-            <p className="mt-2 text-[12.5px] text-muted-foreground">{space.description}</p>
+            <p className="mt-2 text-xs text-muted-foreground">{space.description}</p>
           ) : null}
         </div>
       </div>
@@ -1101,7 +1078,7 @@ function SpaceCard({
         <button
           type="button"
           onClick={onEdit}
-          className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-[12px] font-semibold hover:bg-muted"
+          className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-semibold hover:bg-muted"
         >
           <Pencil className="size-3" />
           Editar
@@ -1109,7 +1086,7 @@ function SpaceCard({
         <button
           type="button"
           onClick={onDelete}
-          className="ml-auto inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-[12px] font-semibold text-destructive hover:bg-destructive/10"
+          className="ml-auto inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10"
         >
           <Trash2 className="size-3" />
           Excluir
@@ -1240,21 +1217,19 @@ function DeleteConfirmModal({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
       <div className="w-full max-w-md rounded-t-xl border border-border bg-card p-5 sm:rounded-xl">
         <h2 className="font-display text-lg font-bold">Excluir {space.name}?</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           A quadra será removida da listagem. Reservas futuras precisam ser canceladas antes — caso
           contrário a exclusão é bloqueada.
         </p>
         {error ? (
-          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-[12px] text-destructive">
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : null}
         <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
           >
             Voltar
           </button>
@@ -1262,7 +1237,7 @@ function DeleteConfirmModal({
             type="button"
             onClick={() => void handleDelete()}
             disabled={submitting}
-            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-3 text-[13px] font-semibold text-white disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-destructive px-3 text-sm font-semibold text-white disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -1317,7 +1292,7 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase tracking-[0.06em]',
+        'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
         tone,
       )}
     >
@@ -1387,7 +1362,7 @@ function Section({
 }) {
   return (
     <section className="space-y-2.5 rounded-xl border border-border bg-card p-3.5">
-      <h2 className="font-display text-[14px] font-bold">{title}</h2>
+      <h2 className="font-display text-sm font-bold">{title}</h2>
       {children}
       <SaveStatus status={status} />
       <div className="flex justify-end">
@@ -1400,19 +1375,9 @@ function Section({
 function SaveStatus({ status }: { status: SaveStatusValue }) {
   if (status.kind === 'idle' || status.kind === 'saving') return null;
   if (status.kind === 'ok') {
-    return (
-      <p className="rounded-lg border border-success/30 bg-success/5 p-2.5 text-[12px] text-success">
-        <CheckCircle2 className="mr-1 inline size-3.5" />
-        {status.message}
-      </p>
-    );
+    return <Banner tone="success">{status.message}</Banner>;
   }
-  return (
-    <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-2.5 text-[12.5px] text-destructive">
-      <AlertCircle className="mr-1 inline size-3.5" />
-      {status.message}
-    </p>
-  );
+  return <Banner tone="error">{status.message}</Banner>;
 }
 
 function SaveButton({ submitting, onClick }: { submitting: boolean; onClick: () => void }) {
@@ -1421,7 +1386,7 @@ function SaveButton({ submitting, onClick }: { submitting: boolean; onClick: () 
       type="button"
       onClick={onClick}
       disabled={submitting}
-      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
     >
       {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
       Salvar
@@ -1430,7 +1395,7 @@ function SaveButton({ submitting, onClick }: { submitting: boolean; onClick: () 
 }
 
 const inputCls =
-  'w-full rounded-[10px] border border-input bg-background px-3 py-2.25 text-[13.5px] outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
+  'w-full rounded-md border border-input bg-background px-3 py-2.25 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20';
 
 function Field({
   label,
@@ -1443,11 +1408,11 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+      <label className="mb-1 block text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
         {label}
       </label>
       {children}
-      {help ? <p className="mt-1 text-[11px] text-muted-foreground">{help}</p> : null}
+      {help ? <p className="mt-1 text-xs text-muted-foreground">{help}</p> : null}
     </div>
   );
 }
@@ -1469,7 +1434,7 @@ function Toggle({
         type="button"
         onClick={() => onChange(!value)}
         className={cn(
-          'flex w-full items-center justify-between rounded-[10px] border p-3 text-[13px] font-medium transition-colors',
+          'flex w-full items-center justify-between rounded-md border p-3 text-sm font-medium transition-colors',
           value
             ? 'border-primary bg-primary/10 text-[hsl(var(--brand-primary-600))]'
             : 'border-input bg-background hover:bg-muted',
@@ -1490,7 +1455,7 @@ function Toggle({
           />
         </span>
       </button>
-      {help ? <p className="mt-1 text-[11px] text-muted-foreground">{help}</p> : null}
+      {help ? <p className="mt-1 text-xs text-muted-foreground">{help}</p> : null}
     </div>
   );
 }

@@ -6,11 +6,11 @@ import { cn } from '@/lib/utils';
  *
  * Substitui ~100 cópias de:
  *   <div>
- *     <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+ *     <label className="mb-1 block text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
  *       Label
  *     </label>
  *     <input ... />
- *     {help ? <p className="mt-1 text-[11px] text-muted-foreground">{help}</p> : null}
+ *     {help ? <p className="mt-1 text-xs text-muted-foreground">{help}</p> : null}
  *   </div>
  *
  * Aceita qualquer children (input/select/textarea/custom). Não controla

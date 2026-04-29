@@ -132,7 +132,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
     >
       {/* Nome */}
       <div>
-        <label htmlFor="signup-name" className="mb-1.5 block text-[13px] font-medium">
+        <label htmlFor="signup-name" className="mb-1.5 block text-sm font-medium">
           Nome
         </label>
         <input
@@ -152,7 +152,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
 
       {/* E-mail */}
       <div>
-        <label htmlFor="signup-email" className="mb-1.5 block text-[13px] font-medium">
+        <label htmlFor="signup-email" className="mb-1.5 block text-sm font-medium">
           E-mail
         </label>
         <input
@@ -172,7 +172,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
 
       {/* Senha */}
       <div>
-        <label htmlFor="signup-password" className="mb-1.5 block text-[13px] font-medium">
+        <label htmlFor="signup-password" className="mb-1.5 block text-sm font-medium">
           Senha
         </label>
         <div className="relative">
@@ -198,14 +198,14 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
             {showPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
           </button>
         </div>
-        <p className="mt-1 text-[11px] text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground">
           Mínimo 8 caracteres com pelo menos 1 número.
         </p>
       </div>
 
       {/* Confirmar */}
       <div>
-        <label htmlFor="signup-confirm" className="mb-1.5 block text-[13px] font-medium">
+        <label htmlFor="signup-confirm" className="mb-1.5 block text-sm font-medium">
           Confirme a senha
         </label>
         <input
@@ -223,7 +223,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
         {isError && errorMsg ? (
           <div
             role="alert"
-            className="dk-shake mt-2 flex items-start gap-1.5 text-[13px] leading-tight text-destructive"
+            className="dk-shake mt-2 flex items-start gap-1.5 text-sm leading-tight text-destructive"
           >
             <AlertCircle className="mt-px size-3.5 shrink-0" />
             <span>{errorMsg}</span>
@@ -236,7 +236,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
         type="submit"
         disabled={isLoading}
         className={cn(
-          'mt-1 inline-flex h-11.5 items-center justify-center gap-2 rounded-[10px] bg-primary text-[15px] font-semibold text-primary-foreground transition-colors',
+          'mt-1 inline-flex h-11.5 items-center justify-center gap-2 rounded-md bg-primary text-sm font-semibold text-primary-foreground transition-colors',
           'hover:bg-primary/90 active:translate-y-px',
           'focus-visible:ring-[3px] focus-visible:ring-primary/30 focus-visible:outline-none',
           'disabled:cursor-not-allowed disabled:opacity-95',
@@ -255,7 +255,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
       {/* Divisor */}
       <div className="my-1 flex items-center gap-3">
         <div className="h-px flex-1 bg-border" />
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           ou
         </span>
         <div className="h-px flex-1 bg-border" />
@@ -267,7 +267,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
         onClick={() => void handleGoogle()}
         disabled={isLoading || googleLoading}
         className={cn(
-          'inline-flex h-11.5 items-center justify-center gap-2.5 rounded-[10px] border border-border bg-card text-[15px] font-medium text-foreground transition-colors',
+          'inline-flex h-11.5 items-center justify-center gap-2.5 rounded-md border border-border bg-card text-sm font-medium text-foreground transition-colors',
           'hover:bg-muted',
           'focus-visible:ring-[3px] focus-visible:ring-primary/20 focus-visible:outline-none',
           'disabled:cursor-not-allowed disabled:opacity-60',
@@ -287,7 +287,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
       </button>
 
       {/* Já tem conta? */}
-      <p className="mt-2 text-center text-[12.5px] text-muted-foreground">
+      <p className="mt-2 text-center text-xs text-muted-foreground">
         Já tem conta?{' '}
         <Link
           href="/login"
@@ -302,7 +302,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
 
 function inputCls(isError: boolean) {
   return cn(
-    'h-11 w-full rounded-[10px] border border-input bg-card px-3.5 text-[15px] text-foreground transition-colors outline-none',
+    'h-11 w-full rounded-md border border-input bg-card px-3.5 text-sm text-foreground transition-colors outline-none',
     'placeholder:text-muted-foreground',
     'focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20',
     'disabled:cursor-not-allowed disabled:opacity-60',
