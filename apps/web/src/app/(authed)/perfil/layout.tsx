@@ -57,14 +57,8 @@ export default function PerfilLayout({ children }: { children: React.ReactNode }
           mode="link"
           tabs={[
             { id: 'identidade', label: 'Identidade', href: baseHref },
-            { id: 'pessoa-fisica', label: 'CPF', href: `${baseHref}/pessoa-fisica` },
             { id: 'endereco', label: 'Endereço', href: `${baseHref}/endereco` },
-            { id: 'preferencias', label: 'Preferências', href: `${baseHref}/preferencias` },
-            {
-              id: 'notificacoes',
-              label: 'Notificações',
-              href: `${baseHref}/notificacoes`,
-            },
+            { id: 'notificacoes', label: 'Notificações', href: `${baseHref}/notificacoes` },
             { id: 'acesso', label: 'Acesso', href: `${baseHref}/acesso` },
           ]}
           active={activeSeg}

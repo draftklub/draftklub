@@ -146,6 +146,7 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
   const [phone, setPhone] = React.useState(initial.phone ?? '');
   const [birthDate, setBirthDate] = React.useState(initial.birthDate ?? '');
   const [gender, setGender] = React.useState<Gender | ''>(initial.gender ?? '');
+  const [cpfInput, setCpfInput] = React.useState(formatCpf(initial.documentNumber ?? ''));
   const [status, setStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = React.useState('');
 
@@ -154,13 +155,16 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
     setPhone(initial.phone ?? '');
     setBirthDate(initial.birthDate ?? '');
     setGender(initial.gender ?? '');
+    setCpfInput(formatCpf(initial.documentNumber ?? ''));
   }, [initial]);
 
+  const cpfDigits = cpfInput.replace(/\D/g, '');
   const dirty =
     name.trim() !== initial.fullName.trim() ||
     phone !== (initial.phone ?? '') ||
     birthDate !== (initial.birthDate ?? '') ||
-    gender !== (initial.gender ?? '');
+    gender !== (initial.gender ?? '') ||
+    cpfDigits !== (initial.documentNumber ?? '');
 
   function clearStatusOnChange() {
     if (status === 'error' || status === 'saved') setStatus('idle');
@@ -168,12 +172,16 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
 
   function validate(): string | null {
     if (name.trim().length < 2) return 'Nome muito curto (mínimo 2 caracteres).';
-    if (birthDate.length > 0) {
-      const d = new Date(`${birthDate}T00:00:00Z`);
-      if (Number.isNaN(d.getTime())) return 'Data de nascimento inválida.';
-      if (d.getTime() > Date.now()) return 'Data de nascimento não pode ser no futuro.';
-    }
+    if (phone.trim().length === 0) return 'Telefone é obrigatório.';
     if (phone.length > 30) return 'Telefone muito longo.';
+    if (birthDate.length === 0) return 'Data de nascimento é obrigatória.';
+    const d = new Date(`${birthDate}T00:00:00Z`);
+    if (Number.isNaN(d.getTime())) return 'Data de nascimento inválida.';
+    if (d.getTime() > Date.now()) return 'Data de nascimento não pode ser no futuro.';
+    if (gender === '') return 'Gênero é obrigatório.';
+    if (cpfDigits.length === 0) return 'CPF é obrigatório.';
+    if (cpfDigits.length !== 11) return 'CPF deve ter 11 dígitos.';
+    if (!validateCpfChecksum(cpfDigits)) return 'CPF inválido. Confere os dígitos.';
     return null;
   }
 
@@ -200,6 +208,8 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
           phone: phone || undefined,
           birthDate: birthDate || undefined,
           gender: gender || undefined,
+          documentNumber: cpfDigits || undefined,
+          documentType: cpfDigits ? 'cpf' : undefined,
         }),
       );
       const results = await Promise.all(promises);
@@ -235,11 +245,27 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
         />
       </Field>
 
-      <Field label="E-mail" hint="Gerenciado pelo provedor de login. Não dá pra editar aqui.">
+      <Field label="E-mail">
         <input type="email" value={initial.email} disabled className={inputCls(false)} />
       </Field>
 
-      <Field label="Telefone" hint="Opcional. Usamos pra contato em torneios e notificações.">
+      <Field label="CPF">
+        <input
+          type="text"
+          inputMode="numeric"
+          value={cpfInput}
+          onChange={(e) => {
+            setCpfInput(formatCpf(e.target.value));
+            clearStatusOnChange();
+          }}
+          placeholder="000.000.000-00"
+          maxLength={14}
+          autoComplete="off"
+          className={inputCls(status === 'error')}
+        />
+      </Field>
+
+      <Field label="Telefone">
         <input
           type="tel"
           value={phone}
@@ -253,7 +279,7 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
         />
       </Field>
 
-      <Field label="Data de nascimento" hint="Opcional. Usamos pra categorias de torneio.">
+      <Field label="Data de nascimento">
         <input
           type="date"
           value={birthDate}
@@ -266,7 +292,7 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
         />
       </Field>
 
-      <Field label="Gênero" hint="Opcional. Usamos pra categorias de torneio.">
+      <Field label="Gênero">
         <div className="flex flex-wrap gap-2">
           {(
             [
@@ -295,18 +321,6 @@ export function IdentitySection({ initial, onUpdated }: IdentitySectionProps) {
               </button>
             );
           })}
-          {gender ? (
-            <button
-              type="button"
-              onClick={() => {
-                setGender('');
-                clearStatusOnChange();
-              }}
-              className="inline-flex h-9 items-center rounded-lg bg-transparent px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Limpar
-            </button>
-          ) : null}
         </div>
       </Field>
 

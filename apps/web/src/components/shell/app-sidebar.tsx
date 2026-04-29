@@ -7,34 +7,18 @@ import {
   Bell,
   CalendarCheck,
   Castle,
-  ChevronDown,
-  ChevronRight,
   Home,
+  ListOrdered,
   LogOut,
-  Loader2,
   X,
 } from 'lucide-react';
-import type { PlayerSportEnrollment, UserKlubMembership, Role } from '@draftklub/shared-types';
+import type { UserKlubMembership } from '@draftklub/shared-types';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { useAuth } from '@/components/auth-provider';
-import { listMyEnrollments } from '@/lib/api/enrollments';
 import { getMyKlubs } from '@/lib/api/me';
 import { logout } from '@/lib/auth';
 import { forgetLastKlubSlug } from '@/lib/last-klub-cookie';
 import { cn } from '@/lib/utils';
-
-type EnrollmentWithProfile = PlayerSportEnrollment & {
-  klubSportProfile?: { klubId: string; sportCode: string; name: string };
-};
-
-type SportEnrollmentStatus = 'active' | 'pending' | 'suspended' | 'none';
-
-const SPORT_LABELS: Record<string, string> = {
-  tennis: 'Tênis',
-  padel: 'Padel',
-  squash: 'Squash',
-  beach_tennis: 'Beach tennis',
-};
 
 interface AppSidebarProps {
   open: boolean;
@@ -46,7 +30,6 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
-  const [enrollments, setEnrollments] = React.useState<EnrollmentWithProfile[]>([]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -57,48 +40,32 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
       .catch(() => {
         if (!cancelled) setKlubs([]);
       });
-    listMyEnrollments()
-      .then((data) => {
-        if (!cancelled) setEnrollments(data);
-      })
-      .catch(() => {
-        if (!cancelled) setEnrollments([]);
-      });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const enrollmentStatusByKey = React.useMemo(() => {
-    const map = new Map<string, SportEnrollmentStatus>();
-    for (const e of enrollments) {
-      const profile = e.klubSportProfile;
-      if (!profile) continue;
-      const key = `${profile.klubId}:${profile.sportCode}`;
-      const current = map.get(key);
-      const status: SportEnrollmentStatus =
-        e.status === 'active'
-          ? 'active'
-          : e.status === 'pending'
-            ? 'pending'
-            : e.status === 'suspended'
-              ? 'suspended'
-              : 'none';
-      if (
-        !current ||
-        (current === 'pending' && status === 'active') ||
-        (current === 'suspended' && status !== 'suspended')
-      ) {
-        map.set(key, status);
-      }
-    }
-    return map;
-  }, [enrollments]);
-
   const activeKlubSlug = React.useMemo(() => {
     const m = /^\/k\/([^/]+)/.exec(pathname);
     return m ? (m[1] ?? null) : null;
   }, [pathname]);
+
+  const activeSport = React.useMemo(() => {
+    const m = /^\/k\/[^/]+\/sports\/([^/]+)/.exec(pathname);
+    return m ? (m[1] ?? null) : null;
+  }, [pathname]);
+
+  const rankingsHref = React.useMemo(() => {
+    if (activeKlubSlug) {
+      const sport = activeSport ?? 'tennis';
+      return `/k/${activeKlubSlug}/sports/${sport}/rankings`;
+    }
+    const first = klubs?.[0];
+    if (first) {
+      return `/k/${first.klubSlug}/sports/${first.sports?.[0] ?? 'tennis'}/rankings`;
+    }
+    return '#';
+  }, [activeKlubSlug, activeSport, klubs]);
 
   async function handleLogout() {
     forgetLastKlubSlug();
@@ -125,7 +92,7 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
         )}
       >
         {/* Brand row */}
-        <div className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-4 pb-3.5 pt-4">
+        <div className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-5 pb-3 pt-4">
           <Link href="/home" className="flex items-center gap-2.5" onClick={onClose}>
             <BrandLockup size="sm" />
           </Link>
@@ -139,12 +106,9 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           </button>
         </div>
 
-        {/* Scrollable nav area */}
-        <div className="flex-1 overflow-y-auto py-2">
-          {/* Spacer — placeholder onde "Você" estava */}
-          <div className="h-1" />
-
-          <nav className="flex flex-col gap-0.5 px-3 pb-1.5">
+        {/* Nav */}
+        <div className="flex-1 overflow-y-auto py-3">
+          <nav className="flex flex-col gap-0.5 px-3">
             <NavLink
               href="/home"
               label="Home"
@@ -159,16 +123,26 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
               active={pathname === '/minhas-reservas'}
               onNavigate={onClose}
             />
-
-            {/* Klubs — accordion com klubs inscritos */}
-            <KlubsAccordion
-              klubs={klubs}
-              activeKlubSlug={activeKlubSlug}
-              pathname={pathname}
-              enrollmentStatusByKey={enrollmentStatusByKey}
+            <NavLink
+              href="/klubs"
+              label="Klubs"
+              icon={Castle}
+              active={
+                pathname === '/klubs' ||
+                pathname === '/criar-klub' ||
+                pathname === '/buscar-klubs' ||
+                (activeKlubSlug !== null && !pathname.includes('/rankings'))
+              }
               onNavigate={onClose}
             />
-
+            <NavLink
+              href={rankingsHref}
+              label="Rankings"
+              icon={ListOrdered}
+              active={pathname.includes('/rankings')}
+              disabled={rankingsHref === '#'}
+              onNavigate={onClose}
+            />
             <NavLink
               href="/notificacoes"
               label="Notificações"
@@ -213,255 +187,6 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
         </div>
       </aside>
     </>
-  );
-}
-
-// ─── KlubsAccordion ──────────────────────────────────────────────────────────
-
-function KlubsAccordion({
-  klubs,
-  activeKlubSlug,
-  pathname,
-  enrollmentStatusByKey,
-  onNavigate,
-}: {
-  klubs: UserKlubMembership[] | null;
-  activeKlubSlug: string | null;
-  pathname: string;
-  enrollmentStatusByKey: Map<string, SportEnrollmentStatus>;
-  onNavigate?: () => void;
-}) {
-  const [expanded, setExpanded] = React.useState(activeKlubSlug !== null);
-  const isActive =
-    pathname === '/klubs' || pathname === '/criar-klub' || pathname === '/buscar-klubs';
-  const ChevIcon = expanded ? ChevronDown : ChevronRight;
-
-  return (
-    <div>
-      <div
-        className={cn(
-          'flex items-center gap-1 rounded-lg pr-1 transition-colors',
-          isActive ? 'bg-primary/10' : 'hover:bg-muted',
-        )}
-      >
-        <Link
-          href="/klubs"
-          onClick={onNavigate}
-          className={cn(
-            'flex min-w-0 flex-1 items-center gap-2.75 rounded-lg px-2.5 py-1.75 text-sm',
-            isActive
-              ? 'font-semibold text-[hsl(var(--brand-primary-600))]'
-              : 'font-medium text-foreground',
-          )}
-        >
-          <Castle
-            className={cn(
-              'size-4.25 shrink-0',
-              isActive ? 'text-primary' : 'text-muted-foreground',
-            )}
-            strokeWidth={1.8}
-          />
-          <span className="flex-1 truncate">Klubs</span>
-        </Link>
-        <button
-          type="button"
-          onClick={() => setExpanded((x) => !x)}
-          aria-label={expanded ? 'Recolher Klubs' : 'Expandir Klubs'}
-          className="inline-flex size-7 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground"
-        >
-          <ChevIcon className="size-3.5" />
-        </button>
-      </div>
-
-      {expanded ? (
-        <div className="ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
-          {klubs === null ? (
-            <div className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" />
-              Carregando…
-            </div>
-          ) : klubs.length === 0 ? (
-            <p className="px-2.5 py-2 text-xs text-muted-foreground">
-              Nenhum Klub ainda.{' '}
-              <Link href="/klubs" className="font-semibold text-primary hover:underline">
-                Buscar
-              </Link>
-            </p>
-          ) : (
-            klubs.map((k) => (
-              <KlubItem
-                key={k.klubId}
-                klub={k}
-                pathname={pathname}
-                enrollmentStatusByKey={enrollmentStatusByKey}
-                onNavigate={onNavigate}
-              />
-            ))
-          )}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-// ─── KlubItem ─────────────────────────────────────────────────────────────────
-
-function KlubItem({
-  klub,
-  pathname,
-  enrollmentStatusByKey,
-  onNavigate,
-}: {
-  klub: UserKlubMembership;
-  pathname: string;
-  enrollmentStatusByKey: Map<string, SportEnrollmentStatus>;
-  onNavigate?: () => void;
-}) {
-  const label = klub.klubCommonName ?? klub.klubName;
-  const sports = klub.sports ?? [];
-  const [expanded, setExpanded] = React.useState(false);
-  const hasSports = sports.length > 0;
-  const ChevIcon = expanded ? ChevronDown : ChevronRight;
-
-  return (
-    <div>
-      <div className="flex items-center gap-1 rounded-lg pr-1 transition-colors hover:bg-muted">
-        <Link
-          href={`/k/${klub.klubSlug}/dashboard`}
-          onClick={onNavigate}
-          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.75 text-sm font-medium"
-        >
-          <KlubAvatar name={label} size="sm" />
-          <span className="min-w-0 flex-1 truncate">{label}</span>
-          {klub.role ? <RoleDot role={klub.role} /> : null}
-        </Link>
-        {hasSports ? (
-          <button
-            type="button"
-            onClick={() => setExpanded((x) => !x)}
-            aria-label={expanded ? 'Recolher modalidades' : 'Expandir modalidades'}
-            className="inline-flex size-7 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground"
-          >
-            <ChevIcon className="size-3.5" />
-          </button>
-        ) : null}
-      </div>
-
-      {expanded && hasSports ? (
-        <ul className="ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
-          {sports.map((code) => (
-            <li key={code}>
-              <SportLink
-                klubSlug={klub.klubSlug}
-                klubId={klub.klubId}
-                sportCode={code}
-                status={enrollmentStatusByKey.get(`${klub.klubId}:${code}`) ?? 'none'}
-                onNavigate={onNavigate}
-              />
-              {/* Torneios + Rankings sub-links */}
-              <div className="ml-3 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
-                <SubLink
-                  href={`/k/${klub.klubSlug}/sports/${code}/torneios`}
-                  label="Torneios"
-                  pathname={pathname}
-                  onNavigate={onNavigate}
-                />
-                <SubLink
-                  href={`/k/${klub.klubSlug}/sports/${code}/rankings`}
-                  label="Rankings"
-                  pathname={pathname}
-                  onNavigate={onNavigate}
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
-}
-
-// ─── SportLink ────────────────────────────────────────────────────────────────
-
-function SportLink({
-  klubSlug,
-  klubId,
-  sportCode,
-  status,
-  onNavigate,
-}: {
-  klubSlug: string;
-  klubId: string;
-  sportCode: string;
-  status: SportEnrollmentStatus;
-  onNavigate?: () => void;
-}) {
-  void klubId;
-  const label = SPORT_LABELS[sportCode] ?? sportCode;
-  const dashboardHref = `/k/${klubSlug}/sports/${sportCode}/dashboard`;
-  const enrollHref = `/k/${klubSlug}/sports/${sportCode}/enroll`;
-  const href = status === 'active' ? dashboardHref : status === 'none' ? enrollHref : null;
-
-  const inner = (
-    <span className="flex flex-1 items-center justify-between gap-2">
-      <span className="truncate">{label}</span>
-      {status === 'pending' ? (
-        <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.06em] text-amber-700 dark:text-amber-400">
-          pendente
-        </span>
-      ) : status === 'suspended' ? (
-        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
-          suspenso
-        </span>
-      ) : status === 'none' ? (
-        <span className="text-xs text-muted-foreground">solicitar</span>
-      ) : null}
-    </span>
-  );
-
-  const cls =
-    'flex items-center gap-2 rounded px-2 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted';
-
-  if (!href) {
-    return (
-      <span className={cn(cls, 'cursor-not-allowed opacity-70 hover:bg-transparent')}>{inner}</span>
-    );
-  }
-
-  return (
-    <Link href={href} onClick={onNavigate} className={cls}>
-      {inner}
-    </Link>
-  );
-}
-
-// ─── SubLink (Torneios / Rankings) ────────────────────────────────────────────
-
-function SubLink({
-  href,
-  label,
-  pathname,
-  onNavigate,
-}: {
-  href: string;
-  label: string;
-  pathname: string;
-  onNavigate?: () => void;
-}) {
-  const isActive = pathname.startsWith(href);
-  return (
-    <Link
-      href={href}
-      onClick={onNavigate}
-      className={cn(
-        'flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-colors',
-        isActive
-          ? 'font-semibold text-[hsl(var(--brand-primary-600))]'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-      )}
-    >
-      {label}
-    </Link>
   );
 }
 
@@ -516,26 +241,6 @@ function NavLink({ href, label, icon: Icon, active, disabled, badge, onNavigate 
   );
 }
 
-// ─── KlubAvatar ───────────────────────────────────────────────────────────────
-
-function KlubAvatar({ name, size = 'sm' }: { name: string; size?: 'sm' }) {
-  const initial = name.trim().charAt(0).toUpperCase() || 'K';
-  const hue = Array.from(name).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
-  const dim = size === 'sm' ? 'size-6 text-xs' : 'size-10 text-base';
-  return (
-    <span
-      className={cn(
-        'flex shrink-0 items-center justify-center rounded-md font-display font-bold text-white',
-        dim,
-      )}
-      style={{ background: `hsl(${hue} 55% 42%)` }}
-      aria-hidden="true"
-    >
-      {initial}
-    </span>
-  );
-}
-
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
 function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
@@ -562,10 +267,3 @@ function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
   );
 }
 
-// ─── RoleDot ──────────────────────────────────────────────────────────────────
-
-function RoleDot({ role }: { role: Role }) {
-  const isAdmin = role === 'KLUB_ADMIN' || role === 'PLATFORM_OWNER';
-  if (!isAdmin) return null;
-  return <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-label="Admin" />;
-}
