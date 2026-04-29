@@ -135,3 +135,20 @@ module "cloud_run" {
 
   depends_on = [module.vpc, module.iam]
 }
+
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  project_id  = local.project_id
+  region      = var.region
+  environment = local.environment
+
+  alert_email     = var.alert_email
+  api_uptime_host = var.api_uptime_host
+  web_uptime_host = var.web_uptime_host
+
+  cloud_sql_database_id = "${local.project_id}:${module.cloud_sql.instance_name}"
+  db_max_connections    = 50
+
+  depends_on = [module.project, module.cloud_run, module.cloud_sql]
+}
