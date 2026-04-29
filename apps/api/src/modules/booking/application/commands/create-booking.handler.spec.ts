@@ -108,9 +108,7 @@ function makePrisma(
       findMany: vi
         .fn()
         .mockImplementation(({ where }: { where: { id: { in: string[] } } }) =>
-          Promise.resolve(
-            (where.id.in ?? []).map((id) => ({ id, fullName: `User ${id}` })),
-          ),
+          Promise.resolve((where.id.in ?? []).map((id) => ({ id, fullName: `User ${id}` }))),
         ),
     },
     membership: {
