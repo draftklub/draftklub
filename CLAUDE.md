@@ -85,10 +85,12 @@ duplicar ao implementar features novas:
 before, after, metadata })` pra eventos sensíveis (role grants, klub
   transfers, cancellations, deletions). Fire-and-forget — falha loga warning.
 - **MetricsService** (`apps/api/src/shared/metrics/`) — Prometheus counters
-  - histograms. Já hooked: booking*created/cancelled, tournament_created/
-    cancelled, match_reported, klub_created, klub_review_decided, membership*
-    request*decided. Histogramas: booking_create_duration, tournament_draw*
-    duration. Endpoint `/metrics`.
+  e histograms. Já hooked: `booking_created/cancelled_total`,
+  `tournament_created/cancelled_total`, `match_reported_total`,
+  `klub_created_total`, `klub_review_decided_total`,
+  `membership_request_decided_total`. Histogramas:
+  `booking_create_duration_seconds`, `tournament_draw_duration_seconds`.
+  Endpoint `/metrics`.
 - **IdempotencyInterceptor** — global APP_INTERCEPTOR. Cliente envia
   `Idempotency-Key` header em POST/PATCH/DELETE; backend cacheia (status,
   body) por 24h scoped por user. Tabela `audit.idempotency_keys`.
