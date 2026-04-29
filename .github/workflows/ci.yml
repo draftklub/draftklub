@@ -49,3 +49,13 @@ jobs:
 
       - name: Test
         run: pnpm turbo run test
+
+      # Sprint M batch SM-7 — security audit informativo.
+      # continue-on-error=true: report visível no CI mas não bloqueia.
+      # Razão: várias CVEs hoje são em transitivas que precisam patch
+      # upstream (ex: fastify 5.8.4 herdado do @fastify/helmet, fix em
+      # 5.8.5). Dependabot weekly (.github/dependabot.yml) cuida do
+      # gradual cleanup. Quando vulns críticas zerarem, virar bloqueante.
+      - name: pnpm audit (production deps, advisory)
+        run: pnpm audit --prod --audit-level=high
+        continue-on-error: true

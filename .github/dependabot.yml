@@ -1,0 +1,57 @@
+version: 2
+
+updates:
+  # Sprint M batch SM-7 — pnpm/npm packages weekly.
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'America/Sao_Paulo'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps)'
+    labels:
+      - 'dependencies'
+      - 'auto'
+    groups:
+      # Agrupa deps relacionadas em 1 PR (em vez de N PRs separados).
+      nestjs:
+        patterns: ['@nestjs/*']
+      prisma:
+        patterns: ['prisma', '@prisma/*']
+      next:
+        patterns: ['next', 'eslint-config-next', '@next/*']
+      sentry:
+        patterns: ['@sentry/*']
+      otel:
+        patterns: ['@opentelemetry/*', '@google-cloud/opentelemetry-*']
+      types:
+        patterns: ['@types/*']
+        dependency-type: 'development'
+      eslint-prettier:
+        patterns: ['eslint*', 'prettier', '@typescript-eslint/*']
+
+  # GitHub Actions workflows — se atualiza pinned versions de actions.
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    commit-message:
+      prefix: 'chore(ci)'
+
+  # Docker base images.
+  - package-ecosystem: 'docker'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    commit-message:
+      prefix: 'chore(docker)'
+
+  - package-ecosystem: 'docker'
+    directory: '/apps/web'
+    schedule:
+      interval: 'weekly'
+    commit-message:
+      prefix: 'chore(docker)'
