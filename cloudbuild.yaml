@@ -175,11 +175,11 @@ steps:
           EXTRA_SECRETS=",SENTRY_DSN=sentry-dsn:latest"
         fi
         gcloud run services update draftklub-api \
-          --project=$_PROJECT_ID \
-          --region=$_REGION \
-          --image=$_API_IMAGE:$COMMIT_SHA \
+          --project="$_PROJECT_ID" \
+          --region="$_REGION" \
+          --image="$_API_IMAGE:$COMMIT_SHA" \
           --set-secrets="DATABASE_URL=database-url:latest,ENCRYPTION_KEY=encryption-key:latest,RESEND_API_KEY=resend-api-key:latest$$EXTRA_SECRETS" \
-          --set-env-vars=NODE_ENV=production,LOG_LEVEL=info,OTEL_ENABLED=false,OTEL_SERVICE_NAME=draftklub-api,CORS_ORIGINS=$_WEB_CORS_ORIGINS,EMAIL_FROM=$_EMAIL_FROM,APP_BASE_URL=$_APP_BASE_URL,SENTRY_ENVIRONMENT=$_SENTRY_ENVIRONMENT,SENTRY_RELEASE=$COMMIT_SHA
+          --set-env-vars="NODE_ENV=production,LOG_LEVEL=info,OTEL_ENABLED=false,OTEL_SERVICE_NAME=draftklub-api,CORS_ORIGINS=$_WEB_CORS_ORIGINS,EMAIL_FROM=$_EMAIL_FROM,APP_BASE_URL=$_APP_BASE_URL,SENTRY_ENVIRONMENT=$_SENTRY_ENVIRONMENT,SENTRY_RELEASE=$COMMIT_SHA"
     waitFor: ['migrate']
 
   # ─────────────────────────────────────────
