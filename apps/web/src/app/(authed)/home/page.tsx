@@ -9,6 +9,7 @@ import { EmailVerifyBanner } from '@/components/email-verify-banner';
 import { getMyKlubs } from '@/lib/api/me';
 import { cancelMyMembershipRequest, listMyMembershipRequests } from '@/lib/api/membership-requests';
 import { listMyBookings, type MyBookingItem } from '@/lib/api/bookings';
+import { KlubAvatar } from '@/components/ui/klub-avatar';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -344,7 +345,7 @@ function KlubDashCard({
       className="group flex h-full flex-col rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-sm"
     >
       <div className="flex items-center gap-3">
-        <KlubAvatar name={label} small />
+        <KlubAvatar name={label} size="sm" />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-semibold leading-tight">{label}</h3>
           <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
@@ -603,22 +604,4 @@ function SectionTitle({
   );
 }
 
-// ─── KlubAvatar ───────────────────────────────────────────────────────────────
-
-function KlubAvatar({ name, small }: { name: string; small?: boolean }) {
-  const initial = name.trim().charAt(0).toUpperCase() || 'K';
-  const hue = Array.from(name).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
-  return (
-    <span
-      className={
-        small
-          ? 'flex size-8 shrink-0 items-center justify-center rounded-md font-display text-xs font-bold text-white'
-          : 'flex size-12 shrink-0 items-center justify-center rounded-lg font-display text-base font-bold text-white'
-      }
-      style={{ background: `hsl(${hue} 55% 42%)` }}
-      aria-hidden="true"
-    >
-      {initial}
-    </span>
-  );
-}
+// KlubAvatar movido pra @/components/ui/klub-avatar (Sprint M batch SM-4).

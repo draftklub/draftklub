@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, Loader2, MapPin, Plus, Search } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
+import { KlubAvatar } from '@/components/ui/klub-avatar';
 import type {
   KlubAccessMode,
   KlubDiscoveryResult,
@@ -585,19 +586,7 @@ function formatDistance(km: number): string {
   return `${Math.round(km)} km`;
 }
 
-function KlubAvatar({ name }: { name: string }) {
-  const initial = name.trim().charAt(0).toUpperCase() || 'K';
-  const hue = Array.from(name).reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
-  return (
-    <span
-      className="flex size-10 shrink-0 items-center justify-center rounded-lg font-display text-base font-bold text-white"
-      style={{ background: `hsl(${hue} 55% 42%)` }}
-      aria-hidden="true"
-    >
-      {initial}
-    </span>
-  );
-}
+// KlubAvatar movido pra @/components/ui/klub-avatar (Sprint M batch SM-4).
 
 function TierBadge({ tier }: { tier: 'same-city' | 'same-state' }) {
   const label = tier === 'same-city' ? 'Na sua cidade' : 'No seu estado';

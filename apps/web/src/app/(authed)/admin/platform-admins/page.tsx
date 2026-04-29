@@ -5,6 +5,7 @@ import { Loader2, Plus, Shield, Trash2, UserPlus } from 'lucide-react';
 import { Banner } from '@/components/ui/banner';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import type { Role, RoleAssignmentListItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { getMe } from '@/lib/api/me';
@@ -228,6 +229,7 @@ function GrantForm({
 
 // ─── Assignment row ─────────────────────────────────────────────────────
 
+// imports já presentes no topo do arquivo; ConfirmDialog adicionado ali tb.
 function AssignmentRow({
   item,
   canRevoke,
@@ -240,12 +242,9 @@ function AssignmentRow({
   onError: (msg: string) => void;
 }) {
   const [submitting, setSubmitting] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
 
-  async function handleRevoke() {
-    if (submitting) return;
-    if (!window.confirm(`Revogar PLATFORM_ADMIN de ${item.userFullName} (${item.userEmail})?`)) {
-      return;
-    }
+  async function performRevoke() {
     setSubmitting(true);
     try {
       await revokePlatformRole(item.id);
@@ -253,6 +252,7 @@ function AssignmentRow({
     } catch (err: unknown) {
       onError(toErrorMessage(err, 'Erro ao revogar.'));
       setSubmitting(false);
+      throw err;
     }
   }
 
@@ -269,15 +269,30 @@ function AssignmentRow({
         </p>
       </div>
       {canRevoke ? (
-        <button
-          type="button"
-          onClick={() => void handleRevoke()}
-          disabled={submitting}
-          className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
-        >
-          {submitting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
-          Revogar
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => setConfirmOpen(true)}
+            disabled={submitting}
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+          >
+            {submitting ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <Trash2 className="size-3" />
+            )}
+            Revogar
+          </button>
+          <ConfirmDialog
+            open={confirmOpen}
+            onClose={() => setConfirmOpen(false)}
+            title="Revogar PLATFORM_ADMIN"
+            description={`Revogar PLATFORM_ADMIN de ${item.userFullName} (${item.userEmail})?`}
+            confirmLabel="Revogar"
+            destructive
+            onConfirm={performRevoke}
+          />
+        </>
       ) : null}
     </div>
   );
