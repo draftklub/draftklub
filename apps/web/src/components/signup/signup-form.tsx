@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { loginWithGoogle, signupWithEmail } from '@/lib/auth';
+import { CURRENT_CONSENT_VERSION, recordConsent } from '@/lib/api/me';
 
 type Status = 'idle' | 'loading' | 'error' | 'success';
 
@@ -33,6 +34,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const [confirm, setConfirm] = React.useState('');
+  const [acceptedTerms, setAcceptedTerms] = React.useState(false);
   const [status, setStatus] = React.useState<Status>('idle');
   const [errorMsg, setErrorMsg] = React.useState('');
   const [googleLoading, setGoogleLoading] = React.useState(false);
@@ -54,6 +56,7 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
     if (password.length < 8) return 'Senha precisa ter ao menos 8 caracteres.';
     if (!/\d/.test(password)) return 'Senha precisa ter ao menos 1 número.';
     if (confirm !== password) return 'A confirmação não bate com a senha.';
+    if (!acceptedTerms) return 'Você precisa aceitar a Política de Privacidade e os Termos de Uso.';
     return null;
   }
 
@@ -72,6 +75,11 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
     setErrorMsg('');
     try {
       await signupWithEmail(email, password, name);
+      // Registra aceite LGPD imediatamente após criar conta. Falha de
+      // consent não trava o flow — log no Sentry pra investigar.
+      await recordConsent(CURRENT_CONSENT_VERSION).catch((err: unknown) => {
+        console.error('Failed to record consent:', err);
+      });
       setStatus('success');
       // Pequena pausa pro user ver a confirmação antes do redirect.
       setTimeout(() => router.push('/home'), 700);
@@ -83,10 +91,18 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
 
   async function handleGoogle() {
     if (isLoading || googleLoading) return;
+    if (!acceptedTerms) {
+      setStatus('error');
+      setErrorMsg('Você precisa aceitar a Política de Privacidade e os Termos de Uso.');
+      return;
+    }
     setGoogleLoading(true);
     setErrorMsg('');
     try {
       await loginWithGoogle();
+      await recordConsent(CURRENT_CONSENT_VERSION).catch((err: unknown) => {
+        console.error('Failed to record consent:', err);
+      });
       setStatus('success');
       setTimeout(() => router.push('/home'), 700);
     } catch (err) {
@@ -230,6 +246,39 @@ export function SignupForm({ formWidth = 320 }: SignupFormProps) {
           </div>
         ) : null}
       </div>
+
+      {/* Consent (LGPD) */}
+      <label className="flex cursor-pointer items-start gap-2 text-xs text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={acceptedTerms}
+          onChange={(e) => {
+            setAcceptedTerms(e.target.checked);
+            clearErrorOnChange();
+          }}
+          disabled={isLoading}
+          className="mt-0.5 size-4 shrink-0 cursor-pointer rounded border-input text-primary focus:ring-primary/30"
+        />
+        <span className="leading-snug">
+          Li e aceito a{' '}
+          <Link
+            href="/privacidade"
+            target="_blank"
+            className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
+          >
+            Política de Privacidade
+          </Link>{' '}
+          e os{' '}
+          <Link
+            href="/termos"
+            target="_blank"
+            className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
+          >
+            Termos de Uso
+          </Link>{' '}
+          do DraftKlub.
+        </span>
+      </label>
 
       {/* Criar conta */}
       <button

@@ -5,6 +5,9 @@ import { GetUserByFirebaseUidHandler } from './application/queries/get-user-by-f
 import { GetMyKlubsHandler } from './application/queries/get-my-klubs.handler';
 import { GetMeHandler } from './application/queries/get-me.handler';
 import { UpdateMeHandler } from './application/commands/update-me.handler';
+import { RecordConsentHandler } from './application/commands/record-consent.handler';
+import { ExportMyDataHandler } from './application/queries/export-my-data.handler';
+import { DeleteMyAccountHandler } from './application/commands/delete-my-account.handler';
 import { GrantRoleHandler } from './application/commands/grant-role.handler';
 import { RevokeRoleHandler } from './application/commands/revoke-role.handler';
 import { TransferKlubAdminHandler } from './application/commands/transfer-klub-admin.handler';
@@ -23,6 +26,9 @@ import { FirebaseAuthGuard } from '../../shared/auth/firebase-auth.guard';
     GetMyKlubsHandler,
     GetMeHandler,
     UpdateMeHandler,
+    RecordConsentHandler,
+    ExportMyDataHandler,
+    DeleteMyAccountHandler,
     GrantRoleHandler,
     RevokeRoleHandler,
     TransferKlubAdminHandler,

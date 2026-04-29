@@ -45,9 +45,14 @@ function buildHandler(
   const geocoder = {
     geocode: vi.fn(() => Promise.resolve(opts.geocode ?? null)),
   };
+  const encryption = {
+    encryptToString: (s: string | null | undefined) => (s === undefined ? null : s),
+    decryptFromString: (s: string | null) => s,
+  };
   const handler = new UpdateMeHandler(
     prisma as unknown as PrismaService,
     geocoder as unknown as CepGeocoderService,
+    encryption as never,
   );
   return { handler, prisma, geocoder };
 }

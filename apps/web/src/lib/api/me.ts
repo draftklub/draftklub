@@ -47,3 +47,31 @@ export function updateMe(input: UpdateMeInput): Promise<MeResponse> {
 export function getMyKlubs(): Promise<UserKlubMembership[]> {
   return apiFetch<UserKlubMembership[]>('/me/klubs');
 }
+
+/**
+ * Sprint M batch 8 — LGPD endpoints.
+ */
+
+/** Versão atual da política/termos. Bump quando alterar /privacidade. */
+export const CURRENT_CONSENT_VERSION = '2026-04-29-v1';
+
+/** POST /me/consent — registra aceite à versão atual da política. */
+export function recordConsent(
+  version: string = CURRENT_CONSENT_VERSION,
+): Promise<{ consentGivenAt: string; version: string }> {
+  return apiFetch('/me/consent', { method: 'POST', json: { version } });
+}
+
+/** GET /me/export — JSON com todos os dados pessoais (LGPD Art. 18 V). */
+export function exportMyData(): Promise<Record<string, unknown>> {
+  return apiFetch<Record<string, unknown>>('/me/export');
+}
+
+/**
+ * DELETE /me — anonimiza User no backend. Frontend deve então deletar
+ * o Firebase user separadamente (auth.currentUser.delete) e fazer logout.
+ * Pode falhar com 409 se user é sole KLUB_ADMIN — UI mostra qual Klub.
+ */
+export function deleteMyAccount(): Promise<{ id: string; anonymizedAt: string }> {
+  return apiFetch('/me', { method: 'DELETE' });
+}

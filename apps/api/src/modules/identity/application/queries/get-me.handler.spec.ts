@@ -11,7 +11,8 @@ function buildHandler(opts: { user?: object | null } = {}) {
       findUnique: vi.fn(() => Promise.resolve(opts.user ?? null)),
     },
   };
-  const handler = new GetMeHandler(prisma as unknown as PrismaService);
+  const encryption = { decryptFromString: (s: string | null) => s };
+  const handler = new GetMeHandler(prisma as unknown as PrismaService, encryption as never);
   return { handler, prisma };
 }
 

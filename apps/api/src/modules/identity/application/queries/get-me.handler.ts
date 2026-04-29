@@ -7,6 +7,7 @@ import type {
   RoleAssignment,
 } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { EncryptionService } from '../../../../shared/encryption/encryption.service';
 
 /**
  * GET /me — retorna o User completo do DB + roleAssignments do contexto
@@ -19,7 +20,10 @@ import { PrismaService } from '../../../../shared/prisma/prisma.service';
  */
 @Injectable()
 export class GetMeHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly encryption: EncryptionService,
+  ) {}
 
   async execute(userId: string, roleAssignments: RoleAssignment[]): Promise<MeResponse> {
     const user = await this.prisma.user.findUnique({
@@ -41,14 +45,14 @@ export class GetMeHandler {
       gender: (user.gender as Gender | null) ?? null,
       city: user.city,
       state: user.state,
-      cep: user.cep,
-      addressStreet: user.addressStreet,
-      addressNumber: user.addressNumber,
-      addressComplement: user.addressComplement,
-      addressNeighborhood: user.addressNeighborhood,
+      cep: this.encryption.decryptFromString(user.cep),
+      addressStreet: this.encryption.decryptFromString(user.addressStreet),
+      addressNumber: this.encryption.decryptFromString(user.addressNumber),
+      addressComplement: this.encryption.decryptFromString(user.addressComplement),
+      addressNeighborhood: this.encryption.decryptFromString(user.addressNeighborhood),
       latitude: user.latitude,
       longitude: user.longitude,
-      documentNumber: user.documentNumber,
+      documentNumber: this.encryption.decryptFromString(user.documentNumber),
       documentType: (user.documentType as DocumentType | null) ?? null,
       notificationPrefs: (user.notificationPrefs as NotificationPrefs | null) ?? {},
       roleAssignments,

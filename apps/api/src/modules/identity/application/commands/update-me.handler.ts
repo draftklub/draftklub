@@ -8,6 +8,7 @@ import type {
 } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { CepGeocoderService } from '../../../../shared/geocoding/cep-geocoder.service';
+import { EncryptionService } from '../../../../shared/encryption/encryption.service';
 import type { UpdateMeDto } from '../../api/dtos/update-me.dto';
 
 export interface UpdateMeCommand {
@@ -27,6 +28,7 @@ export class UpdateMeHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly geocoder: CepGeocoderService,
+    private readonly encryption: EncryptionService,
   ) {}
 
   async execute(cmd: UpdateMeCommand): Promise<MeResponse> {
@@ -43,19 +45,23 @@ export class UpdateMeHandler {
     if (dto.city !== undefined) data.city = dto.city;
     if (dto.state !== undefined) data.state = dto.state;
     if (dto.cep !== undefined) {
-      data.cep = dto.cep;
-      // Geocoding CEP -> lat/lng. Falha silenciosa: deixa null e usuário
-      // cai em fallback de browser geolocation no /buscar-klubs.
+      // Geocoding usa o CEP em PLAINTEXT (BrasilAPI não decifra…). Só
+      // armazenamos a versão cifrada — leituras de get-me decifram.
       const coords = dto.cep ? await this.geocoder.geocode(dto.cep) : null;
+      data.cep = this.encryption.encryptToString(dto.cep);
       data.latitude = coords?.latitude ?? null;
       data.longitude = coords?.longitude ?? null;
     }
-    if (dto.addressStreet !== undefined) data.addressStreet = dto.addressStreet;
-    if (dto.addressNumber !== undefined) data.addressNumber = dto.addressNumber;
-    if (dto.addressComplement !== undefined) data.addressComplement = dto.addressComplement;
-    if (dto.addressNeighborhood !== undefined) data.addressNeighborhood = dto.addressNeighborhood;
+    if (dto.addressStreet !== undefined)
+      data.addressStreet = this.encryption.encryptToString(dto.addressStreet);
+    if (dto.addressNumber !== undefined)
+      data.addressNumber = this.encryption.encryptToString(dto.addressNumber);
+    if (dto.addressComplement !== undefined)
+      data.addressComplement = this.encryption.encryptToString(dto.addressComplement);
+    if (dto.addressNeighborhood !== undefined)
+      data.addressNeighborhood = this.encryption.encryptToString(dto.addressNeighborhood);
     if (dto.documentNumber !== undefined) {
-      data.documentNumber = dto.documentNumber;
+      data.documentNumber = this.encryption.encryptToString(dto.documentNumber);
       // Setar CPF -> implicitamente seta type='cpf' se não veio explícito.
       data.documentType = dto.documentType ?? 'cpf';
     } else if (dto.documentType !== undefined) {
@@ -97,14 +103,14 @@ export class UpdateMeHandler {
       gender: (user.gender as Gender | null) ?? null,
       city: user.city,
       state: user.state,
-      cep: user.cep,
-      addressStreet: user.addressStreet,
-      addressNumber: user.addressNumber,
-      addressComplement: user.addressComplement,
-      addressNeighborhood: user.addressNeighborhood,
+      cep: this.encryption.decryptFromString(user.cep),
+      addressStreet: this.encryption.decryptFromString(user.addressStreet),
+      addressNumber: this.encryption.decryptFromString(user.addressNumber),
+      addressComplement: this.encryption.decryptFromString(user.addressComplement),
+      addressNeighborhood: this.encryption.decryptFromString(user.addressNeighborhood),
       latitude: user.latitude,
       longitude: user.longitude,
-      documentNumber: user.documentNumber,
+      documentNumber: this.encryption.decryptFromString(user.documentNumber),
       documentType: (user.documentType as DocumentType | null) ?? null,
       notificationPrefs: (user.notificationPrefs as NotificationPrefs | null) ?? {},
       roleAssignments,

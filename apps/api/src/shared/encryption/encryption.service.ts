@@ -45,4 +45,44 @@ export class EncryptionService {
     decipher.setAuthTag(authTag);
     return decipher.update(ciphertext).toString('utf8') + decipher.final('utf8');
   }
+
+  /**
+   * Sprint M batch 8 — pack encrypted+iv num único string pra storage
+   * em coluna text simples. Formato: `enc:v1:{iv_hex}:{ciphertext_b64}`.
+   * Prefixo `enc:v1:` permite distinguir de plaintext legado e suporta
+   * versionamento futuro do esquema sem migration destrutiva.
+   *
+   * Pra valores nulos/vazios, retorna o input sem tocar.
+   */
+  encryptToString(plain: string | null | undefined): string | null {
+    if (plain == null || plain === '') return plain ?? null;
+    const { encrypted, iv } = this.encrypt(plain);
+    return `enc:v1:${iv}:${encrypted}`;
+  }
+
+  /**
+   * Inverso de encryptToString. Detecta plaintext legado pelo prefixo
+   * ausente e retorna como veio (gradual migration: re-saves criptografam).
+   * Falha de decrypt (auth tag mismatch, corrompido) loga warning e
+   * retorna o input original — não quebra a request por causa de 1 linha.
+   */
+  decryptFromString(stored: string | null | undefined): string | null {
+    if (stored == null || stored === '') return stored ?? null;
+    if (!stored.startsWith('enc:v1:')) return stored;
+    const parts = stored.split(':');
+    // 'enc' | 'v1' | iv_hex | ciphertext_b64 (b64 não tem `:`)
+    if (parts.length !== 4) {
+      this.logger.warn(`Malformed encrypted value (parts=${parts.length})`);
+      return stored;
+    }
+    const iv = parts[2];
+    const ciphertext = parts[3];
+    if (!iv || !ciphertext) return stored;
+    try {
+      return this.decrypt(ciphertext, iv);
+    } catch (err) {
+      this.logger.warn(`Decryption failed: ${err instanceof Error ? err.message : String(err)}`);
+      return stored;
+    }
+  }
 }
