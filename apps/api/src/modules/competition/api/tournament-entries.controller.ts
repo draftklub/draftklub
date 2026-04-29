@@ -13,11 +13,13 @@ export class TournamentEntriesController {
   constructor(private readonly facade: CompetitionFacade) {}
 
   @Get()
+  @RequirePolicy('tournament.read', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async list(@Param('tournamentId') tournamentId: string) {
     return this.facade.listEntries(tournamentId);
   }
 
   @Post()
+  @RequirePolicy('tournament.enroll', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async register(
     @Param('tournamentId') tournamentId: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -29,6 +31,7 @@ export class TournamentEntriesController {
   }
 
   @Delete('me')
+  @RequirePolicy('tournament.withdraw', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async withdraw(
     @Param('tournamentId') tournamentId: string,
     @CurrentUser() user: AuthenticatedUser,

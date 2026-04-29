@@ -108,6 +108,10 @@ export class PolicyEngine {
         if (domain === 'role' && operation === 'list') return true;
         if (domain === 'match' && ['create', 'confirm'].includes(operation)) return true;
         if (domain === 'booking' && operation === 'create') return true;
+        // Sprint M batch 4 — PLAYER do scope pode se inscrever em torneios
+        // do próprio Klub e desistir. Approval/seeding/draw/manage seguem
+        // sendo prerrogativa de SPORT_COMMISSION/KLUB_ADMIN.
+        if (domain === 'tournament' && ['enroll', 'withdraw'].includes(operation)) return true;
         if (resource.ownerId != null && resource.ownerId === user.userId) return true;
         return false;
 

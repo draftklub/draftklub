@@ -87,6 +87,39 @@ describe('PolicyEngine', () => {
     expect(engine.can(user, 'tournament.delete', { klubId, ownerId: 'outro-user' })).toBe(false);
   });
 
+  it('PLAYER pode se inscrever e desistir de torneio do próprio Klub', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'player@test.com',
+      roleAssignments: [{ role: 'PLAYER', scopeKlubId: klubId }],
+    };
+    expect(engine.can(user, 'tournament.enroll', { klubId })).toBe(true);
+    expect(engine.can(user, 'tournament.withdraw', { klubId })).toBe(true);
+  });
+
+  it('PLAYER NÃO pode se inscrever em torneio de outro Klub (scope mismatch)', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'player@test.com',
+      roleAssignments: [{ role: 'PLAYER', scopeKlubId: klubId }],
+    };
+    expect(engine.can(user, 'tournament.enroll', { klubId: 'outro-klub' })).toBe(false);
+  });
+
+  it('PLAYER NÃO pode gerenciar torneio (manage/cancel/draw)', () => {
+    const user: AuthenticatedUser = {
+      userId,
+      firebaseUid: 'firebase-uid',
+      email: 'player@test.com',
+      roleAssignments: [{ role: 'PLAYER', scopeKlubId: klubId }],
+    };
+    expect(engine.can(user, 'tournament.manage', { klubId })).toBe(false);
+    expect(engine.can(user, 'tournament.cancel', { klubId })).toBe(false);
+    expect(engine.can(user, 'tournament.draw', { klubId })).toBe(false);
+  });
+
   it('STAFF passa em booking.create quando scopeKlubId bate', () => {
     const user: AuthenticatedUser = {
       userId,

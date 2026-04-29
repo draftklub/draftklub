@@ -14,6 +14,7 @@ export class TournamentMatchesController {
   constructor(private readonly facade: CompetitionFacade) {}
 
   @Post('result')
+  @RequirePolicy('match.create', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async report(
     @Param('tournamentId') tournamentId: string,
     @Param('matchId') matchId: string,
@@ -34,6 +35,7 @@ export class TournamentMatchesController {
   }
 
   @Post('confirm')
+  @RequirePolicy('match.confirm', { resolveKlubIdFrom: 'tournament:tournamentId' })
   async confirm(
     @Param('tournamentId') tournamentId: string,
     @Param('matchId') matchId: string,
