@@ -1,20 +1,34 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type {
+  TournamentDetail,
+  TournamentFormat,
+  TournamentRegistrationApproval,
+  TournamentResultReportingMode,
+  TournamentStatus,
+} from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 @Injectable()
 export class GetTournamentHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(id: string) {
+  /**
+   * Sprint N batch N-17 — return type pinned em `TournamentDetail`.
+   * Antes retornava shape divergente do contrato (faltavam klubSportId,
+   * coverUrl, resultReportingMode, pointsApplied, cancelledAt,
+   * createdAt + entryCount/matchCount como aggregates top-level). FE
+   * castava `as TournamentDetail` e quebrava em runtime nos campos
+   * faltantes (entryCount, resultReportingMode usados no detail page).
+   */
+  async execute(id: string): Promise<TournamentDetail> {
     const tournament = await this.prisma.tournament.findUnique({
       where: { id },
       include: {
         categories: {
           orderBy: { order: 'asc' },
-          include: {
-            pointsSchema: { select: { id: true, name: true } },
-            _count: { select: { entries: true } },
-          },
+        },
+        _count: {
+          select: { entries: true, matches: true },
         },
       },
     });
@@ -23,34 +37,44 @@ export class GetTournamentHandler {
 
     return {
       id: tournament.id,
+      klubSportId: tournament.klubSportId,
+      rankingId: tournament.rankingId,
       name: tournament.name,
       description: tournament.description,
-      format: tournament.format,
-      status: tournament.status,
-      currentPhase: tournament.currentPhase,
+      coverUrl: tournament.coverUrl,
+      format: tournament.format as TournamentFormat,
       hasPrequalifiers: tournament.hasPrequalifiers,
       prequalifierBordersPerFrontier: tournament.prequalifierBordersPerFrontier,
-      registrationApproval: tournament.registrationApproval,
-      registrationFee: tournament.registrationFee,
-      registrationOpensAt: tournament.registrationOpensAt,
-      registrationClosesAt: tournament.registrationClosesAt,
-      drawDate: tournament.drawDate,
-      prequalifierStartDate: tournament.prequalifierStartDate,
-      prequalifierEndDate: tournament.prequalifierEndDate,
-      mainStartDate: tournament.mainStartDate,
-      mainEndDate: tournament.mainEndDate,
-      scheduleConfig: tournament.scheduleConfig,
-      rankingId: tournament.rankingId,
+      registrationApproval: tournament.registrationApproval as TournamentRegistrationApproval,
+      registrationFee:
+        tournament.registrationFee !== null ? tournament.registrationFee.toString() : null,
+      registrationOpensAt: tournament.registrationOpensAt.toISOString(),
+      registrationClosesAt: tournament.registrationClosesAt.toISOString(),
+      drawDate: tournament.drawDate.toISOString(),
+      prequalifierStartDate: tournament.prequalifierStartDate?.toISOString() ?? null,
+      prequalifierEndDate: tournament.prequalifierEndDate?.toISOString() ?? null,
+      mainStartDate: tournament.mainStartDate.toISOString(),
+      mainEndDate: tournament.mainEndDate?.toISOString() ?? null,
+      status: tournament.status as TournamentStatus,
+      currentPhase: tournament.currentPhase,
+      resultReportingMode: tournament.resultReportingMode as TournamentResultReportingMode,
+      pointsApplied: tournament.pointsApplied,
+      pointsAppliedAt: tournament.pointsAppliedAt?.toISOString() ?? null,
+      cancelledAt: tournament.cancelledAt?.toISOString() ?? null,
+      cancellationReason: tournament.cancellationReason,
       categories: tournament.categories.map((c) => ({
         id: c.id,
+        tournamentId: c.tournamentId,
         name: c.name,
         order: c.order,
         maxPlayers: c.maxPlayers,
         minRatingExpected: c.minRatingExpected,
         maxRatingExpected: c.maxRatingExpected,
-        pointsSchema: c.pointsSchema,
-        entryCount: c._count.entries,
+        pointsSchemaId: c.pointsSchemaId,
       })),
+      entryCount: tournament._count.entries,
+      matchCount: tournament._count.matches,
+      createdAt: tournament.createdAt.toISOString(),
     };
   }
 }
