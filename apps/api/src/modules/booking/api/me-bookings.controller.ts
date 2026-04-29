@@ -1,8 +1,9 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { CurrentUser } from '../../../shared/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.interface';
 import { CursorPaginationSchema } from '../../../shared/pagination/cursor';
+import { EtagInterceptor } from '../../../shared/etag/etag.interceptor';
 import { BookingFacade } from '../public/booking.facade';
 
 /**
@@ -16,6 +17,7 @@ import { BookingFacade } from '../public/booking.facade';
  */
 @Controller('me/bookings')
 @UseGuards(FirebaseAuthGuard)
+@UseInterceptors(EtagInterceptor)
 export class MeBookingsController {
   constructor(private readonly bookingFacade: BookingFacade) {}
 

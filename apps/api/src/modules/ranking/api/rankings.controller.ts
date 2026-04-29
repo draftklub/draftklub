@@ -1,10 +1,20 @@
-import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../../shared/auth/firebase-auth.guard';
 import { PolicyGuard } from '../../../shared/auth/policy.guard';
 import { RequirePolicy } from '../../../shared/auth/require-policy.decorator';
 import { CurrentUser } from '../../../shared/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../../shared/auth/authenticated-user.interface';
 import { CursorPaginationSchema } from '../../../shared/pagination/cursor';
+import { EtagInterceptor } from '../../../shared/etag/etag.interceptor';
 import { RankingFacade } from '../public/ranking.facade';
 import { CreateRankingSchema } from './dtos/create-ranking.dto';
 import { EnrollPlayerSchema } from './dtos/enroll-player.dto';
@@ -33,6 +43,7 @@ export class RankingsController {
   }
 
   @Get(':rankingId')
+  @UseInterceptors(EtagInterceptor)
   async getRanking(@Param('rankingId') rankingId: string, @Query() query: Record<string, unknown>) {
     const params = CursorPaginationSchema.parse(query);
     return this.facade.getRanking(rankingId, params);
