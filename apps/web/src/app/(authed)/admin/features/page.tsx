@@ -53,7 +53,10 @@ export default function AdminFeaturesPage() {
   }, []);
 
   function setRow(id: string, patch: Partial<RowState>) {
-    setRowState((prev) => ({ ...prev, [id]: { saving: false, error: null, saved: false, ...prev[id], ...patch } }));
+    setRowState((prev) => ({
+      ...prev,
+      [id]: { saving: false, error: null, saved: false, ...prev[id], ...patch },
+    }));
   }
 
   async function handlePatch(id: string, input: { tier?: FeatureTier; enabled?: boolean }) {
@@ -196,10 +199,7 @@ export default function AdminFeaturesPage() {
                             )}
                             {rs?.saved && <CheckCircle2 className="size-4 text-success" />}
                             {rs?.error && (
-                              <span
-                                title={rs.error}
-                                className="cursor-help"
-                              >
+                              <span title={rs.error} className="cursor-help">
                                 <XCircle className="size-4 text-destructive" />
                               </span>
                             )}
@@ -215,8 +215,8 @@ export default function AdminFeaturesPage() {
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          Mudanças são gravadas imediatamente + trilha de auditoria.
-          Feature inexistente num Klub = tier <code>free</code> por padrão.
+          Mudanças são gravadas imediatamente + trilha de auditoria. Feature inexistente num Klub =
+          tier <code>free</code> por padrão.
         </p>
       </div>
     </main>

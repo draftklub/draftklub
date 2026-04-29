@@ -109,9 +109,7 @@ function ModalidadesScreen() {
         </div>
       ) : null}
 
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
 
       {tab === 'all' ? (
         <ProfilesGrid
@@ -237,9 +235,7 @@ function ProfileCard({
       </h3>
       <p className="mt-0.5 font-mono text-xs text-muted-foreground">{profile.sportCode}</p>
       {profile.description ? (
-        <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
-          {profile.description}
-        </p>
+        <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{profile.description}</p>
       ) : null}
 
       <div className="mt-auto flex items-center justify-between pt-4">
@@ -408,9 +404,7 @@ function PendingApprovalsTab({
           className="grid grid-cols-1 gap-3 rounded-lg border border-border bg-card p-4 md:grid-cols-[1fr_auto] md:items-center"
         >
           <div>
-            <p className="text-sm font-semibold">
-              {profile.name ?? sportName(profile.sportCode)}
-            </p>
+            <p className="text-sm font-semibold">{profile.name ?? sportName(profile.sportCode)}</p>
             <p className="mt-0.5 font-mono text-xs text-muted-foreground">
               user {enrollment.userId.slice(0, 8)}… · pediu{' '}
               {new Date(enrollment.enrolledAt).toLocaleDateString('pt-BR')}

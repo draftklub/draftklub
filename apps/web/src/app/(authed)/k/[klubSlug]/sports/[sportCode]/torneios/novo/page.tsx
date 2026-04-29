@@ -263,7 +263,10 @@ export default function NovoTorneioPage() {
       <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
         <div className="mx-auto max-w-2xl space-y-4">
           <PageHeader
-            back={{ href: `/k/${klub.slug}/sports/${sportCode}/torneios`, label: `Torneios · ${sportLabel}` }}
+            back={{
+              href: `/k/${klub.slug}/sports/${sportCode}/torneios`,
+              label: `Torneios · ${sportLabel}`,
+            }}
             eyebrow={`${klub.commonName ?? klub.name} · ${sportLabel}`}
             title="Criar torneio"
           />
@@ -284,14 +287,15 @@ export default function NovoTorneioPage() {
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-2xl space-y-4">
         <PageHeader
-          back={{ href: `/k/${klub.slug}/sports/${sportCode}/torneios`, label: `Torneios · ${sportLabel}` }}
+          back={{
+            href: `/k/${klub.slug}/sports/${sportCode}/torneios`,
+            label: `Torneios · ${sportLabel}`,
+          }}
           eyebrow={`${klub.commonName ?? klub.name} · ${sportLabel}`}
           title="Criar torneio"
         />
 
-        {submitError ? (
-          <Banner tone="error">{submitError}</Banner>
-        ) : null}
+        {submitError ? <Banner tone="error">{submitError}</Banner> : null}
 
         <Section title="Identidade">
           <Field label="Nome">
@@ -809,9 +813,7 @@ function CreatePointsSchemaModal({
         </>
       }
     >
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
 
       <Field label="Nome">
         <input

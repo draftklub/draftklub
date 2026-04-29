@@ -61,12 +61,8 @@ export default function NotificacoesPage() {
           description="Partidas reportadas pelo seu rival aguardando sua confirmação."
         />
 
-        {actionMessage ? (
-          <Banner tone="success">{actionMessage}</Banner>
-        ) : null}
-        {error ? (
-          <Banner tone="error">{error}</Banner>
-        ) : null}
+        {actionMessage ? <Banner tone="success">{actionMessage}</Banner> : null}
+        {error ? <Banner tone="error">{error}</Banner> : null}
 
         {items === null ? (
           <div className="flex items-center justify-center py-10">

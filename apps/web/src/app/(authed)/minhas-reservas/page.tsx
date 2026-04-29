@@ -2,15 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import {
-  CalendarDays,
-  Clock,
-  Loader2,
-  MapPin,
-  Plus,
-  Timer,
-  X,
-} from 'lucide-react';
+import { CalendarDays, Clock, Loader2, MapPin, Plus, Timer, X } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { UserKlubMembership } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
@@ -130,9 +122,7 @@ export default function MinhasReservasPage() {
           onChange={(id) => setTab(id as Tab)}
         />
 
-        {actionMessage ? (
-          <Banner tone="success">{actionMessage}</Banner>
-        ) : null}
+        {actionMessage ? <Banner tone="success">{actionMessage}</Banner> : null}
 
         {error ? (
           <Banner tone="error">{error}</Banner>
@@ -238,7 +228,6 @@ function ReservarKlubPicker({
     </Modal>
   );
 }
-
 
 function BookingCard({
   booking,
@@ -437,9 +426,7 @@ function CancelModal({
       <p className="mt-1 text-right text-xs text-muted-foreground">
         {reason.trim().length}/500 (mín 10)
       </p>
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
       <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <button
           type="button"
@@ -529,9 +516,7 @@ function AddPlayersModal({
         type="email"
         className="mt-2 w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
       />
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
       <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <button
           type="button"
@@ -623,9 +608,7 @@ function ExtendModal({
         maxLength={500}
         className="mt-3 w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
       />
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
       <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <button
           type="button"
@@ -688,9 +671,7 @@ function BookingEmptyState({ tab }: { tab: Tab }) {
         ? 'Sem reservas passadas'
         : 'Sem reservas canceladas';
   const description =
-    tab === 'upcoming'
-      ? 'Entre num Klub e use o botão Reservar quadra pra agendar.'
-      : undefined;
+    tab === 'upcoming' ? 'Entre num Klub e use o botão Reservar quadra pra agendar.' : undefined;
   return <EmptyState icon={MapPin} title={title} description={description} />;
 }
 

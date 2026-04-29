@@ -3,14 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import {
-  ArrowRight,
-  Calendar,
-  Loader2,
-  Plus,
-  Trophy,
-  Users,
-} from 'lucide-react';
+import { ArrowRight, Calendar, Loader2, Plus, Trophy, Users } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -139,7 +132,11 @@ export default function SportTournamentsPage() {
           <EmptyState
             icon={Trophy}
             title="Nenhum torneio ainda"
-            description={canCreate ? 'Clique em "Criar" no topo pra abrir o primeiro.' : 'A comissão dessa modalidade ainda não criou nenhum.'}
+            description={
+              canCreate
+                ? 'Clique em "Criar" no topo pra abrir o primeiro.'
+                : 'A comissão dessa modalidade ainda não criou nenhum.'
+            }
           />
         ) : (
           <div className="space-y-6">

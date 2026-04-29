@@ -78,8 +78,24 @@ export default function CadastrosPage() {
         <Tabs
           className="mb-4"
           tabs={[
-            { id: 'pj', label: <><Building2 className="size-3.5" />PJ</> },
-            { id: 'pf', label: <><UserIcon className="size-3.5" />PF</> },
+            {
+              id: 'pj',
+              label: (
+                <>
+                  <Building2 className="size-3.5" />
+                  PJ
+                </>
+              ),
+            },
+            {
+              id: 'pf',
+              label: (
+                <>
+                  <UserIcon className="size-3.5" />
+                  PF
+                </>
+              ),
+            },
           ]}
           active={tab}
           onChange={(id) => setTab(id as Tab)}
@@ -141,7 +157,6 @@ export default function CadastrosPage() {
     </main>
   );
 }
-
 
 function CadastroCard({ item }: { item: AdminPendingKlubItem }) {
   const date = new Date(item.createdAt).toLocaleDateString('pt-BR', {

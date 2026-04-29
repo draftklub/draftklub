@@ -202,9 +202,7 @@ export default function ReservarPage() {
             <Step3Confirmar space={selectedSpace} slot={selectedSlot} matchType={matchType} />
           ) : null}
 
-          {stepError ? (
-            <Banner tone="error">{stepError}</Banner>
-          ) : null}
+          {stepError ? <Banner tone="error">{stepError}</Banner> : null}
         </div>
       </div>
 
@@ -534,9 +532,7 @@ function Step3Confirmar({
   matchType: MatchType;
 }) {
   if (!space || !slot) {
-    return (
-      <p className="text-sm text-muted-foreground">Volta um passo e completa as escolhas.</p>
-    );
+    return <p className="text-sm text-muted-foreground">Volta um passo e completa as escolhas.</p>;
   }
   const start = new Date(slot.startTime);
   const end = new Date(slot.endTime);
@@ -620,10 +616,7 @@ function SuccessView({
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-success">
           <CheckCircle2 className="size-7" strokeWidth={1.8} />
         </div>
-        <h1
-          className="mt-6 font-display text-2xl font-bold"
-          style={{ letterSpacing: '-0.02em' }}
-        >
+        <h1 className="mt-6 font-display text-2xl font-bold" style={{ letterSpacing: '-0.02em' }}>
           Reservado!
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -716,9 +709,7 @@ function MatchTypePill({
         active ? 'border-primary bg-primary/5' : 'border-border bg-background hover:bg-muted',
       )}
     >
-      <span className={cn('text-sm font-semibold', active ? 'text-foreground' : '')}>
-        {label}
-      </span>
+      <span className={cn('text-sm font-semibold', active ? 'text-foreground' : '')}>{label}</span>
       <span className="text-xs text-muted-foreground">{hint}</span>
     </button>
   );

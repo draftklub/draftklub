@@ -401,12 +401,8 @@ export function PerigosaTab({ klub, onDeactivated }: { klub: Klub; onDeactivated
         Desativar o Klub é soft delete — `deletedAt` populado, `status='suspended'`. Members perdem
         acesso. Reversível via SQL.
       </p>
-      {message ? (
-        <Banner tone="success">{message}</Banner>
-      ) : null}
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {message ? <Banner tone="success">{message}</Banner> : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
       <button
         type="button"
         onClick={() => void handleDeactivate()}
@@ -482,12 +478,8 @@ export function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferA
         </p>
       </header>
 
-      {message ? (
-        <Banner tone="success">{message}</Banner>
-      ) : null}
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {message ? <Banner tone="success">{message}</Banner> : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
 
       <EquipeGrantForm
         klubId={klub.id}
@@ -875,12 +867,8 @@ export function ModalidadesTab({ klub }: { klub: Klub }) {
         </p>
       </div>
 
-      {message ? (
-        <Banner tone="success">{message}</Banner>
-      ) : null}
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {message ? <Banner tone="success">{message}</Banner> : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
 
       {sports === null ? (
         <div className="flex items-center justify-center py-8">
@@ -969,12 +957,8 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
         </button>
       </div>
 
-      {message ? (
-        <Banner tone="success">{message}</Banner>
-      ) : null}
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {message ? <Banner tone="success">{message}</Banner> : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
 
       {spaces === null ? (
         <div className="flex items-center justify-center py-10">
@@ -1221,9 +1205,7 @@ function DeleteConfirmModal({
           A quadra será removida da listagem. Reservas futuras precisam ser canceladas antes — caso
           contrário a exclusão é bloqueada.
         </p>
-        {error ? (
-          <Banner tone="error">{error}</Banner>
-        ) : null}
+        {error ? <Banner tone="error">{error}</Banner> : null}
         <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"

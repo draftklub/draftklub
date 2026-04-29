@@ -1,14 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  CalendarDays,
-  Check,
-  Clock,
-  Loader2,
-  Timer,
-  X,
-} from 'lucide-react';
+import { CalendarDays, Check, Clock, Loader2, Timer, X } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -69,9 +62,7 @@ export default function ExtensionsPendingPage() {
           description="Players solicitaram estender reservas — aprove ou rejeite."
         />
 
-        {actionMessage ? (
-          <Banner tone="success">{actionMessage}</Banner>
-        ) : null}
+        {actionMessage ? <Banner tone="success">{actionMessage}</Banner> : null}
 
         {error ? (
           <Banner tone="error">{error}</Banner>
@@ -181,9 +172,7 @@ function ExtensionCard({
           {item.extension.decisionReason}
         </p>
       ) : null}
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
         <button
           type="button"

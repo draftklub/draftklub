@@ -169,13 +169,9 @@ export default function CadastroDetailPage() {
           description={data.legalName ?? undefined}
         />
 
-        {actionSuccess ? (
-          <Banner tone="success">{actionSuccess}</Banner>
-        ) : null}
+        {actionSuccess ? <Banner tone="success">{actionSuccess}</Banner> : null}
 
-        {actionError ? (
-          <Banner tone="error">{actionError}</Banner>
-        ) : null}
+        {actionError ? <Banner tone="error">{actionError}</Banner> : null}
 
         {/* Identidade */}
         <Section title="Identidade">

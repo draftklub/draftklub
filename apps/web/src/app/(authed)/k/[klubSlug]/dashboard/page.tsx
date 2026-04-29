@@ -486,9 +486,7 @@ function RealActivityFeed() {
   }
   if (bookings.length === 0) {
     return (
-      <p className="py-3 text-xs text-muted-foreground">
-        Sem reservas recentes nas últimas 24h.
-      </p>
+      <p className="py-3 text-xs text-muted-foreground">Sem reservas recentes nas últimas 24h.</p>
     );
   }
 
@@ -606,10 +604,7 @@ function Panel({
     <div className={cn('rounded-xl border border-border bg-card p-5', className)}>
       <div className="mb-4.5 flex items-start justify-between gap-3">
         <div>
-          <h2
-            className="mb-1 font-display text-sm font-bold"
-            style={{ letterSpacing: '-0.01em' }}
-          >
+          <h2 className="mb-1 font-display text-sm font-bold" style={{ letterSpacing: '-0.01em' }}>
             {title}
           </h2>
           {subtitle ? <p className="text-xs text-muted-foreground">{subtitle}</p> : null}

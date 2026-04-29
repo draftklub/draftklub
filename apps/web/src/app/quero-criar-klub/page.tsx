@@ -211,10 +211,7 @@ function SentScreen({ contactName }: { contactName: string }) {
         <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
           <Check className="size-8" strokeWidth={2.5} />
         </div>
-        <h1
-          className="mt-6 font-display text-3xl font-bold"
-          style={{ letterSpacing: '-0.02em' }}
-        >
+        <h1 className="mt-6 font-display text-3xl font-bold" style={{ letterSpacing: '-0.02em' }}>
           Recebemos seu pedido, {firstName}!
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">

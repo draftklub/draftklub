@@ -39,7 +39,11 @@ export class FeaturesController {
    */
   @Patch(':id')
   @HttpCode(200)
-  async patch(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
+  async patch(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     if (!user.roleAssignments.some((r) => isPlatformLevel(r.role))) {
       throw new ForbiddenException('Apenas admins de plataforma podem alterar feature gates');
     }

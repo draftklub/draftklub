@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { FastifyRequest } from 'fastify';
 import { REQUIRE_FEATURE_KEY } from './require-feature.decorator';
@@ -37,7 +32,9 @@ export class FeatureGuard implements CanActivate {
 
     if (!featureId) return true;
 
-    const request = context.switchToHttp().getRequest<FastifyRequest & { user?: AuthenticatedUser }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<FastifyRequest & { user?: AuthenticatedUser }>();
     const user = request.user;
 
     if (!user) {

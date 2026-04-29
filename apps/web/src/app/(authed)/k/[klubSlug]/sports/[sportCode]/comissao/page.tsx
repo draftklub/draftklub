@@ -164,9 +164,7 @@ function Group({
           >
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{item.userFullName}</p>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                {item.userEmail}
-              </p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{item.userEmail}</p>
             </div>
             {item.scopeSportId ? (
               <span className="inline-flex h-5 items-center rounded-full bg-primary/10 px-2 text-xs font-semibold uppercase tracking-[0.04em] text-[hsl(var(--brand-primary-600))]">

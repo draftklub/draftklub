@@ -45,5 +45,4 @@ export class FeatureRepository {
       return updated;
     });
   }
-
 }

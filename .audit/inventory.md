@@ -56,11 +56,11 @@ horizontalmente nas 51 páginas.
   como KPI de receita mock. Deve ser removido antes de production.
 - **Gap arquitetural**: **`useFeature` hook não existe**, **tabela `features` não
   existe**. Tier gating é estático via `Klub.plan` (Trial/Starter/Pro/Elite/Enterprise)
-  + limites (`maxMembers`/`maxSports`/`maxCourts`). Existe apenas `usePersona()` em
-  `apps/web/src/components/dashboard/persona-switcher.tsx` (dev-only). Recomenda-se
-  **criar tabela `features` + hook `useFeature` em sprint dedicada antes do refator
-  visual continuar**, pra que features visuais futuras (badges Premium, gates,
-  rollout %) não sejam hardcoded numa segunda rodada.
+  - limites (`maxMembers`/`maxSports`/`maxCourts`). Existe apenas `usePersona()` em
+    `apps/web/src/components/dashboard/persona-switcher.tsx` (dev-only). Recomenda-se
+    **criar tabela `features` + hook `useFeature` em sprint dedicada antes do refator
+    visual continuar**, pra que features visuais futuras (badges Premium, gates,
+    rollout %) não sejam hardcoded numa segunda rodada.
 
 ### Mobile
 
@@ -96,59 +96,59 @@ foco em payload, deep-links, e paridade de menus com a sidebar web.
 
 ## 3. Tabela de inventário (compacta — 51 rotas)
 
-| # | Rota | Persona | Tier | Layout | Lines | Priority |
-|---|---|---|---|---|---|---|
-| 01 | `/` | Anônimo | Always-on | Redirect | 6 | low |
-| 02 | `/login` | Anônimo | Always-on | Landing | 195 | medium |
-| 03 | `/criar-conta` | Anônimo | Always-on | Landing | 178 | medium |
-| 04 | `/recuperar-senha` | Anônimo | Always-on | Form | 149 | high |
-| 05 | `/quero-criar-klub` | Anônimo | Always-on | Form | 269 | high |
-| 06 | `/convite/[klubSlug]` | Anônimo→Player | Always-on | Form | 167 | high |
-| 07 | `/criar-klub` | Player→Klub Admin | Always-on | Wizard | 412 | medium |
-| 08 | `/criar-klub/sucesso` | Ambos | Always-on | Confirmation | 65 | low |
-| 09 | `/home` | Ambos | Always-on | Dashboard | 300 | medium |
-| 10 | `/klubs` | Ambos | Always-on | List | 146 | low |
-| 11 | `/buscar-klubs` | Player | Always-on | List | 717 | high |
-| 12 | `/minhas-reservas` | Player | Always-on | List | 790 | high |
-| 13 | `/notificacoes` | Player | Always-on | List | 238 | medium |
-| 14 | `/perfil` | Ambos | Always-on | Form-shell | 9 | low |
-| 15 | `/perfil/acesso` | Ambos | Always-on | Form-shell | 14 | low |
-| 16 | `/perfil/endereco` | Ambos | Always-on | Form-shell | 9 | low |
-| 17 | `/perfil/notificacoes` | Ambos | Always-on | Form-shell | 9 | low |
-| 18 | `/perfil/pessoa-fisica` | Player | Always-on | Form-shell | 9 | low |
-| 19 | `/perfil/preferencias` | Ambos | Always-on | Form-shell | 7 | low |
-| 20 | `/admin/aprovacoes` | SUPER_ADMIN | Always-on | List | 275 | low |
-| 21 | `/admin/aprovacoes/[id]` | SUPER_ADMIN | Always-on | Detail | 495 | medium |
-| 22 | `/admin/cadastros` | SUPER_ADMIN | Always-on | Redirect | 10 | low |
-| 23 | `/admin/platform-admins` | PLATFORM_OWNER | Always-on | List+Form | 337 | medium |
-| 24 | `/k/[slug]/onboarding` | Klub Admin | Always-on | Redirect | 14 | low |
-| 25 | `/k/[slug]/quadras` | Klub Admin | Always-on | Redirect | 13 | low |
-| 26 | `/k/[slug]/editar` | Klub Admin | Always-on | Redirect | 14 | low |
-| 27 | `/k/[slug]/dashboard` | Klub Admin>Player | Always-on | Dashboard | 721 | high |
-| 28 | `/k/[slug]/extensions-pending` | Klub Admin | Always-on | List | 246 | medium |
-| 29 | `/k/[slug]/modalidades` | Ambos | Always-on | Grid | 443 | medium |
-| 30 | `/k/[slug]/reservar` | Player | Always-on | Wizard | 857 | high |
-| 31 | `/k/[slug]/solicitacoes` | Klub Admin | Always-on | List | 423 | high |
-| 32 | `/k/[slug]/configurar` | Klub Admin | Always-on | Form-shell | 9 | low |
-| 33 | `/k/[slug]/configurar/contato` | Klub Admin | Always-on | Form-shell | 9 | low |
-| 34 | `/k/[slug]/configurar/equipe` | Klub Admin | Always-on | Form-shell | 19 | low |
-| 35 | `/k/[slug]/configurar/legal` | PLATFORM | Always-on | Form-shell | 19 | low |
-| 36 | `/k/[slug]/configurar/localizacao` | Klub Admin | Always-on | Form-shell | 9 | low |
-| 37 | `/k/[slug]/configurar/modalidades` | Klub Admin | Always-on | Form-shell | 9 | low |
-| 38 | `/k/[slug]/configurar/perigosa` | PLATFORM | Always-on | Form-shell | 19 | high |
-| 39 | `/k/[slug]/configurar/quadras` | Klub Admin | Always-on | Form-shell | 9 | low |
-| 40 | `/k/[slug]/configurar/visibilidade` | Klub Admin | Always-on | Form-shell | 9 | low |
-| 41 | `/k/[slug]/sports/[code]/comissao` | Ambos | Always-on | List | 197 | low |
-| 42 | `/k/[slug]/sports/[code]/dashboard` | Ambos | Always-on | Hub | 109 | low |
-| 43 | `/k/[slug]/sports/[code]/enroll` | Player | Always-on | Form | 124 | medium |
-| 44 | `/k/[slug]/sports/[code]/rankings` | Ambos | Always-on | List | 428 | low |
-| 45 | `/k/[slug]/sports/[code]/rankings/[id]` | Ambos | Always-on | Detail | 654 | medium |
-| 46 | `/k/[slug]/sports/[code]/torneios` | Ambos | Always-on | List | 288 | low |
-| 47 | `/k/[slug]/sports/[code]/torneios/novo` | Klub Admin | Always-on | Form (long) | 931 | **critical** |
-| 48 | `/k/[slug]/sports/[code]/torneios/[id]` | Ambos | Always-on | Detail-shell | 119 | low |
-| 49 | `/k/[slug]/sports/[code]/torneios/[id]/chave` | Ambos | Always-on | Detail-shell | 69 | low |
-| 50 | `/k/[slug]/sports/[code]/torneios/[id]/inscritos` | Ambos | Always-on | Detail-shell | 69 | low |
-| 51 | `/k/[slug]/sports/[code]/torneios/[id]/operacoes` | Klub Admin | Always-on | Detail-shell | 24 | low |
+| #   | Rota                                              | Persona           | Tier      | Layout       | Lines | Priority     |
+| --- | ------------------------------------------------- | ----------------- | --------- | ------------ | ----- | ------------ |
+| 01  | `/`                                               | Anônimo           | Always-on | Redirect     | 6     | low          |
+| 02  | `/login`                                          | Anônimo           | Always-on | Landing      | 195   | medium       |
+| 03  | `/criar-conta`                                    | Anônimo           | Always-on | Landing      | 178   | medium       |
+| 04  | `/recuperar-senha`                                | Anônimo           | Always-on | Form         | 149   | high         |
+| 05  | `/quero-criar-klub`                               | Anônimo           | Always-on | Form         | 269   | high         |
+| 06  | `/convite/[klubSlug]`                             | Anônimo→Player    | Always-on | Form         | 167   | high         |
+| 07  | `/criar-klub`                                     | Player→Klub Admin | Always-on | Wizard       | 412   | medium       |
+| 08  | `/criar-klub/sucesso`                             | Ambos             | Always-on | Confirmation | 65    | low          |
+| 09  | `/home`                                           | Ambos             | Always-on | Dashboard    | 300   | medium       |
+| 10  | `/klubs`                                          | Ambos             | Always-on | List         | 146   | low          |
+| 11  | `/buscar-klubs`                                   | Player            | Always-on | List         | 717   | high         |
+| 12  | `/minhas-reservas`                                | Player            | Always-on | List         | 790   | high         |
+| 13  | `/notificacoes`                                   | Player            | Always-on | List         | 238   | medium       |
+| 14  | `/perfil`                                         | Ambos             | Always-on | Form-shell   | 9     | low          |
+| 15  | `/perfil/acesso`                                  | Ambos             | Always-on | Form-shell   | 14    | low          |
+| 16  | `/perfil/endereco`                                | Ambos             | Always-on | Form-shell   | 9     | low          |
+| 17  | `/perfil/notificacoes`                            | Ambos             | Always-on | Form-shell   | 9     | low          |
+| 18  | `/perfil/pessoa-fisica`                           | Player            | Always-on | Form-shell   | 9     | low          |
+| 19  | `/perfil/preferencias`                            | Ambos             | Always-on | Form-shell   | 7     | low          |
+| 20  | `/admin/aprovacoes`                               | SUPER_ADMIN       | Always-on | List         | 275   | low          |
+| 21  | `/admin/aprovacoes/[id]`                          | SUPER_ADMIN       | Always-on | Detail       | 495   | medium       |
+| 22  | `/admin/cadastros`                                | SUPER_ADMIN       | Always-on | Redirect     | 10    | low          |
+| 23  | `/admin/platform-admins`                          | PLATFORM_OWNER    | Always-on | List+Form    | 337   | medium       |
+| 24  | `/k/[slug]/onboarding`                            | Klub Admin        | Always-on | Redirect     | 14    | low          |
+| 25  | `/k/[slug]/quadras`                               | Klub Admin        | Always-on | Redirect     | 13    | low          |
+| 26  | `/k/[slug]/editar`                                | Klub Admin        | Always-on | Redirect     | 14    | low          |
+| 27  | `/k/[slug]/dashboard`                             | Klub Admin>Player | Always-on | Dashboard    | 721   | high         |
+| 28  | `/k/[slug]/extensions-pending`                    | Klub Admin        | Always-on | List         | 246   | medium       |
+| 29  | `/k/[slug]/modalidades`                           | Ambos             | Always-on | Grid         | 443   | medium       |
+| 30  | `/k/[slug]/reservar`                              | Player            | Always-on | Wizard       | 857   | high         |
+| 31  | `/k/[slug]/solicitacoes`                          | Klub Admin        | Always-on | List         | 423   | high         |
+| 32  | `/k/[slug]/configurar`                            | Klub Admin        | Always-on | Form-shell   | 9     | low          |
+| 33  | `/k/[slug]/configurar/contato`                    | Klub Admin        | Always-on | Form-shell   | 9     | low          |
+| 34  | `/k/[slug]/configurar/equipe`                     | Klub Admin        | Always-on | Form-shell   | 19    | low          |
+| 35  | `/k/[slug]/configurar/legal`                      | PLATFORM          | Always-on | Form-shell   | 19    | low          |
+| 36  | `/k/[slug]/configurar/localizacao`                | Klub Admin        | Always-on | Form-shell   | 9     | low          |
+| 37  | `/k/[slug]/configurar/modalidades`                | Klub Admin        | Always-on | Form-shell   | 9     | low          |
+| 38  | `/k/[slug]/configurar/perigosa`                   | PLATFORM          | Always-on | Form-shell   | 19    | high         |
+| 39  | `/k/[slug]/configurar/quadras`                    | Klub Admin        | Always-on | Form-shell   | 9     | low          |
+| 40  | `/k/[slug]/configurar/visibilidade`               | Klub Admin        | Always-on | Form-shell   | 9     | low          |
+| 41  | `/k/[slug]/sports/[code]/comissao`                | Ambos             | Always-on | List         | 197   | low          |
+| 42  | `/k/[slug]/sports/[code]/dashboard`               | Ambos             | Always-on | Hub          | 109   | low          |
+| 43  | `/k/[slug]/sports/[code]/enroll`                  | Player            | Always-on | Form         | 124   | medium       |
+| 44  | `/k/[slug]/sports/[code]/rankings`                | Ambos             | Always-on | List         | 428   | low          |
+| 45  | `/k/[slug]/sports/[code]/rankings/[id]`           | Ambos             | Always-on | Detail       | 654   | medium       |
+| 46  | `/k/[slug]/sports/[code]/torneios`                | Ambos             | Always-on | List         | 288   | low          |
+| 47  | `/k/[slug]/sports/[code]/torneios/novo`           | Klub Admin        | Always-on | Form (long)  | 931   | **critical** |
+| 48  | `/k/[slug]/sports/[code]/torneios/[id]`           | Ambos             | Always-on | Detail-shell | 119   | low          |
+| 49  | `/k/[slug]/sports/[code]/torneios/[id]/chave`     | Ambos             | Always-on | Detail-shell | 69    | low          |
+| 50  | `/k/[slug]/sports/[code]/torneios/[id]/inscritos` | Ambos             | Always-on | Detail-shell | 69    | low          |
+| 51  | `/k/[slug]/sports/[code]/torneios/[id]/operacoes` | Klub Admin        | Always-on | Detail-shell | 24    | low          |
 
 ---
 
@@ -258,11 +258,11 @@ foco em payload, deep-links, e paridade de menus com a sidebar web.
 - **Components**: `<PageHeader>`, `<Banner>`, `Stepper`, `Step1-4` (de `_components.tsx`).
 - **Nav entry**: `/home` ou `/klubs` (botão Criar Klub).
 - **Visual issues**:
-  - `(authed)/criar-klub/page.tsx:188-205` — `rounded-[10px]` inputs (legacy do _components).
+  - `(authed)/criar-klub/page.tsx:188-205` — `rounded-[10px]` inputs (legacy do \_components).
   - Botões back/next/submit inline com `bg-primary` em vez de `<Button>` primitivo.
 - **IA issues**:
   - 3 estados pra CNPJ lookup (loading/tried/data) razoáveis mas verbose.
-- **Priority**: medium (PR-L5 já modernizou shell mas _components ainda hardcoded).
+- **Priority**: medium (PR-L5 já modernizou shell mas \_components ainda hardcoded).
 
 #### 08. `/criar-klub/sucesso` — `(authed)/criar-klub/sucesso/page.tsx` (65 linhas)
 
@@ -898,9 +898,9 @@ Quando o app mobile for criado, recomenda-se repetir esta auditoria com foco em:
     - `(authed)/home/page.tsx:172` — "Sou dono de um clube e quero saber mais"
     - `_components.tsx criar-klub:30` — "Clube esportivo" (label de option em select)
     - `_components.tsx configurar:129` — "Clube esportivo / social" (idem)
-    Decisão sugerida: **"Klub" no copy de marca**, **"clube esportivo" como label
-    descritivo do tipo de entidade** (manter os 2 últimos como estão; corrigir os 3
-    primeiros).
+      Decisão sugerida: **"Klub" no copy de marca**, **"clube esportivo" como label
+      descritivo do tipo de entidade** (manter os 2 últimos como estão; corrigir os 3
+      primeiros).
 
 12. **Substituir `TabButton` local por `<Tabs>` primitivo**:
     - `(authed)/admin/aprovacoes/page.tsx`
@@ -1012,17 +1012,17 @@ container widths. Recomendações marginais:
 
 ### Componentes a consolidar
 
-| Atual | Substituir por | Páginas afetadas |
-|---|---|---|
-| `TabButton` local | `<Tabs>` primitivo | aprovacoes, modalidades, solicitacoes, minhas-reservas |
-| Modal inline `fixed inset-0` | `<Modal>` primitivo | buscar-klubs, minhas-reservas (3×), solicitacoes, aprovacoes/[id] |
-| `window.prompt()`/`confirm()` | `<Modal>` + `<form>` | aprovacoes/[id], extensions-pending, _components configurar (3×), platform-admins |
-| Banner inline `border-destructive/30 bg-destructive/5` | `<Banner tone="error">` | 21 arquivos (ver grep) |
-| Empty state inline | `<EmptyState>` | klubs, modalidades, etc. |
-| Back-link `<Link><ArrowLeft/>+texto</Link>` | `<PageHeader back={...}>` | 8 páginas (ver lista 🟡) |
-| Form `<label>+<input>` inline | `<FormField>+<Input>` | recuperar-senha, quero-criar-klub, convite, login, criar-conta, _components configurar |
-| `inputCls` constante hardcoded | `<Input>` primitivo | torneios/novo, rankings/[id], rankings (e os forms públicos) |
-| Buttons inline `bg-primary` | `<Button variant="default">` | criar-klub (back/next/submit), klubs (CTAs), buscar-klubs, etc. |
+| Atual                                                  | Substituir por               | Páginas afetadas                                                                        |
+| ------------------------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------- |
+| `TabButton` local                                      | `<Tabs>` primitivo           | aprovacoes, modalidades, solicitacoes, minhas-reservas                                  |
+| Modal inline `fixed inset-0`                           | `<Modal>` primitivo          | buscar-klubs, minhas-reservas (3×), solicitacoes, aprovacoes/[id]                       |
+| `window.prompt()`/`confirm()`                          | `<Modal>` + `<form>`         | aprovacoes/[id], extensions-pending, \_components configurar (3×), platform-admins      |
+| Banner inline `border-destructive/30 bg-destructive/5` | `<Banner tone="error">`      | 21 arquivos (ver grep)                                                                  |
+| Empty state inline                                     | `<EmptyState>`               | klubs, modalidades, etc.                                                                |
+| Back-link `<Link><ArrowLeft/>+texto</Link>`            | `<PageHeader back={...}>`    | 8 páginas (ver lista 🟡)                                                                |
+| Form `<label>+<input>` inline                          | `<FormField>+<Input>`        | recuperar-senha, quero-criar-klub, convite, login, criar-conta, \_components configurar |
+| `inputCls` constante hardcoded                         | `<Input>` primitivo          | torneios/novo, rankings/[id], rankings (e os forms públicos)                            |
+| Buttons inline `bg-primary`                            | `<Button variant="default">` | criar-klub (back/next/submit), klubs (CTAs), buscar-klubs, etc.                         |
 
 ### Vocabulário canônico (sugestão de glossário)
 

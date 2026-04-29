@@ -72,9 +72,7 @@ export default function SolicitacoesPage() {
           onChange={(id) => setStatus(id as MembershipRequestStatus)}
         />
 
-        {actionMessage ? (
-          <Banner tone="success">{actionMessage}</Banner>
-        ) : null}
+        {actionMessage ? <Banner tone="success">{actionMessage}</Banner> : null}
 
         {error ? (
           <Banner tone="error">{error}</Banner>
@@ -107,7 +105,6 @@ export default function SolicitacoesPage() {
     </main>
   );
 }
-
 
 function RequestCard({
   item,
@@ -152,9 +149,7 @@ function RequestCard({
         <UserAvatar name={item.user.fullName} url={item.user.avatarUrl} />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-sm font-bold leading-tight">
-              {item.user.fullName}
-            </h3>
+            <h3 className="font-display text-sm font-bold leading-tight">{item.user.fullName}</h3>
             <RequestBadge status={item.status} />
           </div>
           <p className="text-xs text-muted-foreground">
@@ -185,12 +180,12 @@ function RequestCard({
       ) : null}
 
       {item.rejectionReason ? (
-        <Banner tone="error"><strong>Motivo da rejeição:</strong> {item.rejectionReason}</Banner>
+        <Banner tone="error">
+          <strong>Motivo da rejeição:</strong> {item.rejectionReason}
+        </Banner>
       ) : null}
 
-      {actionError ? (
-        <Banner tone="error">{actionError}</Banner>
-      ) : null}
+      {actionError ? <Banner tone="error">{actionError}</Banner> : null}
 
       {item.status === 'pending' ? (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -284,9 +279,7 @@ function RejectModal({
         <p className="mt-1 text-right text-xs text-muted-foreground">
           {reason.trim().length}/500 (mín 10)
         </p>
-        {error ? (
-          <Banner tone="error">{error}</Banner>
-        ) : null}
+        {error ? <Banner tone="error">{error}</Banner> : null}
         <div className="mt-4 flex justify-end gap-2">
           <button
             type="button"

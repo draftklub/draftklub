@@ -72,9 +72,7 @@ export function EmailVerifyBanner() {
               ? `Enviamos um link pra ${user.email}. Confere a caixa de entrada e o spam.`
               : `Enviamos um link de confirmação pra ${user.email}. Sem ele, alguns fluxos transacionais podem ficar bloqueados.`}
           </p>
-          {status === 'error' ? (
-            <p className="mt-1 text-xs text-destructive">{errorMsg}</p>
-          ) : null}
+          {status === 'error' ? <p className="mt-1 text-xs text-destructive">{errorMsg}</p> : null}
         </div>
       </div>
       <button

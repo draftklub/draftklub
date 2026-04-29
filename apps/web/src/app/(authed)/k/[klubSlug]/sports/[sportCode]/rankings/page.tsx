@@ -3,13 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import {
-  ArrowRight,
-  ListOrdered,
-  Loader2,
-  Plus,
-  Users,
-} from 'lucide-react';
+import { ArrowRight, ListOrdered, Loader2, Plus, Users } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -115,9 +109,7 @@ export default function SportRankingsPage() {
           }
         />
 
-        {actionMessage ? (
-          <Banner tone="success">{actionMessage}</Banner>
-        ) : null}
+        {actionMessage ? <Banner tone="success">{actionMessage}</Banner> : null}
 
         {error ? (
           <Banner tone="error">{error}</Banner>
@@ -255,9 +247,7 @@ function CreateRankingModal({
           </button>
         </div>
 
-        {error ? (
-          <Banner tone="error">{error}</Banner>
-        ) : null}
+        {error ? <Banner tone="error">{error}</Banner> : null}
 
         <div>
           <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">

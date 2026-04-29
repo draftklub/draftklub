@@ -813,9 +813,7 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: 'green' | 
     <span
       className={cn(
         'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
-        tone === 'green'
-          ? 'bg-success/12 text-success'
-          : 'bg-muted text-muted-foreground',
+        tone === 'green' ? 'bg-success/12 text-success' : 'bg-muted text-muted-foreground',
       )}
     >
       {children}

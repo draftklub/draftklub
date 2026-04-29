@@ -278,9 +278,7 @@ export default function BuscarKlubsPage() {
                   )}
                 >
                   <span>{p.label}</span>
-                  <span
-                    className={cn('text-xs', active ? 'opacity-90' : 'text-muted-foreground')}
-                  >
+                  <span className={cn('text-xs', active ? 'opacity-90' : 'text-muted-foreground')}>
                     {p.hint}
                   </span>
                 </button>
@@ -537,9 +535,7 @@ function RequestMembershipModal({
       <p className="mt-1 text-right text-xs text-muted-foreground">
         {message.trim().length}/1000 (mín 10)
       </p>
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
     </Modal>
   );
 }
@@ -625,9 +621,7 @@ function AccessBadge({ accessMode }: { accessMode: KlubAccessMode }) {
     <span
       className={cn(
         'inline-flex h-5 items-center rounded-full px-2 text-xs font-bold uppercase tracking-[0.06em]',
-        isPublic
-          ? 'bg-success/12 text-success'
-          : 'bg-muted text-muted-foreground',
+        isPublic ? 'bg-success/12 text-success' : 'bg-muted text-muted-foreground',
       )}
     >
       {isPublic ? 'Aberto' : 'Privado'}

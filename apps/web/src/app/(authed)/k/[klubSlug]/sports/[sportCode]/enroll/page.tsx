@@ -81,9 +81,7 @@ export default function EnrollRequestPage() {
               o ranking dessa modalidade.
             </p>
 
-            {error ? (
-              <Banner tone="error">{error}</Banner>
-            ) : null}
+            {error ? <Banner tone="error">{error}</Banner> : null}
 
             <button
               type="button"

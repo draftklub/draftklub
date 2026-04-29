@@ -92,7 +92,10 @@ export default function RankingDetailPage() {
     <main className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto max-w-3xl space-y-5">
         <PageHeader
-          back={{ href: `/k/${klub.slug}/sports/${sportCode}/rankings`, label: `Rankings · ${sportLabel}` }}
+          back={{
+            href: `/k/${klub.slug}/sports/${sportCode}/rankings`,
+            label: `Rankings · ${sportLabel}`,
+          }}
           eyebrow={`${klub.commonName ?? klub.name} · ${sportLabel}`}
           title={data?.name ?? ''}
           description={
@@ -120,10 +123,7 @@ export default function RankingDetailPage() {
           </div>
         ) : (
           <>
-
-            {actionMessage ? (
-              <Banner tone="success">{actionMessage}</Banner>
-            ) : null}
+            {actionMessage ? <Banner tone="success">{actionMessage}</Banner> : null}
 
             <CasualMatchActions
               klubId={klub.id}
@@ -351,9 +351,7 @@ function SubmitMatchModal({
           </button>
         </div>
 
-        {localError ? (
-          <Banner tone="error">{localError}</Banner>
-        ) : null}
+        {localError ? <Banner tone="error">{localError}</Banner> : null}
 
         <div>
           <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">

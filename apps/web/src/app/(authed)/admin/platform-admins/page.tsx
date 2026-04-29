@@ -1,13 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Loader2,
-  Plus,
-  Shield,
-  Trash2,
-  UserPlus,
-} from 'lucide-react';
+import { Loader2, Plus, Shield, Trash2, UserPlus } from 'lucide-react';
 import { Banner } from '@/components/ui/banner';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -118,12 +112,8 @@ export default function PlatformAdminsPage() {
           }
         />
 
-        {message ? (
-          <Banner tone="success">{message}</Banner>
-        ) : null}
-        {error ? (
-          <Banner tone="error">{error}</Banner>
-        ) : null}
+        {message ? <Banner tone="success">{message}</Banner> : null}
+        {error ? <Banner tone="error">{error}</Banner> : null}
 
         <GrantForm
           quotaReached={adminCount >= PLATFORM_ADMIN_QUOTA}
@@ -143,10 +133,7 @@ export default function PlatformAdminsPage() {
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
           ) : items.length === 0 ? (
-            <EmptyState
-              icon={Shield}
-              title="Sem Platform Admins ainda."
-            />
+            <EmptyState icon={Shield} title="Sem Platform Admins ainda." />
           ) : (
             <ul className="space-y-2">
               {items.map((item) => (

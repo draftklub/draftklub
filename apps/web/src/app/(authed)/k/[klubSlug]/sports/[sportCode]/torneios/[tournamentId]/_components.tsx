@@ -84,12 +84,8 @@ export function OperacoesView({
 
   return (
     <div className="space-y-4">
-      {message ? (
-        <Banner tone="success">{message}</Banner>
-      ) : null}
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {message ? <Banner tone="success">{message}</Banner> : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
 
       <DrawSection
         tournament={tournament}
@@ -317,9 +313,7 @@ function EditTournamentModal({
           </button>
         </div>
 
-        {localError ? (
-          <Banner tone="error">{localError}</Banner>
-        ) : null}
+        {localError ? <Banner tone="error">{localError}</Banner> : null}
 
         <div>
           <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
@@ -862,12 +856,8 @@ function ScheduleModal({
           </button>
         </div>
 
-        {bootError ? (
-          <Banner tone="error">{bootError}</Banner>
-        ) : null}
-        {localError ? (
-          <Banner tone="error">{localError}</Banner>
-        ) : null}
+        {bootError ? <Banner tone="error">{bootError}</Banner> : null}
+        {localError ? <Banner tone="error">{localError}</Banner> : null}
 
         <div>
           <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
@@ -1006,9 +996,7 @@ function ScheduleModal({
                       <input type="checkbox" checked={checked} onChange={() => toggleSpace(s.id)} />
                       <span className="flex-1">{s.name}</span>
                       {s.indoor ? (
-                        <span className="text-xs uppercase text-muted-foreground">
-                          indoor
-                        </span>
+                        <span className="text-xs uppercase text-muted-foreground">indoor</span>
                       ) : null}
                     </label>
                   </li>
@@ -1097,23 +1085,13 @@ export function BracketView({
   }
 
   if (bracket.categories.length === 0) {
-    return (
-      <EmptyState
-        icon={Trophy}
-        title="Nenhuma categoria com matches gerados"
-      />
-    );
+    return <EmptyState icon={Trophy} title="Nenhuma categoria com matches gerados" />;
   }
 
   const activeCategory =
     bracket.categories.find((c) => c.id === activeCategoryId) ?? bracket.categories[0];
   if (!activeCategory) {
-    return (
-      <EmptyState
-        icon={Trophy}
-        title="Categoria não encontrada"
-      />
-    );
+    return <EmptyState icon={Trophy} title="Categoria não encontrada" />;
   }
 
   return (
@@ -1173,12 +1151,7 @@ function BracketByPhases({
   onChanged: () => void;
 }) {
   if (matches.length === 0) {
-    return (
-      <EmptyState
-        icon={Dices}
-        title="Sem matches gerados"
-      />
-    );
+    return <EmptyState icon={Dices} title="Sem matches gerados" />;
   }
 
   // Agrupa por phase. Se houver matchKind!=main, separa em grupos.
@@ -1498,9 +1471,7 @@ function MatchCard({
           isWinner={isCompleted && match.winnerId === match.player2Id}
         />
         {match.score ? (
-          <p className="mt-2 text-right font-mono text-xs text-muted-foreground">
-            {match.score}
-          </p>
+          <p className="mt-2 text-right font-mono text-xs text-muted-foreground">{match.score}</p>
         ) : null}
         {isWalkover ? (
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.04em] text-amber-700 dark:text-amber-400">
@@ -1755,9 +1726,7 @@ function ReportForm({
 
   return (
     <div className="space-y-2.5">
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
       <div>
         <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
           Vencedor
@@ -1864,9 +1833,7 @@ function ConfirmForm({
 
   return (
     <div className="space-y-2.5">
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
       <p className="text-xs text-muted-foreground">
         Resultado já reportado. Ao confirmar, vira oficial: rating é recalculado e bracket avança o
         vencedor pro próximo match.
@@ -1941,9 +1908,7 @@ function EditForm({
 
   return (
     <div className="space-y-2.5">
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
       <Banner tone="warning">
         Editar resultado já registrado recalcula rating e pode afetar matches posteriores. Use só em
         correção de erro óbvio.
@@ -2094,9 +2059,7 @@ function WalkoverActions({
         Use quando jogador desistir/não comparecer. Walkover simples avança o outro; double walkover
         finaliza sem vencedor.
       </p>
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
       {confirming ? (
         <div className="space-y-2">
           <p className="text-xs">
@@ -2284,9 +2247,7 @@ function RevertModal({
                 className={inputCls}
               />
             </div>
-            {submitError ? (
-              <Banner tone="error">{submitError}</Banner>
-            ) : null}
+            {submitError ? <Banner tone="error">{submitError}</Banner> : null}
           </>
         )}
 
@@ -2388,12 +2349,7 @@ export function EntriesView({
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
 
   if (!entries) {
-    return (
-      <EmptyState
-        icon={Users}
-        title="Lista de inscritos não disponível"
-      />
-    );
+    return <EmptyState icon={Users} title="Lista de inscritos não disponível" />;
   }
 
   const categoriesById = new Map(tournament.categories.map((c) => [c.id, c.name]));
@@ -2402,12 +2358,8 @@ export function EntriesView({
 
   return (
     <div className="space-y-3">
-      {actionMessage ? (
-        <Banner tone="success">{actionMessage}</Banner>
-      ) : null}
-      {actionError ? (
-        <Banner tone="error">{actionError}</Banner>
-      ) : null}
+      {actionMessage ? <Banner tone="success">{actionMessage}</Banner> : null}
+      {actionError ? <Banner tone="error">{actionError}</Banner> : null}
 
       <RegistrationCTA
         tournament={tournament}
@@ -2425,10 +2377,7 @@ export function EntriesView({
       />
 
       {entries.length === 0 ? (
-        <EmptyState
-          icon={Inbox}
-          title="Sem inscritos ainda"
-        />
+        <EmptyState icon={Inbox} title="Sem inscritos ainda" />
       ) : (
         <ul className="space-y-2">
           {entries.map((e) => (
@@ -2749,9 +2698,7 @@ function MoveCategoryModal({
           Mover <strong>{entry.userFullName}</strong> de categoria. Wild card permite alocar em
           categoria fora do range esperado de rating.
         </p>
-        {localError ? (
-          <Banner tone="error">{localError}</Banner>
-        ) : null}
+        {localError ? <Banner tone="error">{localError}</Banner> : null}
         <div>
           <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-muted-foreground">
             Categoria

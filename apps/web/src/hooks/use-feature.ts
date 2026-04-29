@@ -113,7 +113,12 @@ export function useFeature(id: string): FeatureState {
 
   if (error || !feature) {
     // Fallback: free → open, everything else → closed.
-    return { enabled: feature?.tier === 'free', tier: feature?.tier ?? 'free', loading: false, error: true };
+    return {
+      enabled: feature?.tier === 'free',
+      tier: feature?.tier ?? 'free',
+      loading: false,
+      error: true,
+    };
   }
 
   return {
