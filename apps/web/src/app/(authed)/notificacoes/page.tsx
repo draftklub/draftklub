@@ -2,8 +2,9 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { AlertCircle, Bell, CheckCircle2, Loader2, Swords, XCircle } from 'lucide-react';
+import { Bell, CheckCircle2, Loader2, Swords, XCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
+import { Banner } from '@/components/ui/banner';
 import type { PendingMatchConfirmationItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { confirmCasualMatch, listPendingMatchConfirmations } from '@/lib/api/rankings';
@@ -60,16 +61,10 @@ export default function NotificacoesPage() {
         />
 
         {actionMessage ? (
-          <p className="rounded-lg border border-success/30 bg-success/5 p-3 text-xs text-success">
-            <CheckCircle2 className="mr-1 inline size-3.5" />
-            {actionMessage}
-          </p>
+          <Banner tone="success">{actionMessage}</Banner>
         ) : null}
         {error ? (
-          <p className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-            <AlertCircle className="mr-1 inline size-3.5" />
-            {error}
-          </p>
+          <Banner tone="error">{error}</Banner>
         ) : null}
 
         {items === null ? (
