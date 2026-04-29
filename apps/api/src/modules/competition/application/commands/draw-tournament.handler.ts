@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { MetricsService } from '../../../../shared/metrics/metrics.service';
 import {
   PrequalifierGeneratorService,
   type PrequalifierPairing,
@@ -53,6 +54,7 @@ export class DrawTournamentHandler {
     roundRobinStrategy: RoundRobinStrategy,
     groupsKnockoutStrategy: GroupsKnockoutStrategy,
     doubleEliminationStrategy: DoubleEliminationStrategy,
+    private readonly metrics: MetricsService,
   ) {
     this.strategies.set(knockoutStrategy.format, knockoutStrategy);
     this.strategies.set(roundRobinStrategy.format, roundRobinStrategy);
@@ -61,6 +63,10 @@ export class DrawTournamentHandler {
   }
 
   async execute(cmd: DrawTournamentCommand) {
+    return this.metrics.timeTournamentDraw(() => this.executeInner(cmd));
+  }
+
+  private async executeInner(cmd: DrawTournamentCommand) {
     const tournament = await this.prisma.tournament.findUnique({
       where: { id: cmd.tournamentId },
       include: {

@@ -164,9 +164,11 @@ describe('CreateBookingHandler', () => {
     resolver = new HourBandResolverService();
     const guestSvc = new GuestUserService({} as never);
     // MetricsService mock — métricas são fire-and-forget, mock no-op suficiente.
+    // timeBookingCreate é wrapper async — mock retorna a promise direto.
     const metricsMock = {
       bookingCreated: vi.fn(),
       bookingCancelled: vi.fn(),
+      timeBookingCreate: vi.fn().mockImplementation((fn: () => Promise<unknown>) => fn()),
     } as never;
     handler = new CreateBookingHandler({} as never, resolver, guestSvc, metricsMock);
   });

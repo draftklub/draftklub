@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import type { Counter } from 'prom-client';
+import type { Counter, Histogram } from 'prom-client';
 
 /**
  * Sprint N batch 7 — métricas de negócio em formato Prometheus.
@@ -37,6 +37,10 @@ export class MetricsService {
     private readonly membershipRequestDecidedTotal: Counter<'decision'>,
     @InjectMetric('klub_review_decided_total')
     private readonly klubReviewDecidedTotal: Counter<'decision'>,
+    @InjectMetric('booking_create_duration_seconds')
+    private readonly bookingCreateDuration: Histogram<'outcome'>,
+    @InjectMetric('tournament_draw_duration_seconds')
+    private readonly tournamentDrawDuration: Histogram<'outcome'>,
   ) {}
 
   bookingCreated(klubId: string, status: 'pending' | 'confirmed'): void {
@@ -69,6 +73,36 @@ export class MetricsService {
 
   klubReviewDecided(decision: 'approved' | 'rejected'): void {
     this.safe(() => this.klubReviewDecidedTotal.inc({ decision }));
+  }
+
+  /**
+   * Sprint N batch 12 — wraps an async operation, observa duração no
+   * histogram correspondente. `outcome` é 'success' | 'error' baseado
+   * em throw — caller continua propagando exceptions normalmente.
+   *
+   * Uso típico em handlers:
+   *   return this.metrics.timeBookingCreate(async () => {
+   *     // ... existing logic
+   *   });
+   */
+  async timeBookingCreate<T>(fn: () => Promise<T>): Promise<T> {
+    return this.observe(this.bookingCreateDuration, fn);
+  }
+
+  async timeTournamentDraw<T>(fn: () => Promise<T>): Promise<T> {
+    return this.observe(this.tournamentDrawDuration, fn);
+  }
+
+  private async observe<T>(histogram: Histogram<'outcome'>, fn: () => Promise<T>): Promise<T> {
+    const end = histogram.startTimer();
+    try {
+      const result = await fn();
+      this.safe(() => end({ outcome: 'success' }));
+      return result;
+    } catch (err) {
+      this.safe(() => end({ outcome: 'error' }));
+      throw err;
+    }
   }
 
   private safe(fn: () => void): void {

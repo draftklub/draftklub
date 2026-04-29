@@ -1,6 +1,17 @@
 import { Global, Module } from '@nestjs/common';
-import { PrometheusModule, makeCounterProvider } from '@willsoto/nestjs-prometheus';
+import {
+  PrometheusModule,
+  makeCounterProvider,
+  makeHistogramProvider,
+} from '@willsoto/nestjs-prometheus';
 import { MetricsService } from './metrics.service';
+
+/**
+ * Buckets em segundos pra operações DB-bound. P50 esperado ~50-200ms,
+ * P99 1-2s. Cobre desde queries rápidas até casos patológicos (10s+
+ * vira hint de timeout / migration runtime).
+ */
+const DB_DURATION_BUCKETS = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10];
 
 /**
  * Sprint N batch 7 — módulo de métricas Prometheus.
@@ -62,6 +73,21 @@ import { MetricsService } from './metrics.service';
       name: 'klub_review_decided_total',
       help: 'Klubs cadastrados moderados pelo platform admin, decision=approved|rejected',
       labelNames: ['decision'],
+    }),
+    // Sprint N batch 12 — histogramas de duração das operações de
+    // mutação mais pesadas. Permite calcular p50/p95/p99 via quantile
+    // do histogram_quantile() em PromQL.
+    makeHistogramProvider({
+      name: 'booking_create_duration_seconds',
+      help: 'Duração ponta-a-ponta do create-booking handler (validações + tx)',
+      labelNames: ['outcome'],
+      buckets: DB_DURATION_BUCKETS,
+    }),
+    makeHistogramProvider({
+      name: 'tournament_draw_duration_seconds',
+      help: 'Duração do draw de torneio (alocação de bracket — varia com nº de players)',
+      labelNames: ['outcome'],
+      buckets: DB_DURATION_BUCKETS,
     }),
   ],
   exports: [MetricsService],

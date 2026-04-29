@@ -57,6 +57,10 @@ export class CreateBookingHandler {
   ) {}
 
   async execute(cmd: CreateBookingCommand) {
+    return this.metrics.timeBookingCreate(() => this.executeInner(cmd));
+  }
+
+  private async executeInner(cmd: CreateBookingCommand) {
     const space = await this.prisma.space.findUnique({
       where: { id: cmd.spaceId },
     });
