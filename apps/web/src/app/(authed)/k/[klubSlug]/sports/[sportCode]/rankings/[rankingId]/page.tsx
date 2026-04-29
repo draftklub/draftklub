@@ -3,16 +3,20 @@
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import {
+  ListOrdered,
   Loader2,
   Minus,
   Plus,
   Swords,
   TrendingDown,
   TrendingUp,
+  Trophy,
   UserPlus,
+  Users,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { RankingDetail, RankingPlayerEntry } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -174,9 +178,11 @@ function CasualMatchActions({
 
   if (!acceptsCasual) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-3 text-xs text-muted-foreground">
-        Esse ranking não considera partidas casuais — só matches de torneio contam.
-      </p>
+      <EmptyState
+        icon={Trophy}
+        title="Apenas partidas de torneio"
+        description="Esse ranking não considera partidas casuais — só matches de torneio contam."
+      />
     );
   }
 
@@ -543,12 +549,11 @@ function toErrorMessage(err: unknown, fallback: string): string {
 function PlayerTable({ players, orderBy }: { players: RankingPlayerEntry[]; orderBy: string }) {
   if (players.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border p-8 text-center">
-        <p className="font-display text-sm font-bold">Sem jogadores ainda</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Players são enrolados no ranking quando comissão aprova ou via primeira partida.
-        </p>
-      </div>
+      <EmptyState
+        icon={Users}
+        title="Sem jogadores ainda"
+        description="Players são enrolados no ranking quando comissão aprova ou via primeira partida."
+      />
     );
   }
 

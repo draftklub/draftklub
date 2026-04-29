@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, Loader2, MapPin, Plus, Search } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import type {
   KlubAccessMode,
   KlubDiscoveryResult,
@@ -655,34 +656,30 @@ function SkeletonGrid() {
 
 function InitialEmptyState() {
   return (
-    <div className="rounded-xl border border-dashed border-border p-10 text-center">
-      <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-[hsl(var(--brand-primary-600))]">
-        <Search className="size-5" strokeWidth={1.8} />
-      </div>
-      <h2 className="mt-4 font-display text-lg font-bold">Comece a buscar</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Digite o nome de um Klub (mín 2 letras) ou use os filtros pra ver resultados.
-      </p>
-    </div>
+    <EmptyState
+      icon={Search}
+      title="Comece a buscar"
+      description="Digite o nome de um Klub (mín 2 letras) ou use os filtros pra ver resultados."
+    />
   );
 }
 
 function NoResultsState() {
   return (
-    <div className="rounded-xl border border-dashed border-border p-10 text-center">
-      <h2 className="font-display text-lg font-bold">Nenhum Klub encontrado</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Tenta outros filtros — talvez o nome esteja escrito diferente, ou o Klub ainda não optou por
-        aparecer em busca.
-      </p>
-      <Link
-        href="/criar-klub"
-        className="mt-5 inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-      >
-        <Plus className="size-3.5" />
-        Criar meu Klub
-      </Link>
-    </div>
+    <EmptyState
+      icon={Search}
+      title="Nenhum Klub encontrado"
+      description="Tenta outros filtros — talvez o nome esteja escrito diferente, ou o Klub ainda não optou por aparecer em busca."
+      action={
+        <Link
+          href="/criar-klub"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <Plus className="size-3.5" />
+          Criar meu Klub
+        </Link>
+      }
+    />
   );
 }
 

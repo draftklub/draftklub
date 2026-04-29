@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   Crown,
   Dices,
+  Inbox,
   Loader2,
   Pencil,
   Plus,
@@ -27,6 +28,7 @@ import {
   Settings2,
   Trash2,
   Trophy,
+  Users,
   XCircle,
 } from 'lucide-react';
 import type {
@@ -39,6 +41,7 @@ import type {
   TournamentResultReportingMode,
 } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
+import { EmptyState } from '@/components/ui/empty-state';
 import { listKlubSpaces } from '@/lib/api/spaces';
 import {
   applyDoubleWalkover,
@@ -1085,17 +1088,20 @@ export function BracketView({
 
   if (!bracket) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-        Chave ainda não disponível. Torneio precisa ter sido sorteado primeiro.
-      </p>
+      <EmptyState
+        icon={Dices}
+        title="Chave ainda não disponível"
+        description="Torneio precisa ter sido sorteado primeiro."
+      />
     );
   }
 
   if (bracket.categories.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-        Nenhuma categoria com matches gerados.
-      </p>
+      <EmptyState
+        icon={Trophy}
+        title="Nenhuma categoria com matches gerados"
+      />
     );
   }
 
@@ -1103,9 +1109,10 @@ export function BracketView({
     bracket.categories.find((c) => c.id === activeCategoryId) ?? bracket.categories[0];
   if (!activeCategory) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-        Categoria não encontrada.
-      </p>
+      <EmptyState
+        icon={Trophy}
+        title="Categoria não encontrada"
+      />
     );
   }
 
@@ -1167,9 +1174,10 @@ function BracketByPhases({
 }) {
   if (matches.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-        Sem matches gerados.
-      </p>
+      <EmptyState
+        icon={Dices}
+        title="Sem matches gerados"
+      />
     );
   }
 
@@ -2381,9 +2389,10 @@ export function EntriesView({
 
   if (!entries) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-        Lista de inscritos não disponível.
-      </p>
+      <EmptyState
+        icon={Users}
+        title="Lista de inscritos não disponível"
+      />
     );
   }
 
@@ -2416,9 +2425,10 @@ export function EntriesView({
       />
 
       {entries.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-          Sem inscritos ainda.
-        </p>
+        <EmptyState
+          icon={Inbox}
+          title="Sem inscritos ainda"
+        />
       ) : (
         <ul className="space-y-2">
           {entries.map((e) => (

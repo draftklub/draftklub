@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { Bell, CheckCircle2, Loader2, Swords, XCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Banner } from '@/components/ui/banner';
 import type { PendingMatchConfirmationItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
@@ -72,15 +73,11 @@ export default function NotificacoesPage() {
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-10 text-center">
-            <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-              <Bell className="size-5" />
-            </div>
-            <p className="mt-3 font-display text-sm font-bold">Nada pra confirmar</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Você está em dia. Quando alguém reportar partida com você, aparece aqui.
-            </p>
-          </div>
+          <EmptyState
+            icon={Bell}
+            title="Nada pra confirmar"
+            description="Você está em dia. Quando alguém reportar partida com você, aparece aqui."
+          />
         ) : (
           <ul className="space-y-2">
             {items.map((item) => (

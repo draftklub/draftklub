@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Check, Clock, Loader2, X } from 'lucide-react';
+import { Check, CheckSquare, Clock, Layers, Loader2, X } from 'lucide-react';
 import type {
   EnrollmentStatus,
   KlubSportProfile,
@@ -23,6 +23,7 @@ import {
   requestEnrollment,
 } from '@/lib/api/enrollments';
 import { Banner } from '@/components/ui/banner';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 
 const ADMIN_ROLES: Role[] = ['PLATFORM_OWNER', 'KLUB_ADMIN', 'SPORT_COMMISSION'];
@@ -177,12 +178,11 @@ function ProfilesGrid({ profiles, enrollmentByProfile, onRequest, sportName }: P
 
   if (profiles.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border p-8 text-center">
-        <h2 className="font-display text-lg font-bold">Nenhuma modalidade ativa</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          O Klub ainda não habilitou modalidades. Klub Admin pode adicionar nas configurações.
-        </p>
-      </div>
+      <EmptyState
+        icon={Layers}
+        title="Nenhuma modalidade ativa"
+        description="O Klub ainda não habilitou modalidades. Klub Admin pode adicionar nas configurações."
+      />
     );
   }
 
@@ -392,10 +392,11 @@ function PendingApprovalsTab({
 
   if (pending.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border p-8 text-center">
-        <h2 className="font-display text-lg font-bold">Nenhuma inscrição pendente</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Tudo em dia.</p>
-      </div>
+      <EmptyState
+        icon={CheckSquare}
+        title="Nenhuma inscrição pendente"
+        description="Tudo em dia."
+      />
     );
   }
 

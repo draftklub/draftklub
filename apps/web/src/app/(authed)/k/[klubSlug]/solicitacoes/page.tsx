@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Check, Loader2, X } from 'lucide-react';
+import { Check, Inbox, Loader2, X } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import type { MembershipRequestAdminItem, MembershipRequestStatus } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
@@ -13,6 +13,7 @@ import {
 } from '@/lib/api/membership-requests';
 import { Banner } from '@/components/ui/banner';
 import { Tabs } from '@/components/ui/tabs';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 
 /**
@@ -82,13 +83,10 @@ export default function SolicitacoesPage() {
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-10 text-center">
-            <p className="font-display text-base font-bold">
-              Nada{' '}
-              {status === 'pending' ? 'pendente' : status === 'approved' ? 'aprovado' : 'rejeitado'}
-              .
-            </p>
-          </div>
+          <EmptyState
+            icon={Inbox}
+            title={`Nada ${status === 'pending' ? 'pendente' : status === 'approved' ? 'aprovado' : 'rejeitado'}.`}
+          />
         ) : (
           <ul className="space-y-3">
             {items.map((item) => (

@@ -21,6 +21,7 @@ import {
   Power,
   Save,
   Trash2,
+  Users,
   UserPlus,
 } from 'lucide-react';
 import type {
@@ -54,6 +55,7 @@ import {
 } from '@/lib/api/spaces';
 import { SpaceForm } from '@/components/spaces/space-form';
 import { Banner } from '@/components/ui/banner';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 
 interface FormTabProps {
@@ -506,9 +508,11 @@ export function EquipeTab({ klub, canTransferAdmin }: { klub: Klub; canTransferA
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : items.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-            Sem roles operacionais ainda — você ainda é o único admin desse Klub.
-          </p>
+          <EmptyState
+            icon={Users}
+            title="Sem roles operacionais ainda"
+            description="Você ainda é o único admin desse Klub."
+          />
         ) : (
           <ul className="space-y-2">
             {items.map((item) => (
@@ -977,15 +981,11 @@ export function QuadrasTab({ klub }: { klub: Klub }) {
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
         </div>
       ) : spaces.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border p-8 text-center">
-          <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-            <MapPin className="size-4" />
-          </div>
-          <p className="mt-3 font-display text-sm font-bold">Nenhuma quadra cadastrada</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Adicione a primeira quadra pra players começarem a reservar.
-          </p>
-        </div>
+        <EmptyState
+          icon={MapPin}
+          title="Nenhuma quadra cadastrada"
+          description="Adicione a primeira quadra pra players começarem a reservar."
+        />
       ) : (
         <ul className="space-y-3">
           {spaces.map((s) => (

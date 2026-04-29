@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Banner } from '@/components/ui/banner';
 import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Role, RoleAssignmentListItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { getMe } from '@/lib/api/me';
@@ -142,9 +143,10 @@ export default function PlatformAdminsPage() {
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
           ) : items.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-              Sem Platform Admins ainda.
-            </p>
+            <EmptyState
+              icon={Shield}
+              title="Sem Platform Admins ainda."
+            />
           ) : (
             <ul className="space-y-2">
               {items.map((item) => (

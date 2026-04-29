@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
+import { EmptyState } from '@/components/ui/empty-state';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import {
@@ -79,15 +80,11 @@ export default function ExtensionsPendingPage() {
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-8 text-center">
-            <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <Timer className="size-4" />
-            </div>
-            <p className="mt-3 font-display text-sm font-bold">Nada pendente</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Não há extensões aguardando decisão agora.
-            </p>
-          </div>
+          <EmptyState
+            icon={Timer}
+            title="Nada pendente"
+            description="Não há extensões aguardando decisão agora."
+          />
         ) : (
           <ul className="space-y-3">
             {items.map((it) => (
