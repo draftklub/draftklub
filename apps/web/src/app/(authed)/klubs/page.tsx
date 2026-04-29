@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { Castle, Loader2, Plus, Search } from 'lucide-react';
 import type { UserKlubMembership } from '@draftklub/shared-types';
+import { EmptyState } from '@/components/ui/empty-state';
 import { getMyKlubs } from '@/lib/api/me';
 import { rememberLastKlubSlug } from '@/lib/last-klub-cookie';
 import { cn } from '@/lib/utils';
@@ -75,15 +76,11 @@ export default function KlubsPage() {
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
           ) : klubs.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border p-8 text-center">
-              <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                <Castle className="size-4" />
-              </div>
-              <p className="mt-3 font-display text-sm font-bold">Nenhum Klub ainda</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Use os botões acima pra entrar num Klub existente ou criar o seu.
-              </p>
-            </div>
+            <EmptyState
+              icon={Castle}
+              title="Nenhum Klub ainda"
+              description="Use os botões acima pra entrar num Klub existente ou criar o seu."
+            />
           ) : (
             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {klubs.map((k) => (

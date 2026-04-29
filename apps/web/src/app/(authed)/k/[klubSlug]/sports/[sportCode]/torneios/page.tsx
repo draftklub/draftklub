@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { TournamentStatus } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -135,17 +136,11 @@ export default function SportTournamentsPage() {
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : tournaments?.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-8 text-center">
-            <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <Trophy className="size-4" />
-            </div>
-            <p className="mt-3 font-display text-sm font-bold">Nenhum torneio ainda</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {canCreate
-                ? 'Clique em "Criar" no topo pra abrir o primeiro.'
-                : 'A comissão dessa modalidade ainda não criou nenhum.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={Trophy}
+            title="Nenhum torneio ainda"
+            description={canCreate ? 'Clique em "Criar" no topo pra abrir o primeiro.' : 'A comissão dessa modalidade ainda não criou nenhum.'}
+          />
         ) : (
           <div className="space-y-6">
             {grouped.live.length > 0 ? (

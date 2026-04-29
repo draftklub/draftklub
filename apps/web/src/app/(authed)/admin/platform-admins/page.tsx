@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Banner } from '@/components/ui/banner';
 import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Role, RoleAssignmentListItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { getMe } from '@/lib/api/me';
@@ -19,7 +20,6 @@ import {
   revokePlatformRole,
 } from '@/lib/api/role-assignments';
 import { isPlatformOwner } from '@/lib/auth/role-helpers';
-import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/utils';
 
 /**
@@ -143,9 +143,10 @@ export default function PlatformAdminsPage() {
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
           ) : items.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-              Sem Platform Admins ainda.
-            </p>
+            <EmptyState
+              icon={Shield}
+              title="Sem Platform Admins ainda."
+            />
           ) : (
             <ul className="space-y-2">
               {items.map((item) => (
@@ -252,10 +253,12 @@ function AssignmentRow({
   onError: (msg: string) => void;
 }) {
   const [submitting, setSubmitting] = React.useState(false);
-  const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   async function handleRevoke() {
-    setConfirmOpen(false);
+    if (submitting) return;
+    if (!window.confirm(`Revogar PLATFORM_ADMIN de ${item.userFullName} (${item.userEmail})?`)) {
+      return;
+    }
     setSubmitting(true);
     try {
       await revokePlatformRole(item.id);
@@ -267,63 +270,29 @@ function AssignmentRow({
   }
 
   return (
-    <>
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate font-display text-sm font-bold">{item.userFullName}</p>
-            <RoleBadge role={item.role} />
-          </div>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{item.userEmail}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Concedido em {new Date(item.grantedAt).toLocaleDateString('pt-BR')}
-          </p>
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="truncate font-display text-sm font-bold">{item.userFullName}</p>
+          <RoleBadge role={item.role} />
         </div>
-        {canRevoke ? (
-          <button
-            type="button"
-            onClick={() => setConfirmOpen(true)}
-            disabled={submitting}
-            className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
-          >
-            {submitting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
-            Revogar
-          </button>
-        ) : null}
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">{item.userEmail}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Concedido em {new Date(item.grantedAt).toLocaleDateString('pt-BR')}
+        </p>
       </div>
-
-      <Modal
-        title="Revogar acesso"
-        description={`Revogar PLATFORM_ADMIN de ${item.userFullName} (${item.userEmail})?`}
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        size="sm"
-        dismissOnBackdropClick={!submitting}
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={() => setConfirmOpen(false)}
-              disabled={submitting}
-              className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleRevoke()}
-              disabled={submitting}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-sm font-semibold text-white disabled:opacity-60"
-            >
-              {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-              Revogar
-            </button>
-          </>
-        }
-      >
-        <p className="text-sm text-muted-foreground">Esta ação remove o acesso administrativo imediatamente. O usuário pode ser readicionado se necessário.</p>
-      </Modal>
-    </>
+      {canRevoke ? (
+        <button
+          type="button"
+          onClick={() => void handleRevoke()}
+          disabled={submitting}
+          className="inline-flex h-9 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60"
+        >
+          {submitting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+          Revogar
+        </button>
+      ) : null}
+    </div>
   );
 }
 

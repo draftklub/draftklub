@@ -1,9 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Check, Loader2, X } from 'lucide-react';
+import { Check, Inbox, Loader2, X } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
-import { Modal } from '@/components/ui/modal';
 import type { MembershipRequestAdminItem, MembershipRequestStatus } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -14,6 +13,7 @@ import {
 } from '@/lib/api/membership-requests';
 import { Banner } from '@/components/ui/banner';
 import { Tabs } from '@/components/ui/tabs';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 
 /**
@@ -83,13 +83,10 @@ export default function SolicitacoesPage() {
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-10 text-center">
-            <p className="font-display text-base font-bold">
-              Nada{' '}
-              {status === 'pending' ? 'pendente' : status === 'approved' ? 'aprovado' : 'rejeitado'}
-              .
-            </p>
-          </div>
+          <EmptyState
+            icon={Inbox}
+            title={`Nada ${status === 'pending' ? 'pendente' : status === 'approved' ? 'aprovado' : 'rejeitado'}.`}
+          />
         ) : (
           <ul className="space-y-3">
             {items.map((item) => (
@@ -270,15 +267,27 @@ function RejectModal({
   }
 
   return (
-    <Modal
-      title="Rejeitar solicitação"
-      description={`${applicantName} vai receber este motivo por email.`}
-      open
-      onClose={onClose}
-      size="sm"
-      dismissOnBackdropClick={!submitting}
-      footer={
-        <>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-xl border border-border bg-card p-5">
+        <h2 className="font-display text-lg font-bold">Rejeitar solicitação</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {applicantName} vai receber este motivo por email.
+        </p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Ex: Não conseguimos confirmar sua matrícula. Entre em contato com a secretaria."
+          rows={4}
+          maxLength={500}
+          className="mt-3 w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+        />
+        <p className="mt-1 text-right text-xs text-muted-foreground">
+          {reason.trim().length}/500 (mín 10)
+        </p>
+        {error ? (
+          <Banner tone="error">{error}</Banner>
+        ) : null}
+        <div className="mt-4 flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
@@ -300,24 +309,9 @@ function RejectModal({
             )}
             Rejeitar
           </button>
-        </>
-      }
-    >
-      <textarea
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder="Ex: Não conseguimos confirmar sua matrícula. Entre em contato com a secretaria."
-        rows={4}
-        maxLength={500}
-        className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
-      />
-      <p className="mt-1 text-right text-xs text-muted-foreground">
-        {reason.trim().length}/500 (mín 10)
-      </p>
-      {error ? (
-        <Banner tone="error">{error}</Banner>
-      ) : null}
-    </Modal>
+        </div>
+      </div>
+    </div>
   );
 }
 

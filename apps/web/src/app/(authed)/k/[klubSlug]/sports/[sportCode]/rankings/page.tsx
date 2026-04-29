@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { RankingListItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -125,15 +126,11 @@ export default function SportRankingsPage() {
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : rankings.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-8 text-center">
-            <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <ListOrdered className="size-4" />
-            </div>
-            <p className="mt-3 font-display text-sm font-bold">Nenhum ranking ainda</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              A comissão dessa modalidade pode criar rankings (em breve via UI).
-            </p>
-          </div>
+          <EmptyState
+            icon={ListOrdered}
+            title="Nenhum ranking ainda"
+            description="A comissão dessa modalidade pode criar rankings (em breve via UI)."
+          />
         ) : (
           <ul className="space-y-2">
             {rankings.map((r) => (

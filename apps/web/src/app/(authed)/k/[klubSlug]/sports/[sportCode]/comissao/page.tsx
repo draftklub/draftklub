@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { Loader2, Sparkles, UserCheck, Users } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Banner } from '@/components/ui/banner';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { RoleAssignmentListItem } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
@@ -102,10 +103,11 @@ export default function SportCommitteePage() {
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : filtered.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
-            Sem comissão nem staff designados ainda. KLUB_ADMIN pode promover via Configurar Klub →
-            tab Equipe.
-          </p>
+          <EmptyState
+            icon={Users}
+            title="Sem comissão designada"
+            description="KLUB_ADMIN pode promover via Configurar Klub → tab Equipe."
+          />
         ) : (
           <>
             <Group

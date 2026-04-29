@@ -13,6 +13,7 @@ import { listPendingKlubs } from '@/lib/api/admin-klubs';
 import { hintDocument } from '@/lib/format-document';
 import { Banner } from '@/components/ui/banner';
 import { Tabs } from '@/components/ui/tabs';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 
 type Tab = 'pj' | 'pf';
@@ -117,14 +118,11 @@ export default function CadastrosPage() {
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : !data || data.items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-10 text-center">
-            <p className="font-display text-base font-bold">
-              Nenhum cadastro {labelStatus(status)}.
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Quando alguém criar um Klub {tab === 'pj' ? 'PJ' : 'PF'}, ele aparece aqui.
-            </p>
-          </div>
+          <EmptyState
+            icon={Building2}
+            title={`Nenhum cadastro ${labelStatus(status)}.`}
+            description={`Quando alguém criar um Klub ${tab === 'pj' ? 'PJ' : 'PF'}, ele aparece aqui.`}
+          />
         ) : (
           <>
             <p className="mb-3 text-xs text-muted-foreground">

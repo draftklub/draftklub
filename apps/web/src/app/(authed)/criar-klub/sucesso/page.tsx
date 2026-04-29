@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ArrowRight, CheckCircle2, Mail } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Loader2, Mail } from 'lucide-react';
 
 /**
  * Sprint D PR1 — sucesso pós-/criar-klub. Klub fica pendente; user
@@ -12,7 +12,13 @@ import { ArrowRight, CheckCircle2, Mail } from 'lucide-react';
  */
 export default function CriarKlubSucessoPage() {
   return (
-    <React.Suspense fallback={null}>
+    <React.Suspense
+      fallback={
+        <main className="flex flex-1 items-center justify-center">
+          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        </main>
+      }
+    >
       <Inner />
     </React.Suspense>
   );

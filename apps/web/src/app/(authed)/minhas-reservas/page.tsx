@@ -11,6 +11,7 @@ import {
   Timer,
   X,
 } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { UserKlubMembership } from '@draftklub/shared-types';
 import { ApiError } from '@/lib/api/client';
 import { useAuth } from '@/components/auth-provider';
@@ -139,7 +140,7 @@ export default function MinhasReservasPage() {
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyState tab={tab} />
+          <BookingEmptyState tab={tab} />
         ) : (
           <ul className="space-y-3">
             {filtered
@@ -707,26 +708,18 @@ function StatusBadge({
   );
 }
 
-function EmptyState({ tab }: { tab: Tab }) {
-  return (
-    <div className="rounded-xl border border-dashed border-border p-8 text-center">
-      <div className="mx-auto flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-        <MapPin className="size-4" />
-      </div>
-      <p className="mt-3 font-display text-sm font-bold">
-        {tab === 'upcoming'
-          ? 'Sem reservas agendadas'
-          : tab === 'past'
-            ? 'Sem reservas passadas'
-            : 'Sem reservas canceladas'}
-      </p>
-      {tab === 'upcoming' ? (
-        <p className="mt-2 text-xs text-muted-foreground">
-          Entre num Klub e use o botão <strong>Reservar quadra</strong> pra agendar.
-        </p>
-      ) : null}
-    </div>
-  );
+function BookingEmptyState({ tab }: { tab: Tab }) {
+  const title =
+    tab === 'upcoming'
+      ? 'Sem reservas agendadas'
+      : tab === 'past'
+        ? 'Sem reservas passadas'
+        : 'Sem reservas canceladas';
+  const description =
+    tab === 'upcoming'
+      ? 'Entre num Klub e use o botão Reservar quadra pra agendar.'
+      : undefined;
+  return <EmptyState icon={MapPin} title={title} description={description} />;
 }
 
 function statusTone(status: string): 'green' | 'amber' | 'red' | 'muted' {

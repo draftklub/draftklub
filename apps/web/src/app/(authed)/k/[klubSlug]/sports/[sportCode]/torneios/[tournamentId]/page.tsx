@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Calendar } from 'lucide-react';
 import { Banner } from '@/components/ui/banner';
+import { EmptyState } from '@/components/ui/empty-state';
 import { formatDateInTz, isBrowserInKlubTz, klubTzLabel } from '@/lib/format-datetime';
 import { useTournamentContext } from './_context';
 
@@ -56,9 +57,7 @@ export default function TournamentOverviewPage() {
           Categorias
         </h3>
         {tournament.categories.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-            Sem categorias configuradas.
-          </p>
+          <EmptyState icon={Calendar} title="Sem categorias configuradas." />
         ) : (
           <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {tournament.categories
