@@ -5,6 +5,7 @@ import { CepGeocoderService } from '../../../../shared/geocoding/cep-geocoder.se
 import { CnpjLookupService } from '../../../../shared/lookup/cnpj-lookup.service';
 import { DocumentVO } from '../../domain/value-objects/document.vo';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { MetricsService } from '../../../../shared/metrics/metrics.service';
 import { generateKlubSlug, slugify } from '../slug-generator';
 
 export interface CreateKlubCommand {
@@ -64,6 +65,7 @@ export class CreateKlubHandler {
     private readonly geocoder: CepGeocoderService,
     private readonly cnpjLookup: CnpjLookupService,
     private readonly prisma: PrismaService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async execute(cmd: CreateKlubCommand): Promise<CreateKlubResult> {
@@ -200,6 +202,7 @@ export class CreateKlubHandler {
       ...geo,
     });
 
+    this.metrics.klubCreated(cmd.plan ?? 'trial');
     return { ...result, reviewStatus: 'pending' };
   }
 

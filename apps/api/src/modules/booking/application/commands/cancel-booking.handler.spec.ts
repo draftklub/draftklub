@@ -50,7 +50,7 @@ describe('CancelBookingHandler', () => {
   let handler: CancelBookingHandler;
 
   beforeEach(() => {
-    handler = new CancelBookingHandler({} as never);
+    handler = new CancelBookingHandler({} as never, { bookingCancelled: vi.fn() } as never);
   });
 
   it('participant cancela quando mode=free (sem deadline check)', async () => {

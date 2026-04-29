@@ -28,7 +28,10 @@ function buildHandler(
   const prisma = {
     $transaction: vi.fn((fn: (t: typeof tx) => Promise<unknown>) => fn(tx)),
   };
-  const handler = new RejectMembershipRequestHandler(prisma as unknown as PrismaService);
+  const handler = new RejectMembershipRequestHandler(
+    prisma as unknown as PrismaService,
+    { membershipRequestDecided: vi.fn() } as never,
+  );
   return { handler, update, outbox };
 }
 

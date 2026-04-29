@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { MetricsService } from '../../../../shared/metrics/metrics.service';
 
 export interface RejectMembershipRequestCommand {
   requestId: string;
@@ -13,7 +14,10 @@ const MAX_REASON = 500;
 
 @Injectable()
 export class RejectMembershipRequestHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly metrics: MetricsService,
+  ) {}
 
   async execute(cmd: RejectMembershipRequestCommand): Promise<{ id: string }> {
     const reason = cmd.reason.trim();
@@ -24,7 +28,7 @@ export class RejectMembershipRequestHandler {
       throw new BadRequestException(`Motivo não pode passar de ${MAX_REASON} caracteres.`);
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const req = await tx.membershipRequest.findUnique({
         where: { id: cmd.requestId },
         select: {
@@ -70,5 +74,7 @@ export class RejectMembershipRequestHandler {
 
       return { id: req.id };
     });
+    this.metrics.membershipRequestDecided('rejected');
+    return result;
   }
 }

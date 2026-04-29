@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { MetricsService } from '../../../../shared/metrics/metrics.service';
 import { TournamentValidatorService } from '../../domain/services/tournament-validator.service';
 
 export interface CreateTournamentCategoryInput {
@@ -40,6 +41,7 @@ export class CreateTournamentHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly validator: TournamentValidatorService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async execute(cmd: CreateTournamentCommand) {
@@ -107,7 +109,7 @@ export class CreateTournamentHandler {
       cmd.categories.length,
     );
 
-    return this.prisma.tournament.create({
+    const created = await this.prisma.tournament.create({
       data: {
         klubSportId: cmd.klubSportId,
         rankingId: cmd.rankingId,
@@ -142,7 +144,10 @@ export class CreateTournamentHandler {
       },
       include: {
         categories: { orderBy: { order: 'asc' } },
+        klubSport: { select: { klubId: true, sportCode: true } },
       },
     });
+    this.metrics.tournamentCreated(created.klubSport.klubId, created.klubSport.sportCode);
+    return created;
   }
 }

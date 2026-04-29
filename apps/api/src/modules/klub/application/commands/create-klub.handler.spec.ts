@@ -92,6 +92,7 @@ function buildHandler(opts: BuildOpts = {}) {
     geocoder as unknown as CepGeocoderService,
     cnpjLookup as unknown as CnpjLookupService,
     prisma as unknown as PrismaService,
+    { klubCreated: vi.fn() } as never,
   );
 
   return { handler, repo, encryption, geocoder, cnpjLookup, prisma, userUpdate };

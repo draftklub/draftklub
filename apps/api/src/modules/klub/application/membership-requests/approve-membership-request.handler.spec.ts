@@ -31,7 +31,10 @@ function buildHandler(opts: { req?: MockReq | null; existingRole?: { id: string 
   const prisma = {
     $transaction: vi.fn((fn: (t: typeof tx) => Promise<unknown>) => fn(tx)),
   };
-  const handler = new ApproveMembershipRequestHandler(prisma as unknown as PrismaService);
+  const handler = new ApproveMembershipRequestHandler(
+    prisma as unknown as PrismaService,
+    { membershipRequestDecided: vi.fn() } as never,
+  );
   return { handler, reqUpdate, membershipUpsert, roleCreate, outboxCreate };
 }
 

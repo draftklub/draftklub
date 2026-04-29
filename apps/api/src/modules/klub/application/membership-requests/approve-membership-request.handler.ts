@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { MetricsService } from '../../../../shared/metrics/metrics.service';
 
 export interface ApproveMembershipRequestCommand {
   requestId: string;
@@ -18,10 +19,13 @@ export interface ApproveMembershipRequestCommand {
  */
 @Injectable()
 export class ApproveMembershipRequestHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly metrics: MetricsService,
+  ) {}
 
   async execute(cmd: ApproveMembershipRequestCommand): Promise<{ id: string }> {
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const req = await tx.membershipRequest.findUnique({
         where: { id: cmd.requestId },
         select: {
@@ -96,5 +100,7 @@ export class ApproveMembershipRequestHandler {
 
       return { id: req.id };
     });
+    this.metrics.membershipRequestDecided('approved');
+    return result;
   }
 }

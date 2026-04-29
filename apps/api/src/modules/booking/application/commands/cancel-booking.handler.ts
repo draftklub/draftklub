@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
+import { MetricsService } from '../../../../shared/metrics/metrics.service';
 
 export interface CancelBookingCommand {
   bookingId: string;
@@ -19,7 +20,10 @@ interface OtherPlayer {
 
 @Injectable()
 export class CancelBookingHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly metrics: MetricsService,
+  ) {}
 
   async execute(cmd: CancelBookingCommand) {
     const booking = await this.prisma.booking.findUnique({
@@ -63,7 +67,7 @@ export class CancelBookingHandler {
       }
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.booking.update({
         where: { id: cmd.bookingId },
         data: {
@@ -100,5 +104,7 @@ export class CancelBookingHandler {
 
       return updated;
     });
+    this.metrics.bookingCancelled(booking.klubId);
+    return result;
   }
 }
