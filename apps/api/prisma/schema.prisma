@@ -83,6 +83,48 @@ model User {
   membershipRequests          MembershipRequest[] @relation("UserMembershipRequests")
   decidedMembershipRequests   MembershipRequest[] @relation("DecidedMembershipRequests")
 
+  // ─── Back-relations de auditoria (DB-3) ──────────────────────
+  membershipsCreated          Membership[]              @relation("MembershipCreatedBy")
+  rolesGranted                RoleAssignment[]          @relation("RoleGrantedBy")
+  klubsCreated                Klub[]                    @relation("KlubCreatedBy")
+  klubsReviewDecided          Klub[]                    @relation("KlubReviewDecidedBy")
+  klubsUpdated                Klub[]                    @relation("KlubUpdatedBy")
+  klubConfigsCreated          KlubConfig[]              @relation("KlubConfigCreatedBy")
+  klubConfigsUpdated          KlubConfig[]              @relation("KlubConfigUpdatedBy")
+  sportProfilesAdded          KlubSportProfile[]        @relation("SportProfileAddedBy")
+  sportProfilesUpdated        KlubSportProfile[]        @relation("SportProfileUpdatedBy")
+  enrollmentsApproved         PlayerSportEnrollment[]   @relation("EnrollmentApprovedBy")
+  enrollmentsSuspended        PlayerSportEnrollment[]   @relation("EnrollmentSuspendedBy")
+  enrollmentsCancelled        PlayerSportEnrollment[]   @relation("EnrollmentCancelledBy")
+  enrollmentsUpdated          PlayerSportEnrollment[]   @relation("EnrollmentUpdatedBy")
+  rankingsCreated             KlubSportRanking[]        @relation("RankingCreatedBy")
+  rankingsUpdated             KlubSportRanking[]        @relation("RankingUpdatedBy")
+  matchResultsConfirmed       MatchResult[]             @relation("MatchResultConfirmedBy")
+  matchResultsValidated       MatchResult[]             @relation("MatchResultValidatedBy")
+  pointsSchemasCreated        RankingPointsSchema[]     @relation("PointsSchemaCreatedBy")
+  pointsSchemasUpdated        RankingPointsSchema[]     @relation("PointsSchemaUpdatedBy")
+  tournamentsCreated          Tournament[]              @relation("TournamentCreatedBy")
+  tournamentsUpdated          Tournament[]              @relation("TournamentUpdatedBy")
+  tournamentsCancelled        Tournament[]              @relation("TournamentCancelledBy")
+  tournamentCategoriesCreated TournamentCategory[]      @relation("TournamentCategoryCreatedBy")
+  tournamentCategoriesUpdated TournamentCategory[]      @relation("TournamentCategoryUpdatedBy")
+  tournamentMatchesUpdated    TournamentMatch[]         @relation("TournamentMatchUpdatedBy")
+  tournamentEntriesApproved   TournamentEntry[]         @relation("TournamentEntryApprovedBy")
+  tournamentEntriesMoved      TournamentEntry[]         @relation("TournamentEntryMovedBy")
+  klubRequestsReviewed        KlubRequest[]             @relation("KlubRequestReviewedBy")
+  spacesCreated               Space[]                   @relation("SpaceCreatedBy")
+  spacesUpdated               Space[]                   @relation("SpaceUpdatedBy")
+  bookingsPrimaryPlayer       Booking[]                 @relation("BookingPrimaryPlayer")
+  bookingsCreated             Booking[]                 @relation("BookingCreatedBy")
+  bookingsApproved            Booking[]                 @relation("BookingApprovedBy")
+  bookingsRejected            Booking[]                 @relation("BookingRejectedBy")
+  bookingsCancelled           Booking[]                 @relation("BookingCancelledBy")
+  bookingsUpdated             Booking[]                 @relation("BookingUpdatedBy")
+  bookingSeriesPrimaryPlayer  BookingSeries[]           @relation("BookingSeriesPrimaryPlayer")
+  bookingSeriesCreated        BookingSeries[]           @relation("BookingSeriesCreatedBy")
+  bookingSeriesCancelled      BookingSeries[]           @relation("BookingSeriesCancelledBy")
+  bookingSeriesUpdated        BookingSeries[]           @relation("BookingSeriesUpdatedBy")
+
   @@map("users")
   @@schema("identity")
 }
@@ -99,8 +141,9 @@ model Membership {
   updatedAt DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   createdById String? @map("created_by_id") @db.Uuid
 
-  user User @relation(fields: [userId], references: [id])
-  klub Klub @relation("KlubMemberships", fields: [klubId], references: [id], map: "memberships_klub_id_fkey")
+  user      User  @relation(fields: [userId], references: [id])
+  klub      Klub  @relation("KlubMemberships", fields: [klubId], references: [id], map: "memberships_klub_id_fkey")
+  createdBy User? @relation("MembershipCreatedBy", fields: [createdById], references: [id])
 
   @@unique([userId, klubId])
   @@map("memberships")
@@ -153,7 +196,8 @@ model RoleAssignment {
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
 
-  user User @relation(fields: [userId], references: [id])
+  user         User  @relation(fields: [userId], references: [id])
+  grantedByUser User? @relation("RoleGrantedBy", fields: [grantedBy], references: [id])
 
   @@map("role_assignments")
   @@schema("identity")
@@ -344,6 +388,7 @@ model Klub {
   updatedById String?   @map("updated_by_id") @db.Uuid
 
   // ─── CNPJ snapshot (Sprint D PR1) ─────────────────────────
+
   // Snapshot da BrasilAPI no momento do cadastro. Admin usa pra
   // auditar antes de aprovar; campo raw guarda payload completo.
   cnpjStatus          String?   @map("cnpj_status")
@@ -372,6 +417,9 @@ model Klub {
   memberships        Membership[]        @relation("KlubMemberships")
   membershipRequests MembershipRequest[] @relation("KlubMembershipRequests")
   bookings           Booking[]           @relation("BookingKlub")
+  createdBy          User?               @relation("KlubCreatedBy", fields: [createdById], references: [id])
+  reviewDecidedBy    User?               @relation("KlubReviewDecidedBy", fields: [reviewDecidedById], references: [id])
+  updatedBy          User?               @relation("KlubUpdatedBy", fields: [updatedById], references: [id])
 
   @@map("klubs")
   @@schema("klub")
@@ -431,7 +479,9 @@ model KlubConfig {
   createdById String?   @map("created_by_id") @db.Uuid
   updatedById String?   @map("updated_by_id") @db.Uuid
 
-  klub  Klub  @relation(fields: [klubId], references: [id])
+  klub       Klub  @relation(fields: [klubId], references: [id])
+  createdBy  User? @relation("KlubConfigCreatedBy", fields: [createdById], references: [id])
+  updatedBy  User? @relation("KlubConfigUpdatedBy", fields: [updatedById], references: [id])
 
   @@map("klub_configs")
   @@schema("klub")
@@ -456,12 +506,14 @@ model KlubSportProfile {
   updatedAt     DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   updatedById   String?   @map("updated_by_id") @db.Uuid
 
-  klub   Klub         @relation("KlubSportProfiles", fields: [klubId], references: [id])
-  sport  SportCatalog @relation(fields: [sportCode], references: [code])
-  rankings KlubSportRanking[] @relation("RankingProfiles")
+  klub       Klub         @relation("KlubSportProfiles", fields: [klubId], references: [id])
+  sport      SportCatalog @relation(fields: [sportCode], references: [code])
+  rankings   KlubSportRanking[]    @relation("RankingProfiles")
   pointsSchemas  RankingPointsSchema[] @relation("PointsSchemas")
   tournaments    Tournament[]          @relation("Tournaments")
   playerSportEnrollments PlayerSportEnrollment[]
+  addedBy    User? @relation("SportProfileAddedBy", fields: [addedById], references: [id])
+  updatedBy  User? @relation("SportProfileUpdatedBy", fields: [updatedById], references: [id])
 
   @@unique([klubId, sportCode])
   @@map("klub_sport_profiles")
@@ -491,8 +543,12 @@ model PlayerSportEnrollment {
   updatedAt           DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   updatedById         String?   @map("updated_by_id") @db.Uuid
 
-  user                User              @relation(fields: [userId], references: [id])
-  klubSportProfile    KlubSportProfile  @relation(fields: [klubSportProfileId], references: [id])
+  user             User              @relation(fields: [userId], references: [id])
+  klubSportProfile KlubSportProfile  @relation(fields: [klubSportProfileId], references: [id])
+  approvedBy       User?             @relation("EnrollmentApprovedBy", fields: [approvedById], references: [id])
+  suspendedBy      User?             @relation("EnrollmentSuspendedBy", fields: [suspendedById], references: [id])
+  cancelledBy      User?             @relation("EnrollmentCancelledBy", fields: [cancelledById], references: [id])
+  updatedBy        User?             @relation("EnrollmentUpdatedBy", fields: [updatedById], references: [id])
 
   @@unique([userId, klubSportProfileId])
   @@index([userId, status])
@@ -538,10 +594,12 @@ model KlubSportRanking {
   createdById     String?   @map("created_by_id") @db.Uuid
   updatedById     String?   @map("updated_by_id") @db.Uuid
 
-  klubSport       KlubSportProfile @relation("RankingProfiles", fields: [klubSportId], references: [id])
-  entries         PlayerRankingEntry[]
-  matches         MatchResult[]
-  tournaments     Tournament[] @relation("TournamentRankings")
+  klubSport   KlubSportProfile @relation("RankingProfiles", fields: [klubSportId], references: [id])
+  entries     PlayerRankingEntry[]
+  matches     MatchResult[]
+  tournaments Tournament[] @relation("TournamentRankings")
+  createdBy   User? @relation("RankingCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User? @relation("RankingUpdatedBy", fields: [updatedById], references: [id])
 
   @@map("klub_sport_rankings")
   @@schema("klub")
@@ -625,6 +683,8 @@ model MatchResult {
 
   ranking         KlubSportRanking @relation(fields: [rankingId], references: [id])
   submittedBy     User             @relation("MatchesSubmitted", fields: [submittedById], references: [id])
+  confirmedBy     User?            @relation("MatchResultConfirmedBy", fields: [confirmedById], references: [id])
+  validatedBy     User?            @relation("MatchResultValidatedBy", fields: [validatedById], references: [id])
   tournament      Tournament?      @relation("TournamentMatchResults", fields: [tournamentId], references: [id])
   tournamentMatch TournamentMatch? @relation("TournamentMatchResult")
 
@@ -665,8 +725,10 @@ model RankingPointsSchema {
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime @updatedAt      @map("updated_at") @db.Timestamptz
 
-  klubSport       KlubSportProfile     @relation("PointsSchemas", fields: [klubSportId], references: [id])
-  categories      TournamentCategory[]
+  klubSport   KlubSportProfile     @relation("PointsSchemas", fields: [klubSportId], references: [id])
+  categories  TournamentCategory[]
+  createdBy   User? @relation("PointsSchemaCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User? @relation("PointsSchemaUpdatedBy", fields: [updatedById], references: [id])
 
   @@map("ranking_points_schemas")
   @@schema("klub")
@@ -720,10 +782,13 @@ model Tournament {
 
   klubSport               KlubSportProfile @relation("Tournaments", fields: [klubSportId], references: [id])
   ranking                 KlubSportRanking @relation("TournamentRankings", fields: [rankingId], references: [id])
-  categories              TournamentCategory[]
-  entries                 TournamentEntry[]
-  matches                 TournamentMatch[]
-  matchResults            MatchResult[] @relation("TournamentMatchResults")
+  categories    TournamentCategory[]
+  entries       TournamentEntry[]
+  matches       TournamentMatch[]
+  matchResults  MatchResult[] @relation("TournamentMatchResults")
+  createdBy     User?         @relation("TournamentCreatedBy", fields: [createdById], references: [id])
+  updatedBy     User?         @relation("TournamentUpdatedBy", fields: [updatedById], references: [id])
+  cancelledBy   User?         @relation("TournamentCancelledBy", fields: [cancelledById], references: [id])
 
   @@map("tournaments")
   @@schema("klub")
@@ -747,10 +812,12 @@ model TournamentCategory {
   createdById       String?  @map("created_by_id") @db.Uuid
   updatedById       String?  @map("updated_by_id") @db.Uuid
 
-  tournament        Tournament          @relation(fields: [tournamentId], references: [id])
-  pointsSchema      RankingPointsSchema @relation(fields: [pointsSchemaId], references: [id])
-  entries           TournamentEntry[]
-  matches           TournamentMatch[]
+  tournament   Tournament          @relation(fields: [tournamentId], references: [id])
+  pointsSchema RankingPointsSchema @relation(fields: [pointsSchemaId], references: [id])
+  entries      TournamentEntry[]
+  matches      TournamentMatch[]
+  createdBy    User? @relation("TournamentCategoryCreatedBy", fields: [createdById], references: [id])
+  updatedBy    User? @relation("TournamentCategoryUpdatedBy", fields: [updatedById], references: [id])
 
   @@unique([tournamentId, name])
   @@unique([tournamentId, order])
@@ -817,6 +884,7 @@ model TournamentMatch {
   tbdPlayer2DependentMatches TournamentMatch[] @relation("TbdPlayer2Ref")
   booking             Booking?
   reverts             TournamentMatchRevert[]
+  updatedBy           User? @relation("TournamentMatchUpdatedBy", fields: [updatedById], references: [id])
 
   @@unique([tournamentId, bracketPosition])
   @@index([matchKind])
@@ -873,9 +941,11 @@ model TournamentEntry {
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
 
-  tournament        Tournament         @relation(fields: [tournamentId], references: [id])
-  user              User               @relation("TournamentEntries", fields: [userId], references: [id])
-  category          TournamentCategory? @relation(fields: [categoryId], references: [id])
+  tournament  Tournament          @relation(fields: [tournamentId], references: [id])
+  user        User                @relation("TournamentEntries", fields: [userId], references: [id])
+  category    TournamentCategory? @relation(fields: [categoryId], references: [id])
+  approvedBy  User?               @relation("TournamentEntryApprovedBy", fields: [approvedById], references: [id])
+  movedBy     User?               @relation("TournamentEntryMovedBy", fields: [movedById], references: [id])
 
   @@unique([tournamentId, userId])
   @@map("tournament_entries")
@@ -932,9 +1002,11 @@ model KlubRequest {
   status           String    @default("pending")
   // pending | approved | rejected | converted
   convertedKlubId  String?   @map("converted_klub_id") @db.Uuid
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  reviewedAt       DateTime? @map("reviewed_at") @db.Timestamptz
-  reviewedById     String?   @map("reviewed_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  reviewedAt   DateTime? @map("reviewed_at") @db.Timestamptz
+  reviewedById String?   @map("reviewed_by_id") @db.Uuid
+
+  reviewedBy   User? @relation("KlubRequestReviewedBy", fields: [reviewedById], references: [id])
 
   @@map("klub_requests")
   @@schema("klub")
@@ -1000,6 +1072,8 @@ model Space {
   tournamentMatches TournamentMatch[]
   bookings          Booking[]
   bookingSeries     BookingSeries[]
+  createdBy         User? @relation("SpaceCreatedBy", fields: [createdById], references: [id])
+  updatedBy         User? @relation("SpaceUpdatedBy", fields: [updatedById], references: [id])
 
   @@map("spaces")
   @@schema("space")
@@ -1073,6 +1147,12 @@ model Booking {
   bookingSeries   BookingSeries? @relation(fields: [bookingSeriesId], references: [id])
   autoCancelledBy Booking?  @relation("AutoCancellation", fields: [autoCancelledByBookingId], references: [id])
   cancelledBookings Booking[] @relation("AutoCancellation")
+  primaryPlayer   User?     @relation("BookingPrimaryPlayer", fields: [primaryPlayerId], references: [id])
+  createdBy       User?     @relation("BookingCreatedBy", fields: [createdById], references: [id])
+  approvedBy      User?     @relation("BookingApprovedBy", fields: [approvedById], references: [id])
+  rejectedBy      User?     @relation("BookingRejectedBy", fields: [rejectedById], references: [id])
+  cancelledBy     User?     @relation("BookingCancelledBy", fields: [cancelledById], references: [id])
+  updatedBy       User?     @relation("BookingUpdatedBy", fields: [updatedById], references: [id])
 
   @@index([klubId, startsAt])
   @@index([spaceId, startsAt])
@@ -1117,8 +1197,12 @@ model BookingSeries {
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
   updatedById     String?   @map("updated_by_id") @db.Uuid
 
-  space           Space     @relation(fields: [spaceId], references: [id])
-  bookings        Booking[]
+  space          Space     @relation(fields: [spaceId], references: [id])
+  bookings       Booking[]
+  primaryPlayer  User?     @relation("BookingSeriesPrimaryPlayer", fields: [primaryPlayerId], references: [id])
+  createdBy      User      @relation("BookingSeriesCreatedBy", fields: [createdById], references: [id])
+  cancelledBy    User?     @relation("BookingSeriesCancelledBy", fields: [cancelledById], references: [id])
+  updatedBy      User?     @relation("BookingSeriesUpdatedBy", fields: [updatedById], references: [id])
 
   @@index([klubId, startsOn])
   @@index([spaceId, startsOn])
