@@ -95,6 +95,9 @@ model Membership {
   type      String    @default("member")
   joinedAt  DateTime  @default(now()) @map("joined_at") @db.Timestamptz
   expiresAt DateTime? @map("expires_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  createdById String? @map("created_by_id") @db.Uuid
 
   user User @relation(fields: [userId], references: [id])
   klub Klub @relation("KlubMemberships", fields: [klubId], references: [id], map: "memberships_klub_id_fkey")
@@ -147,6 +150,8 @@ model RoleAssignment {
   scopeSportId String?   @map("scope_sport_id") @db.Uuid
   grantedAt    DateTime  @default(now()) @map("granted_at") @db.Timestamptz
   grantedBy    String?   @map("granted_by") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
 
   user User @relation(fields: [userId], references: [id])
 
@@ -336,6 +341,7 @@ model Klub {
   onboardingSource String @default("self_service") @map("onboarding_source")
   // self_service | sales_led
   createdById String?   @map("created_by_id") @db.Uuid
+  updatedById String?   @map("updated_by_id") @db.Uuid
 
   // ─── CNPJ snapshot (Sprint D PR1) ─────────────────────────
   // Snapshot da BrasilAPI no momento do cadastro. Admin usa pra
@@ -420,6 +426,11 @@ model KlubConfig {
   tournamentBookingConflictMode String   @default("staff_decides") @map("tournament_booking_conflict_mode")
   // 'block_avulso' | 'auto_cancel_avulso' | 'staff_decides'
 
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  createdById String?   @map("created_by_id") @db.Uuid
+  updatedById String?   @map("updated_by_id") @db.Uuid
+
   klub  Klub  @relation(fields: [klubId], references: [id])
 
   @@map("klub_configs")
@@ -442,6 +453,8 @@ model KlubSportProfile {
   status        String    @default("active")
   addedAt       DateTime  @default(now()) @map("added_at") @db.Timestamptz
   addedById     String?   @map("added_by_id") @db.Uuid
+  updatedAt     DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  updatedById   String?   @map("updated_by_id") @db.Uuid
 
   klub   Klub         @relation("KlubSportProfiles", fields: [klubId], references: [id])
   sport  SportCatalog @relation(fields: [sportCode], references: [code])
@@ -476,6 +489,7 @@ model PlayerSportEnrollment {
 
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  updatedById         String?   @map("updated_by_id") @db.Uuid
 
   user                User              @relation(fields: [userId], references: [id])
   klubSportProfile    KlubSportProfile  @relation(fields: [klubSportProfileId], references: [id])
@@ -521,6 +535,8 @@ model KlubSportRanking {
 
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  createdById     String?   @map("created_by_id") @db.Uuid
+  updatedById     String?   @map("updated_by_id") @db.Uuid
 
   klubSport       KlubSportProfile @relation("RankingProfiles", fields: [klubSportId], references: [id])
   entries         PlayerRankingEntry[]
@@ -554,6 +570,8 @@ model PlayerRankingEntry {
 
   active          Boolean   @default(true)
   joinedAt        DateTime  @default(now()) @map("joined_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
 
   ranking         KlubSportRanking @relation(fields: [rankingId], references: [id])
   user            User             @relation("PlayerEntries", fields: [userId], references: [id])
@@ -643,6 +661,7 @@ model RankingPointsSchema {
 
   active          Boolean  @default(true)
   createdById     String?  @map("created_by_id") @db.Uuid
+  updatedById     String?  @map("updated_by_id") @db.Uuid
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime @updatedAt      @map("updated_at") @db.Timestamptz
 
@@ -691,6 +710,7 @@ model Tournament {
   pointsAppliedAt         DateTime? @map("points_applied_at") @db.Timestamptz
 
   createdById             String?   @map("created_by_id") @db.Uuid
+  updatedById             String?   @map("updated_by_id") @db.Uuid
   createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt               DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
 
@@ -724,6 +744,8 @@ model TournamentCategory {
 
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime @updatedAt      @map("updated_at") @db.Timestamptz
+  createdById       String?  @map("created_by_id") @db.Uuid
+  updatedById       String?  @map("updated_by_id") @db.Uuid
 
   tournament        Tournament          @relation(fields: [tournamentId], references: [id])
   pointsSchema      RankingPointsSchema @relation(fields: [pointsSchemaId], references: [id])
@@ -781,6 +803,7 @@ model TournamentMatch {
   completedAt         DateTime? @map("completed_at") @db.Timestamptz
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  updatedById         String?   @map("updated_by_id") @db.Uuid
 
   tournament          Tournament          @relation(fields: [tournamentId], references: [id])
   category            TournamentCategory  @relation(fields: [categoryId], references: [id])
@@ -847,6 +870,8 @@ model TournamentEntry {
   seededAt          DateTime? @map("seeded_at") @db.Timestamptz
   movedById         String?   @map("moved_by_id") @db.Uuid
   withdrawnAt       DateTime? @map("withdrawn_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
 
   tournament        Tournament         @relation(fields: [tournamentId], references: [id])
   user              User               @relation("TournamentEntries", fields: [userId], references: [id])
@@ -924,6 +949,7 @@ model KlubMedia {
   order     Int      @default(0)
   caption   String?
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt      @map("updated_at") @db.Timestamptz
 
   klub  Klub  @relation(fields: [klubId], references: [id])
 
@@ -968,6 +994,8 @@ model Space {
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+  createdById String?   @map("created_by_id") @db.Uuid
+  updatedById String?   @map("updated_by_id") @db.Uuid
 
   tournamentMatches TournamentMatch[]
   bookings          Booking[]
@@ -1037,6 +1065,7 @@ model Booking {
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+  updatedById     String?   @map("updated_by_id") @db.Uuid
 
   klub            Klub      @relation("BookingKlub", fields: [klubId], references: [id])
   space           Space     @relation(fields: [spaceId], references: [id])
@@ -1086,6 +1115,7 @@ model BookingSeries {
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+  updatedById     String?   @map("updated_by_id") @db.Uuid
 
   space           Space     @relation(fields: [spaceId], references: [id])
   bookings        Booking[]
