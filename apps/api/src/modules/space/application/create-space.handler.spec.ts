@@ -56,7 +56,7 @@ describe('CreateSpaceHandler', () => {
 
   it('rejeita 404 quando Klub soft-deleted', async () => {
     const { handler } = buildHandler({
-      klub: { id: KLUB_ID, reviewStatus: 'approved', deletedAt: new Date() },
+      klub: { id: KLUB_ID, review: { reviewStatus: 'approved' }, deletedAt: new Date() },
     });
     await expect(handler.execute(VALID_DATA)).rejects.toThrow(NotFoundException);
   });
