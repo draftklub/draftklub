@@ -50,12 +50,12 @@ export class RequestMembershipHandler {
         id: true,
         name: true,
         accessMode: true,
-        reviewStatus: true,
         deletedAt: true,
+        review: { select: { reviewStatus: true } },
       },
     });
 
-    if (!klub || klub.deletedAt || klub.reviewStatus !== 'approved') {
+    if (!klub || klub.deletedAt || klub.review?.reviewStatus !== 'approved') {
       throw new NotFoundException(`Klub '${cmd.klubSlug}' não encontrado`);
     }
 

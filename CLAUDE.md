@@ -131,12 +131,25 @@ before, after, metadata })` pra eventos sensíveis (role grants, klub
   inteiros). Off-grid (`p-2.25`, `mb-4.5`, `size-7.5`) é proibido pelo
   SYSTEM.md e pre-commit não checa, mas auditoria reabriu issue.
 
+## Padrões web (Sprint O)
+
+- **RSC layout pattern**: `layout.tsx` sem `'use client'` importa `layout.client.tsx`
+  que contém todo o conteúdo original. Filho `{children}` escapa da boundary client.
+- **Server Actions**: `'use server'`, recebe `(token: string, raw: unknown)`, valida com
+  Zod, faz fetch server-to-server. Cliente chama `getIdToken()` e passa o token.
+  Actions em `apps/web/src/lib/actions/`, schemas em `apps/web/src/lib/schemas/`.
+- **TanStack Query**: `useQuery` + `useMutation` para todo fetch/mutation. Sem
+  `useEffect+cancelled+fetch` manual. `enabled: !!user` guard nos queries autenticados.
+- **React Hook Form**: `useForm<T>({ resolver: zodResolver(schema) })` para forms com
+  validação. Schemas compartilhados entre RHF (client) e Server Actions (server).
+- **Rota `/rankings`**: página consolidada cross-Klub/sport em `(authed)/rankings/page.tsx`.
+  Fan-out: `getMyKlubs()` → por Klub/sport → `listKlubRankings()`.
+
 ## Auditoria + roadmap
 
 `/Users/bouhid/.claude/plans/draftklub-to-do-inherited-pumpkin.md` —
-plano completo de Sprint M (~92% done), Sprint N (~63% done), Sprint O
-(frontend RSC, primitivos faltantes), Sprint P (mobile + diferenciais).
-Re-auditoria automática agendada pra 27/05/2026.
+plano completo. Sprint M ✅ · Sprint N ✅ · Sprint O ✅ · Sprint P 🔴 (não começou).
+Database hardening 🔴 (não tocado). Re-auditoria recomendada: 27/05/2026.
 
 ## Comandos úteis
 

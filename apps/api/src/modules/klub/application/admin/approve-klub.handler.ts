@@ -36,17 +36,17 @@ export class ApproveKlubHandler {
             id: true,
             slug: true,
             name: true,
-            reviewStatus: true,
             deletedAt: true,
             createdById: true,
+            review: { select: { reviewStatus: true } },
           },
         });
         if (!klub || klub.deletedAt) {
           throw new NotFoundException(`Klub ${cmd.klubId} não encontrado`);
         }
-        if (klub.reviewStatus !== 'pending') {
+        if (klub.review?.reviewStatus !== 'pending') {
           throw new BadRequestException(
-            `Klub ${cmd.klubId} já foi decidido (status=${klub.reviewStatus}).`,
+            `Klub ${cmd.klubId} já foi decidido (status=${klub.review?.reviewStatus}).`,
           );
         }
 
@@ -58,7 +58,7 @@ export class ApproveKlubHandler {
             // Conflitos com Klubs também pendentes não bloqueiam — o admin
             // decide qual fica primeiro; só Klubs já aprovados (live no
             // sistema) bloqueiam aprovação.
-            reviewStatus: 'approved',
+            review: { is: { reviewStatus: 'approved' } },
           },
           select: { id: true, name: true },
         });
@@ -69,15 +69,22 @@ export class ApproveKlubHandler {
           });
         }
 
-        const updated = await tx.klub.update({
-          where: { id: cmd.klubId },
-          data: {
+        await tx.klubReview.upsert({
+          where: { klubId: cmd.klubId },
+          update: {
             reviewStatus: 'approved',
             reviewDecisionAt: new Date(),
             reviewDecidedById: cmd.decidedById,
           },
-          select: { id: true, slug: true },
+          create: {
+            klubId: cmd.klubId,
+            reviewStatus: 'approved',
+            reviewDecisionAt: new Date(),
+            reviewDecidedById: cmd.decidedById,
+          },
         });
+
+        const updated = { id: cmd.klubId, slug: klub.slug };
 
         // Outbox event — PR3 vai consumir pra disparar email pro criador.
         await tx.outboxEvent.create({

@@ -74,7 +74,6 @@ export class KlubPrismaRepository {
           addressComplement: data.addressComplement,
           addressNeighborhood: data.addressNeighborhood,
           addressSource: data.addressSource,
-          reviewStatus: (data.reviewStatus ?? 'pending') as $Enums.KlubReviewStatus,
           status: data.plan === 'trial' ? 'trial' : 'active',
           trialEndsAt:
             data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
@@ -92,6 +91,11 @@ export class KlubPrismaRepository {
                 : undefined,
             },
           },
+          review: {
+            create: {
+              reviewStatus: (data.reviewStatus ?? 'pending') as $Enums.KlubReviewStatus,
+            },
+          },
           config: {
             create: {},
           },
@@ -106,6 +110,7 @@ export class KlubPrismaRepository {
           config: true,
           sportProfiles: true,
           legal: true,
+          review: true,
         },
       });
 
@@ -169,14 +174,14 @@ export class KlubPrismaRepository {
   async findById(id: string) {
     return this.prisma.klub.findUnique({
       where: { id, deletedAt: null },
-      include: { config: true, sportProfiles: true, media: true, legal: true },
+      include: { config: true, sportProfiles: true, media: true, legal: true, review: true },
     });
   }
 
   async findBySlug(slug: string) {
     return this.prisma.klub.findUnique({
       where: { slug, deletedAt: null },
-      include: { config: true, sportProfiles: true, legal: true },
+      include: { config: true, sportProfiles: true, legal: true, review: true },
     });
   }
 
@@ -187,7 +192,7 @@ export class KlubPrismaRepository {
         ...(filters?.status ? { status: filters.status as $Enums.KlubStatus } : {}),
         ...(filters?.type ? { type: filters.type as $Enums.KlubType } : {}),
       },
-      include: { config: true, sportProfiles: true, legal: true },
+      include: { config: true, sportProfiles: true, legal: true, review: true },
       orderBy: { createdAt: 'desc' },
     });
   }

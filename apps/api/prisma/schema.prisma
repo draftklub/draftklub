@@ -84,7 +84,7 @@ model User {
   membershipsCreated          Membership[]              @relation("MembershipCreatedBy")
   rolesGranted                RoleAssignment[]          @relation("RoleGrantedBy")
   klubsCreated                Klub[]                    @relation("KlubCreatedBy")
-  klubsReviewDecided          Klub[]                    @relation("KlubReviewDecidedBy")
+  klubsReviewDecided          KlubReview[]              @relation("KlubReviewDecidedBy")
   klubsUpdated                Klub[]                    @relation("KlubUpdatedBy")
   klubConfigsCreated          KlubConfig[]              @relation("KlubConfigCreatedBy")
   klubConfigsUpdated          KlubConfig[]              @relation("KlubConfigUpdatedBy")
@@ -368,21 +368,13 @@ model Klub {
   createdById String?   @map("created_by_id") @db.Uuid
   updatedById String?   @map("updated_by_id") @db.Uuid
 
-  // ─── Review administrativo (Sprint D PR1) ─────────────────
-  // Ortogonal a `status` (trial/active/...) e a `kycStatus`. Klub
-  // só vira visível em /klubs/discover e /k/:slug quando
-  // reviewStatus='approved'. Plano comercial não muda.
-  reviewStatus           KlubReviewStatus @default(pending) @map("review_status")
-  reviewDecisionAt       DateTime?        @map("review_decision_at") @db.Timestamptz
-  reviewDecidedById      String?   @map("review_decided_by_id") @db.Uuid
-  reviewRejectionReason  String?   @map("review_rejection_reason")
-
   // ─── Auditoria ────────────────────────────────────────────
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
 
   legal              KlubLegal?
+  review             KlubReview?
   config             KlubConfig?
   sportProfiles      KlubSportProfile[]  @relation("KlubSportProfiles")
   sportInterests     KlubSportInterest[] @relation("KlubSportInterests")
@@ -391,7 +383,6 @@ model Klub {
   membershipRequests MembershipRequest[] @relation("KlubMembershipRequests")
   bookings           Booking[]           @relation("BookingKlub")
   createdBy          User?               @relation("KlubCreatedBy", fields: [createdById], references: [id])
-  reviewDecidedBy    User?               @relation("KlubReviewDecidedBy", fields: [reviewDecidedById], references: [id])
   updatedBy          User?               @relation("KlubUpdatedBy", fields: [updatedById], references: [id])
 
   @@map("klubs")
@@ -415,6 +406,22 @@ model KlubLegal {
   klub                Klub            @relation(fields: [klubId], references: [id], onDelete: Cascade)
 
   @@map("klub_legal")
+  @@schema("klub")
+}
+
+model KlubReview {
+  id                    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId                String           @unique @map("klub_id") @db.Uuid
+  reviewStatus          KlubReviewStatus @default(pending) @map("review_status")
+  reviewDecisionAt      DateTime?        @map("review_decision_at") @db.Timestamptz
+  reviewDecidedById     String?          @map("review_decided_by_id") @db.Uuid
+  reviewRejectionReason String?          @map("review_rejection_reason")
+  createdAt             DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+  klub                  Klub             @relation(fields: [klubId], references: [id], onDelete: Cascade)
+  reviewDecidedBy       User?            @relation("KlubReviewDecidedBy", fields: [reviewDecidedById], references: [id])
+
+  @@map("klub_review")
   @@schema("klub")
 }
 

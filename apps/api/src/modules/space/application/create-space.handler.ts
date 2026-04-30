@@ -27,12 +27,12 @@ export class CreateSpaceHandler {
   async execute(cmd: CreateSpaceCommand) {
     const klub = await this.prisma.klub.findUnique({
       where: { id: cmd.klubId },
-      select: { id: true, reviewStatus: true, deletedAt: true },
+      select: { id: true, deletedAt: true, review: { select: { reviewStatus: true } } },
     });
     if (!klub || klub.deletedAt) {
       throw new NotFoundException(`Klub ${cmd.klubId} não encontrado`);
     }
-    if (klub.reviewStatus !== 'approved') {
+    if (klub.review?.reviewStatus !== 'approved') {
       throw new BadRequestException({
         type: 'klub_not_approved',
         message: 'Klub ainda não foi aprovado pela plataforma — aguarde a revisão.',

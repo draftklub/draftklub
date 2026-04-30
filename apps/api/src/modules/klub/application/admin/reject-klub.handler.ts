@@ -44,23 +44,30 @@ export class RejectKlubHandler {
           select: {
             id: true,
             name: true,
-            reviewStatus: true,
             deletedAt: true,
             createdById: true,
+            review: { select: { reviewStatus: true } },
           },
         });
         if (!klub || klub.deletedAt) {
           throw new NotFoundException(`Klub ${cmd.klubId} não encontrado`);
         }
-        if (klub.reviewStatus !== 'pending') {
+        if (klub.review?.reviewStatus !== 'pending') {
           throw new BadRequestException(
-            `Klub ${cmd.klubId} já foi decidido (status=${klub.reviewStatus}).`,
+            `Klub ${cmd.klubId} já foi decidido (status=${klub.review?.reviewStatus}).`,
           );
         }
 
-        await tx.klub.update({
-          where: { id: cmd.klubId },
-          data: {
+        await tx.klubReview.upsert({
+          where: { klubId: cmd.klubId },
+          update: {
+            reviewStatus: 'rejected',
+            reviewDecisionAt: new Date(),
+            reviewDecidedById: cmd.decidedById,
+            reviewRejectionReason: reason,
+          },
+          create: {
+            klubId: cmd.klubId,
             reviewStatus: 'rejected',
             reviewDecisionAt: new Date(),
             reviewDecidedById: cmd.decidedById,

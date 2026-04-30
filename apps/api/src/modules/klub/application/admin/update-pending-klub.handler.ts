@@ -36,14 +36,14 @@ export class UpdatePendingKlubHandler {
   async execute(cmd: UpdatePendingKlubCommand): Promise<{ id: string; slug: string }> {
     const klub = await this.prisma.klub.findUnique({
       where: { id: cmd.klubId },
-      select: { id: true, slug: true, reviewStatus: true, deletedAt: true },
+      select: { id: true, slug: true, deletedAt: true, review: { select: { reviewStatus: true } } },
     });
     if (!klub || klub.deletedAt) {
       throw new NotFoundException(`Klub ${cmd.klubId} não encontrado`);
     }
-    if (klub.reviewStatus !== 'pending') {
+    if (klub.review?.reviewStatus !== 'pending') {
       throw new BadRequestException(
-        `Klub ${cmd.klubId} já foi decidido (status=${klub.reviewStatus}); use o fluxo normal de edição.`,
+        `Klub ${cmd.klubId} já foi decidido (status=${klub.review?.reviewStatus}); use o fluxo normal de edição.`,
       );
     }
 
