@@ -52,11 +52,6 @@ export class KlubPrismaRepository {
           name: data.name,
           slug: data.slug,
           type: data.type as $Enums.KlubType,
-          city: data.city,
-          state: data.state,
-          timezone: data.timezone,
-          email: data.email,
-          phone: data.phone,
           commonName: data.commonName,
           abbreviation: data.abbreviation,
           parentKlubId: data.parentKlubId,
@@ -66,17 +61,26 @@ export class KlubPrismaRepository {
           plan: data.plan as $Enums.KlubPlan,
           discoverable: data.discoverable ?? false,
           accessMode: (data.accessMode ?? 'public') as $Enums.KlubAccessMode,
-          cep: data.cep,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          addressStreet: data.addressStreet,
-          addressNumber: data.addressNumber,
-          addressComplement: data.addressComplement,
-          addressNeighborhood: data.addressNeighborhood,
-          addressSource: data.addressSource,
           status: data.plan === 'trial' ? 'trial' : 'active',
           trialEndsAt:
             data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
+          contact: {
+            create: {
+              city: data.city,
+              state: data.state,
+              timezone: data.timezone ?? 'America/Sao_Paulo',
+              email: data.email,
+              phone: data.phone,
+              cep: data.cep,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              addressStreet: data.addressStreet,
+              addressNumber: data.addressNumber,
+              addressComplement: data.addressComplement,
+              addressNeighborhood: data.addressNeighborhood,
+              addressSource: data.addressSource,
+            },
+          },
           legal: {
             create: {
               entityType: data.entityType as $Enums.KlubEntityType | undefined,
@@ -111,6 +115,7 @@ export class KlubPrismaRepository {
           sportProfiles: true,
           legal: true,
           review: true,
+          contact: true,
         },
       });
 
@@ -165,8 +170,8 @@ export class KlubPrismaRepository {
         type: klub.type,
         plan: klub.plan,
         status: klub.status,
-        city: klub.city,
-        state: klub.state,
+        city: klub.contact?.city ?? null,
+        state: klub.contact?.state ?? null,
       };
     });
   }
@@ -174,14 +179,21 @@ export class KlubPrismaRepository {
   async findById(id: string) {
     return this.prisma.klub.findUnique({
       where: { id, deletedAt: null },
-      include: { config: true, sportProfiles: true, media: true, legal: true, review: true },
+      include: {
+        config: true,
+        sportProfiles: true,
+        media: true,
+        legal: true,
+        review: true,
+        contact: true,
+      },
     });
   }
 
   async findBySlug(slug: string) {
     return this.prisma.klub.findUnique({
       where: { slug, deletedAt: null },
-      include: { config: true, sportProfiles: true, legal: true, review: true },
+      include: { config: true, sportProfiles: true, legal: true, review: true, contact: true },
     });
   }
 
@@ -192,7 +204,7 @@ export class KlubPrismaRepository {
         ...(filters?.status ? { status: filters.status as $Enums.KlubStatus } : {}),
         ...(filters?.type ? { type: filters.type as $Enums.KlubType } : {}),
       },
-      include: { config: true, sportProfiles: true, legal: true, review: true },
+      include: { config: true, sportProfiles: true, legal: true, review: true, contact: true },
       orderBy: { createdAt: 'desc' },
     });
   }

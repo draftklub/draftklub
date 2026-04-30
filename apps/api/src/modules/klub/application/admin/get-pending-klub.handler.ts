@@ -51,7 +51,12 @@ export class GetPendingKlubHandler {
   async execute(id: string): Promise<PendingKlubDetail> {
     const klub = await this.prisma.klub.findUnique({
       where: { id },
-      include: { sportProfiles: { where: { status: 'active' } }, legal: true, review: true },
+      include: {
+        sportProfiles: { where: { status: 'active' } },
+        legal: true,
+        review: true,
+        contact: true,
+      },
     });
     if (!klub || klub.deletedAt) {
       throw new NotFoundException(`Klub ${id} não encontrado`);
@@ -91,14 +96,14 @@ export class GetPendingKlubHandler {
       cnpjStatus: klub.legal?.cnpjStatus ?? null,
       cnpjStatusCheckedAt: klub.legal?.cnpjStatusCheckedAt?.toISOString() ?? null,
       cnpjLookupData: (klub.legal?.cnpjLookupData as Record<string, unknown> | null) ?? null,
-      cep: klub.cep,
-      addressStreet: klub.addressStreet,
-      addressNumber: klub.addressNumber,
-      addressComplement: klub.addressComplement,
-      addressNeighborhood: klub.addressNeighborhood,
-      city: klub.city,
-      state: klub.state,
-      addressSource: klub.addressSource,
+      cep: klub.contact?.cep ?? null,
+      addressStreet: klub.contact?.addressStreet ?? null,
+      addressNumber: klub.contact?.addressNumber ?? null,
+      addressComplement: klub.contact?.addressComplement ?? null,
+      addressNeighborhood: klub.contact?.addressNeighborhood ?? null,
+      city: klub.contact?.city ?? null,
+      state: klub.contact?.state ?? null,
+      addressSource: klub.contact?.addressSource ?? null,
       discoverable: klub.discoverable,
       accessMode: klub.accessMode,
       sports: klub.sportProfiles.map((s) => s.sportCode),

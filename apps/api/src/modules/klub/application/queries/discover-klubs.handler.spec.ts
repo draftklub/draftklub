@@ -8,11 +8,13 @@ interface MockKlub {
   slug: string;
   type: string;
   status: string;
-  city: string | null;
-  state: string | null;
   accessMode: string | null;
-  latitude: number | null;
-  longitude: number | null;
+  contact: {
+    city: string | null;
+    state: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  } | null;
   sportProfiles: { sportCode: string }[];
 }
 
@@ -57,11 +59,8 @@ const k = (
   slug: id,
   type: 'sports_club',
   status: 'active',
-  city,
-  state,
   accessMode,
-  latitude,
-  longitude,
+  contact: { city, state, latitude, longitude },
   sportProfiles: sportCodes.map((c) => ({ sportCode: c })),
 });
 
@@ -87,7 +86,7 @@ describe('DiscoverKlubsHandler', () => {
   it('filtra por UF exato', async () => {
     const { handler, getLastWhere } = buildHandler({ rows: [] });
     await handler.execute({ state: 'RJ' });
-    expect(getLastWhere()?.state).toBe('RJ');
+    expect(getLastWhere()?.contact).toEqual({ is: { state: 'RJ' } });
   });
 
   it('filtra por sport via sportProfiles.some active', async () => {

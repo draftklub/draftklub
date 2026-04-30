@@ -309,29 +309,7 @@ model Klub {
   // ─── Tipo ─────────────────────────────────────────────────
   type        KlubType  @default(sports_club)
 
-  // ─── Localização ──────────────────────────────────────────
-  country     String    @default("BR")
-  state       String?
-  city        String?
-  address     String?
-  zipCode     String?   @map("zip_code")
-  timezone    String    @default("America/Sao_Paulo")
-  latitude    Decimal?  @db.Decimal(10, 8)
-  longitude   Decimal?  @db.Decimal(11, 8)
-  // Endereço granular (Sprint D PR1). `address` legacy permanece pra
-  // não quebrar dados existentes; novos cadastros populam os granulares.
-  addressStreet       String? @map("address_street")
-  addressNumber       String? @map("address_number")
-  addressComplement   String? @map("address_complement")
-  addressNeighborhood String? @map("address_neighborhood")
-  addressSource       String? @map("address_source")
-  // 'cnpj_lookup' | 'manual' — origem dos campos de endereço.
-  // Anti-divergência: campos auto-preenchidos via Receita ficam
-  // read-only no UI até user explicitamente "Editar manualmente".
-
   // ─── Contato ──────────────────────────────────────────────
-  email       String?
-  phone       String?
   website     String?
 
   // ─── Comodidades (JSONB flexível) ─────────────────────────
@@ -356,12 +334,8 @@ model Klub {
   // null = o próprio Klub é responsável pelo billing
 
   // ─── Discovery + privacy (Sprint B) ────────────────────────
-  // (latitude/longitude já existem acima; Sprint B+1 vai geocodificar
-  //  via CEP+address e popular esses campos.)
   discoverable Boolean        @default(false)
   accessMode   KlubAccessMode @default(public) @map("access_mode")
-  cep          String? @db.Char(8)
-  // CEP do Klub. Source pra geocoding lat/lng (Sprint B+1).
 
   // ─── Onboarding ───────────────────────────────────────────
   onboardingSource KlubOnboardingSource @default(self_service) @map("onboarding_source")
@@ -375,6 +349,7 @@ model Klub {
 
   legal              KlubLegal?
   review             KlubReview?
+  contact            KlubContact?
   config             KlubConfig?
   sportProfiles      KlubSportProfile[]  @relation("KlubSportProfiles")
   sportInterests     KlubSportInterest[] @relation("KlubSportInterests")
@@ -422,6 +397,33 @@ model KlubReview {
   reviewDecidedBy       User?            @relation("KlubReviewDecidedBy", fields: [reviewDecidedById], references: [id])
 
   @@map("klub_review")
+  @@schema("klub")
+}
+
+model KlubContact {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId              String    @unique @map("klub_id") @db.Uuid
+  country             String    @default("BR")
+  state               String?
+  city                String?
+  address             String?
+  zipCode             String?   @map("zip_code")
+  cep                 String?   @db.Char(8)
+  timezone            String    @default("America/Sao_Paulo")
+  latitude            Decimal?  @db.Decimal(10, 8)
+  longitude           Decimal?  @db.Decimal(11, 8)
+  addressStreet       String?   @map("address_street")
+  addressNumber       String?   @map("address_number")
+  addressComplement   String?   @map("address_complement")
+  addressNeighborhood String?   @map("address_neighborhood")
+  addressSource       String?   @map("address_source")
+  email               String?
+  phone               String?
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  klub                Klub      @relation(fields: [klubId], references: [id], onDelete: Cascade)
+
+  @@map("klub_contact")
   @@schema("klub")
 }
 

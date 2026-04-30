@@ -77,10 +77,9 @@ export class ListPendingKlubsHandler {
           name: true,
           slug: true,
           type: true,
-          city: true,
-          state: true,
           createdAt: true,
           createdById: true,
+          contact: { select: { city: true, state: true } },
           legal: {
             select: {
               entityType: true,
@@ -114,8 +113,8 @@ export class ListPendingKlubsHandler {
         entityType: r.legal?.entityType ?? null,
         documentHint: r.legal?.documentHint ?? null,
         legalName: r.legal?.legalName ?? null,
-        city: r.city,
-        state: r.state,
+        city: r.contact?.city ?? null,
+        state: r.contact?.state ?? null,
         cnpjStatus: r.legal?.cnpjStatus ?? null,
         reviewStatus: r.review?.reviewStatus ?? status,
         createdAt: r.createdAt.toISOString(),

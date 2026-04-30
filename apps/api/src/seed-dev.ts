@@ -53,16 +53,20 @@ async function main(): Promise<void> {
       name: 'Tennis Club Carioca',
       slug: 'tennis-club-carioca',
       type: 'sports_club',
-      city: 'Rio de Janeiro',
-      state: 'RJ',
-      country: 'BR',
-      timezone: 'America/Sao_Paulo',
-      email: 'contato@tenniscarioca.com.br',
-      phone: '+5521999990000',
       plan: 'trial',
       status: 'trial',
       trialEndsAt,
       onboardingSource: 'sales_led',
+      contact: {
+        create: {
+          city: 'Rio de Janeiro',
+          state: 'RJ',
+          country: 'BR',
+          timezone: 'America/Sao_Paulo',
+          email: 'contato@tenniscarioca.com.br',
+          phone: '+5521999990000',
+        },
+      },
       config: {
         create: {
           bookingPolicy: 'members_only',

@@ -114,6 +114,7 @@ export class UpdateKlubHandler {
 
     const data: Prisma.KlubUpdateInput = {};
     const legalData: Record<string, unknown> = {};
+    const contactData: Record<string, unknown> = {};
     const p = cmd.patch;
     if (p.name !== undefined) data.name = p.name;
     if (p.abbreviation !== undefined) data.abbreviation = p.abbreviation;
@@ -122,22 +123,23 @@ export class UpdateKlubHandler {
     if (p.type !== undefined) data.type = p.type;
     if (p.avatarUrl !== undefined) data.avatarUrl = p.avatarUrl;
     if (p.coverUrl !== undefined) data.coverUrl = p.coverUrl;
-    if (p.email !== undefined) data.email = p.email;
-    if (p.phone !== undefined) data.phone = p.phone;
     if (p.website !== undefined) data.website = p.website;
-    if (p.cep !== undefined) data.cep = p.cep;
-    if (p.addressStreet !== undefined) data.addressStreet = p.addressStreet;
-    if (p.addressNumber !== undefined) data.addressNumber = p.addressNumber;
-    if (p.addressComplement !== undefined) data.addressComplement = p.addressComplement;
-    if (p.addressNeighborhood !== undefined) data.addressNeighborhood = p.addressNeighborhood;
-    if (p.city !== undefined) data.city = p.city;
-    if (p.state !== undefined) data.state = p.state;
-    if (p.addressSource !== undefined) data.addressSource = p.addressSource;
-    if (p.latitude !== undefined) data.latitude = p.latitude;
-    if (p.longitude !== undefined) data.longitude = p.longitude;
     if (p.discoverable !== undefined) data.discoverable = p.discoverable;
     if (p.accessMode !== undefined) data.accessMode = p.accessMode;
     if (p.amenities !== undefined) data.amenities = p.amenities as Prisma.InputJsonValue;
+    if (p.email !== undefined) contactData.email = p.email;
+    if (p.phone !== undefined) contactData.phone = p.phone;
+    if (p.cep !== undefined) contactData.cep = p.cep;
+    if (p.addressStreet !== undefined) contactData.addressStreet = p.addressStreet;
+    if (p.addressNumber !== undefined) contactData.addressNumber = p.addressNumber;
+    if (p.addressComplement !== undefined) contactData.addressComplement = p.addressComplement;
+    if (p.addressNeighborhood !== undefined)
+      contactData.addressNeighborhood = p.addressNeighborhood;
+    if (p.city !== undefined) contactData.city = p.city;
+    if (p.state !== undefined) contactData.state = p.state;
+    if (p.addressSource !== undefined) contactData.addressSource = p.addressSource;
+    if (p.latitude !== undefined) contactData.latitude = p.latitude;
+    if (p.longitude !== undefined) contactData.longitude = p.longitude;
 
     if (cmd.isSuperAdmin) {
       if (p.legalName !== undefined) legalData.legalName = p.legalName;
@@ -175,7 +177,11 @@ export class UpdateKlubHandler {
       }
     }
 
-    if (Object.keys(data).length === 0 && Object.keys(legalData).length === 0) {
+    if (
+      Object.keys(data).length === 0 &&
+      Object.keys(legalData).length === 0 &&
+      Object.keys(contactData).length === 0
+    ) {
       throw new BadRequestException('Nenhum campo válido pra atualizar');
     }
 
@@ -188,6 +194,13 @@ export class UpdateKlubHandler {
         where: { klubId: cmd.klubId },
         create: { klubId: cmd.klubId, ...legalData },
         update: legalData,
+      });
+    }
+    if (Object.keys(contactData).length > 0) {
+      await this.prisma.klubContact.upsert({
+        where: { klubId: cmd.klubId },
+        create: { klubId: cmd.klubId, ...contactData },
+        update: contactData,
       });
     }
     return updatedKlub ?? this.prisma.klub.findUnique({ where: { id: cmd.klubId } });

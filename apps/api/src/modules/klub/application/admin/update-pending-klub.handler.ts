@@ -48,16 +48,17 @@ export class UpdatePendingKlubHandler {
     }
 
     const data: Record<string, unknown> = {};
+    const contactData: Record<string, unknown> = {};
     if (cmd.patch.name !== undefined) data.name = cmd.patch.name;
-    if (cmd.patch.addressStreet !== undefined) data.addressStreet = cmd.patch.addressStreet;
-    if (cmd.patch.addressNumber !== undefined) data.addressNumber = cmd.patch.addressNumber;
+    if (cmd.patch.addressStreet !== undefined) contactData.addressStreet = cmd.patch.addressStreet;
+    if (cmd.patch.addressNumber !== undefined) contactData.addressNumber = cmd.patch.addressNumber;
     if (cmd.patch.addressComplement !== undefined)
-      data.addressComplement = cmd.patch.addressComplement;
+      contactData.addressComplement = cmd.patch.addressComplement;
     if (cmd.patch.addressNeighborhood !== undefined)
-      data.addressNeighborhood = cmd.patch.addressNeighborhood;
-    if (cmd.patch.city !== undefined) data.city = cmd.patch.city;
-    if (cmd.patch.state !== undefined) data.state = cmd.patch.state;
-    if (cmd.patch.cep !== undefined) data.cep = cmd.patch.cep;
+      contactData.addressNeighborhood = cmd.patch.addressNeighborhood;
+    if (cmd.patch.city !== undefined) contactData.city = cmd.patch.city;
+    if (cmd.patch.state !== undefined) contactData.state = cmd.patch.state;
+    if (cmd.patch.cep !== undefined) contactData.cep = cmd.patch.cep;
 
     if (cmd.patch.slug !== undefined && cmd.patch.slug !== klub.slug) {
       if (!SLUG_REGEX.test(cmd.patch.slug)) {
@@ -80,11 +81,21 @@ export class UpdatePendingKlubHandler {
       data.slug = cmd.patch.slug;
     }
 
-    const updated = await this.prisma.klub.update({
-      where: { id: cmd.klubId },
-      data,
-      select: { id: true, slug: true },
-    });
-    return updated;
+    let updated: { id: string; slug: string } | undefined;
+    if (Object.keys(data).length > 0) {
+      updated = await this.prisma.klub.update({
+        where: { id: cmd.klubId },
+        data,
+        select: { id: true, slug: true },
+      });
+    }
+    if (Object.keys(contactData).length > 0) {
+      await this.prisma.klubContact.upsert({
+        where: { klubId: cmd.klubId },
+        update: contactData,
+        create: { klubId: cmd.klubId, ...contactData },
+      });
+    }
+    return updated ?? { id: cmd.klubId, slug: klub.slug };
   }
 }

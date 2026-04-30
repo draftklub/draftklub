@@ -30,6 +30,9 @@ function makePrisma(
     klubLegal: {
       upsert: vi.fn().mockResolvedValue({}),
     },
+    klubContact: {
+      upsert: vi.fn().mockResolvedValue({}),
+    },
   };
 }
 
@@ -57,7 +60,11 @@ describe('UpdateKlubHandler', () => {
     });
     expect(prisma.klub.update).toHaveBeenCalledTimes(1);
     const updateArg = prisma.klub.update.mock.calls[0]?.[0] as { data: Record<string, unknown> };
-    expect(updateArg.data).toEqual({ name: 'New Name', email: 'new@klub.com', discoverable: true });
+    expect(updateArg.data).toEqual({ name: 'New Name', discoverable: true });
+    const contactUpsertArg = prisma.klubContact.upsert.mock.calls[0]?.[0] as {
+      update: Record<string, unknown>;
+    };
+    expect(contactUpsertArg.update).toMatchObject({ email: 'new@klub.com' });
     expect(result).toBeDefined();
   });
 

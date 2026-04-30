@@ -14,8 +14,8 @@ export class ListKlubsHandler {
       type: k.type,
       plan: k.plan,
       status: k.status,
-      city: k.city,
-      state: k.state,
+      city: k.contact?.city ?? null,
+      state: k.contact?.state ?? null,
       sports: k.sportProfiles.map((s) => s.sportCode),
     }));
   }

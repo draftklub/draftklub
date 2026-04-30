@@ -59,7 +59,7 @@ export class DiscoverKlubsHandler {
     const where: Record<string, unknown> = {
       discoverable: true,
       deletedAt: null,
-      reviewStatus: 'approved',
+      review: { is: { reviewStatus: 'approved' } },
       status: { in: ['active', 'trial'] },
     };
 
@@ -67,7 +67,7 @@ export class DiscoverKlubsHandler {
       where.name = { contains: cmd.q, mode: 'insensitive' };
     }
     if (cmd.state) {
-      where.state = cmd.state;
+      where.contact = { is: { state: cmd.state } };
     }
     if (cmd.sport) {
       where.sportProfiles = {
@@ -86,6 +86,7 @@ export class DiscoverKlubsHandler {
           where: { status: 'active' },
           select: { sportCode: true },
         },
+        contact: true,
       },
       orderBy: { name: 'asc' },
       take: fetchTake,
@@ -123,8 +124,8 @@ export class DiscoverKlubsHandler {
 
     if (hasGeo && typeof userLat === 'number' && typeof userLng === 'number') {
       const withDistance = klubs.map((k) => {
-        const kLat = k.latitude !== null ? Number(k.latitude) : null;
-        const kLng = k.longitude !== null ? Number(k.longitude) : null;
+        const kLat = k.contact?.latitude != null ? Number(k.contact.latitude) : null;
+        const kLng = k.contact?.longitude != null ? Number(k.contact.longitude) : null;
         const dist =
           kLat !== null && kLng !== null && Number.isFinite(kLat) && Number.isFinite(kLng)
             ? haversineKm(userLat, userLng, kLat, kLng)
@@ -151,8 +152,8 @@ export class DiscoverKlubsHandler {
         slug: klub.slug,
         type: klub.type,
         status: klub.status as KlubDiscoveryResult['status'],
-        city: klub.city,
-        state: klub.state,
+        city: klub.contact?.city ?? null,
+        state: klub.contact?.state ?? null,
         sports: klub.sportProfiles.map((s) => s.sportCode),
         accessMode: klub.accessMode ?? 'public',
         latitude: kLat,
@@ -168,7 +169,7 @@ export class DiscoverKlubsHandler {
     };
 
     const ranked = klubs
-      .map((k) => ({ klub: k, tier: tierOf(k.city, k.state) }))
+      .map((k) => ({ klub: k, tier: tierOf(k.contact?.city ?? null, k.contact?.state ?? null) }))
       .sort((a, b) => {
         if (a.tier !== b.tier) return a.tier - b.tier;
         return a.klub.name.localeCompare(b.klub.name, 'pt-BR');
@@ -180,12 +181,12 @@ export class DiscoverKlubsHandler {
       slug: klub.slug,
       type: klub.type,
       status: klub.status as KlubDiscoveryResult['status'],
-      city: klub.city,
-      state: klub.state,
+      city: klub.contact?.city ?? null,
+      state: klub.contact?.state ?? null,
       sports: klub.sportProfiles.map((s) => s.sportCode),
       accessMode: klub.accessMode ?? 'public',
-      latitude: klub.latitude !== null ? Number(klub.latitude) : null,
-      longitude: klub.longitude !== null ? Number(klub.longitude) : null,
+      latitude: klub.contact?.latitude != null ? Number(klub.contact.latitude) : null,
+      longitude: klub.contact?.longitude != null ? Number(klub.contact.longitude) : null,
       distanceKm: null,
     }));
   }
