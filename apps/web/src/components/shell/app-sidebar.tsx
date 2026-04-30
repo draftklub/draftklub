@@ -5,10 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Bell, CalendarCheck, Castle, Home, ListOrdered, LogOut, X } from 'lucide-react';
-import type { UserKlubMembership } from '@draftklub/shared-types';
 import { BrandLockup } from '@/components/brand/brand-lockup';
 import { useAuth } from '@/components/auth-provider';
-import { getMyKlubs } from '@/lib/api/me';
 import { logout } from '@/lib/auth';
 import { forgetLastKlubSlug } from '@/lib/last-klub-cookie';
 import { cn } from '@/lib/utils';
@@ -22,43 +20,11 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
-  const [klubs, setKlubs] = React.useState<UserKlubMembership[] | null>(null);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    getMyKlubs()
-      .then((data) => {
-        if (!cancelled) setKlubs(data);
-      })
-      .catch(() => {
-        if (!cancelled) setKlubs([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const activeKlubSlug = React.useMemo(() => {
     const m = /^\/k\/([^/]+)/.exec(pathname);
     return m ? (m[1] ?? null) : null;
   }, [pathname]);
-
-  const activeSport = React.useMemo(() => {
-    const m = /^\/k\/[^/]+\/sports\/([^/]+)/.exec(pathname);
-    return m ? (m[1] ?? null) : null;
-  }, [pathname]);
-
-  const rankingsHref = React.useMemo(() => {
-    if (activeKlubSlug) {
-      const sport = activeSport ?? 'tennis';
-      return `/k/${activeKlubSlug}/sports/${sport}/rankings`;
-    }
-    const first = klubs?.[0];
-    if (first) {
-      return `/k/${first.klubSlug}/sports/${first.sports?.[0] ?? 'tennis'}/rankings`;
-    }
-    return '#';
-  }, [activeKlubSlug, activeSport, klubs]);
 
   async function handleLogout() {
     forgetLastKlubSlug();
@@ -129,11 +95,10 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
               onNavigate={onClose}
             />
             <NavLink
-              href={rankingsHref}
+              href="/rankings"
               label="Rankings"
               icon={ListOrdered}
-              active={pathname.includes('/rankings')}
-              disabled={rankingsHref === '#'}
+              active={pathname === '/rankings' || pathname.includes('/rankings')}
               onNavigate={onClose}
             />
             <NavLink
