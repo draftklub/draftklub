@@ -5,6 +5,7 @@
  */
 
 import * as React from 'react';
+import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 import type { Gender, MeResponse } from '@draftklub/shared-types';
 import { updateDisplayName } from '@/lib/auth';
@@ -72,11 +73,13 @@ function AvatarRow({ userId, avatarUrl, displayName, onUpdated }: AvatarRowProps
         aria-hidden="true"
       >
         {avatarUrl ? (
-          <img
+          <Image
             src={avatarUrl}
+            width={64}
+            height={64}
             alt=""
             className="size-full object-cover"
-            referrerPolicy="no-referrer"
+            unoptimized
           />
         ) : (
           initial

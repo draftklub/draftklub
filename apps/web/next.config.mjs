@@ -9,6 +9,12 @@ const nextConfig = {
   experimental: {
     typedRoutes: true,
   },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
+    ],
+  },
   async headers() {
     // Headers de segurança aplicados a todas as rotas. CSP propriamente
     // configurada (com nonce + allowlist de Firebase/APIs) ficou pra

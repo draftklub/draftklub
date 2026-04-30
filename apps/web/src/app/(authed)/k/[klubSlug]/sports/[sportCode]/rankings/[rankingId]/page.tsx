@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import {
   Loader2,
@@ -575,11 +576,13 @@ function PlayerTable({ players, orderBy }: { players: RankingPlayerEntry[]; orde
               <td className="truncate px-3 py-2.5">
                 <div className="flex items-center gap-2">
                   {p.avatarUrl ? (
-                    <img
+                    <Image
                       src={p.avatarUrl}
+                      width={28}
+                      height={28}
                       alt=""
                       className="size-7 rounded-full bg-muted object-cover"
-                      referrerPolicy="no-referrer"
+                      unoptimized
                     />
                   ) : (
                     <div className="flex size-7 items-center justify-center rounded-full bg-muted text-xs font-bold uppercase text-muted-foreground">

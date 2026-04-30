@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Bell, CalendarCheck, Castle, Home, ListOrdered, LogOut, X } from 'lucide-react';
@@ -240,11 +241,13 @@ function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
   if (photoUrl) {
     return (
       <span className="flex size-8 shrink-0 overflow-hidden rounded-full" aria-hidden="true">
-        <img
+        <Image
           src={photoUrl}
+          width={32}
+          height={32}
           alt=""
           className="size-full object-cover"
-          referrerPolicy="no-referrer"
+          unoptimized
         />
       </span>
     );
