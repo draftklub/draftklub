@@ -55,7 +55,6 @@ async function main(): Promise<void> {
       type: 'sports_club',
       plan: 'trial',
       status: 'trial',
-      trialEndsAt,
       onboardingSource: 'sales_led',
       contact: {
         create: {
@@ -65,6 +64,11 @@ async function main(): Promise<void> {
           timezone: 'America/Sao_Paulo',
           email: 'contato@tenniscarioca.com.br',
           phone: '+5521999990000',
+        },
+      },
+      billing: {
+        create: {
+          trialEndsAt,
         },
       },
       config: {

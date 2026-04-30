@@ -306,26 +306,13 @@ model Klub {
   // ─── Tipo ─────────────────────────────────────────────────
   type        KlubType  @default(sports_club)
 
-  // ─── Comodidades (JSONB flexível) ─────────────────────────
-  amenities   Json      @default("{}")
-  // {"parking": true, "locker": false, "wifi": true, ...}
-
   // ─── Plano e billing ──────────────────────────────────────
   plan        KlubPlan   @default(trial)
   status      KlubStatus @default(trial)
-  trialEndsAt DateTime? @map("trial_ends_at") @db.Timestamptz
-
-  // ─── Limites operacionais ─────────────────────────────────
-  maxMembers  Int       @default(50)    @map("max_members")
-  maxSports   Int       @default(2)     @map("max_sports")
-  maxCourts   Int       @default(3)     @map("max_courts")
-  txFeeRate   Decimal   @default(0.025) @map("tx_fee_rate") @db.Decimal(5, 4)
 
   // ─── Filiais ──────────────────────────────────────────────
   parentKlubId  String?  @map("parent_klub_id") @db.Uuid
   isGroup       Boolean  @default(false) @map("is_group")
-  billingKlubId String?  @map("billing_klub_id") @db.Uuid
-  // null = o próprio Klub é responsável pelo billing
 
   // ─── Onboarding ───────────────────────────────────────────
   onboardingSource KlubOnboardingSource @default(self_service) @map("onboarding_source")
@@ -341,6 +328,7 @@ model Klub {
   review             KlubReview?
   contact            KlubContact?
   discovery          KlubDiscovery?
+  billing            KlubBilling?
   config             KlubConfig?
   sportProfiles      KlubSportProfile[]  @relation("KlubSportProfiles")
   sportInterests     KlubSportInterest[] @relation("KlubSportInterests")
@@ -432,6 +420,24 @@ model KlubDiscovery {
   klub         Klub           @relation(fields: [klubId], references: [id], onDelete: Cascade)
 
   @@map("klub_discovery")
+  @@schema("klub")
+}
+
+model KlubBilling {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId        String    @unique @map("klub_id") @db.Uuid
+  amenities     Json      @default("{}")
+  trialEndsAt   DateTime? @map("trial_ends_at") @db.Timestamptz
+  maxMembers    Int       @default(50) @map("max_members")
+  maxSports     Int       @default(2) @map("max_sports")
+  maxCourts     Int       @default(3) @map("max_courts")
+  txFeeRate     Decimal   @default(0.025) @map("tx_fee_rate") @db.Decimal(5, 4)
+  billingKlubId String?   @map("billing_klub_id") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  klub          Klub      @relation(fields: [klubId], references: [id], onDelete: Cascade)
+
+  @@map("klub_billing")
   @@schema("klub")
 }
 

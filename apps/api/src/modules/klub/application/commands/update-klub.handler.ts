@@ -49,9 +49,6 @@ export interface UpdateKlubPatch {
   discoverable?: boolean;
   accessMode?: 'public' | 'private';
 
-  // JSONB livre
-  amenities?: Record<string, unknown>;
-
   // SUPER_ADMIN-only (não passados quando isSuperAdmin=false)
   legalName?: string | null;
   plan?: 'trial' | 'starter' | 'pro' | 'elite' | 'enterprise';
@@ -59,6 +56,7 @@ export interface UpdateKlubPatch {
   maxMembers?: number;
   maxSports?: number;
   maxCourts?: number;
+  amenities?: Record<string, unknown>;
   /** Sprint Polish PR-G — slug muda URL/cookies. SUPER_ADMIN-only. */
   slug?: string;
   /** Sprint Polish PR-G — CNPJ. Re-encripta. SUPER_ADMIN-only. */
@@ -78,6 +76,7 @@ const SUPER_ADMIN_ONLY_FIELDS: (keyof UpdateKlubPatch)[] = [
   'maxMembers',
   'maxSports',
   'maxCourts',
+  'amenities',
   'slug',
   'document',
 ];
@@ -116,6 +115,7 @@ export class UpdateKlubHandler {
     const legalData: Record<string, unknown> = {};
     const contactData: Record<string, unknown> = {};
     const discoveryData: Record<string, unknown> = {};
+    const billingData: Record<string, unknown> = {};
     const p = cmd.patch;
     if (p.name !== undefined) data.name = p.name;
     if (p.abbreviation !== undefined) data.abbreviation = p.abbreviation;
@@ -127,7 +127,6 @@ export class UpdateKlubHandler {
     if (p.website !== undefined) discoveryData.website = p.website;
     if (p.discoverable !== undefined) discoveryData.discoverable = p.discoverable;
     if (p.accessMode !== undefined) discoveryData.accessMode = p.accessMode;
-    if (p.amenities !== undefined) data.amenities = p.amenities as Prisma.InputJsonValue;
     if (p.email !== undefined) contactData.email = p.email;
     if (p.phone !== undefined) contactData.phone = p.phone;
     if (p.cep !== undefined) contactData.cep = p.cep;
@@ -146,9 +145,10 @@ export class UpdateKlubHandler {
       if (p.legalName !== undefined) legalData.legalName = p.legalName;
       if (p.plan !== undefined) data.plan = p.plan;
       if (p.status !== undefined) data.status = p.status;
-      if (p.maxMembers !== undefined) data.maxMembers = p.maxMembers;
-      if (p.maxSports !== undefined) data.maxSports = p.maxSports;
-      if (p.maxCourts !== undefined) data.maxCourts = p.maxCourts;
+      if (p.maxMembers !== undefined) billingData.maxMembers = p.maxMembers;
+      if (p.maxSports !== undefined) billingData.maxSports = p.maxSports;
+      if (p.maxCourts !== undefined) billingData.maxCourts = p.maxCourts;
+      if (p.amenities !== undefined) billingData.amenities = p.amenities;
 
       if (p.slug !== undefined && p.slug !== klub.slug) {
         const conflict = await this.prisma.klub.findFirst({
@@ -182,7 +182,8 @@ export class UpdateKlubHandler {
       Object.keys(data).length === 0 &&
       Object.keys(legalData).length === 0 &&
       Object.keys(contactData).length === 0 &&
-      Object.keys(discoveryData).length === 0
+      Object.keys(discoveryData).length === 0 &&
+      Object.keys(billingData).length === 0
     ) {
       throw new BadRequestException('Nenhum campo válido pra atualizar');
     }
@@ -210,6 +211,13 @@ export class UpdateKlubHandler {
         where: { klubId: cmd.klubId },
         create: { klubId: cmd.klubId, ...discoveryData },
         update: discoveryData,
+      });
+    }
+    if (Object.keys(billingData).length > 0) {
+      await this.prisma.klubBilling.upsert({
+        where: { klubId: cmd.klubId },
+        create: { klubId: cmd.klubId, ...billingData },
+        update: billingData,
       });
     }
     return updatedKlub ?? this.prisma.klub.findUnique({ where: { id: cmd.klubId } });

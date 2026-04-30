@@ -60,8 +60,6 @@ export class KlubPrismaRepository {
           createdById: data.createdById,
           plan: data.plan as $Enums.KlubPlan,
           status: data.plan === 'trial' ? 'trial' : 'active',
-          trialEndsAt:
-            data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
           contact: {
             create: {
               city: data.city,
@@ -104,6 +102,12 @@ export class KlubPrismaRepository {
               accessMode: (data.accessMode ?? 'public') as $Enums.KlubAccessMode,
             },
           },
+          billing: {
+            create: {
+              trialEndsAt:
+                data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
+            },
+          },
           config: {
             create: {},
           },
@@ -121,6 +125,7 @@ export class KlubPrismaRepository {
           review: true,
           contact: true,
           discovery: true,
+          billing: true,
         },
       });
 
@@ -192,6 +197,7 @@ export class KlubPrismaRepository {
         review: true,
         contact: true,
         discovery: true,
+        billing: true,
       },
     });
   }
@@ -206,6 +212,7 @@ export class KlubPrismaRepository {
         review: true,
         contact: true,
         discovery: true,
+        billing: true,
       },
     });
   }
@@ -224,6 +231,7 @@ export class KlubPrismaRepository {
         review: true,
         contact: true,
         discovery: true,
+        billing: true,
       },
       orderBy: { createdAt: 'desc' },
     });

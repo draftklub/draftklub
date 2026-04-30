@@ -36,6 +36,9 @@ function makePrisma(
     klubDiscovery: {
       upsert: vi.fn().mockResolvedValue({}),
     },
+    klubBilling: {
+      upsert: vi.fn().mockResolvedValue({}),
+    },
   };
 }
 
@@ -125,7 +128,11 @@ describe('UpdateKlubHandler', () => {
       patch: { plan: 'pro', status: 'active', maxMembers: 200 },
     });
     const updateArg = prisma.klub.update.mock.calls[0]?.[0] as { data: Record<string, unknown> };
-    expect(updateArg.data).toEqual({ plan: 'pro', status: 'active', maxMembers: 200 });
+    expect(updateArg.data).toEqual({ plan: 'pro', status: 'active' });
+    const billingUpsertArg = prisma.klubBilling.upsert.mock.calls[0]?.[0] as {
+      update: Record<string, unknown>;
+    };
+    expect(billingUpsertArg.update).toMatchObject({ maxMembers: 200 });
   });
 
   it('SUPER_ADMIN troca slug livre OK (Sprint PR-G)', async () => {
