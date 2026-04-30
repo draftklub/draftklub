@@ -51,7 +51,7 @@ export class GetPendingKlubHandler {
   async execute(id: string): Promise<PendingKlubDetail> {
     const klub = await this.prisma.klub.findUnique({
       where: { id },
-      include: { sportProfiles: { where: { status: 'active' } }, legal: true },
+      include: { sportProfiles: { where: { status: 'active' } }, legal: true, review: true },
     });
     if (!klub || klub.deletedAt) {
       throw new NotFoundException(`Klub ${id} não encontrado`);
@@ -102,10 +102,10 @@ export class GetPendingKlubHandler {
       discoverable: klub.discoverable,
       accessMode: klub.accessMode,
       sports: klub.sportProfiles.map((s) => s.sportCode),
-      reviewStatus: klub.reviewStatus,
-      reviewRejectionReason: klub.reviewRejectionReason,
-      reviewDecisionAt: klub.reviewDecisionAt?.toISOString() ?? null,
-      reviewDecidedById: klub.reviewDecidedById,
+      reviewStatus: klub.review?.reviewStatus ?? 'pending',
+      reviewRejectionReason: klub.review?.reviewRejectionReason ?? null,
+      reviewDecisionAt: klub.review?.reviewDecisionAt?.toISOString() ?? null,
+      reviewDecidedById: klub.review?.reviewDecidedById ?? null,
       createdAt: klub.createdAt.toISOString(),
       createdBy: creator,
       slugConflictKlubName: conflict?.name ?? null,

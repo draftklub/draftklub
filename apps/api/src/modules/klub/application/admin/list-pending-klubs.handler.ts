@@ -58,10 +58,10 @@ export class ListPendingKlubsHandler {
     const status: KlubReviewStatus = cmd.status ?? 'pending';
 
     const where: Record<string, unknown> = {
-      reviewStatus: status,
+      review: { is: { reviewStatus: status } },
       deletedAt: null,
     };
-    if (cmd.type) where.entityType = cmd.type;
+    if (cmd.type) where.legal = { is: { entityType: cmd.type } };
     if (cmd.q && cmd.q.trim().length >= 2) {
       where.name = { contains: cmd.q.trim(), mode: 'insensitive' };
     }
@@ -79,7 +79,6 @@ export class ListPendingKlubsHandler {
           type: true,
           city: true,
           state: true,
-          reviewStatus: true,
           createdAt: true,
           createdById: true,
           legal: {
@@ -90,6 +89,7 @@ export class ListPendingKlubsHandler {
               cnpjStatus: true,
             },
           },
+          review: { select: { reviewStatus: true } },
         },
       }),
       this.prisma.klub.count({ where }),
@@ -117,7 +117,7 @@ export class ListPendingKlubsHandler {
         city: r.city,
         state: r.state,
         cnpjStatus: r.legal?.cnpjStatus ?? null,
-        reviewStatus: r.reviewStatus,
+        reviewStatus: r.review?.reviewStatus ?? status,
         createdAt: r.createdAt.toISOString(),
         createdBy: r.createdById
           ? (() => {

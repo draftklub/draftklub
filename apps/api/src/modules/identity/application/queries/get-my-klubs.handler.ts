@@ -38,8 +38,7 @@ export class GetMyKlubsHandler {
             plan: true,
             status: true,
             deletedAt: true,
-            reviewStatus: true,
-            reviewRejectionReason: true,
+            review: { select: { reviewStatus: true, reviewRejectionReason: true } },
             sportProfiles: {
               where: { status: 'active' },
               select: { sportCode: true },
@@ -85,8 +84,8 @@ export class GetMyKlubsHandler {
         membershipStatus: m.status,
         role: role as UserKlubMembership['role'],
         joinedAt: m.joinedAt.toISOString(),
-        reviewStatus: m.klub.reviewStatus,
-        reviewRejectionReason: m.klub.reviewRejectionReason,
+        reviewStatus: m.klub.review?.reviewStatus ?? 'pending',
+        reviewRejectionReason: m.klub.review?.reviewRejectionReason ?? null,
       };
     });
   }

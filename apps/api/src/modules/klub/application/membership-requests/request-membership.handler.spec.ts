@@ -8,7 +8,7 @@ interface MockKlub {
   id: string;
   name: string;
   accessMode: string;
-  reviewStatus: string;
+  review: { reviewStatus: string } | null;
   deletedAt: Date | null;
 }
 
@@ -48,7 +48,7 @@ const PRIVATE_KLUB: MockKlub = {
   id: 'klub-1',
   name: 'Tennis Club',
   accessMode: 'private',
-  reviewStatus: 'approved',
+  review: { reviewStatus: 'approved' },
   deletedAt: null,
 };
 

@@ -5,7 +5,12 @@ import type { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 function buildHandler(
   opts: {
-    klub?: { id: string; slug: string; reviewStatus: string; deletedAt: Date | null } | null;
+    klub?: {
+      id: string;
+      slug: string;
+      review: { reviewStatus: string } | null;
+      deletedAt: Date | null;
+    } | null;
     slugConflict?: { id: string; name: string } | null;
   } = {},
 ) {
@@ -32,7 +37,12 @@ const KLUB_ID = '00000000-0000-0000-0099-000000000001';
 describe('UpdatePendingKlubHandler', () => {
   it('atualiza name e slug quando válido e livre', async () => {
     const { handler, update } = buildHandler({
-      klub: { id: KLUB_ID, slug: 'velho-slug', reviewStatus: 'pending', deletedAt: null },
+      klub: {
+        id: KLUB_ID,
+        slug: 'velho-slug',
+        review: { reviewStatus: 'pending' },
+        deletedAt: null,
+      },
     });
     await handler.execute({
       klubId: KLUB_ID,
@@ -47,7 +57,7 @@ describe('UpdatePendingKlubHandler', () => {
 
   it('rejeita slug com formato inválido', async () => {
     const { handler } = buildHandler({
-      klub: { id: KLUB_ID, slug: 'velho', reviewStatus: 'pending', deletedAt: null },
+      klub: { id: KLUB_ID, slug: 'velho', review: { reviewStatus: 'pending' }, deletedAt: null },
     });
     await expect(
       handler.execute({ klubId: KLUB_ID, patch: { slug: 'NOT VALID' } }),
@@ -56,7 +66,7 @@ describe('UpdatePendingKlubHandler', () => {
 
   it('rejeita Conflict quando slug em uso', async () => {
     const { handler } = buildHandler({
-      klub: { id: KLUB_ID, slug: 'velho', reviewStatus: 'pending', deletedAt: null },
+      klub: { id: KLUB_ID, slug: 'velho', review: { reviewStatus: 'pending' }, deletedAt: null },
       slugConflict: { id: 'other', name: 'Klub Outro' },
     });
     await expect(handler.execute({ klubId: KLUB_ID, patch: { slug: 'taken' } })).rejects.toThrow(
@@ -66,7 +76,7 @@ describe('UpdatePendingKlubHandler', () => {
 
   it('rejeita BadRequest quando Klub não está pending', async () => {
     const { handler } = buildHandler({
-      klub: { id: KLUB_ID, slug: 'x', reviewStatus: 'approved', deletedAt: null },
+      klub: { id: KLUB_ID, slug: 'x', review: { reviewStatus: 'approved' }, deletedAt: null },
     });
     await expect(handler.execute({ klubId: KLUB_ID, patch: { name: 'Novo' } })).rejects.toThrow(
       BadRequestException,

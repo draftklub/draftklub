@@ -8,7 +8,7 @@ const KLUB_ID = '00000000-0000-0000-0099-000000000001';
 
 interface MockKlub {
   id: string;
-  reviewStatus: string;
+  review: { reviewStatus: string } | null;
   deletedAt: Date | null;
 }
 
@@ -42,7 +42,7 @@ const VALID_DATA = {
 describe('CreateSpaceHandler', () => {
   it('cria Space quando Klub aprovado', async () => {
     const { handler, create } = buildHandler({
-      klub: { id: KLUB_ID, reviewStatus: 'approved', deletedAt: null },
+      klub: { id: KLUB_ID, review: { reviewStatus: 'approved' }, deletedAt: null },
     });
     const result = await handler.execute(VALID_DATA);
     expect(result).toMatchObject({ id: 'new-space-id', name: 'Quadra 1' });
@@ -63,14 +63,14 @@ describe('CreateSpaceHandler', () => {
 
   it('rejeita BadRequest quando Klub não aprovado (pending review)', async () => {
     const { handler } = buildHandler({
-      klub: { id: KLUB_ID, reviewStatus: 'pending', deletedAt: null },
+      klub: { id: KLUB_ID, review: { reviewStatus: 'pending' }, deletedAt: null },
     });
     await expect(handler.execute(VALID_DATA)).rejects.toThrow(BadRequestException);
   });
 
   it('rejeita BadRequest quando Klub rejeitado', async () => {
     const { handler } = buildHandler({
-      klub: { id: KLUB_ID, reviewStatus: 'rejected', deletedAt: null },
+      klub: { id: KLUB_ID, review: { reviewStatus: 'rejected' }, deletedAt: null },
     });
     await expect(handler.execute(VALID_DATA)).rejects.toThrow(BadRequestException);
   });

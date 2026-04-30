@@ -17,7 +17,7 @@ export class GetKlubBySlugHandler {
     const klub = await this.klubRepo.findBySlug(slug);
     if (!klub) throw new NotFoundException(`Klub '${slug}' not found`);
 
-    if (klub.reviewStatus !== 'approved' && klub.createdById !== viewerId) {
+    if ((klub.review?.reviewStatus ?? 'pending') !== 'approved' && klub.createdById !== viewerId) {
       throw new NotFoundException(`Klub '${slug}' not found`);
     }
 
@@ -54,8 +54,8 @@ export class GetKlubBySlugHandler {
       addressNeighborhood: klub.addressNeighborhood,
       latitude: klub.latitude ? Number(klub.latitude) : null,
       longitude: klub.longitude ? Number(klub.longitude) : null,
-      reviewStatus: klub.reviewStatus,
-      reviewRejectionReason: klub.reviewRejectionReason,
+      reviewStatus: klub.review?.reviewStatus ?? 'pending',
+      reviewRejectionReason: klub.review?.reviewRejectionReason ?? null,
       createdAt: klub.createdAt.toISOString(),
     };
   }

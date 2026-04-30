@@ -7,13 +7,17 @@ function buildHandler(
   klub: {
     id: string;
     name: string;
-    reviewStatus: string;
+    review: { reviewStatus: string } | null;
     deletedAt: Date | null;
     createdById: string | null;
   } | null,
 ) {
-  const update = vi.fn((_args: { where: { id: string }; data: Record<string, unknown> }) =>
-    Promise.resolve({}),
+  const klubReviewUpsert = vi.fn(
+    (_args: {
+      where: { klubId: string };
+      update: Record<string, unknown>;
+      create: Record<string, unknown>;
+    }) => Promise.resolve({}),
   );
   const outbox = vi.fn((_args: { data: { eventType: string; payload: unknown } }) =>
     Promise.resolve({}),
@@ -21,8 +25,8 @@ function buildHandler(
   const tx = {
     klub: {
       findUnique: vi.fn(() => Promise.resolve(klub)),
-      update,
     },
+    klubReview: { upsert: klubReviewUpsert },
     outboxEvent: { create: outbox },
   };
   const prisma = {
@@ -33,7 +37,7 @@ function buildHandler(
     { record: vi.fn().mockResolvedValue(undefined) } as never,
     { klubReviewDecided: vi.fn() } as never,
   );
-  return { handler, update, outbox };
+  return { handler, tx, klubReviewUpsert, outbox };
 }
 
 const KLUB_ID = '00000000-0000-0000-0099-000000000001';
@@ -44,7 +48,7 @@ describe('RejectKlubHandler', () => {
     const { handler } = buildHandler({
       id: KLUB_ID,
       name: 'X',
-      reviewStatus: 'pending',
+      review: { reviewStatus: 'pending' },
       deletedAt: null,
       createdById: 'c',
     });
@@ -57,7 +61,7 @@ describe('RejectKlubHandler', () => {
     const { handler } = buildHandler({
       id: KLUB_ID,
       name: 'X',
-      reviewStatus: 'pending',
+      review: { reviewStatus: 'pending' },
       deletedAt: null,
       createdById: 'c',
     });
@@ -71,10 +75,10 @@ describe('RejectKlubHandler', () => {
   });
 
   it('aceita motivo válido e marca rejected', async () => {
-    const { handler, update, outbox } = buildHandler({
+    const { handler, klubReviewUpsert, outbox } = buildHandler({
       id: KLUB_ID,
       name: 'X',
-      reviewStatus: 'pending',
+      review: { reviewStatus: 'pending' },
       deletedAt: null,
       createdById: 'c',
     });
@@ -83,9 +87,9 @@ describe('RejectKlubHandler', () => {
       decidedById: ADMIN_ID,
       reason: 'CNPJ inválido na Receita Federal',
     });
-    const updateCall = update.mock.calls[0]?.[0];
-    expect(updateCall?.data.reviewStatus).toBe('rejected');
-    expect(updateCall?.data.reviewRejectionReason).toBe('CNPJ inválido na Receita Federal');
+    const upsertCall = klubReviewUpsert.mock.calls[0]?.[0];
+    expect(upsertCall?.update.reviewStatus).toBe('rejected');
+    expect(upsertCall?.update.reviewRejectionReason).toBe('CNPJ inválido na Receita Federal');
     const outboxCall = outbox.mock.calls[0]?.[0];
     expect(outboxCall?.data.eventType).toBe('klub.review.rejected');
   });
@@ -105,7 +109,7 @@ describe('RejectKlubHandler', () => {
     const { handler } = buildHandler({
       id: KLUB_ID,
       name: 'X',
-      reviewStatus: 'rejected',
+      review: { reviewStatus: 'rejected' },
       deletedAt: null,
       createdById: 'c',
     });
