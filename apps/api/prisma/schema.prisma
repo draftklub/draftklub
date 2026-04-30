@@ -18,9 +18,9 @@ model OutboxEvent {
   eventVersion  Int       @default(1) @map("event_version")
   payload       Json
   occurredAt    DateTime  @default(now()) @map("occurred_at") @db.Timestamptz
-  status        String    @default("pending")
-  attempts      Int       @default(0)
-  lastError     String?   @map("last_error")
+  status        OutboxEventStatus @default(pending)
+  attempts      Int               @default(0)
+  lastError     String?           @map("last_error")
   sentAt        DateTime? @map("sent_at") @db.Timestamptz
   correlationId String?   @map("correlation_id")
 
@@ -42,7 +42,7 @@ model User {
   fullName       String    @map("full_name")
   birthDate      DateTime? @map("birth_date") @db.Date
   avatarUrl      String?   @map("avatar_url")
-  gender         String?
+  gender         UserGender?
   // 'male' | 'female' | 'undisclosed'
   city           String?
   state          String?   @db.Char(2)
@@ -56,12 +56,9 @@ model User {
   // Geocoded via CEP (BrasilAPI v2). Fallback pra "próximos a mim"
   // quando user nega geolocation do browser.
 
-  kind            String    @default("regular")
-  // 'regular' | 'guest'
-  documentNumber  String?   @map("document_number")
-  // CPF/RG/passport (sem encryption no MVP)
-  documentType    String?   @map("document_type")
-  // 'cpf' | 'rg' | 'passport' | 'other'
+  kind            UserKind    @default(regular)
+  documentNumber  String?     @map("document_number")
+  documentType    DocumentType? @map("document_type")
 
   consentGivenAt DateTime? @map("consent_given_at") @db.Timestamptz
   consentVersion String?   @map("consent_version")
@@ -133,9 +130,9 @@ model Membership {
   id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String    @map("user_id") @db.Uuid
   klubId    String    @map("klub_id") @db.Uuid
-  status    String    @default("active")
-  type      String    @default("member")
-  joinedAt  DateTime  @default(now()) @map("joined_at") @db.Timestamptz
+  status    MembershipStatus @default(active)
+  type      MembershipType   @default(member)
+  joinedAt  DateTime         @default(now()) @map("joined_at") @db.Timestamptz
   expiresAt DateTime? @map("expires_at") @db.Timestamptz
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
@@ -159,8 +156,7 @@ model MembershipRequest {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   klubId          String    @map("klub_id") @db.Uuid
   userId          String    @map("user_id") @db.Uuid
-  status          String    @default("pending")
-  // 'pending' | 'approved' | 'rejected' | 'cancelled'
+  status          MembershipRequestStatus @default(pending)
   message         String
   attachmentUrl   String?   @map("attachment_url")
   decisionAt      DateTime? @map("decision_at") @db.Timestamptz
@@ -213,8 +209,8 @@ model Feature {
   id          String   @id
   displayName String   @map("display_name")
   description String?
-  tier        String   @default("free")
-  enabled     Boolean  @default(true)
+  tier        FeatureTier @default(free)
+  enabled     Boolean     @default(true)
   rolloutPct  Int      @default(100) @map("rollout_pct")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
@@ -309,18 +305,15 @@ model Klub {
   commonName  String?   @map("common_name") @db.VarChar(100)
 
   // ─── Tipo ─────────────────────────────────────────────────
-  type        String    @default("sports_club")
-  // sports_club | arena | academy | condo | hotel_resort | university |
-  // school | public_space | individual
+  type        KlubType  @default(sports_club)
 
   // ─── Dados legais ─────────────────────────────────────────
-  entityType          String?   @map("entity_type")   // pj | pf
+  entityType          KlubEntityType? @map("entity_type")
   documentEncrypted   String?   @map("document_encrypted")
   documentHint        String?   @map("document_hint") // últimos 4 dígitos
   documentIv          String?   @map("document_iv")   // IV do AES-GCM
   legalName           String?   @map("legal_name")
-  kycStatus           String    @default("pending") @map("kyc_status")
-  // pending | approved | rejected
+  kycStatus           KlubKycStatus @default(pending) @map("kyc_status")
 
   // ─── Localização ──────────────────────────────────────────
   country     String    @default("BR")
@@ -352,10 +345,8 @@ model Klub {
   // {"parking": true, "locker": false, "wifi": true, ...}
 
   // ─── Plano e billing ──────────────────────────────────────
-  plan        String    @default("trial")
-  // trial | starter | pro | elite | enterprise
-  status      String    @default("trial")
-  // trial | active | suspended | churned | pending_payment
+  plan        KlubPlan   @default(trial)
+  status      KlubStatus @default(trial)
   trialEndsAt DateTime? @map("trial_ends_at") @db.Timestamptz
 
   // ─── Limites operacionais ─────────────────────────────────
@@ -373,17 +364,13 @@ model Klub {
   // ─── Discovery + privacy (Sprint B) ────────────────────────
   // (latitude/longitude já existem acima; Sprint B+1 vai geocodificar
   //  via CEP+address e popular esses campos.)
-  discoverable Boolean @default(false)
-  // true → aparece em GET /klubs/discover. Opt-in pelo Klub Admin.
-  accessMode   String  @default("public") @map("access_mode")
-  // 'public' (qualquer um entra direto via klub.join_via_link) |
-  // 'private' (precisa MembershipRequest aprovado — Sprint C)
+  discoverable Boolean        @default(false)
+  accessMode   KlubAccessMode @default(public) @map("access_mode")
   cep          String? @db.Char(8)
   // CEP do Klub. Source pra geocoding lat/lng (Sprint B+1).
 
   // ─── Onboarding ───────────────────────────────────────────
-  onboardingSource String @default("self_service") @map("onboarding_source")
-  // self_service | sales_led
+  onboardingSource KlubOnboardingSource @default(self_service) @map("onboarding_source")
   createdById String?   @map("created_by_id") @db.Uuid
   updatedById String?   @map("updated_by_id") @db.Uuid
 
@@ -399,9 +386,8 @@ model Klub {
   // Ortogonal a `status` (trial/active/...) e a `kycStatus`. Klub
   // só vira visível em /klubs/discover e /k/:slug quando
   // reviewStatus='approved'. Plano comercial não muda.
-  reviewStatus           String    @default("pending") @map("review_status")
-  // 'pending' | 'approved' | 'rejected'
-  reviewDecisionAt       DateTime? @map("review_decision_at") @db.Timestamptz
+  reviewStatus           KlubReviewStatus @default(pending) @map("review_status")
+  reviewDecisionAt       DateTime?        @map("review_decision_at") @db.Timestamptz
   reviewDecidedById      String?   @map("review_decided_by_id") @db.Uuid
   reviewRejectionReason  String?   @map("review_rejection_reason")
 
@@ -430,20 +416,17 @@ model KlubConfig {
   klubId  String  @unique @map("klub_id") @db.Uuid
 
   // ─── Política de reserva (granular) ───────────────────────
-  accessMode              String   @default("members_only") @map("access_mode")
-  // 'public' | 'members_only'
+  accessMode              KlubConfigAccessMode @default(members_only) @map("access_mode")
 
-  bookingModes            Json     @default("[\"direct\"]") @map("booking_modes")
+  bookingModes            Json                 @default("[\"direct\"]") @map("booking_modes")
   // ['direct', 'staff_approval', 'staff_only'] — modos podem combinar
 
-  cancellationMode        String   @default("with_deadline") @map("cancellation_mode")
-  // 'free' | 'with_deadline' | 'staff_only'
+  cancellationMode        KlubCancellationMode @default(with_deadline) @map("cancellation_mode")
 
-  agendaVisibility        String   @default("public") @map("agenda_visibility")
-  // 'public' | 'private'
+  agendaVisibility        KlubAgendaVisibility @default(public) @map("agenda_visibility")
 
   // DEPRECATED: mantido por compat (backfill em init_booking popula accessMode)
-  bookingPolicy           String   @default("members_only") @map("booking_policy")
+  bookingPolicy           KlubConfigAccessMode @default(members_only) @map("booking_policy")
 
   // ─── Política de cancelamento ─────────────────────────────
   cancellationWindowHours Int     @default(24)  @map("cancellation_window_hours")
@@ -464,15 +447,11 @@ model KlubConfig {
   maxRecurrenceMonths Int @default(3) @map("max_recurrence_months")
 
   // ─── Extensão de booking ──────────────────────────────────
-  extensionMode       String   @default("disabled") @map("extension_mode")
-  // 'disabled' | 'player' | 'staff_approval' | 'staff_only'
+  extensionMode       KlubExtensionMode @default(disabled) @map("extension_mode")
 
   // ─── Convidados + integracao com torneio ──────────────────
-  guestsAddedBy                 String   @default("both") @map("guests_added_by")
-  // 'player' | 'staff' | 'both'
-
-  tournamentBookingConflictMode String   @default("staff_decides") @map("tournament_booking_conflict_mode")
-  // 'block_avulso' | 'auto_cancel_avulso' | 'staff_decides'
+  guestsAddedBy                 KlubGuestsAddedBy          @default(both) @map("guests_added_by")
+  tournamentBookingConflictMode KlubTournamentConflictMode @default(staff_decides) @map("tournament_booking_conflict_mode")
 
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
@@ -496,12 +475,12 @@ model KlubSportProfile {
   description   String?
   coverUrl      String?   @map("cover_url")
 
-  defaultRatingEngine   String  @default("elo") @map("default_rating_engine")
-  defaultRatingConfig   Json    @default("{}") @map("default_rating_config")
-  defaultInitialRating  Int     @default(1000) @map("default_initial_rating")
+  defaultRatingEngine   RatingEngineType      @default(elo) @map("default_rating_engine")
+  defaultRatingConfig   Json                  @default("{}") @map("default_rating_config")
+  defaultInitialRating  Int                   @default(1000) @map("default_initial_rating")
 
-  status        String    @default("active")
-  addedAt       DateTime  @default(now()) @map("added_at") @db.Timestamptz
+  status        KlubSportProfileStatus @default(active)
+  addedAt       DateTime               @default(now()) @map("added_at") @db.Timestamptz
   addedById     String?   @map("added_by_id") @db.Uuid
   updatedAt     DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   updatedById   String?   @map("updated_by_id") @db.Uuid
@@ -525,8 +504,7 @@ model PlayerSportEnrollment {
   userId              String    @map("user_id") @db.Uuid
   klubSportProfileId  String    @map("klub_sport_profile_id") @db.Uuid
 
-  status              String    @default("pending")
-  // 'pending' | 'active' | 'suspended' | 'cancelled'
+  status              EnrollmentStatus @default(pending)
 
   enrolledAt          DateTime  @default(now()) @map("enrolled_at") @db.Timestamptz
   approvedById        String?   @map("approved_by_id") @db.Uuid
@@ -566,12 +544,12 @@ model KlubSportRanking {
   klubSportId     String    @map("klub_sport_id") @db.Uuid
 
   name            String
-  type            String    @default("singles")
-  gender          String?
-  ageMin          Int?      @map("age_min")
-  ageMax          Int?      @map("age_max")
+  type            RankingType      @default(singles)
+  gender          UserGender?
+  ageMin          Int?             @map("age_min")
+  ageMax          Int?             @map("age_max")
 
-  ratingEngine    String    @default("elo") @map("rating_engine")
+  ratingEngine    RatingEngineType @default(elo) @map("rating_engine")
   ratingConfig    Json      @default("{}") @map("rating_config")
   initialRating   Int       @default(1000) @map("initial_rating")
 
@@ -579,10 +557,10 @@ model KlubSportRanking {
   includesTournamentMatches Boolean   @default(true) @map("includes_tournament_matches")
   includesTournamentPoints  Boolean   @default(false) @map("includes_tournament_points")
 
-  orderBy                   String    @default("rating") @map("order_by")
+  orderBy                   RankingOrderBy @default(rating) @map("order_by")
   combinedWeight            Json?     @map("combined_weight")
 
-  windowType                String    @default("all_time") @map("window_type")
+  windowType                RankingWindowType @default(all_time) @map("window_type")
   windowSize                Int?      @map("window_size")
   windowStartDate           DateTime? @map("window_start_date") @db.Timestamptz
 
@@ -611,7 +589,7 @@ model PlayerRankingEntry {
   userId          String    @map("user_id") @db.Uuid
 
   rating          Int       @default(1000)
-  ratingSource    String    @default("initial") @map("rating_source")
+  ratingSource    PlayerRatingSource @default(initial) @map("rating_source")
 
   wins            Int       @default(0)
   losses          Int       @default(0)
@@ -649,7 +627,7 @@ model MatchResult {
   winnerId        String?   @map("winner_id") @db.Uuid
   score           String?
 
-  status          String    @default("pending_confirmation")
+  status          MatchResultStatus @default(pending_confirmation)
 
   submittedById   String    @map("submitted_by_id") @db.Uuid
   confirmedById   String?   @map("confirmed_by_id") @db.Uuid
@@ -674,8 +652,8 @@ model MatchResult {
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
 
-  source              String    @default("casual")
-  tournamentId        String?   @map("tournament_id") @db.Uuid
+  source              MatchSource @default(casual)
+  tournamentId        String?     @map("tournament_id") @db.Uuid
   tournamentMatchId   String?   @map("tournament_match_id") @db.Uuid
   phase               String?
   bracketPosition     String?   @map("bracket_position")
@@ -743,11 +721,11 @@ model Tournament {
   description             String?
   coverUrl                String?   @map("cover_url")
 
-  format                  String    @default("knockout")
-  hasPrequalifiers        Boolean   @default(false) @map("has_prequalifiers")
-  prequalifierBordersPerFrontier Int? @map("prequalifier_borders_per_frontier")
+  format                  TournamentFormat              @default(knockout)
+  hasPrequalifiers        Boolean                       @default(false) @map("has_prequalifiers")
+  prequalifierBordersPerFrontier Int?                   @map("prequalifier_borders_per_frontier")
 
-  registrationApproval    String    @default("auto") @map("registration_approval")
+  registrationApproval    TournamentRegistrationApproval @default(auto) @map("registration_approval")
   registrationFee         Decimal?  @map("registration_fee") @db.Decimal(10, 2)
 
   registrationOpensAt     DateTime  @map("registration_opens_at") @db.Timestamptz
@@ -763,10 +741,10 @@ model Tournament {
   tieBreakRule            Json?     @default("[\"wins\",\"head_to_head\",\"set_diff\",\"game_diff\"]") @map("tie_break_rule")
   groupsConfig            Json?     @map("groups_config")
 
-  status                  String    @default("draft")
-  currentPhase            String?   @map("current_phase")
+  status                  TournamentStatus              @default(draft)
+  currentPhase            String?                       @map("current_phase")
 
-  resultReportingMode     String    @default("committee_only") @map("result_reporting_mode")
+  resultReportingMode     TournamentResultReportingMode @default(committee_only) @map("result_reporting_mode")
 
   pointsApplied           Boolean   @default(false) @map("points_applied")
   pointsAppliedAt         DateTime? @map("points_applied_at") @db.Timestamptz
@@ -846,11 +824,11 @@ model TournamentMatch {
   nextMatchId         String?   @map("next_match_id") @db.Uuid
   nextMatchSlot       String?   @map("next_match_slot")
 
-  status              String    @default("pending")
-  winnerId            String?   @map("winner_id") @db.Uuid
-  matchResultId       String?   @map("match_result_id") @db.Uuid @unique
+  status              TournamentMatchStatus @default(pending)
+  winnerId            String?               @map("winner_id") @db.Uuid
+  matchResultId       String?               @map("match_result_id") @db.Uuid @unique
 
-  matchKind                     String    @default("main") @map("match_kind")
+  matchKind                     TournamentMatchKind @default(main) @map("match_kind")
   prequalifierFrontierUpper     String?   @map("prequalifier_frontier_upper")
   prequalifierFrontierLower     String?   @map("prequalifier_frontier_lower")
   prequalifierPairIndex         Int?      @map("prequalifier_pair_index")
@@ -924,12 +902,12 @@ model TournamentEntry {
   userId            String    @map("user_id") @db.Uuid
   categoryId        String?   @map("category_id") @db.Uuid
 
-  status            String    @default("pending_seeding")
-  finalPosition     String?   @map("final_position")
+  status            TournamentEntryStatus         @default(pending_seeding)
+  finalPosition     String?                       @map("final_position")
 
-  ratingAtEntry     Int?      @map("rating_at_entry")
+  ratingAtEntry     Int?                          @map("rating_at_entry")
 
-  categorySource    String    @default("auto") @map("category_source")
+  categorySource    TournamentEntryCategorySource @default(auto) @map("category_source")
   isWildCard        Boolean   @default(false) @map("is_wild_card")
 
   registeredAt      DateTime  @default(now()) @map("registered_at") @db.Timestamptz
@@ -960,7 +938,7 @@ model SportCatalog {
   code          String    @id
   name          String
   description   String?
-  playType      String    @default("both") @map("play_type")
+  playType      SportPlayType @default(both) @map("play_type")
   minPlayers    Int       @default(2) @map("min_players")
   maxPlayers    Int       @default(4) @map("max_players")
   active        Boolean   @default(true)
@@ -990,7 +968,7 @@ model RatingEngine {
 model KlubRequest {
   id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name             String
-  type             String    @default("sports_club")
+  type             KlubType  @default(sports_club)
   city             String
   state            String
   contactName      String    @map("contact_name")
@@ -999,9 +977,8 @@ model KlubRequest {
   sportCodes       String[]  @map("sport_codes")
   estimatedMembers Int?      @map("estimated_members")
   message          String?
-  status           String    @default("pending")
-  // pending | approved | rejected | converted
-  convertedKlubId  String?   @map("converted_klub_id") @db.Uuid
+  status           KlubRequestStatus @default(pending)
+  convertedKlubId  String?           @map("converted_klub_id") @db.Uuid
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
   reviewedAt   DateTime? @map("reviewed_at") @db.Timestamptz
   reviewedById String?   @map("reviewed_by_id") @db.Uuid
@@ -1015,8 +992,7 @@ model KlubRequest {
 model KlubMedia {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   klubId    String   @map("klub_id") @db.Uuid
-  type      String
-  // photo | video | cover | logo
+  type      KlubMediaType
   url       String
   order     Int      @default(0)
   caption   String?
@@ -1038,19 +1014,15 @@ model Space {
   klubId      String    @map("klub_id") @db.Uuid
   name        String
   // ex: "Quadra 1", "Quadra Central", "Sala A"
-  type        String    @default("court")
-  // court | room | pool | field | other
-  sportCode   String?   @map("sport_code")
-  // tennis | padel | squash | beach_tennis | null (pra spaces não-esportivos)
-  surface     String?
-  // clay | hard | grass | synthetic | carpet | null
+  type        SpaceType   @default(court)
+  sportCode   String?     @map("sport_code")
+  surface     SpaceSurface?
   indoor      Boolean   @default(false)
   hasLighting Boolean   @default(false) @map("has_lighting")
   maxPlayers  Int       @default(4)     @map("max_players")
   description String?
   amenities   Json      @default("{}")
-  status      String    @default("active")
-  // active | maintenance | inactive
+  status      SpaceStatus @default(active)
 
   slotGranularityMinutes     Int      @default(30) @map("slot_granularity_minutes")
   // 15-180, múltiplo de 15 (validação Zod + check constraint)
@@ -1091,24 +1063,18 @@ model Booking {
   startsAt        DateTime  @map("starts_at") @db.Timestamptz
   endsAt          DateTime  @map("ends_at") @db.Timestamptz
 
-  bookingType     String    @default("player_match") @map("booking_type")
-  // 'player_match' | 'player_free_play' | 'maintenance' | 'weather_closed' | 'staff_blocked'
+  bookingType     BookingType         @default(player_match) @map("booking_type")
 
-  creationMode    String    @map("creation_mode")
-  // 'direct' | 'staff_approval' | 'staff_assisted'
+  creationMode    BookingCreationMode @map("creation_mode")
 
-  status          String    @default("pending") @map("status")
-  // 'pending' | 'confirmed' | 'cancelled' | 'no_show' | 'completed'
+  status          BookingStatus       @default(pending) @map("status")
 
   primaryPlayerId String?   @map("primary_player_id") @db.Uuid
   otherPlayers    Json      @default("[]") @map("other_players")
 
-  matchType       String?   @map("match_type")
-  // 'singles' | 'doubles' | null (null pra blocos operacionais e bookings 10A/10B legados)
+  matchType       MatchType? @map("match_type")
 
   responsibleMemberId String?  @map("responsible_member_id") @db.Uuid
-  // FK pra User. Nullable. Default = primaryPlayerId quando primary eh member.
-  // Em members_only sem primary member, este campo eh obrigatorio.
   responsibleMember   User?    @relation("ResponsibleMember", fields: [responsibleMemberId], references: [id])
 
   extensions      Json      @default("[]") @map("extensions")
@@ -1168,7 +1134,7 @@ model BookingSeries {
   klubId          String    @map("klub_id") @db.Uuid
   spaceId         String    @map("space_id") @db.Uuid
 
-  frequency       String
+  frequency       BookingSeriesFrequency
   interval        Int       @default(1)
   daysOfWeek      Json      @default("[]") @map("days_of_week")
 
@@ -1179,12 +1145,12 @@ model BookingSeries {
   startHour       Int       @map("start_hour")
   startMinute     Int       @default(0) @map("start_minute")
 
-  bookingType     String    @default("player_match") @map("booking_type")
+  bookingType     BookingType @default(player_match) @map("booking_type")
 
   primaryPlayerId String?   @map("primary_player_id") @db.Uuid
   otherPlayers    Json      @default("[]") @map("other_players")
 
-  status          String    @default("active")
+  status          BookingSeriesStatus @default(active)
 
   createdById     String    @map("created_by_id") @db.Uuid
   cancelledById   String?   @map("cancelled_by_id") @db.Uuid
@@ -1208,5 +1174,456 @@ model BookingSeries {
   @@index([spaceId, startsOn])
   @@index([primaryPlayerId])
   @@map("booking_series")
+  @@schema("booking")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENUMS — DB-4
+// ═══════════════════════════════════════════════════════════════
+
+// ─── audit ─────────────────────────────────────────────────────
+
+enum OutboxEventStatus {
+  pending
+  sent
+  dead
+
+  @@schema("audit")
+}
+
+// ─── identity ──────────────────────────────────────────────────
+
+enum UserKind {
+  regular
+  guest
+
+  @@schema("identity")
+}
+
+enum UserGender {
+  male
+  female
+  undisclosed
+
+  @@schema("identity")
+}
+
+enum DocumentType {
+  cpf
+  rg
+  passport
+  other
+
+  @@schema("identity")
+}
+
+enum MembershipStatus {
+  active
+  inactive
+
+  @@schema("identity")
+}
+
+enum MembershipType {
+  member
+  staff
+  guest
+
+  @@schema("identity")
+}
+
+enum FeatureTier {
+  free
+  premium
+  disabled
+
+  @@schema("identity")
+}
+
+// ─── klub ──────────────────────────────────────────────────────
+
+enum MembershipRequestStatus {
+  pending
+  approved
+  rejected
+  cancelled
+
+  @@schema("klub")
+}
+
+enum KlubType {
+  sports_club
+  arena
+  academy
+  condo
+  hotel_resort
+  university
+  school
+  public_space
+  individual
+
+  @@schema("klub")
+}
+
+enum KlubEntityType {
+  pj
+  pf
+
+  @@schema("klub")
+}
+
+enum KlubKycStatus {
+  pending
+  approved
+  rejected
+
+  @@schema("klub")
+}
+
+enum KlubPlan {
+  trial
+  starter
+  pro
+  elite
+  enterprise
+
+  @@schema("klub")
+}
+
+enum KlubStatus {
+  trial
+  active
+  suspended
+  churned
+  pending_payment
+
+  @@schema("klub")
+}
+
+enum KlubAccessMode {
+  public
+  private
+
+  @@schema("klub")
+}
+
+enum KlubOnboardingSource {
+  self_service
+  sales_led
+
+  @@schema("klub")
+}
+
+enum KlubReviewStatus {
+  pending
+  approved
+  rejected
+
+  @@schema("klub")
+}
+
+enum KlubConfigAccessMode {
+  public
+  members_only
+
+  @@schema("klub")
+}
+
+enum KlubCancellationMode {
+  free
+  with_deadline
+  staff_only
+
+  @@schema("klub")
+}
+
+enum KlubAgendaVisibility {
+  public
+  private
+
+  @@schema("klub")
+}
+
+enum KlubExtensionMode {
+  disabled
+  player
+  staff_approval
+  staff_only
+
+  @@schema("klub")
+}
+
+enum KlubGuestsAddedBy {
+  player
+  staff
+  both
+
+  @@schema("klub")
+}
+
+enum KlubTournamentConflictMode {
+  block_avulso
+  auto_cancel_avulso
+  staff_decides
+
+  @@schema("klub")
+}
+
+enum KlubAddressSource {
+  cnpj_lookup
+  manual
+
+  @@schema("klub")
+}
+
+enum KlubMediaType {
+  photo
+  video
+  cover
+  logo
+
+  @@schema("klub")
+}
+
+enum KlubSportProfileStatus {
+  active
+  inactive
+
+  @@schema("klub")
+}
+
+enum KlubRequestStatus {
+  pending
+  approved
+  rejected
+  converted
+
+  @@schema("klub")
+}
+
+enum EnrollmentStatus {
+  pending
+  active
+  suspended
+  cancelled
+
+  @@schema("klub")
+}
+
+enum RatingEngineType {
+  elo
+  points
+  win_loss
+
+  @@schema("klub")
+}
+
+enum RankingType {
+  singles
+  doubles
+  mixed
+
+  @@schema("klub")
+}
+
+enum RankingOrderBy {
+  rating
+  tournament_points
+  combined
+
+  @@schema("klub")
+}
+
+enum RankingWindowType {
+  all_time
+  season
+  semester
+  last_weeks
+  last_tournaments
+
+  @@schema("klub")
+}
+
+enum PlayerRatingSource {
+  initial
+  calculated
+  manual
+
+  @@schema("klub")
+}
+
+enum MatchResultStatus {
+  pending_confirmation
+  confirmed
+  reverted
+
+  @@schema("klub")
+}
+
+enum MatchSource {
+  casual
+  tournament
+
+  @@schema("klub")
+}
+
+enum TournamentFormat {
+  knockout
+  round_robin
+  swiss
+
+  @@schema("klub")
+}
+
+enum TournamentRegistrationApproval {
+  auto
+  manual
+
+  @@schema("klub")
+}
+
+enum TournamentStatus {
+  draft
+  prequalifying
+  in_progress
+  finished
+  cancelled
+
+  @@schema("klub")
+}
+
+enum TournamentResultReportingMode {
+  committee_only
+  player_with_confirm
+
+  @@schema("klub")
+}
+
+enum TournamentMatchStatus {
+  pending
+  scheduled
+  awaiting_confirmation
+  completed
+  walkover
+  double_walkover
+  cancelled
+
+  @@schema("klub")
+}
+
+enum TournamentMatchKind {
+  main
+  prequalifier
+  group
+
+  @@schema("klub")
+}
+
+enum TournamentEntryStatus {
+  pending_seeding
+  seeded
+  approved
+  withdrawn
+
+  @@schema("klub")
+}
+
+enum TournamentEntryCategorySource {
+  auto
+  manual
+
+  @@schema("klub")
+}
+
+// ─── space ─────────────────────────────────────────────────────
+
+enum SpaceType {
+  court
+  room
+  pool
+  field
+  other
+
+  @@schema("space")
+}
+
+enum SpaceSurface {
+  clay
+  hard
+  grass
+  synthetic
+  carpet
+
+  @@schema("space")
+}
+
+enum SpaceStatus {
+  active
+  maintenance
+  inactive
+
+  @@schema("space")
+}
+
+// ─── sports ────────────────────────────────────────────────────
+
+enum SportPlayType {
+  singles
+  doubles
+  both
+
+  @@schema("sports")
+}
+
+// ─── booking ───────────────────────────────────────────────────
+
+enum BookingType {
+  player_match
+  player_free_play
+  maintenance
+  weather_closed
+  staff_blocked
+  tournament_match
+
+  @@schema("booking")
+}
+
+enum BookingCreationMode {
+  direct
+  staff_approval
+  staff_assisted
+
+  @@schema("booking")
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  no_show
+  completed
+
+  @@schema("booking")
+}
+
+enum MatchType {
+  singles
+  doubles
+
+  @@schema("booking")
+}
+
+enum BookingSeriesFrequency {
+  weekly
+  biweekly
+  monthly
+
+  @@schema("booking")
+}
+
+enum BookingSeriesStatus {
+  active
+  cancelled
+
   @@schema("booking")
 }
