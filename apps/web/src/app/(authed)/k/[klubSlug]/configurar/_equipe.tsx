@@ -7,17 +7,17 @@
  */
 
 import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, Loader2, Plus, Power, Trash2, UserPlus, Users } from 'lucide-react';
 import type { Klub, KlubSportProfile, Role, RoleAssignmentListItem } from '@draftklub/shared-types';
-import {
-  grantKlubRole,
-  listKlubRoleAssignments,
-  revokeKlubRole,
-  transferKlubAdmin,
-} from '@/lib/api/role-assignments';
+import { grantKlubRole, listKlubRoleAssignments, revokeKlubRole } from '@/lib/api/role-assignments';
 import { listKlubSports } from '@/lib/api/sports';
+import { getIdToken } from '@/lib/auth';
+import { transferAdminAction } from '@/lib/actions/transfer-admin';
+import { transferAdminSchema, type TransferAdminInput } from '@/lib/schemas/transfer-admin';
 import { Banner } from '@/components/ui/banner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { inputCls, toErrorMessage } from './_form-helpers';
@@ -160,27 +160,27 @@ function TransferAdminSection({
   onError: (msg: string) => void;
 }) {
   const router = useRouter();
-  const [email, setEmail] = React.useState('');
-  const [submitting, setSubmitting] = React.useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<TransferAdminInput>({ resolver: zodResolver(transferAdminSchema) });
 
-  async function handleTransfer() {
-    if (submitting || !email.trim()) return;
+  async function onSubmit({ email }: TransferAdminInput) {
     const target = email.trim().toLowerCase();
     const confirmMsg =
       `Transferir KLUB_ADMIN de "${klubName}" para ${target}?\n\n` +
       `Você sai LIMPO desse Klub: zero role administrativa. Continuará membro/sócio se já era. ` +
       `Apenas o novo admin pode te readmitir como Assistant.`;
     if (!window.confirm(confirmMsg)) return;
-    setSubmitting(true);
     try {
-      await transferKlubAdmin(klubId, target);
+      const token = await getIdToken();
+      if (!token) throw new Error('Sessão expirada. Faça login novamente.');
+      await transferAdminAction(token, klubId, { email: target });
       onTransferred(`Klub Admin transferido pra ${target}.`);
-      // Caller pode ter perdido acesso de admin — após 1.5s redireciona pra
-      // home, deixando UI mostrar a mensagem antes.
       setTimeout(() => router.replace(`/k/${klubSlug}/dashboard`), 1500);
     } catch (err: unknown) {
       onError(toErrorMessage(err, 'Erro ao transferir admin.'));
-      setSubmitting(false);
     }
   }
 
@@ -195,29 +195,35 @@ function TransferAdminSection({
         administração — zero role. Membership/sócio permanece. Target precisa já ser membro ativo do
         Klub.
       </p>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="email-do-novo-admin@dominio.com"
-          disabled={submitting}
-          className={inputCls}
-        />
+      <form
+        onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+        className="flex flex-col gap-2 sm:flex-row sm:items-start"
+      >
+        <div className="flex-1">
+          <input
+            type="email"
+            {...register('email')}
+            placeholder="email-do-novo-admin@dominio.com"
+            disabled={isSubmitting}
+            className={inputCls}
+          />
+          {errors.email ? (
+            <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>
+          ) : null}
+        </div>
         <button
-          type="button"
-          onClick={() => void handleTransfer()}
-          disabled={submitting || !email.trim()}
+          type="submit"
+          disabled={isSubmitting}
           className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-warning bg-warning/10 px-4 text-sm font-semibold text-warning-foreground hover:bg-warning/20 disabled:opacity-60"
         >
-          {submitting ? (
+          {isSubmitting ? (
             <Loader2 className="size-3.5 animate-spin" />
           ) : (
             <Power className="size-3.5" />
           )}
           Transferir
         </button>
-      </div>
+      </form>
     </section>
   );
 }

@@ -13,6 +13,7 @@
   "dependencies": {
     "@draftklub/shared-types": "workspace:*",
     "@draftklub/sport-strategies": "workspace:*",
+    "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@sentry/nextjs": "^10.50.0",
@@ -24,8 +25,10 @@
     "next": "15.1.6",
     "react": "19.0.0",
     "react-dom": "19.0.0",
+    "react-hook-form": "^7.74.0",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
     "@draftklub/eslint-config": "workspace:*",
