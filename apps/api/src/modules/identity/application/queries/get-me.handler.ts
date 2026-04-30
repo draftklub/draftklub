@@ -1,11 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type {
-  DocumentType,
-  Gender,
-  MeResponse,
-  NotificationPrefs,
-  RoleAssignment,
-} from '@draftklub/shared-types';
+import type { MeResponse, NotificationPrefs, RoleAssignment } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { EncryptionService } from '../../../../shared/encryption/encryption.service';
 
@@ -42,7 +36,7 @@ export class GetMeHandler {
       phone: user.phone,
       birthDate: user.birthDate ? toIsoDate(user.birthDate) : null,
       avatarUrl: user.avatarUrl,
-      gender: (user.gender as Gender | null) ?? null,
+      gender: user.gender ?? null,
       city: user.city,
       state: user.state,
       cep: this.encryption.decryptFromString(user.cep),
@@ -53,7 +47,7 @@ export class GetMeHandler {
       latitude: user.latitude,
       longitude: user.longitude,
       documentNumber: this.encryption.decryptFromString(user.documentNumber),
-      documentType: (user.documentType as DocumentType | null) ?? null,
+      documentType: user.documentType ?? null,
       notificationPrefs: (user.notificationPrefs as NotificationPrefs | null) ?? {},
       roleAssignments,
     };

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 export interface CreateSpaceData {
@@ -44,9 +44,9 @@ export class SpacePrismaRepository {
       data: {
         klubId: data.klubId,
         name: data.name,
-        type: data.type,
+        type: data.type as $Enums.SpaceType,
         sportCode: data.sportCode,
-        surface: data.surface,
+        surface: data.surface as $Enums.SpaceSurface,
         indoor: data.indoor,
         hasLighting: data.hasLighting,
         maxPlayers: data.maxPlayers,

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { MembershipRequestForUser, MembershipRequestStatus } from '@draftklub/shared-types';
+import type { MembershipRequestForUser } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class ListMyRequestsHandler {
       id: r.id,
       klubId: r.klubId,
       userId: r.userId,
-      status: r.status as MembershipRequestStatus,
+      status: r.status,
       message: r.message,
       attachmentUrl: r.attachmentUrl,
       decisionAt: r.decisionAt?.toISOString() ?? null,

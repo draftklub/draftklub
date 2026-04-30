@@ -17,7 +17,7 @@ export interface MyBookingExtension {
 export interface MyBookingItem {
   id: string;
   startsAt: Date;
-  endsAt: Date | null;
+  endsAt: Date;
   status: string;
   notes: string | null;
   matchType: string | null;
@@ -128,7 +128,7 @@ export class GetMyBookingsHandler {
           extensions,
         };
       })
-      .filter((x): x is MyBookingItem => x !== null);
+      .filter(Boolean) as MyBookingItem[];
 
     return buildCursorPage(mapped, limit, (item) => ({
       startsAt: item.startsAt.toISOString(),

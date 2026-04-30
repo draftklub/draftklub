@@ -19,7 +19,16 @@ export class ListBookingsHandler {
       where: {
         klubId: filters.klubId,
         ...(filters.spaceId ? { spaceId: filters.spaceId } : {}),
-        ...(filters.status ? { status: filters.status } : {}),
+        ...(filters.status
+          ? {
+              status: filters.status as
+                | 'pending'
+                | 'confirmed'
+                | 'cancelled'
+                | 'no_show'
+                | 'completed',
+            }
+          : {}),
         ...(filters.primaryPlayerId ? { primaryPlayerId: filters.primaryPlayerId } : {}),
         ...(filters.startsAfter || filters.startsBefore
           ? {
@@ -29,7 +38,6 @@ export class ListBookingsHandler {
               },
             }
           : {}),
-        deletedAt: null,
       },
       include: {
         space: { select: { id: true, name: true, type: true } },

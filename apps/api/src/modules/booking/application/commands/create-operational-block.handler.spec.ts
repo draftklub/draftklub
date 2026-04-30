@@ -79,19 +79,19 @@ describe('CreateOperationalBlockHandler', () => {
     expect(tx.booking.update).toHaveBeenCalledTimes(2);
   });
 
-  it('weather_closed permite endsAt=null (open-ended)', async () => {
+  it('weather_closed requer endsAt (coluna NOT NULL no DB)', async () => {
     const { prisma } = makePrisma({});
     (handler as unknown as { prisma: unknown }).prisma = prisma;
 
-    const result = await handler.execute({
-      klubId: KLUB_ID,
-      spaceId: SPACE_ID,
-      blockType: 'weather_closed',
-      startsAt: new Date('2030-01-15T10:00:00Z'),
-      createdById: STAFF_ID,
-    });
-    expect(result.block).toBeTruthy();
-    expect(result.series).toBeNull();
+    await expect(
+      handler.execute({
+        klubId: KLUB_ID,
+        spaceId: SPACE_ID,
+        blockType: 'weather_closed',
+        startsAt: new Date('2030-01-15T10:00:00Z'),
+        createdById: STAFF_ID,
+      }),
+    ).rejects.toThrow(/endsAt is required/);
   });
 
   it('rejeita weather_closed recorrente', async () => {
@@ -131,7 +131,7 @@ describe('CreateOperationalBlockHandler', () => {
     ).rejects.toThrow(/endsAt is required/);
   });
 
-  it('rejeita segundo weather_closed open-ended se ja existe um aberto', async () => {
+  it('weather_closed sem endsAt rejeita antes de checar duplicatas', async () => {
     const { prisma } = makePrisma({
       existingOpenWeather: { id: 'open-weather-1' },
     });
@@ -145,6 +145,6 @@ describe('CreateOperationalBlockHandler', () => {
         startsAt: new Date('2030-01-15T10:00:00Z'),
         createdById: STAFF_ID,
       }),
-    ).rejects.toThrow(/open-ended weather_closed/);
+    ).rejects.toThrow(/endsAt is required/);
   });
 });

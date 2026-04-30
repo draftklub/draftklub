@@ -79,13 +79,13 @@ export class GetMyKlubsHandler {
         klubName: m.klub.name,
         klubCommonName: m.klub.commonName,
         sports: m.klub.sportProfiles.map((s) => s.sportCode),
-        klubPlan: m.klub.plan as UserKlubMembership['klubPlan'],
+        klubPlan: m.klub.plan,
         klubStatus: m.klub.status as UserKlubMembership['klubStatus'],
-        membershipType: m.type as UserKlubMembership['membershipType'],
-        membershipStatus: m.status as UserKlubMembership['membershipStatus'],
+        membershipType: m.type,
+        membershipStatus: m.status,
         role: role as UserKlubMembership['role'],
         joinedAt: m.joinedAt.toISOString(),
-        reviewStatus: m.klub.reviewStatus as UserKlubMembership['reviewStatus'],
+        reviewStatus: m.klub.reviewStatus,
         reviewRejectionReason: m.klub.reviewRejectionReason,
       };
     });

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 @Injectable()
@@ -37,7 +37,7 @@ export class KlubSportProfileRepository {
         sportCode: data.sportCode,
         name: data.name,
         description: data.description,
-        defaultRatingEngine: data.defaultRatingEngine,
+        defaultRatingEngine: data.defaultRatingEngine as $Enums.RatingEngineType,
         defaultRatingConfig: data.defaultRatingConfig as Prisma.InputJsonValue,
         defaultInitialRating: data.defaultInitialRating,
         addedById: data.addedById,
@@ -49,7 +49,7 @@ export class KlubSportProfileRepository {
   async update(id: string, data: Partial<{ status: string; name: string; description: string }>) {
     return this.prisma.klubSportProfile.update({
       where: { id },
-      data,
+      data: { ...data, status: data.status as $Enums.KlubSportProfileStatus | undefined },
       include: { sport: true },
     });
   }

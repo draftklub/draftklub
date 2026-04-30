@@ -107,13 +107,13 @@ export class ListPendingKlubsHandler {
         name: r.name,
         slug: r.slug,
         type: r.type,
-        entityType: (r.entityType as 'pj' | 'pf' | null) ?? null,
+        entityType: r.entityType ?? null,
         documentHint: r.documentHint,
         legalName: r.legalName,
         city: r.city,
         state: r.state,
         cnpjStatus: r.cnpjStatus,
-        reviewStatus: r.reviewStatus as KlubReviewStatus,
+        reviewStatus: r.reviewStatus,
         createdAt: r.createdAt.toISOString(),
         createdBy: r.createdById
           ? (() => {

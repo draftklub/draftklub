@@ -28,7 +28,7 @@ export class PatchFeatureHandler {
       if (!ALLOWED_TIERS.includes(cmd.tier as AllowedTier)) {
         throw new Error(`Invalid tier '${cmd.tier}'`);
       }
-      data.tier = cmd.tier;
+      data.tier = cmd.tier as AllowedTier;
       audits.push({
         featureId: cmd.id,
         changedBy: cmd.changedBy,

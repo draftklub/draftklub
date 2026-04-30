@@ -67,7 +67,7 @@ export class ExtendBookingHandler {
       throw new BadRequestException('Cannot extend booking without endsAt');
     }
 
-    const mode = config.extensionMode as 'disabled' | 'player' | 'staff_approval' | 'staff_only';
+    const mode = config.extensionMode;
     if (mode === 'disabled') {
       throw new BadRequestException('This Klub has extension disabled');
     }
@@ -107,7 +107,7 @@ export class ExtendBookingHandler {
         id: { not: booking.id },
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: newEndsAt },
-        OR: [{ endsAt: null }, { endsAt: { gt: booking.endsAt } }],
+        endsAt: { gt: booking.endsAt },
       },
     });
     if (spaceConflict) {

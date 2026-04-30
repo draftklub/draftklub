@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { $Enums } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 export interface AddMemberCommand {
@@ -24,14 +25,14 @@ export class AddMemberHandler {
         ? existing.status !== 'active'
           ? await tx.membership.update({
               where: { id: existing.id },
-              data: { status: 'active', type: cmd.type },
+              data: { status: 'active', type: cmd.type as $Enums.MembershipType },
             })
           : existing
         : await tx.membership.create({
             data: {
               userId: cmd.userId,
               klubId: cmd.klubId,
-              type: cmd.type,
+              type: cmd.type as $Enums.MembershipType,
               status: 'active',
             },
           });

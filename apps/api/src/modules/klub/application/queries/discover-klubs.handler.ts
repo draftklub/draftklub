@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { KlubAccessMode, KlubDiscoveryResult } from '@draftklub/shared-types';
+import type { KlubDiscoveryResult } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 export type DiscoveryPeriod = 'morning' | 'afternoon' | 'evening';
@@ -149,12 +149,12 @@ export class DiscoverKlubsHandler {
         id: klub.id,
         name: klub.name,
         slug: klub.slug,
-        type: klub.type as KlubDiscoveryResult['type'],
+        type: klub.type,
         status: klub.status as KlubDiscoveryResult['status'],
         city: klub.city,
         state: klub.state,
         sports: klub.sportProfiles.map((s) => s.sportCode),
-        accessMode: (klub.accessMode as KlubAccessMode) ?? 'public',
+        accessMode: klub.accessMode ?? 'public',
         latitude: kLat,
         longitude: kLng,
         distanceKm: dist !== null ? Math.round(dist * 10) / 10 : null,
@@ -178,12 +178,12 @@ export class DiscoverKlubsHandler {
       id: klub.id,
       name: klub.name,
       slug: klub.slug,
-      type: klub.type as KlubDiscoveryResult['type'],
+      type: klub.type,
       status: klub.status as KlubDiscoveryResult['status'],
       city: klub.city,
       state: klub.state,
       sports: klub.sportProfiles.map((s) => s.sportCode),
-      accessMode: (klub.accessMode as KlubAccessMode) ?? 'public',
+      accessMode: klub.accessMode ?? 'public',
       latitude: klub.latitude !== null ? Number(klub.latitude) : null,
       longitude: klub.longitude !== null ? Number(klub.longitude) : null,
       distanceKm: null,

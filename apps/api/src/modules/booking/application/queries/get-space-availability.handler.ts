@@ -85,7 +85,7 @@ export class GetSpaceAvailabilityHandler {
         spaceId,
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: dayEnd },
-        OR: [{ endsAt: null }, { endsAt: { gt: dayStart } }],
+        endsAt: { gt: dayStart },
       },
       orderBy: { startsAt: 'asc' },
       select: {

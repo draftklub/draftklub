@@ -251,7 +251,7 @@ export class ScheduleDistributorService {
             bookingType: { in: ['player_match', 'player_free_play'] },
             tournamentMatchId: null,
             startsAt: { lt: sched.endTime },
-            OR: [{ endsAt: null }, { endsAt: { gt: sched.startTime } }],
+            endsAt: { gt: sched.startTime },
           },
           select: { id: true },
         });

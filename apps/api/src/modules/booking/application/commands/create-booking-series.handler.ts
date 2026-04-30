@@ -181,7 +181,7 @@ export class CreateBookingSeriesHandler {
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: windowEnd },
         AND: [
-          { OR: [{ endsAt: null }, { endsAt: { gt: windowStart } }] },
+          { endsAt: { gt: windowStart } },
           {
             OR: [{ spaceId: cmd.spaceId }, { primaryPlayerId: { in: allPlayerIds } }],
           },
@@ -201,7 +201,7 @@ export class CreateBookingSeriesHandler {
       where: {
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: windowEnd },
-        OR: [{ endsAt: null }, { endsAt: { gt: windowStart } }],
+        endsAt: { gt: windowStart },
       },
       select: {
         id: true,

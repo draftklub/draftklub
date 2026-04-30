@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { $Enums } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { MetricsService } from '../../../../shared/metrics/metrics.service';
 import {
@@ -380,7 +381,7 @@ export class DrawTournamentHandler {
 
       await tx.tournament.update({
         where: { id: cmd.tournamentId },
-        data: { status: newStatus, currentPhase: newPhase },
+        data: { status: newStatus as $Enums.TournamentStatus, currentPhase: newPhase },
       });
 
       return tx.tournamentMatch.findMany({

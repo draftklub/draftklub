@@ -33,7 +33,7 @@ export class ApproveBookingHandler {
         id: { not: booking.id },
         status: 'confirmed',
         startsAt: { lt: booking.endsAt },
-        OR: [{ endsAt: null }, { endsAt: { gt: booking.startsAt } }],
+        endsAt: { gt: booking.startsAt },
       },
       select: { id: true },
     });

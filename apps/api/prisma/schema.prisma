@@ -136,6 +136,7 @@ model Membership {
   expiresAt DateTime? @map("expires_at") @db.Timestamptz
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
   createdById String? @map("created_by_id") @db.Uuid
 
   user      User  @relation(fields: [userId], references: [id])
@@ -191,6 +192,7 @@ model RoleAssignment {
   grantedBy    String?   @map("granted_by") @db.Uuid
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
 
   user         User  @relation(fields: [userId], references: [id])
   grantedByUser User? @relation("RoleGrantedBy", fields: [grantedBy], references: [id])
@@ -484,6 +486,7 @@ model KlubSportProfile {
   addedById     String?   @map("added_by_id") @db.Uuid
   updatedAt     DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   updatedById   String?   @map("updated_by_id") @db.Uuid
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
 
   klub       Klub         @relation("KlubSportProfiles", fields: [klubId], references: [id])
   sport      SportCatalog @relation(fields: [sportCode], references: [code])
@@ -757,6 +760,7 @@ model Tournament {
   cancelledAt             DateTime? @map("cancelled_at") @db.Timestamptz
   cancelledById           String?   @map("cancelled_by_id") @db.Uuid
   cancellationReason      String?   @map("cancellation_reason")
+  deletedAt               DateTime? @map("deleted_at") @db.Timestamptz
 
   klubSport               KlubSportProfile @relation("Tournaments", fields: [klubSportId], references: [id])
   ranking                 KlubSportRanking @relation("TournamentRankings", fields: [rankingId], references: [id])
@@ -1463,6 +1467,7 @@ enum MatchResultStatus {
 enum MatchSource {
   casual
   tournament
+  tournament_prequalifier
 
   @@schema("klub")
 }
@@ -1470,14 +1475,15 @@ enum MatchSource {
 enum TournamentFormat {
   knockout
   round_robin
-  swiss
+  double_elimination
+  groups_knockout
 
   @@schema("klub")
 }
 
 enum TournamentRegistrationApproval {
   auto
-  manual
+  committee
 
   @@schema("klub")
 }
@@ -1502,6 +1508,7 @@ enum TournamentResultReportingMode {
 enum TournamentMatchStatus {
   pending
   scheduled
+  bye
   awaiting_confirmation
   completed
   walkover
@@ -1515,14 +1522,18 @@ enum TournamentMatchKind {
   main
   prequalifier
   group
+  losers
+  grand_final
 
   @@schema("klub")
 }
 
 enum TournamentEntryStatus {
+  pending_approval
   pending_seeding
   seeded
-  approved
+  playing
+  disqualified
   withdrawn
 
   @@schema("klub")
@@ -1531,6 +1542,8 @@ enum TournamentEntryStatus {
 enum TournamentEntryCategorySource {
   auto
   manual
+  committee
+  wildcard
 
   @@schema("klub")
 }

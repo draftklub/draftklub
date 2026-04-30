@@ -42,7 +42,7 @@ export class ApproveExtensionHandler {
         id: { not: booking.id },
         status: 'confirmed',
         startsAt: { lt: newEndsAt },
-        OR: [{ endsAt: null }, { endsAt: { gt: booking.endsAt } }],
+        endsAt: { gt: booking.endsAt },
       },
     });
     if (conflict) {

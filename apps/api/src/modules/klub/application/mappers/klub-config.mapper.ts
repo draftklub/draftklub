@@ -11,10 +11,10 @@ export function mapKlubConfig(config: PrismaKlubConfig | null): KlubConfig | nul
   if (!config) return null;
   return {
     bookingPolicy: config.bookingPolicy,
-    accessMode: config.accessMode as KlubConfig['accessMode'],
+    accessMode: config.accessMode,
     bookingModes: config.bookingModes as KlubConfig['bookingModes'],
-    cancellationMode: config.cancellationMode as KlubConfig['cancellationMode'],
-    agendaVisibility: config.agendaVisibility as KlubConfig['agendaVisibility'],
+    cancellationMode: config.cancellationMode,
+    agendaVisibility: config.agendaVisibility,
     cancellationWindowHours: config.cancellationWindowHours,
     cancellationFeePercent: config.cancellationFeePercent.toString(),
     noShowFeeEnabled: config.noShowFeeEnabled,
@@ -24,9 +24,8 @@ export function mapKlubConfig(config: PrismaKlubConfig | null): KlubConfig | nul
     closingHour: config.closingHour,
     openDays: config.openDays,
     maxRecurrenceMonths: config.maxRecurrenceMonths,
-    extensionMode: config.extensionMode as KlubConfig['extensionMode'],
-    guestsAddedBy: config.guestsAddedBy as KlubConfig['guestsAddedBy'],
-    tournamentBookingConflictMode:
-      config.tournamentBookingConflictMode as KlubConfig['tournamentBookingConflictMode'],
+    extensionMode: config.extensionMode,
+    guestsAddedBy: config.guestsAddedBy,
+    tournamentBookingConflictMode: config.tournamentBookingConflictMode,
   };
 }

@@ -244,14 +244,14 @@ export class CreateBookingHandler {
         spaceId: cmd.spaceId,
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: endsAt },
-        OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }],
+        endsAt: { gt: cmd.startsAt },
       },
     });
     if (spaceConflict) {
       throw new ConflictException({
         type: 'space_conflict',
         conflictingBookingId: spaceConflict.id,
-        message: `Space already has a booking from ${spaceConflict.startsAt.toISOString()} to ${spaceConflict.endsAt?.toISOString() ?? 'open-ended'}`,
+        message: `Space already has a booking from ${spaceConflict.startsAt.toISOString()} to ${spaceConflict.endsAt.toISOString()}`,
       });
     }
 
@@ -259,7 +259,7 @@ export class CreateBookingHandler {
       where: {
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: endsAt },
-        AND: [{ OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }] }],
+        endsAt: { gt: cmd.startsAt },
         primaryPlayerId: { in: allUserIds },
       },
       select: {
@@ -293,7 +293,7 @@ export class CreateBookingHandler {
       where: {
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: endsAt },
-        OR: [{ endsAt: null }, { endsAt: { gt: cmd.startsAt } }],
+        endsAt: { gt: cmd.startsAt },
       },
       select: { id: true, otherPlayers: true },
     });

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { $Enums } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 export interface GuestInput {
@@ -57,7 +58,7 @@ export class GuestUserService {
         fullName,
         phone: data.phone,
         documentNumber: data.documentNumber,
-        documentType: data.documentType,
+        documentType: data.documentType as $Enums.DocumentType | undefined,
         kind: 'guest',
         firebaseUid: null,
       },

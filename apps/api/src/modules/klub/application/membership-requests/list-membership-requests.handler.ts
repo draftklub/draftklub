@@ -38,7 +38,7 @@ export class ListMembershipRequestsHandler {
       id: r.id,
       klubId: r.klubId,
       userId: r.userId,
-      status: r.status as MembershipRequestStatus,
+      status: r.status,
       message: r.message,
       attachmentUrl: r.attachmentUrl,
       decisionAt: r.decisionAt?.toISOString() ?? null,

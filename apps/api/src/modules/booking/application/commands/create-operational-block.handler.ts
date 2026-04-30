@@ -63,21 +63,8 @@ export class CreateOperationalBlockHandler {
     if (!config) throw new BadRequestException('Klub config missing');
 
     // ─── Reject duplicate open-ended weather_closed ────────────
-    if (cmd.blockType === 'weather_closed' && !cmd.endsAt) {
-      const openWeather = await this.prisma.booking.findFirst({
-        where: {
-          spaceId: cmd.spaceId,
-          bookingType: 'weather_closed',
-          endsAt: null,
-          status: { in: ['pending', 'confirmed'] },
-        },
-        select: { id: true },
-      });
-      if (openWeather) {
-        throw new BadRequestException(
-          `Space already has an open-ended weather_closed block (${openWeather.id}). Close it first.`,
-        );
-      }
+    if (!cmd.endsAt) {
+      throw new BadRequestException('endsAt is required for operational blocks');
     }
 
     if (!cmd.recurrence) {
@@ -88,13 +75,15 @@ export class CreateOperationalBlockHandler {
   }
 
   private async createSingleBlock(cmd: CreateOperationalBlockCommand, _maxMonths: number) {
+    const endsAt = cmd.endsAt;
+    if (!endsAt) throw new Error('endsAt required');
     return this.prisma.$transaction(async (tx) => {
       const block = await tx.booking.create({
         data: {
           klubId: cmd.klubId,
           spaceId: cmd.spaceId,
           startsAt: cmd.startsAt,
-          endsAt: cmd.endsAt ?? null,
+          endsAt,
           bookingType: cmd.blockType,
           creationMode: 'staff_assisted',
           status: 'confirmed',
@@ -235,7 +224,7 @@ export class CreateOperationalBlockHandler {
         bookingType: { in: ['player_match', 'player_free_play'] },
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: effectiveEnd },
-        OR: [{ endsAt: null }, { endsAt: { gt: startsAt } }],
+        endsAt: { gt: startsAt },
       },
       select: { id: true },
     });

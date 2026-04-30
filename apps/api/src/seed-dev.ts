@@ -1,3 +1,4 @@
+import type { $Enums } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
@@ -164,7 +165,7 @@ async function main(): Promise<void> {
         name: space.name,
         type: 'court',
         sportCode: space.sportCode,
-        surface: space.surface,
+        surface: space.surface as $Enums.SpaceSurface,
         indoor: space.indoor,
         hasLighting: space.hasLighting,
         maxPlayers: space.sportCode === 'squash' ? 2 : 4,
@@ -307,7 +308,7 @@ async function main(): Promise<void> {
         klubSportId: tennisProfile.id,
         name: 'Ranking Masculino Simples',
         type: 'singles',
-        gender: 'M',
+        gender: 'male',
         ratingEngine: 'elo',
         ratingConfig: { kFactor: 32, kFactorHigh: 16, kThreshold: 1400, initialRating: 1000 },
         initialRating: 1000,

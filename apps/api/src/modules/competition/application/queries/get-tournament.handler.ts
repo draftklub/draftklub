@@ -1,11 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type {
-  TournamentDetail,
-  TournamentFormat,
-  TournamentRegistrationApproval,
-  TournamentResultReportingMode,
-  TournamentStatus,
-} from '@draftklub/shared-types';
+import type { TournamentDetail } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 @Injectable()
@@ -42,10 +36,10 @@ export class GetTournamentHandler {
       name: tournament.name,
       description: tournament.description,
       coverUrl: tournament.coverUrl,
-      format: tournament.format as TournamentFormat,
+      format: tournament.format,
       hasPrequalifiers: tournament.hasPrequalifiers,
       prequalifierBordersPerFrontier: tournament.prequalifierBordersPerFrontier,
-      registrationApproval: tournament.registrationApproval as TournamentRegistrationApproval,
+      registrationApproval: tournament.registrationApproval,
       registrationFee:
         tournament.registrationFee !== null ? tournament.registrationFee.toString() : null,
       registrationOpensAt: tournament.registrationOpensAt.toISOString(),
@@ -55,9 +49,9 @@ export class GetTournamentHandler {
       prequalifierEndDate: tournament.prequalifierEndDate?.toISOString() ?? null,
       mainStartDate: tournament.mainStartDate.toISOString(),
       mainEndDate: tournament.mainEndDate?.toISOString() ?? null,
-      status: tournament.status as TournamentStatus,
+      status: tournament.status,
       currentPhase: tournament.currentPhase,
-      resultReportingMode: tournament.resultReportingMode as TournamentResultReportingMode,
+      resultReportingMode: tournament.resultReportingMode,
       pointsApplied: tournament.pointsApplied,
       pointsAppliedAt: tournament.pointsAppliedAt?.toISOString() ?? null,
       cancelledAt: tournament.cancelledAt?.toISOString() ?? null,

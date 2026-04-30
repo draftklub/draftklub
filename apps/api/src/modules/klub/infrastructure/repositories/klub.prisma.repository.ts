@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 export interface CreateKlubData {
@@ -51,13 +51,13 @@ export class KlubPrismaRepository {
         data: {
           name: data.name,
           slug: data.slug,
-          type: data.type,
+          type: data.type as $Enums.KlubType,
           city: data.city,
           state: data.state,
           timezone: data.timezone,
           email: data.email,
           phone: data.phone,
-          entityType: data.entityType,
+          entityType: data.entityType as $Enums.KlubEntityType,
           documentEncrypted: data.documentEncrypted,
           documentIv: data.documentIv,
           documentHint: data.documentHint,
@@ -66,11 +66,11 @@ export class KlubPrismaRepository {
           abbreviation: data.abbreviation,
           parentKlubId: data.parentKlubId,
           isGroup: data.isGroup,
-          onboardingSource: data.onboardingSource,
+          onboardingSource: data.onboardingSource as $Enums.KlubOnboardingSource,
           createdById: data.createdById,
-          plan: data.plan,
+          plan: data.plan as $Enums.KlubPlan,
           discoverable: data.discoverable ?? false,
-          accessMode: data.accessMode ?? 'public',
+          accessMode: (data.accessMode ?? 'public') as $Enums.KlubAccessMode,
           cep: data.cep,
           latitude: data.latitude,
           longitude: data.longitude,
@@ -84,7 +84,7 @@ export class KlubPrismaRepository {
           cnpjLookupData: data.cnpjLookupData
             ? (data.cnpjLookupData as Prisma.InputJsonValue)
             : undefined,
-          reviewStatus: data.reviewStatus ?? 'pending',
+          reviewStatus: (data.reviewStatus ?? 'pending') as $Enums.KlubReviewStatus,
           status: data.plan === 'trial' ? 'trial' : 'active',
           trialEndsAt:
             data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
@@ -179,8 +179,8 @@ export class KlubPrismaRepository {
     return this.prisma.klub.findMany({
       where: {
         deletedAt: null,
-        ...(filters?.status ? { status: filters.status } : {}),
-        ...(filters?.type ? { type: filters.type } : {}),
+        ...(filters?.status ? { status: filters.status as $Enums.KlubStatus } : {}),
+        ...(filters?.type ? { type: filters.type as $Enums.KlubType } : {}),
       },
       include: { config: true, sportProfiles: true },
       orderBy: { createdAt: 'desc' },

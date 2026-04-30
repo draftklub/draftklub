@@ -92,18 +92,18 @@ CREATE TYPE "klub"."RankingOrderBy"       AS ENUM ('rating', 'tournament_points'
 CREATE TYPE "klub"."RankingWindowType"    AS ENUM ('all_time', 'season', 'semester', 'last_weeks', 'last_tournaments');
 CREATE TYPE "klub"."PlayerRatingSource"   AS ENUM ('initial', 'calculated', 'manual');
 CREATE TYPE "klub"."MatchResultStatus"    AS ENUM ('pending_confirmation', 'confirmed', 'reverted');
-CREATE TYPE "klub"."MatchSource"          AS ENUM ('casual', 'tournament');
-CREATE TYPE "klub"."TournamentFormat"     AS ENUM ('knockout', 'round_robin', 'swiss');
-CREATE TYPE "klub"."TournamentRegistrationApproval" AS ENUM ('auto', 'manual');
+CREATE TYPE "klub"."MatchSource"          AS ENUM ('casual', 'tournament', 'tournament_prequalifier');
+CREATE TYPE "klub"."TournamentFormat"     AS ENUM ('knockout', 'round_robin', 'double_elimination', 'groups_knockout');
+CREATE TYPE "klub"."TournamentRegistrationApproval" AS ENUM ('auto', 'committee');
 CREATE TYPE "klub"."TournamentStatus"     AS ENUM ('draft', 'prequalifying', 'in_progress', 'finished', 'cancelled');
 CREATE TYPE "klub"."TournamentResultReportingMode" AS ENUM ('committee_only', 'player_with_confirm');
 CREATE TYPE "klub"."TournamentMatchStatus" AS ENUM (
-  'pending', 'scheduled', 'awaiting_confirmation',
+  'pending', 'scheduled', 'bye', 'awaiting_confirmation',
   'completed', 'walkover', 'double_walkover', 'cancelled'
 );
-CREATE TYPE "klub"."TournamentMatchKind"  AS ENUM ('main', 'prequalifier', 'group');
-CREATE TYPE "klub"."TournamentEntryStatus" AS ENUM ('pending_seeding', 'seeded', 'approved', 'withdrawn');
-CREATE TYPE "klub"."TournamentEntryCategorySource" AS ENUM ('auto', 'manual');
+CREATE TYPE "klub"."TournamentMatchKind"  AS ENUM ('main', 'prequalifier', 'group', 'losers', 'grand_final');
+CREATE TYPE "klub"."TournamentEntryStatus" AS ENUM ('pending_approval', 'pending_seeding', 'seeded', 'playing', 'disqualified', 'withdrawn');
+CREATE TYPE "klub"."TournamentEntryCategorySource" AS ENUM ('auto', 'manual', 'committee', 'wildcard');
 
 -- membership_requests
 ALTER TABLE "klub"."membership_requests"

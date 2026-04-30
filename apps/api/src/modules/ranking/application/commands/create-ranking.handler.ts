@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 
 export interface CreateRankingCommand {
   klubSportId: string;
   name: string;
   type?: 'singles' | 'doubles' | 'mixed';
-  gender?: 'M' | 'F' | null;
+  gender?: 'male' | 'female' | 'undisclosed' | null;
   ageMin?: number;
   ageMax?: number;
   ratingEngine?: string;
@@ -38,7 +38,7 @@ export class CreateRankingHandler {
         gender: cmd.gender,
         ageMin: cmd.ageMin,
         ageMax: cmd.ageMax,
-        ratingEngine: engine,
+        ratingEngine: engine as $Enums.RatingEngineType,
         ratingConfig: config as Prisma.InputJsonValue,
         initialRating: cmd.initialRating ?? profile.defaultInitialRating,
       },

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { $Enums } from '@prisma/client';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { RatingCalculatorService } from '../rating-calculator.service';
 
@@ -49,7 +50,7 @@ export class RankingRecomputeService {
               rankingId,
               status: 'confirmed',
               isWalkover: false,
-              source: { in: sources },
+              source: { in: sources as $Enums.MatchSource[] },
               ...(dateFilter ? { playedAt: dateFilter } : {}),
             },
             orderBy: { playedAt: 'asc' },

@@ -132,7 +132,7 @@ export class AddPlayersToBookingHandler {
         id: { not: booking.id },
         status: { in: ['pending', 'confirmed'] },
         startsAt: { lt: booking.endsAt ?? new Date(booking.startsAt.getTime() + 24 * 3_600_000) },
-        OR: [{ endsAt: null }, { endsAt: { gt: booking.startsAt } }],
+        endsAt: { gt: booking.startsAt },
       },
       select: {
         id: true,

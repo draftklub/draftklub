@@ -1,11 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type {
-  DocumentType,
-  Gender,
-  MeResponse,
-  NotificationPrefs,
-  RoleAssignment,
-} from '@draftklub/shared-types';
+import type { MeResponse, NotificationPrefs, RoleAssignment } from '@draftklub/shared-types';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { CepGeocoderService } from '../../../../shared/geocoding/cep-geocoder.service';
 import { EncryptionService } from '../../../../shared/encryption/encryption.service';
@@ -100,7 +94,7 @@ export class UpdateMeHandler {
       phone: user.phone,
       birthDate: user.birthDate ? user.birthDate.toISOString().slice(0, 10) : null,
       avatarUrl: user.avatarUrl,
-      gender: (user.gender as Gender | null) ?? null,
+      gender: user.gender ?? null,
       city: user.city,
       state: user.state,
       cep: this.encryption.decryptFromString(user.cep),
@@ -111,7 +105,7 @@ export class UpdateMeHandler {
       latitude: user.latitude,
       longitude: user.longitude,
       documentNumber: this.encryption.decryptFromString(user.documentNumber),
-      documentType: (user.documentType as DocumentType | null) ?? null,
+      documentType: user.documentType ?? null,
       notificationPrefs: (user.notificationPrefs as NotificationPrefs | null) ?? {},
       roleAssignments,
     };

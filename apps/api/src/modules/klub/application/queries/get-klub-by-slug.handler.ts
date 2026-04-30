@@ -1,12 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type {
-  Klub,
-  KlubAccessMode,
-  KlubPlan,
-  KlubReviewStatus,
-  KlubStatus,
-  KlubType,
-} from '@draftklub/shared-types';
+import type { Klub, KlubStatus } from '@draftklub/shared-types';
 import { KlubPrismaRepository } from '../../infrastructure/repositories/klub.prisma.repository';
 import { mapKlubConfig } from '../mappers/klub-config.mapper';
 
@@ -35,8 +28,8 @@ export class GetKlubBySlugHandler {
       abbreviation: klub.abbreviation,
       commonName: klub.commonName,
       description: klub.description,
-      type: klub.type as KlubType,
-      plan: klub.plan as KlubPlan,
+      type: klub.type,
+      plan: klub.plan,
       status: klub.status as KlubStatus,
       city: klub.city,
       state: klub.state,
@@ -53,7 +46,7 @@ export class GetKlubBySlugHandler {
       sports: klub.sportProfiles.map((s) => s.sportCode),
       config: mapKlubConfig(klub.config),
       discoverable: klub.discoverable,
-      accessMode: (klub.accessMode as KlubAccessMode) ?? 'public',
+      accessMode: klub.accessMode ?? 'public',
       cep: klub.cep,
       addressStreet: klub.addressStreet,
       addressNumber: klub.addressNumber,
@@ -61,7 +54,7 @@ export class GetKlubBySlugHandler {
       addressNeighborhood: klub.addressNeighborhood,
       latitude: klub.latitude ? Number(klub.latitude) : null,
       longitude: klub.longitude ? Number(klub.longitude) : null,
-      reviewStatus: klub.reviewStatus as KlubReviewStatus,
+      reviewStatus: klub.reviewStatus,
       reviewRejectionReason: klub.reviewRejectionReason,
       createdAt: klub.createdAt.toISOString(),
     };
