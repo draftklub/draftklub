@@ -109,10 +109,10 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
               onNavigate={onClose}
             />
             <NavLink
-              href="/minhas-reservas"
+              href="/reservas"
               label="Reservas"
               icon={CalendarCheck}
-              active={pathname === '/minhas-reservas'}
+              active={pathname === '/reservas'}
               onNavigate={onClose}
             />
             <NavLink

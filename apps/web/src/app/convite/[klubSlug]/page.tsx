@@ -87,7 +87,7 @@ export default function ConvitePage() {
   return (
     <Shell>
       <div className="text-center">
-        <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Você foi convidado pra
         </p>
         <h1

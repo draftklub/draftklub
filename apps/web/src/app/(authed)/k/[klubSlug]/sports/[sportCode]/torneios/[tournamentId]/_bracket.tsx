@@ -513,7 +513,7 @@ function PlayerSlot({
     <div className="flex items-center gap-1.5">
       {isWinner ? <Crown className="size-3 text-warning" /> : null}
       {seed ? (
-        <span className="inline-flex h-4 min-w-[18px] shrink-0 items-center justify-center rounded bg-muted px-1 text-xs font-bold tabular-nums text-muted-foreground">
+        <span className="inline-flex h-4 min-w-4.5 shrink-0 items-center justify-center rounded bg-muted px-1 text-xs font-bold tabular-nums text-muted-foreground">
           {seed}
         </span>
       ) : null}

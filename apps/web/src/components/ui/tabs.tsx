@@ -67,12 +67,22 @@ export function Tabs({
             {mode === 'link' && tab.href ? (
               <LinkTab tab={tab} active={active === tab.id} />
             ) : (
-              <SearchParamTab
-                tab={tab}
-                active={active === tab.id}
-                paramName={paramName}
-                onChange={onChange}
-              />
+              <React.Suspense
+                fallback={
+                  <button type="button" className="block">
+                    <TabContent active={active === tab.id} badge={tab.badge}>
+                      {tab.label}
+                    </TabContent>
+                  </button>
+                }
+              >
+                <SearchParamTab
+                  tab={tab}
+                  active={active === tab.id}
+                  paramName={paramName}
+                  onChange={onChange}
+                />
+              </React.Suspense>
             )}
           </li>
         ))}

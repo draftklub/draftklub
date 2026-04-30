@@ -443,7 +443,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[110px_1fr] items-baseline gap-3 py-1 text-sm">
-      <dt className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground">
+      <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </dt>
       <dd>{children}</dd>

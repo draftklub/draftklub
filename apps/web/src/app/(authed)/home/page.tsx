@@ -194,7 +194,7 @@ function SingleKlubDashboard({
 
         {/* KPI row */}
         <div className="mt-5 grid grid-cols-3 gap-3">
-          <KpiCard label="Próximas reservas" value={klubBookings.length} href="/minhas-reservas" />
+          <KpiCard label="Próximas reservas" value={klubBookings.length} href="/reservas" />
           <KpiCard
             label="Solicitações"
             value={pendingRequestsCount}
@@ -241,7 +241,7 @@ function SingleKlubDashboard({
         <section>
           <SectionTitle
             label="Próximas reservas"
-            action={{ href: '/minhas-reservas', label: 'Ver todas' }}
+            action={{ href: '/reservas', label: 'Ver todas' }}
           />
           <ul className="space-y-2">
             {klubBookings.slice(0, 3).map((b) => (
@@ -280,11 +280,7 @@ function MultiKlubDashboard({
     <div className="space-y-6">
       {/* KPI summary row */}
       <div className="grid grid-cols-3 gap-3">
-        <KpiCard
-          label="Próximas reservas"
-          value={upcomingBookings.length}
-          href="/minhas-reservas"
-        />
+        <KpiCard label="Próximas reservas" value={upcomingBookings.length} href="/reservas" />
         <KpiCard label="Seus Klubs" value={klubs.length} href="/klubs" />
         <KpiCard
           label="Solicitações"
@@ -299,7 +295,7 @@ function MultiKlubDashboard({
         <section>
           <SectionTitle
             label="Próximas reservas"
-            action={{ href: '/minhas-reservas', label: 'Ver todas' }}
+            action={{ href: '/reservas', label: 'Ver todas' }}
           />
           <ul className="space-y-2">
             {upcomingBookings.slice(0, 5).map((b) => (
@@ -408,7 +404,7 @@ function BookingRow({ booking, showKlub }: { booking: MyBookingItem; showKlub?: 
 
   return (
     <Link
-      href="/minhas-reservas"
+      href="/reservas"
       className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 transition-colors hover:border-primary/30 hover:bg-muted/30"
     >
       <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">

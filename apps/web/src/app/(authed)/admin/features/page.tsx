@@ -114,10 +114,10 @@ export default function AdminFeaturesPage() {
                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                       Ativo
                     </th>
-                    <th className="w-[140px] px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                    <th className="w-35 px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                       Rollout %
                     </th>
-                    <th className="w-[80px] px-4 py-3.5" />
+                    <th className="w-20 px-4 py-3.5" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
