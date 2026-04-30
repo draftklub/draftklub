@@ -309,14 +309,6 @@ model Klub {
   // ─── Tipo ─────────────────────────────────────────────────
   type        KlubType  @default(sports_club)
 
-  // ─── Dados legais ─────────────────────────────────────────
-  entityType          KlubEntityType? @map("entity_type")
-  documentEncrypted   String?   @map("document_encrypted")
-  documentHint        String?   @map("document_hint") // últimos 4 dígitos
-  documentIv          String?   @map("document_iv")   // IV do AES-GCM
-  legalName           String?   @map("legal_name")
-  kycStatus           KlubKycStatus @default(pending) @map("kyc_status")
-
   // ─── Localização ──────────────────────────────────────────
   country     String    @default("BR")
   state       String?
@@ -376,14 +368,6 @@ model Klub {
   createdById String?   @map("created_by_id") @db.Uuid
   updatedById String?   @map("updated_by_id") @db.Uuid
 
-  // ─── CNPJ snapshot (Sprint D PR1) ─────────────────────────
-
-  // Snapshot da BrasilAPI no momento do cadastro. Admin usa pra
-  // auditar antes de aprovar; campo raw guarda payload completo.
-  cnpjStatus          String?   @map("cnpj_status")
-  cnpjStatusCheckedAt DateTime? @map("cnpj_status_checked_at") @db.Timestamptz
-  cnpjLookupData      Json?     @map("cnpj_lookup_data")
-
   // ─── Review administrativo (Sprint D PR1) ─────────────────
   // Ortogonal a `status` (trial/active/...) e a `kycStatus`. Klub
   // só vira visível em /klubs/discover e /k/:slug quando
@@ -398,6 +382,7 @@ model Klub {
   updatedAt   DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
 
+  legal              KlubLegal?
   config             KlubConfig?
   sportProfiles      KlubSportProfile[]  @relation("KlubSportProfiles")
   sportInterests     KlubSportInterest[] @relation("KlubSportInterests")
@@ -410,6 +395,26 @@ model Klub {
   updatedBy          User?               @relation("KlubUpdatedBy", fields: [updatedById], references: [id])
 
   @@map("klubs")
+  @@schema("klub")
+}
+
+model KlubLegal {
+  id                  String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId              String          @unique @map("klub_id") @db.Uuid
+  entityType          KlubEntityType? @map("entity_type")
+  documentEncrypted   String?         @map("document_encrypted")
+  documentIv          String?         @map("document_iv")
+  documentHint        String?         @map("document_hint")
+  legalName           String?         @map("legal_name")
+  kycStatus           KlubKycStatus   @default(pending) @map("kyc_status")
+  cnpjStatus          String?         @map("cnpj_status")
+  cnpjStatusCheckedAt DateTime?       @map("cnpj_status_checked_at") @db.Timestamptz
+  cnpjLookupData      Json?           @map("cnpj_lookup_data")
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+  klub                Klub            @relation(fields: [klubId], references: [id], onDelete: Cascade)
+
+  @@map("klub_legal")
   @@schema("klub")
 }
 

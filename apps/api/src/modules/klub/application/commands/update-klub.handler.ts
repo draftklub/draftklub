@@ -113,6 +113,7 @@ export class UpdateKlubHandler {
     }
 
     const data: Prisma.KlubUpdateInput = {};
+    const legalData: Record<string, unknown> = {};
     const p = cmd.patch;
     if (p.name !== undefined) data.name = p.name;
     if (p.abbreviation !== undefined) data.abbreviation = p.abbreviation;
@@ -139,7 +140,7 @@ export class UpdateKlubHandler {
     if (p.amenities !== undefined) data.amenities = p.amenities as Prisma.InputJsonValue;
 
     if (cmd.isSuperAdmin) {
-      if (p.legalName !== undefined) data.legalName = p.legalName;
+      if (p.legalName !== undefined) legalData.legalName = p.legalName;
       if (p.plan !== undefined) data.plan = p.plan;
       if (p.status !== undefined) data.status = p.status;
       if (p.maxMembers !== undefined) data.maxMembers = p.maxMembers;
@@ -168,16 +169,27 @@ export class UpdateKlubHandler {
           throw new BadRequestException('CNPJ inválido (dígito verificador)');
         }
         const { encrypted, iv } = this.encryption.encrypt(docVO.value);
-        data.documentEncrypted = encrypted;
-        data.documentIv = iv;
-        data.documentHint = docVO.hint();
+        legalData.documentEncrypted = encrypted;
+        legalData.documentIv = iv;
+        legalData.documentHint = docVO.hint();
       }
     }
 
-    if (Object.keys(data).length === 0) {
+    if (Object.keys(data).length === 0 && Object.keys(legalData).length === 0) {
       throw new BadRequestException('Nenhum campo válido pra atualizar');
     }
 
-    return this.prisma.klub.update({ where: { id: cmd.klubId }, data });
+    let updatedKlub;
+    if (Object.keys(data).length > 0) {
+      updatedKlub = await this.prisma.klub.update({ where: { id: cmd.klubId }, data });
+    }
+    if (Object.keys(legalData).length > 0) {
+      await this.prisma.klubLegal.upsert({
+        where: { klubId: cmd.klubId },
+        create: { klubId: cmd.klubId, ...legalData },
+        update: legalData,
+      });
+    }
+    return updatedKlub ?? this.prisma.klub.findUnique({ where: { id: cmd.klubId } });
   }
 }

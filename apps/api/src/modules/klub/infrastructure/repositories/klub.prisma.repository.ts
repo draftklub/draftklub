@@ -57,11 +57,6 @@ export class KlubPrismaRepository {
           timezone: data.timezone,
           email: data.email,
           phone: data.phone,
-          entityType: data.entityType as $Enums.KlubEntityType,
-          documentEncrypted: data.documentEncrypted,
-          documentIv: data.documentIv,
-          documentHint: data.documentHint,
-          legalName: data.legalName,
           commonName: data.commonName,
           abbreviation: data.abbreviation,
           parentKlubId: data.parentKlubId,
@@ -79,15 +74,24 @@ export class KlubPrismaRepository {
           addressComplement: data.addressComplement,
           addressNeighborhood: data.addressNeighborhood,
           addressSource: data.addressSource,
-          cnpjStatus: data.cnpjStatus,
-          cnpjStatusCheckedAt: data.cnpjStatusCheckedAt,
-          cnpjLookupData: data.cnpjLookupData
-            ? (data.cnpjLookupData as Prisma.InputJsonValue)
-            : undefined,
           reviewStatus: (data.reviewStatus ?? 'pending') as $Enums.KlubReviewStatus,
           status: data.plan === 'trial' ? 'trial' : 'active',
           trialEndsAt:
             data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
+          legal: {
+            create: {
+              entityType: data.entityType as $Enums.KlubEntityType | undefined,
+              documentEncrypted: data.documentEncrypted,
+              documentIv: data.documentIv,
+              documentHint: data.documentHint,
+              legalName: data.legalName,
+              cnpjStatus: data.cnpjStatus,
+              cnpjStatusCheckedAt: data.cnpjStatusCheckedAt,
+              cnpjLookupData: data.cnpjLookupData
+                ? (data.cnpjLookupData as Prisma.InputJsonValue)
+                : undefined,
+            },
+          },
           config: {
             create: {},
           },
@@ -101,6 +105,7 @@ export class KlubPrismaRepository {
         include: {
           config: true,
           sportProfiles: true,
+          legal: true,
         },
       });
 
@@ -164,14 +169,14 @@ export class KlubPrismaRepository {
   async findById(id: string) {
     return this.prisma.klub.findUnique({
       where: { id, deletedAt: null },
-      include: { config: true, sportProfiles: true, media: true },
+      include: { config: true, sportProfiles: true, media: true, legal: true },
     });
   }
 
   async findBySlug(slug: string) {
     return this.prisma.klub.findUnique({
       where: { slug, deletedAt: null },
-      include: { config: true, sportProfiles: true },
+      include: { config: true, sportProfiles: true, legal: true },
     });
   }
 
@@ -182,7 +187,7 @@ export class KlubPrismaRepository {
         ...(filters?.status ? { status: filters.status as $Enums.KlubStatus } : {}),
         ...(filters?.type ? { type: filters.type as $Enums.KlubType } : {}),
       },
-      include: { config: true, sportProfiles: true },
+      include: { config: true, sportProfiles: true, legal: true },
       orderBy: { createdAt: 'desc' },
     });
   }

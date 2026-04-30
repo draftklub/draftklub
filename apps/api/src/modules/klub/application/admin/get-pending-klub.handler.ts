@@ -51,7 +51,7 @@ export class GetPendingKlubHandler {
   async execute(id: string): Promise<PendingKlubDetail> {
     const klub = await this.prisma.klub.findUnique({
       where: { id },
-      include: { sportProfiles: { where: { status: 'active' } } },
+      include: { sportProfiles: { where: { status: 'active' } }, legal: true },
     });
     if (!klub || klub.deletedAt) {
       throw new NotFoundException(`Klub ${id} não encontrado`);
@@ -85,12 +85,12 @@ export class GetPendingKlubHandler {
       name: klub.name,
       slug: klub.slug,
       type: klub.type,
-      entityType: klub.entityType ?? null,
-      documentHint: klub.documentHint,
-      legalName: klub.legalName,
-      cnpjStatus: klub.cnpjStatus,
-      cnpjStatusCheckedAt: klub.cnpjStatusCheckedAt?.toISOString() ?? null,
-      cnpjLookupData: (klub.cnpjLookupData as Record<string, unknown> | null) ?? null,
+      entityType: klub.legal?.entityType ?? null,
+      documentHint: klub.legal?.documentHint ?? null,
+      legalName: klub.legal?.legalName ?? null,
+      cnpjStatus: klub.legal?.cnpjStatus ?? null,
+      cnpjStatusCheckedAt: klub.legal?.cnpjStatusCheckedAt?.toISOString() ?? null,
+      cnpjLookupData: (klub.legal?.cnpjLookupData as Record<string, unknown> | null) ?? null,
       cep: klub.cep,
       addressStreet: klub.addressStreet,
       addressNumber: klub.addressNumber,

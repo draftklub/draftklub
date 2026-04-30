@@ -27,6 +27,9 @@ function makePrisma(
           Promise.resolve({ id: KLUB_ID, ...args.data }),
         ),
     },
+    klubLegal: {
+      upsert: vi.fn().mockResolvedValue({}),
+    },
   };
 }
 
@@ -138,7 +141,7 @@ describe('UpdateKlubHandler', () => {
     expect(prisma.klub.update).not.toHaveBeenCalled();
   });
 
-  it('SUPER_ADMIN troca CNPJ → re-encripta + atualiza hint (Sprint PR-G)', async () => {
+  it('SUPER_ADMIN troca CNPJ → re-encripta via klubLegal.upsert (Sprint PR-G + DB-6a)', async () => {
     const prisma = makePrisma(makeKlub());
     (handler as unknown as { prisma: unknown }).prisma = prisma;
 
@@ -151,10 +154,14 @@ describe('UpdateKlubHandler', () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const encryptMock = encryption.encrypt as ReturnType<typeof vi.fn>;
     expect(encryptMock).toHaveBeenCalledWith('33000167000101');
-    const updateArg = prisma.klub.update.mock.calls[0]?.[0] as { data: Record<string, unknown> };
-    expect(updateArg.data.documentEncrypted).toBe('enc-base64');
-    expect(updateArg.data.documentIv).toBe('iv-hex');
-    expect(typeof updateArg.data.documentHint).toBe('string');
+    // Legal fields go to klubLegal.upsert (not klub.update) after DB-6a
+    const upsertArg = prisma.klubLegal.upsert.mock.calls[0]?.[0] as {
+      update: Record<string, unknown>;
+    };
+    expect(upsertArg.update.documentEncrypted).toBe('enc-base64');
+    expect(upsertArg.update.documentIv).toBe('iv-hex');
+    expect(typeof upsertArg.update.documentHint).toBe('string');
+    expect(prisma.klub.update).not.toHaveBeenCalled();
   });
 
   it('SUPER_ADMIN CNPJ inválido → 400 (Sprint PR-G)', async () => {
