@@ -49,9 +49,9 @@ export class RequestMembershipHandler {
       select: {
         id: true,
         name: true,
-        accessMode: true,
         deletedAt: true,
         review: { select: { reviewStatus: true } },
+        discovery: { select: { accessMode: true } },
       },
     });
 
@@ -59,7 +59,7 @@ export class RequestMembershipHandler {
       throw new NotFoundException(`Klub '${cmd.klubSlug}' não encontrado`);
     }
 
-    if (klub.accessMode !== 'private') {
+    if (klub.discovery?.accessMode !== 'private') {
       throw new BadRequestException({
         type: 'klub_is_public',
         message: 'Este Klub é aberto. Entre direto via /klubs/slug/:slug/join.',

@@ -56,6 +56,7 @@ export class GetPendingKlubHandler {
         legal: true,
         review: true,
         contact: true,
+        discovery: true,
       },
     });
     if (!klub || klub.deletedAt) {
@@ -104,8 +105,8 @@ export class GetPendingKlubHandler {
       city: klub.contact?.city ?? null,
       state: klub.contact?.state ?? null,
       addressSource: klub.contact?.addressSource ?? null,
-      discoverable: klub.discoverable,
-      accessMode: klub.accessMode,
+      discoverable: klub.discovery?.discoverable ?? false,
+      accessMode: klub.discovery?.accessMode ?? 'public',
       sports: klub.sportProfiles.map((s) => s.sportCode),
       reviewStatus: klub.review?.reviewStatus ?? 'pending',
       reviewRejectionReason: klub.review?.reviewRejectionReason ?? null,

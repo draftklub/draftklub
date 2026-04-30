@@ -298,9 +298,6 @@ model Klub {
   // ─── Identidade ───────────────────────────────────────────
   name        String
   slug        String    @unique
-  description String?
-  avatarUrl   String?   @map("avatar_url")
-  coverUrl    String?   @map("cover_url")
   /// Abreviação curta pra UI compacta (ex: "PAC" pra Paissandu).
   abbreviation String?  @db.VarChar(10)
   /// Nome popular/comumente chamado (ex: "Paissandú").
@@ -308,9 +305,6 @@ model Klub {
 
   // ─── Tipo ─────────────────────────────────────────────────
   type        KlubType  @default(sports_club)
-
-  // ─── Contato ──────────────────────────────────────────────
-  website     String?
 
   // ─── Comodidades (JSONB flexível) ─────────────────────────
   amenities   Json      @default("{}")
@@ -333,10 +327,6 @@ model Klub {
   billingKlubId String?  @map("billing_klub_id") @db.Uuid
   // null = o próprio Klub é responsável pelo billing
 
-  // ─── Discovery + privacy (Sprint B) ────────────────────────
-  discoverable Boolean        @default(false)
-  accessMode   KlubAccessMode @default(public) @map("access_mode")
-
   // ─── Onboarding ───────────────────────────────────────────
   onboardingSource KlubOnboardingSource @default(self_service) @map("onboarding_source")
   createdById String?   @map("created_by_id") @db.Uuid
@@ -350,6 +340,7 @@ model Klub {
   legal              KlubLegal?
   review             KlubReview?
   contact            KlubContact?
+  discovery          KlubDiscovery?
   config             KlubConfig?
   sportProfiles      KlubSportProfile[]  @relation("KlubSportProfiles")
   sportInterests     KlubSportInterest[] @relation("KlubSportInterests")
@@ -424,6 +415,23 @@ model KlubContact {
   klub                Klub      @relation(fields: [klubId], references: [id], onDelete: Cascade)
 
   @@map("klub_contact")
+  @@schema("klub")
+}
+
+model KlubDiscovery {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  klubId       String         @unique @map("klub_id") @db.Uuid
+  description  String?
+  avatarUrl    String?        @map("avatar_url")
+  coverUrl     String?        @map("cover_url")
+  website      String?
+  discoverable Boolean        @default(false)
+  accessMode   KlubAccessMode @default(public) @map("access_mode")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime       @updatedAt      @map("updated_at") @db.Timestamptz
+  klub         Klub           @relation(fields: [klubId], references: [id], onDelete: Cascade)
+
+  @@map("klub_discovery")
   @@schema("klub")
 }
 

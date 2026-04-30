@@ -57,7 +57,7 @@ export class DiscoverKlubsHandler {
     const hasGeo = typeof userLat === 'number' && typeof userLng === 'number';
 
     const where: Record<string, unknown> = {
-      discoverable: true,
+      discovery: { is: { discoverable: true } },
       deletedAt: null,
       review: { is: { reviewStatus: 'approved' } },
       status: { in: ['active', 'trial'] },
@@ -87,6 +87,7 @@ export class DiscoverKlubsHandler {
           select: { sportCode: true },
         },
         contact: true,
+        discovery: true,
       },
       orderBy: { name: 'asc' },
       take: fetchTake,
@@ -155,7 +156,7 @@ export class DiscoverKlubsHandler {
         city: klub.contact?.city ?? null,
         state: klub.contact?.state ?? null,
         sports: klub.sportProfiles.map((s) => s.sportCode),
-        accessMode: klub.accessMode ?? 'public',
+        accessMode: klub.discovery?.accessMode ?? 'public',
         latitude: kLat,
         longitude: kLng,
         distanceKm: dist !== null ? Math.round(dist * 10) / 10 : null,
@@ -184,7 +185,7 @@ export class DiscoverKlubsHandler {
       city: klub.contact?.city ?? null,
       state: klub.contact?.state ?? null,
       sports: klub.sportProfiles.map((s) => s.sportCode),
-      accessMode: klub.accessMode ?? 'public',
+      accessMode: klub.discovery?.accessMode ?? 'public',
       latitude: klub.contact?.latitude != null ? Number(klub.contact.latitude) : null,
       longitude: klub.contact?.longitude != null ? Number(klub.contact.longitude) : null,
       distanceKm: null,

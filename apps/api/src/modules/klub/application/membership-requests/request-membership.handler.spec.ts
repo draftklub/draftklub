@@ -7,7 +7,7 @@ import type { PrismaService } from '../../../../shared/prisma/prisma.service';
 interface MockKlub {
   id: string;
   name: string;
-  accessMode: string;
+  discovery: { accessMode: string } | null;
   review: { reviewStatus: string } | null;
   deletedAt: Date | null;
 }
@@ -47,7 +47,7 @@ function buildHandler(opts: {
 const PRIVATE_KLUB: MockKlub = {
   id: 'klub-1',
   name: 'Tennis Club',
-  accessMode: 'private',
+  discovery: { accessMode: 'private' },
   review: { reviewStatus: 'approved' },
   deletedAt: null,
 };
@@ -82,7 +82,7 @@ describe('RequestMembershipHandler', () => {
 
   it('rejeita BadRequest quando Klub é público', async () => {
     const { handler } = buildHandler({
-      klub: { ...PRIVATE_KLUB, accessMode: 'public' },
+      klub: { ...PRIVATE_KLUB, discovery: { accessMode: 'public' } },
     });
     await expect(
       handler.execute({ klubSlug: 'x', userId: 'u', message: 'mensagem válida aqui' }),

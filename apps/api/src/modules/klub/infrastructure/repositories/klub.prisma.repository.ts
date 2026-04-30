@@ -59,8 +59,6 @@ export class KlubPrismaRepository {
           onboardingSource: data.onboardingSource as $Enums.KlubOnboardingSource,
           createdById: data.createdById,
           plan: data.plan as $Enums.KlubPlan,
-          discoverable: data.discoverable ?? false,
-          accessMode: (data.accessMode ?? 'public') as $Enums.KlubAccessMode,
           status: data.plan === 'trial' ? 'trial' : 'active',
           trialEndsAt:
             data.plan === 'trial' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
@@ -100,6 +98,12 @@ export class KlubPrismaRepository {
               reviewStatus: (data.reviewStatus ?? 'pending') as $Enums.KlubReviewStatus,
             },
           },
+          discovery: {
+            create: {
+              discoverable: data.discoverable ?? false,
+              accessMode: (data.accessMode ?? 'public') as $Enums.KlubAccessMode,
+            },
+          },
           config: {
             create: {},
           },
@@ -116,6 +120,7 @@ export class KlubPrismaRepository {
           legal: true,
           review: true,
           contact: true,
+          discovery: true,
         },
       });
 
@@ -186,6 +191,7 @@ export class KlubPrismaRepository {
         legal: true,
         review: true,
         contact: true,
+        discovery: true,
       },
     });
   }
@@ -193,7 +199,14 @@ export class KlubPrismaRepository {
   async findBySlug(slug: string) {
     return this.prisma.klub.findUnique({
       where: { slug, deletedAt: null },
-      include: { config: true, sportProfiles: true, legal: true, review: true, contact: true },
+      include: {
+        config: true,
+        sportProfiles: true,
+        legal: true,
+        review: true,
+        contact: true,
+        discovery: true,
+      },
     });
   }
 
@@ -204,7 +217,14 @@ export class KlubPrismaRepository {
         ...(filters?.status ? { status: filters.status as $Enums.KlubStatus } : {}),
         ...(filters?.type ? { type: filters.type as $Enums.KlubType } : {}),
       },
-      include: { config: true, sportProfiles: true, legal: true, review: true, contact: true },
+      include: {
+        config: true,
+        sportProfiles: true,
+        legal: true,
+        review: true,
+        contact: true,
+        discovery: true,
+      },
       orderBy: { createdAt: 'desc' },
     });
   }

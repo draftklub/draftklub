@@ -8,7 +8,7 @@ interface MockKlub {
   slug: string;
   type: string;
   status: string;
-  accessMode: string | null;
+  discovery: { accessMode: string; discoverable?: boolean } | null;
   contact: {
     city: string | null;
     state: string | null;
@@ -59,7 +59,7 @@ const k = (
   slug: id,
   type: 'sports_club',
   status: 'active',
-  accessMode,
+  discovery: { accessMode },
   contact: { city, state, latitude, longitude },
   sportProfiles: sportCodes.map((c) => ({ sportCode: c })),
 });
@@ -70,10 +70,10 @@ describe('DiscoverKlubsHandler', () => {
     await handler.execute({});
     const where = getLastWhere();
     expect(where).toMatchObject({
-      discoverable: true,
       deletedAt: null,
       status: { in: ['active', 'trial'] },
     });
+    expect(where?.discovery).toEqual({ is: { discoverable: true } });
   });
 
   it('filtra por q case-insensitive (Prisma contains mode insensitive)', async () => {
@@ -135,7 +135,7 @@ describe('DiscoverKlubsHandler', () => {
   });
 
   it('mapeia accessMode null → public default', async () => {
-    const rows: MockKlub[] = [{ ...k('a', 'A'), accessMode: null }];
+    const rows: MockKlub[] = [{ ...k('a', 'A'), discovery: null }];
     const { handler } = buildHandler({ rows });
     const result = await handler.execute({});
     expect(result[0]?.accessMode).toBe('public');

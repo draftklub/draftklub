@@ -115,17 +115,18 @@ export class UpdateKlubHandler {
     const data: Prisma.KlubUpdateInput = {};
     const legalData: Record<string, unknown> = {};
     const contactData: Record<string, unknown> = {};
+    const discoveryData: Record<string, unknown> = {};
     const p = cmd.patch;
     if (p.name !== undefined) data.name = p.name;
     if (p.abbreviation !== undefined) data.abbreviation = p.abbreviation;
     if (p.commonName !== undefined) data.commonName = p.commonName;
-    if (p.description !== undefined) data.description = p.description;
+    if (p.description !== undefined) discoveryData.description = p.description;
     if (p.type !== undefined) data.type = p.type;
-    if (p.avatarUrl !== undefined) data.avatarUrl = p.avatarUrl;
-    if (p.coverUrl !== undefined) data.coverUrl = p.coverUrl;
-    if (p.website !== undefined) data.website = p.website;
-    if (p.discoverable !== undefined) data.discoverable = p.discoverable;
-    if (p.accessMode !== undefined) data.accessMode = p.accessMode;
+    if (p.avatarUrl !== undefined) discoveryData.avatarUrl = p.avatarUrl;
+    if (p.coverUrl !== undefined) discoveryData.coverUrl = p.coverUrl;
+    if (p.website !== undefined) discoveryData.website = p.website;
+    if (p.discoverable !== undefined) discoveryData.discoverable = p.discoverable;
+    if (p.accessMode !== undefined) discoveryData.accessMode = p.accessMode;
     if (p.amenities !== undefined) data.amenities = p.amenities as Prisma.InputJsonValue;
     if (p.email !== undefined) contactData.email = p.email;
     if (p.phone !== undefined) contactData.phone = p.phone;
@@ -180,7 +181,8 @@ export class UpdateKlubHandler {
     if (
       Object.keys(data).length === 0 &&
       Object.keys(legalData).length === 0 &&
-      Object.keys(contactData).length === 0
+      Object.keys(contactData).length === 0 &&
+      Object.keys(discoveryData).length === 0
     ) {
       throw new BadRequestException('Nenhum campo válido pra atualizar');
     }
@@ -201,6 +203,13 @@ export class UpdateKlubHandler {
         where: { klubId: cmd.klubId },
         create: { klubId: cmd.klubId, ...contactData },
         update: contactData,
+      });
+    }
+    if (Object.keys(discoveryData).length > 0) {
+      await this.prisma.klubDiscovery.upsert({
+        where: { klubId: cmd.klubId },
+        create: { klubId: cmd.klubId, ...discoveryData },
+        update: discoveryData,
       });
     }
     return updatedKlub ?? this.prisma.klub.findUnique({ where: { id: cmd.klubId } });
