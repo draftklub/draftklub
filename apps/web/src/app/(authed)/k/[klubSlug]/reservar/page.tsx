@@ -25,12 +25,13 @@ import { ApiError } from '@/lib/api/client';
 import { useActiveKlub } from '@/components/active-klub-provider';
 import { listKlubSpaces } from '@/lib/api/spaces';
 import {
-  createBooking,
   getSpaceAvailability,
   type MatchType,
   type SpaceAvailability,
   type SpaceAvailabilitySlot,
 } from '@/lib/api/bookings';
+import { createBookingAction } from '@/lib/actions/booking';
+import { getIdToken } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
 /**
@@ -105,7 +106,10 @@ export default function ReservarPage() {
     setSubmitting(true);
     setStepError(null);
     try {
-      const booking = await createBooking(klub.id, {
+      const token = await getIdToken();
+      if (!token) throw new Error('Sessão expirada. Faça login novamente.');
+      const booking = await createBookingAction(token, {
+        klubId: klub.id,
         spaceId: selectedSpace.id,
         startsAt: selectedSlot.startTime,
         matchType,
