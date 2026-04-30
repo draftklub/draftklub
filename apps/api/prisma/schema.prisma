@@ -365,6 +365,7 @@ model Klub {
   media              KlubMedia[]
   memberships        Membership[]        @relation("KlubMemberships")
   membershipRequests MembershipRequest[] @relation("KlubMembershipRequests")
+  bookings           Booking[]           @relation("BookingKlub")
 
   @@map("klubs")
   @@schema("klub")
@@ -986,7 +987,7 @@ model Booking {
   spaceId         String    @map("space_id") @db.Uuid
 
   startsAt        DateTime  @map("starts_at") @db.Timestamptz
-  endsAt          DateTime? @map("ends_at") @db.Timestamptz
+  endsAt          DateTime  @map("ends_at") @db.Timestamptz
 
   bookingType     String    @default("player_match") @map("booking_type")
   // 'player_match' | 'player_free_play' | 'maintenance' | 'weather_closed' | 'staff_blocked'
@@ -1037,6 +1038,7 @@ model Booking {
   updatedAt       DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
 
+  klub            Klub      @relation("BookingKlub", fields: [klubId], references: [id])
   space           Space     @relation(fields: [spaceId], references: [id])
   tournamentMatch TournamentMatch? @relation(fields: [tournamentMatchId], references: [id])
   bookingSeries   BookingSeries? @relation(fields: [bookingSeriesId], references: [id])
